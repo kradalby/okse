@@ -24,17 +24,43 @@
 
 package no.ntnu.okse.core;
 
-import java.util.concurrent.ThreadFactory;
+import java.util.ArrayList;
+import java.util.Iterator;
 
 /**
  * Created by Aleksander Skraastad (myth) on 2/25/15.
  * <p>
  * okse is licenced under the MIT licence.
  */
-public class ThreadDispatcher implements ThreadFactory {
+public class TaskRunner {
+    private ArrayList<Thread> taskPool;
+    ThreadProducer threadFactory;
 
-    @Override
-    public Thread newThread(Runnable r) {
-        return new Thread(r);
+    public TaskRunner() {
+        taskPool = new ArrayList<>();
+        threadFactory = new ThreadProducer();
+    }
+
+    public void run(Runnable r) {
+        Thread t = threadFactory.newThread(r);
+        taskPool.add(t);
+        t.start();
+    }
+
+    public ArrayList<Thread> getActiveThreads() {
+        ArrayList<Thread> active = new ArrayList<>();
+        taskPool.stream().filter(t -> t.getState() != Thread.State.TERMINATED).forEach(t -> active.add(t));
+
+        return active;
+    }
+
+    public void cleanCompletedThreads() {
+        Iterator<Thread> threads = taskPool.iterator();
+
+        while (threads.hasNext()) {
+            Thread t = threads.next();
+
+            if (t.getState() == Thread.State.TERMINATED) threads.remove();
+        }
     }
 }
