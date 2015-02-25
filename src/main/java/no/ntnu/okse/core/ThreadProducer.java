@@ -33,6 +33,13 @@ import java.util.concurrent.ThreadFactory;
  */
 public class ThreadProducer implements ThreadFactory {
 
+    /**
+     * newThread takes in an object implementing the Runnable interface,
+     * and constructs a new thread set up to run the task specified in r.
+     * <p/>
+     * @param r: An object implementing the Runnable interface
+     * @return A new thread ready to run the task specified in r.
+     */
     @Override
     public Thread newThread(Runnable r) {
         return new Thread(r);
