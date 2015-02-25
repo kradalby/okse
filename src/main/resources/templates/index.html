@@ -32,6 +32,9 @@
     <!-- Latest compiled and minified CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css" th:href="@{/css/bootstrap.min.css}" />
 
+    <!-- Our own stylesheet -->
+    <link rel="stylesheet" href="/css/style.css" th:href="@{/css/style.css}" />
+
     <!-- HTML5 shim and Respond.theme.js for IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.theme.js doesn't work if you view the page via file:// -->
     <!--[if lt IE 9]>
@@ -66,17 +69,12 @@
     </nav>
     <div class="container">
         <div class="row">
-            <div class="jumbotron">
-                <h1>Hello, you!</h1>
-                <p>Welcome to the admin console</p>
-                <p><a class="btn btn-primary btn-lg" href="#" role="button">Log in</a></p>
-            </div>
+            <ul class="nav nav-tabs">
+                <li role="presentation" class="active"><a href="#">Home</a></li>
+                <li role="presentation"><a href="#">Topics</a></li>
+                <li role="presentation"><a href="#">Stats</a></li>
+            </ul>
         </div>
-        <ul class="nav nav-tabs">
-            <li role="presentation" class="active"><a href="#">Home</a></li>
-            <li role="presentation"><a href="#">Topics</a></li>
-            <li role="presentation"><a href="#">Stats</a></li>
-        </ul>
     </div>
 
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
