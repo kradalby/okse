@@ -24,24 +24,38 @@
 
 package no.ntnu.okse.core;
 
-import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * Created by Aleksander Skraastad (myth) on 2/25/15.
  * <p>
  * okse is licenced under the MIT licence.
  */
-public class ThreadProducer implements ThreadFactory {
+public class CoreService extends Thread {
 
-    /**
-     * newThread takes in an object implementing the Runnable interface,
-     * and constructs a new thread set up to run the task specified in r.
-     * <p/>
-     * @param r: An object implementing the Runnable interface
-     * @return A new thread ready to run the task specified in r.
-     */
+    private boolean running;
+
+    LinkedBlockingQueue eventQueue;
+    TaskRunner taskRunner;
+
+    public CoreService() {
+        running = false;
+        eventQueue = new LinkedBlockingQueue();
+        taskRunner = new TaskRunner();
+    }
+
+    public LinkedBlockingQueue getEventQueue() {
+        return eventQueue;
+    }
+
     @Override
-    public Thread newThread(Runnable r) {
-        return new Thread(r);
+    public void run() {
+        while (running) {
+            try {
+                eventQueue.take();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }
