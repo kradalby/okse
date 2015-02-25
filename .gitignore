@@ -1,5 +1,8 @@
 # Created by https://www.gitignore.io
 
+# IDEA Project file
+*.iml
+
 ### Maven ###
 target/
 pom.xml.tag
