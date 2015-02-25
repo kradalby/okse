@@ -26,6 +26,11 @@ package no.ntnu.okse;
 
 import no.ntnu.okse.web.Server;
 
+/**
+ * Created by Håkon Ødegård Løvdal (hakloev) on 25/02/15.
+ * <p>
+ * okse is licenced under the MIT licence.
+ */
 public class Application {
 
     public static void main(String[] args) {

@@ -31,6 +31,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.lang.String;
 
+/**
+ * Created by Håkon Ødegård Løvdal (hakloev) on 25/02/15.
+ * <p>
+ * okse is licenced under the MIT licence.
+ */
 @Controller
 public class GreetingController {
 

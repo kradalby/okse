@@ -28,9 +28,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 /**
- * Created by hakloev on 25/02/15.
+ * Created by Håkon Ødegård Løvdal (hakloev) on 25/02/15.
+ * <p>
+ * okse is licenced under the MIT licence.
  */
-
 @SpringBootApplication
 public class Server {
 

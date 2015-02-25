@@ -29,7 +29,9 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 /**
- * Created by hakloev on 25/02/15.
+ * Created by Håkon Ødegård Løvdal (hakloev) on 25/02/15.
+ * <p>
+ * okse is licenced under the MIT licence.
  */
 @Controller
 public class IndexController {
