@@ -21,13 +21,21 @@
   ~ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
   ~ THE SOFTWARE.
   -->
-<!DOCTYPE HTML>
-<html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <title>Getting Started: Serving Web Content</title>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-</head>
-<body>
-<p th:text="'Hello, ' + ${name} + '!'" />
-</body>
+<html xmlns:th="http://www.thymeleaf.org"
+        xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout"
+        layout:decorator="layout">
+    <head>
+        <title th:text="${projectName} + ' Admin Console'">Admin Console</title>
+    </head>
+    <body>
+        <div layout:fragment="content" class="container">
+            <div class="row">
+                <ul class="nav nav-tabs">
+                    <li role="presentation" class="active"><a href="#">Main</a></li>
+                    <li role="presentation"><a href="#">Topics</a></li>
+                    <li role="presentation"><a href="#">Stats</a></li>
+                </ul>
+            </div>
+        </div>
+    </body>
 </html>

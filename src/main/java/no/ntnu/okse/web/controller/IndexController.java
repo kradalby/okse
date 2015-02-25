@@ -39,7 +39,7 @@ public class IndexController {
     @RequestMapping("/")
     public String index(Model model) {
         model.addAttribute("projectName", "OKSE");
-        return "index";
+        return "fragments/index";
     }
 
 }
