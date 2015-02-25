@@ -35,7 +35,6 @@ import java.util.Iterator;
 public class TaskRunner {
 
     private ArrayList<Thread> taskPool;
-    ThreadProducer threadFactory;
 
     /**
      * Constructs an instance of TaskRunner
@@ -43,7 +42,6 @@ public class TaskRunner {
      */
     public TaskRunner() {
         taskPool = new ArrayList<>();
-        threadFactory = new ThreadProducer();
     }
 
     /**
@@ -53,7 +51,7 @@ public class TaskRunner {
      * @param r: An instance of an object implementing the Runnable interface
      */
     public void run(Runnable r) {
-        Thread t = threadFactory.newThread(r);
+        Thread t = new Thread(r);
         taskPool.add(t);
         t.start();
     }
@@ -79,12 +77,6 @@ public class TaskRunner {
      * an exception.
      */
     public void cleanCompletedThreads() {
-        Iterator<Thread> threads = taskPool.iterator();
-
-        while (threads.hasNext()) {
-            Thread t = threads.next();
-
-            if (t.getState() == Thread.State.TERMINATED) threads.remove();
-        }
+        taskPool.removeIf(t -> t.getState() == Thread.State.TERMINATED);
     }
 }
