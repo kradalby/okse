@@ -29,6 +29,31 @@ package no.ntnu.okse.db;
  * <p/>
  * okse is licenced under the MIT licence.
  */
-public class DB {
 
+import java.sql.*;
+
+public class DB {
+    public static void main( String args[] ) {
+        Connection c = null;
+        Statement stmt = null;
+        try {
+            Class.forName("org.sqlite.JDBC");
+            c = DriverManager.getConnection("jdbc:sqlite:okse.db");
+            System.out.println("Opened database successfully");
+
+            stmt = c.createStatement();
+            String sql = "CREATE TABLE user" +
+                    "(id INT PRIMARY KEY NOT NULL," +
+                    " username TEXT NOT NULL, " +
+                    " password TEXT NOT NULL ," +
+                    " description CHAR(50))";
+            stmt.executeUpdate(sql);
+            stmt.close();
+            c.close();
+        } catch ( Exception e ) {
+            System.err.println( e.getClass().getName() + ": " + e.getMessage() );
+            System.exit(0);
+        }
+        System.out.println("Table created successfully");
+    }
 }
