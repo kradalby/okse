@@ -1,4 +1,5 @@
-# Okse (Overordnet Kommunikasjons System for Etteretning)
+# Okse 
+## (Overordnet Kommunikasjons System for Etteretning)
 
 Bachelor Project for FFI
 
