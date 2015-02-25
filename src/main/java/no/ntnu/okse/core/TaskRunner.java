@@ -33,27 +33,51 @@ import java.util.Iterator;
  * okse is licenced under the MIT licence.
  */
 public class TaskRunner {
+
     private ArrayList<Thread> taskPool;
     ThreadProducer threadFactory;
 
+    /**
+     * Constructs an instance of TaskRunner
+     * <p/>
+     */
     public TaskRunner() {
         taskPool = new ArrayList<>();
         threadFactory = new ThreadProducer();
     }
 
+    /**
+     * Runs a task implementing the Runnable interface and adds it to the
+     * task thread pool.
+     * <p/>
+     * @param r: An instance of an object implementing the Runnable interface
+     */
     public void run(Runnable r) {
         Thread t = threadFactory.newThread(r);
         taskPool.add(t);
         t.start();
     }
 
+    /**
+     * Returns an ArrayList containing all threads that are still alive
+     * in the task thread pool.
+     * <p/>
+     * @return ArrayList of Threads that are alive
+     */
     public ArrayList<Thread> getActiveThreads() {
         ArrayList<Thread> active = new ArrayList<>();
-        taskPool.stream().filter(t -> t.getState() != Thread.State.TERMINATED).forEach(t -> active.add(t));
+        taskPool.stream()
+                .filter(t -> t.getState() != Thread.State.TERMINATED)
+                .forEach(t -> active.add(t));
 
         return active;
     }
 
+    /**
+     * Iterates over the task thread pool and removes threads that are
+     * no longer alive, and have either terminated normally or thrown
+     * an exception.
+     */
     public void cleanCompletedThreads() {
         Iterator<Thread> threads = taskPool.iterator();
 
