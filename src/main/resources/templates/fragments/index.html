@@ -30,12 +30,133 @@
     </head>
     <body>
         <div layout:fragment="content" class="container">
-            <div class="row">
-                <ul class="nav nav-tabs">
-                    <li role="presentation" class="active"><a href="#">Main</a></li>
-                    <li role="presentation"><a href="#">Topics</a></li>
-                    <li role="presentation"><a href="#">Stats</a></li>
-                </ul>
+            <div th:switch="${#authorization.expression('isAuthenticated()')}" class="row">
+                <div th:case="false" class="jumbotron">
+                    <h1>OKSE Admin Console</h1>
+                    <p>Plase log in!</p>
+                </div>
+                <div th:case="true" id="pills-root">
+                    <ul class="nav nav-tabs">
+                        <li role="presentation" class="active"><a href="#main" data-toggle="tab">Main</a></li>
+                        <li role="presentation"><a href="#topics" data-toggle="tab">Topics</a></li>
+                        <li role="presentation"><a href="#stats" data-toggle="tab">Stats</a></li>
+                        <li role="presentation"><a href="#config" data-toggle="tab">Config</a></li>
+                    </ul>
+                    <div class="tab-content">
+                        <div class="tab-pane active" id="main">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="panel panel-default">
+                                        <!-- Default panel contents -->
+                                        <div class="panel-heading">Operating environment</div>
+                                        <!-- <div class="panel-body"></div> -->
+                                        <!-- List group -->
+                                        <ul class="list-group">
+                                            <li class="list-group-item"><strong>OS: </strong>Mac OS X</li>
+                                            <li class="list-group-item"><strong>Architecture: </strong>amd64</li>
+                                            <li class="list-group-item">Morbi leo risus</li>
+                                            <li class="list-group-item">Porta ac consectetur ac</li>
+                                            <li class="list-group-item">Vestibulum at eros</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="panel panel-default">
+                                        <!-- Default panel contents -->
+                                        <div class="panel-heading">Operating environment</div>
+                                        <!-- <div class="panel-body"></div> -->
+                                        <!-- List group -->
+                                        <ul class="list-group">
+                                            <li class="list-group-item"><strong>OS: </strong>Mac OS X</li>
+                                            <li class="list-group-item"><strong>Architecture: </strong>amd64</li>
+                                            <li class="list-group-item">Morbi leo risus</li>
+                                            <li class="list-group-item">Porta ac consectetur ac</li>
+                                            <li class="list-group-item">Vestibulum at eros</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="panel panel-default">
+                                        <!-- Default panel contents -->
+                                        <div class="panel-heading">Operating environment</div>
+                                        <!-- <div class="panel-body"></div> -->
+                                        <!-- List group -->
+                                        <ul class="list-group">
+                                            <li class="list-group-item"><strong>OS: </strong>Mac OS X</li>
+                                            <li class="list-group-item"><strong>Architecture: </strong>amd64</li>
+                                            <li class="list-group-item">Morbi leo risus</li>
+                                            <li class="list-group-item">Porta ac consectetur ac</li>
+                                            <li class="list-group-item">Vestibulum at eros</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-pane" id="topics">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <h1>topics</h1>
+                                </div>
+                                <div class="col-md-4">
+                                    <h1>topics</h1>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="panel panel-default">
+                                        <!-- Default panel contents -->
+                                        <div class="panel-heading">Operating environment</div>
+                                        <!-- <div class="panel-body"></div> -->
+                                        <!-- List group -->
+                                        <ul class="list-group">
+                                            <li class="list-group-item"><strong>OS: </strong>Mac OS X</li>
+                                            <li class="list-group-item"><strong>Architecture: </strong>amd64</li>
+                                            <li class="list-group-item">Morbi leo risus</li>
+                                            <li class="list-group-item">Porta ac consectetur ac</li>
+                                            <li class="list-group-item">Vestibulum at eros</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-pane" id="stats">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <h1>stats</h1>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="panel panel-default">
+                                        <!-- Default panel contents -->
+                                        <div class="panel-heading">Operating environment</div>
+                                        <!-- <div class="panel-body"></div> -->
+                                        <!-- List group -->
+                                        <ul class="list-group">
+                                            <li class="list-group-item"><strong>OS: </strong>Mac OS X</li>
+                                            <li class="list-group-item"><strong>Architecture: </strong>amd64</li>
+                                            <li class="list-group-item">Morbi leo risus</li>
+                                            <li class="list-group-item">Porta ac consectetur ac</li>
+                                            <li class="list-group-item">Vestibulum at eros</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <h1>stats</h1>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-pane" id="config">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <h1>config</h1>
+                                </div>
+                                <div class="col-md-4">
+                                    <h1>config</h1>
+                                </div>
+                                <div class="col-md-4">
+                                    <h1>config</h1>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </body>
