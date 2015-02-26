@@ -100,7 +100,7 @@
                                 <div class="col-md-4">
                                     <h1>topics</h1>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-4" id="col3">
                                     <div class="panel panel-default">
                                         <!-- Default panel contents -->
                                         <div class="panel-heading">Operating environment</div>
@@ -114,6 +114,7 @@
                                             <li class="list-group-item">Vestibulum at eros</li>
                                         </ul>
                                     </div>
+                                    <button id="load" class="btn btn-success">Load</button>
                                 </div>
                             </div>
                         </div>
@@ -158,6 +159,9 @@
                     </div>
                 </div>
             </div>
+        </div>
+        <div layout:fragment="scripts">
+            <script th:src="@{/js/test.js}" src="/static/js/test.js"></script>
         </div>
     </body>
 </html>
