@@ -44,17 +44,19 @@
     <![endif]-->
 </head>
 <body>
-    <div class="container">
-        <div th:if="${param.error}" class="alert alert-danger" role="alert">
-            Invalid username or password!
-        </div>
-        <div th:if="${param.logout}" class="alert alert-success" role="alert">
-            You have been logged out!
-        </div>
-    </div>
     <nav th:replace="fragments/header :: header">
         Fake header, nothing fun to see in this header! The real header is in fragments/header.html
     </nav>
+    <div class="container">
+        <div class="row">
+            <div th:if="${param.error}" class="alert alert-danger" role="alert">
+                Invalid username or password!
+            </div>
+            <div th:if="${param.logout}" class="alert alert-success" role="alert">
+                You have been logged out!
+            </div>
+        </div>
+    </div>
     <div layout:fragment="content" class="container">
         Fake content, nothing fun to see here! The real content is rendered based on the request url
     </div>
