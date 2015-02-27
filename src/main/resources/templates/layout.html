@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <!--
   ~ The MIT License (MIT)
   ~
@@ -21,16 +22,19 @@
   ~ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
   ~ THE SOFTWARE.
   -->
-<!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="en">
+
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout" lang="en">
 <head>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title th:text="${projectName} + ' Admin Console'">Admin Console</title>
+    <title>OKSE Admin Console</title>
 
     <!-- Latest compiled and minified CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css" th:href="@{/css/bootstrap.min.css}" />
+
+    <!-- Our own stylesheet -->
+    <link rel="stylesheet" href="/css/style.css" th:href="@{/css/style.css}" />
 
     <!-- HTML5 shim and Respond.theme.js for IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.theme.js doesn't work if you view the page via file:// -->
@@ -40,43 +44,21 @@
     <![endif]-->
 </head>
 <body>
-    <nav class="navbar navbar-inverse navbar-fixed-top">
-        <div class="container">
-            <div class="navbar-header">
-                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-                    <span class="sr-only">Toggle navigation</span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
-                <a class="navbar-brand" href="#" th:text="${projectName} + ' Admin Console'">Admin Console</a>
-            </div>
-            <div id="navbar" class="navbar-collapse collapse">
-                <form class="navbar-form navbar-right">
-                    <div class="form-group">
-                        <input type="text" placeholder="Email" class="form-control" />
-                    </div>
-                    <div class="form-group">
-                        <input type="password" placeholder="Password" class="form-control" />
-                    </div>
-                    <button type="submit" class="btn btn-success">Sign in</button>
-                </form>
-            </div><!--/.navbar-collapse -->
-        </div>
+    <nav th:replace="fragments/header :: header">
+        Fake header, nothing fun to see in this header! The real header is in fragments/header.html
     </nav>
     <div class="container">
         <div class="row">
-            <div class="jumbotron">
-                <h1>Hello, you!</h1>
-                <p>Welcome to the admin console</p>
-                <p><a class="btn btn-primary btn-lg" href="#" role="button">Log in</a></p>
+            <div th:if="${param.error}" class="alert alert-danger" role="alert">
+                Invalid username or password!
+            </div>
+            <div th:if="${param.logout}" class="alert alert-success" role="alert">
+                You have been logged out!
             </div>
         </div>
-        <ul class="nav nav-tabs">
-            <li role="presentation" class="active"><a href="#">Home</a></li>
-            <li role="presentation"><a href="#">Topics</a></li>
-            <li role="presentation"><a href="#">Stats</a></li>
-        </ul>
+    </div>
+    <div layout:fragment="content" class="container">
+        Fake content, nothing fun to see here! The real content is rendered based on the request url
     </div>
 
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
