@@ -34,9 +34,12 @@ import no.ntnu.okse.web.Server;
  */
 public class Application {
 
+    public static CoreService cs;
+    public static Server server;
+
     public static void main(String[] args) {
-        Server server = new Server();
-        CoreService cs = new CoreService();
+        server = new Server();
+        cs = new CoreService();
         server.run();
         cs.run();
     }

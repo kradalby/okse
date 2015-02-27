@@ -80,6 +80,7 @@ public class CoreService extends Thread {
         while (running) {
             try {
                 eventQueue.take();
+                log.info("Consumed an event.");
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
