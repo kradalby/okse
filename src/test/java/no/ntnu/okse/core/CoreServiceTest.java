@@ -61,11 +61,15 @@ public class CoreServiceTest {
     @Test
     public void testRun() throws Exception {
         assertTrue(cs.getState() == Thread.State.NEW,
-                "State of CoreService thread should be NEW before start() has been called.");
+                "State of CoreService thread should be NEW before start() has been called but it was " +
+                cs.getState()
+        );
         cs.start();
         Thread.sleep(100);
         assertTrue(cs.getState() == Thread.State.WAITING,
-                "State of CoreService thread should be WAITING after entering the run loop.");
+                "State of CoreService thread should be WAITING after entering the run loop, but it was" +
+                cs.getState()
+        );
     }
 
     @Test
