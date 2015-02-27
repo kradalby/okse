@@ -24,6 +24,7 @@
 
 package no.ntnu.okse;
 
+import no.ntnu.okse.core.CoreService;
 import no.ntnu.okse.web.Server;
 
 /**
@@ -35,6 +36,8 @@ public class Application {
 
     public static void main(String[] args) {
         Server server = new Server();
+        CoreService cs = new CoreService();
         server.run();
+        cs.run();
     }
 }
