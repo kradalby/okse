@@ -35,7 +35,7 @@ import java.util.concurrent.LinkedBlockingQueue;
  */
 public class CoreService extends Thread {
 
-    private boolean running;
+    private volatile boolean running;
     private static Logger log;
     private LinkedBlockingQueue eventQueue;
     private TaskRunner taskRunner;
@@ -89,14 +89,6 @@ public class CoreService extends Thread {
             }
         }
         log.info("CoreService stopped.");
-    }
-
-    /**
-     *
-     * @return The number of events processed during the lifetime of the CoreService instance.
-     */
-    public Integer getEventCount() {
-        return eventCount;
     }
 
     /**

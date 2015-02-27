@@ -60,16 +60,24 @@ public class CoreServiceTest {
 
     @Test
     public void testRun() throws Exception {
+        assertTrue(cs.getState() == Thread.State.NEW,
+                "State of CoreService thread should be NEW before start() has been called.");
         cs.start();
-        assertTrue(cs.getState() == Thread.State.WAITING ||
-                cs.getState() == Thread.State.RUNNABLE,
+        Thread.sleep(100);
+        assertTrue(cs.getState() == Thread.State.WAITING,
                 "State of CoreService thread should be WAITING after entering the run loop.");
     }
 
     @Test
     public void testStopThread() throws Exception {
+        cs.start();
+        Thread.sleep(100);
         cs.stopThread();
+        cs.interrupt();
+        Thread.sleep(100);
         assertTrue(cs.getState() == Thread.State.TERMINATED,
-                "The state of CoreService thread should be TERMINATED after stopThread has been called.");
+                "The state of CoreService thread should be TERMINATED after stopThread has been called, but it was " +
+                        cs.getState()
+        );
     }
 }
