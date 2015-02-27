@@ -24,6 +24,8 @@
 
 package no.ntnu.okse.core;
 
+import org.apache.log4j.Logger;
+
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
@@ -34,22 +36,47 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class CoreService extends Thread {
 
     private boolean running;
+    private static Logger log;
+    private LinkedBlockingQueue eventQueue;
+    private TaskRunner taskRunner;
 
-    LinkedBlockingQueue eventQueue;
-    TaskRunner taskRunner;
-
+    /**
+     * Constructs the CoreService thread, initiates the logger,
+     * event queue and task runner.
+     */
     public CoreService() {
         running = false;
+        log = Logger.getLogger(CoreService.class.getName());
         eventQueue = new LinkedBlockingQueue();
         taskRunner = new TaskRunner();
     }
 
+    /**
+     * Fetches the eventQueue.
+     *
+     * @return The eventQueue list
+     */
     public LinkedBlockingQueue getEventQueue() {
         return eventQueue;
     }
 
+    /**
+     * Fetches the taskRunner
+     *
+     * @return The taskRunner object
+     */
+    public TaskRunner getTaskRunner() {
+        return taskRunner;
+    }
+
+    /**
+     * Starts the main loop of the CoreService thread.
+     */
     @Override
     public void run() {
+        running = true;
+        Thread.currentThread().setName("Thread: CoreService");
+        log.info("CoreService started.");
         while (running) {
             try {
                 eventQueue.take();
@@ -57,5 +84,8 @@ public class CoreService extends Thread {
                 e.printStackTrace();
             }
         }
+        log.info("CoreService stopped.");
     }
+
+
 }
