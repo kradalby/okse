@@ -35,10 +35,11 @@ import java.util.concurrent.LinkedBlockingQueue;
  */
 public class CoreService extends Thread {
 
-    private boolean running;
+    private volatile boolean running;
     private static Logger log;
     private LinkedBlockingQueue eventQueue;
     private TaskRunner taskRunner;
+    private Integer eventCount;
 
     /**
      * Constructs the CoreService thread, initiates the logger,
@@ -49,6 +50,7 @@ public class CoreService extends Thread {
         log = Logger.getLogger(CoreService.class.getName());
         eventQueue = new LinkedBlockingQueue();
         taskRunner = new TaskRunner();
+        eventCount = new Integer(0);
     }
 
     /**
@@ -80,6 +82,8 @@ public class CoreService extends Thread {
         while (running) {
             try {
                 eventQueue.take();
+                eventCount++;
+                log.info("Consumed an event.");
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -87,5 +91,11 @@ public class CoreService extends Thread {
         log.info("CoreService stopped.");
     }
 
+    /**
+     * Stops execution of the CoreService thread.
+     */
+    public void stopThread() {
+        running = false;
+    }
 
 }

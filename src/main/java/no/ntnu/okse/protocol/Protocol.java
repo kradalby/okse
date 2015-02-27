@@ -22,46 +22,12 @@
  * THE SOFTWARE.
  */
 
-package no.ntnu.okse.core;
-
-import org.apache.log4j.Logger;
+package no.ntnu.okse.protocol;
 
 /**
  * Created by Aleksander Skraastad (myth) on 2/27/15.
  * <p>
  * okse is licenced under the MIT licence.
  */
-public class CoreTestProgram {
-
-    static CoreService cs;
-    static SomeTask s;
-
-    public CoreTestProgram() {
-        cs = new CoreService();
-        s = new SomeTask();
-    }
-
-    public CoreService getCoreService() { return cs; }
-    public SomeTask getTask() { return s; }
-
-    public static void main(String[] args) {
-        CoreTestProgram c = new CoreTestProgram();
-        c.getCoreService().start();
-        c.getCoreService().getTaskRunner().run(c.getTask());
-    }
-
-    public class SomeTask implements Runnable {
-        @Override
-        public void run() {
-            Logger log = Logger.getLogger(SomeTask.class.getName());
-            Thread.currentThread().setName("Thread: Tasks [" + Thread.currentThread().getId() + "]");
-            log.info("Starting Task.");
-            try {
-                Thread.sleep(5000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            log.info("Task completed.");
-        }
-    }
+public interface Protocol {
 }

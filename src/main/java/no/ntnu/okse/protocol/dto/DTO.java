@@ -22,26 +22,12 @@
  * THE SOFTWARE.
  */
 
-package no.ntnu.okse;
-
-import no.ntnu.okse.core.CoreService;
-import no.ntnu.okse.web.Server;
+package no.ntnu.okse.protocol.dto;
 
 /**
- * Created by Håkon Ødegård Løvdal (hakloev) on 25/02/15.
+ * Created by Aleksander Skraastad (myth) on 2/27/15.
  * <p>
  * okse is licenced under the MIT licence.
  */
-public class Application {
-
-    public static CoreService cs;
-    public static Server server;
-
-    public static void main(String[] args) {
-        server = new Server();
-        cs = new CoreService();
-        server.run();
-        cs.run();
-        // DERP
-    }
+public interface DTO {
 }
