@@ -26,39 +26,38 @@
  * Created by Fredrik on 26/02/15.
  */
 
-console.log("loaded")
+
+var Main = (function($) {
+
+    var clickInterval;
+
+    var ajax = function(location, error, success) {
+        $.ajax({
+            url: "http://localhost:8080/" + location.substring(1),
+            dataType: "json",
+            error: error,
+            success: success,
+            type: "GET"
+        })
+    }
+
+    return {
+        init: function() {
+            $(".nav-tabs").on("click", "a", function(e){
+                clearInterval(clickInterval)
+                var clickedElement = $(this).attr("href")
+                if(clickedElement === "#topics"){
+                    clickInterval = setInterval( function() {
+                        ajax(clickedElement, Topics.error, Topics.refresh)
+                    }, 1000);
+                }
+            });
+        }
+    }
+
+})(jQuery)
+
 $(document).ready(function(){
-    $("#load").click(function(){
-        var load = $.ajax({
-            url: "http://localhost:8080/topics",
-            dataType: "json",
-            error: function(error) {
-                console.log("error in ajax")
-            },
-            success: function(data) {
-                $('#col3').html(JSON.stringify(data))
-                console.log("success" + JSON.stringify(data))
-            },
-            type: "GET"
-        })
-    });
-
-    var test = setInterval( function()
-    {
-        var load = $.ajax({
-            url: "http://localhost:8080/topics",
-            dataType: "json",
-            error: function(error) {
-                console.log("error in ajax")
-            },
-            success: function(data) {
-                $('#col3').html(JSON.stringify(data))
-                console.log("success" + JSON.stringify(data))
-            },
-            type: "GET"
-        })
-
-
-    }, 5000);
+    Main.init()
 });
 
