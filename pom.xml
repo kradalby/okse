@@ -78,6 +78,12 @@
             <version>6.8.7</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>teststng</artifactId>
+            <version>6.8.21</version>
+            <scope>test</scope>
+        </dependency>
 
     </dependencies>
 
