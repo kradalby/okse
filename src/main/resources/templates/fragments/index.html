@@ -43,55 +43,7 @@
                         <li role="presentation"><a href="#config" data-toggle="tab">Config</a></li>
                     </ul>
                     <div class="tab-content">
-                        <div class="tab-pane active" id="main">
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <div class="panel panel-default">
-                                        <!-- Default panel contents -->
-                                        <div class="panel-heading">Operating environment</div>
-                                        <!-- <div class="panel-body"></div> -->
-                                        <!-- List group -->
-                                        <ul class="list-group">
-                                            <li class="list-group-item"><strong>OS: </strong>Mac OS X</li>
-                                            <li class="list-group-item"><strong>Architecture: </strong>amd64</li>
-                                            <li class="list-group-item">Morbi leo risus</li>
-                                            <li class="list-group-item">Porta ac consectetur ac</li>
-                                            <li class="list-group-item">Vestibulum at eros</li>
-                                        </ul>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="panel panel-default">
-                                        <!-- Default panel contents -->
-                                        <div class="panel-heading">Operating environment</div>
-                                        <!-- <div class="panel-body"></div> -->
-                                        <!-- List group -->
-                                        <ul class="list-group">
-                                            <li class="list-group-item"><strong>OS: </strong>Mac OS X</li>
-                                            <li class="list-group-item"><strong>Architecture: </strong>amd64</li>
-                                            <li class="list-group-item">Morbi leo risus</li>
-                                            <li class="list-group-item">Porta ac consectetur ac</li>
-                                            <li class="list-group-item">Vestibulum at eros</li>
-                                        </ul>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="panel panel-default">
-                                        <!-- Default panel contents -->
-                                        <div class="panel-heading">Operating environment</div>
-                                        <!-- <div class="panel-body"></div> -->
-                                        <!-- List group -->
-                                        <ul class="list-group">
-                                            <li class="list-group-item"><strong>OS: </strong>Mac OS X</li>
-                                            <li class="list-group-item"><strong>Architecture: </strong>amd64</li>
-                                            <li class="list-group-item">Morbi leo risus</li>
-                                            <li class="list-group-item">Porta ac consectetur ac</li>
-                                            <li class="list-group-item">Vestibulum at eros</li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <div layout:replace="fragments/mainpane :: mainpane"></div>
                         <div class="tab-pane" id="topics">
                             <div class="row">
                                 <div class="col-md-4">
@@ -161,7 +113,8 @@
             </div>
         </div>
         <div layout:fragment="scripts">
-            <script th:src="@{/js/test.js}" src="/static/js/test.js"></script>
+            <script th:src="@{/js/topics.js}" src="/static/js/topics.js"></script>
+            <script th:src="@{/js/main.js}" src="/static/js/main.js"></script>
         </div>
     </body>
 </html>
