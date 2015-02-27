@@ -26,66 +26,42 @@ package no.ntnu.okse.core;
 
 import org.apache.log4j.Logger;
 
-import java.util.concurrent.LinkedBlockingQueue;
-
 /**
- * Created by Aleksander Skraastad (myth) on 2/25/15.
+ * Created by Aleksander Skraastad (myth) on 2/27/15.
  * <p>
  * okse is licenced under the MIT licence.
  */
-public class CoreService extends Thread {
+public class CoreTestProgram {
 
-    private boolean running;
-    private static Logger log;
-    private LinkedBlockingQueue eventQueue;
-    private TaskRunner taskRunner;
+    static CoreService cs;
+    static SomeTask s;
 
-    /**
-     * Constructs the CoreService thread, initiates the logger,
-     * event queue and task runner.
-     */
-    public CoreService() {
-        running = false;
-        log = Logger.getLogger(CoreService.class.getName());
-        eventQueue = new LinkedBlockingQueue();
-        taskRunner = new TaskRunner();
+    public CoreTestProgram() {
+        cs = new CoreService();
+        s = new SomeTask();
     }
 
-    /**
-     * Fetches the eventQueue.
-     *
-     * @return The eventQueue list
-     */
-    public LinkedBlockingQueue getEventQueue() {
-        return eventQueue;
+    public CoreService getCoreService() { return cs; }
+    public SomeTask getTask() { return s; }
+
+    public static void main(String[] args) {
+        CoreTestProgram c = new CoreTestProgram();
+        c.getCoreService().start();
+        c.getCoreService().getTaskRunner().run(c.getTask());
     }
 
-    /**
-     * Fetches the taskRunner
-     *
-     * @return The taskRunner object
-     */
-    public TaskRunner getTaskRunner() {
-        return taskRunner;
-    }
-
-    /**
-     * Starts the main loop of the CoreService thread.
-     */
-    @Override
-    public void run() {
-        running = true;
-        Thread.currentThread().setName("Thread: CoreService");
-        log.info("CoreService started.");
-        while (running) {
+    public class SomeTask implements Runnable {
+        @Override
+        public void run() {
+            Logger log = Logger.getLogger(SomeTask.class.getName());
+            Thread.currentThread().setName("Thread: Tasks [" + Thread.currentThread().getId() + "]");
+            log.info("Starting Task.");
             try {
-                eventQueue.take();
+                Thread.sleep(5000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+            log.info("Task completed.");
         }
-        log.info("CoreService stopped.");
     }
-
-
 }

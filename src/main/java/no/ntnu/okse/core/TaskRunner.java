@@ -24,8 +24,8 @@
 
 package no.ntnu.okse.core;
 
+import org.apache.log4j.Logger;
 import java.util.ArrayList;
-import java.util.Iterator;
 
 /**
  * Created by Aleksander Skraastad (myth) on 2/25/15.
@@ -34,6 +34,7 @@ import java.util.Iterator;
  */
 public class TaskRunner {
 
+    private static Logger log;
     private ArrayList<Thread> taskPool;
 
     /**
@@ -42,6 +43,7 @@ public class TaskRunner {
      */
     public TaskRunner() {
         taskPool = new ArrayList<>();
+        Logger.getLogger(TaskRunner.class.getName());
     }
 
     /**
