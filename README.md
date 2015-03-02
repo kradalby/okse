@@ -9,8 +9,8 @@ This will be a Message broker handling protocol agnostic handling between WSNoti
 # Team
 
 * Aleksander Skraastad
-* Håkon Løvdal
-* Fredrik Berg
+* Håkon Ødegård Løvdal
+* Fredrik Christoffer "Aids" Berg
 * Trond Walleraunet
 * Fredrik "Man Cold" Tørnvall
 * Kristoffer Dalby
