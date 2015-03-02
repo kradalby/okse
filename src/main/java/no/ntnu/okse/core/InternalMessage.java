@@ -22,30 +22,12 @@
  * THE SOFTWARE.
  */
 
-package no.ntnu.okse.protocol.dto;
-
-import java.util.HashMap;
+package no.ntnu.okse.core;
 
 /**
  * Created by Aleksander Skraastad (myth) on 3/2/15.
  * <p>
  * okse is licenced under the MIT licence.
  */
-public abstract class AbstractDTO {
-
-    public Integer maxMessageLength;
-    public Integer minMessageLength;
-    public String pathSeparator;
-    public String queuePrefix;
-    public String protocolName;
-    public HashMap<String, String> flags;
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        if (!super.equals(o)) return false;
-
-        return true;
-    }
+public class InternalMessage {
 }

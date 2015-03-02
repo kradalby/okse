@@ -24,10 +24,18 @@
 
 package no.ntnu.okse.connection;
 
+import no.ntnu.okse.protocol.Protocol;
+
+import java.util.ArrayList;
+
 /**
  * Created by Aleksander Skraastad (myth) on 3/2/15.
  * <p>
  * okse is licenced under the MIT licence.
  */
 public interface Connector {
+    public String getBoundAddress();
+    public Integer getPort();
+    public Protocol getProtocolType();
+    public ArrayList<Client> getClients();
 }
