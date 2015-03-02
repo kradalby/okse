@@ -25,9 +25,24 @@
 package no.ntnu.okse.protocol.dto;
 
 /**
- * Created by Aleksander Skraastad (myth) on 2/27/15.
+ * Created by Aleksander Skraastad (myth) on 3/2/15.
  * <p>
  * okse is licenced under the MIT licence.
  */
-public interface DTO {
+public abstract class AbstractDTO {
+
+    public Integer maxMessageLength;
+    public Integer minMessageLength;
+    public String pathSeparator;
+    public String queuePrefix;
+    public String protocolName;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+
+        return true;
+    }
 }

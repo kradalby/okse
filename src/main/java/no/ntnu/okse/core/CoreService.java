@@ -40,8 +40,7 @@ public class CoreService extends Thread {
     private LinkedBlockingQueue eventQueue;
 
     /**
-     * Constructs the CoreService thread, initiates the logger,
-     * event queue and task runner.
+     * Constructs the CoreService thread, initiates the logger and eventQueue.
      */
     public CoreService() {
         super("CoreService");
