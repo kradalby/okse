@@ -44,18 +44,10 @@
                     </ul>
                     <div class="tab-content">
                         <div layout:replace="fragments/mainpane :: mainpane"></div>
+                        <div layout:replace="fragments/topicspane :: topicspane"></div>
+                        <div layout:replace="fragments/statspane :: statspane"></div>
+                        <div layout:replace="fragments/configpane :: configpane"></div>
 
-                        <div class="tab-pane" id="topics">
-                            <div layout:replace="fragments/topicspane :: topicspane"></div>
-                        </div>
-
-                        <div class="tab-pane" id="stats">
-                            <div layout:replace="fragments/statspane :: statspane"></div>
-                        </div>
-                        
-                        <div class="tab-pane" id="config">
-                            <div layout:replace="fragments/configpane :: configpane"></div>
-                        </div>
                     </div>
                 </div>
             </div>
