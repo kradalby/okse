@@ -29,3 +29,7 @@ body {
 .tab-content {
     padding-top: 20px;
 }
+
+select[multiple] {
+    overflow-y: scroll;
+}
