@@ -24,6 +24,7 @@
 
 package no.ntnu.okse.web.controller;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -36,10 +37,18 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @Controller
 public class IndexController {
 
+    @Value("${spring.application.name}")
+    private String appName;
+
+    @Value("${server.port}")
+    private String port;
+
     @RequestMapping("/")
     public String index(Model model) {
-        model.addAttribute("projectName", "OKSE");
+        model.addAttribute("projectName", appName);
+        model.addAttribute("serverPort", port);
         return "fragments/index";
+
     }
 
 }
