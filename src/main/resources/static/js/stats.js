@@ -23,5 +23,19 @@
  */
 
 /**
- * Created by Fredrik on 02/03/15.
+ * Created by Håkon Ødegård Løvdal (hakloev) on 02/03/15.
  */
+
+var Stats = (function($) {
+
+    return {
+        error: function() {
+            console.log("error in ajax for Stats")
+        },
+        refresh: function(data) {
+            console.log(JSON.stringify(data))
+        }
+    }
+
+
+})(jQuery)
