@@ -52,11 +52,6 @@ public class CoreServiceTest {
                 "getEventQueue should return an instance of LinkedBlockingQueue");
     }
 
-    @Test
-    public void testGetTaskRunner() throws Exception {
-        assertTrue(cs.getTaskRunner() instanceof TaskRunner,
-                "getTaskRunner should return an instance of TaskRunner");
-    }
 
     @Test
     public void testRun() throws Exception {

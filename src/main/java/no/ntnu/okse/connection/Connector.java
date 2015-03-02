@@ -22,18 +22,20 @@
  * THE SOFTWARE.
  */
 
-package no.ntnu.okse.protocol;
+package no.ntnu.okse.connection;
 
-import no.ntnu.okse.connection.Connector;
-import no.ntnu.okse.protocol.dto.AbstractDTO;
+import no.ntnu.okse.protocol.Protocol;
+
+import java.util.ArrayList;
 
 /**
- * Created by Aleksander Skraastad (myth) on 2/27/15.
+ * Created by Aleksander Skraastad (myth) on 3/2/15.
  * <p>
  * okse is licenced under the MIT licence.
  */
-public interface Protocol {
-    public String getProtocolName();
-    public Connector getConnector();
-    public AbstractDTO getDTO();
+public interface Connector {
+    public String getBoundAddress();
+    public Integer getPort();
+    public Protocol getProtocolType();
+    public ArrayList<Client> getClients();
 }

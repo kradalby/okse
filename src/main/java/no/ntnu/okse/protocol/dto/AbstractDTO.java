@@ -22,18 +22,30 @@
  * THE SOFTWARE.
  */
 
-package no.ntnu.okse.protocol;
+package no.ntnu.okse.protocol.dto;
 
-import no.ntnu.okse.connection.Connector;
-import no.ntnu.okse.protocol.dto.AbstractDTO;
+import java.util.HashMap;
 
 /**
- * Created by Aleksander Skraastad (myth) on 2/27/15.
+ * Created by Aleksander Skraastad (myth) on 3/2/15.
  * <p>
  * okse is licenced under the MIT licence.
  */
-public interface Protocol {
-    public String getProtocolName();
-    public Connector getConnector();
-    public AbstractDTO getDTO();
+public abstract class AbstractDTO {
+
+    public Integer maxMessageLength;
+    public Integer minMessageLength;
+    public String pathSeparator;
+    public String queuePrefix;
+    public String protocolName;
+    public HashMap<String, String> flags;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+
+        return true;
+    }
 }

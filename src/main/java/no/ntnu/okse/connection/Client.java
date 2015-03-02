@@ -22,12 +22,22 @@
  * THE SOFTWARE.
  */
 
-package no.ntnu.okse.protocol.dto;
+package no.ntnu.okse.connection;
+
+import no.ntnu.okse.core.InternalMessage;
+import no.ntnu.okse.protocol.Protocol;
 
 /**
- * Created by Aleksander Skraastad (myth) on 2/27/15.
+ * Created by Aleksander Skraastad (myth) on 3/2/15.
  * <p>
  * okse is licenced under the MIT licence.
  */
-public interface DTO {
+public interface Client {
+    public String getClientAddress();
+    public Integer getClientPort();
+    public boolean sendMessage(InternalMessage m);
+    public void messageRecieved();
+    public boolean heartbeat();
+    public void disconnect();
+    public Protocol getProtocol();
 }

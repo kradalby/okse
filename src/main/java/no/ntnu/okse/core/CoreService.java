@@ -38,19 +38,15 @@ public class CoreService extends Thread {
     private volatile boolean running;
     private static Logger log;
     private LinkedBlockingQueue eventQueue;
-    private TaskRunner taskRunner;
-    private Integer eventCount;
 
     /**
-     * Constructs the CoreService thread, initiates the logger,
-     * event queue and task runner.
+     * Constructs the CoreService thread, initiates the logger and eventQueue.
      */
     public CoreService() {
+        super("CoreService");
         running = false;
         log = Logger.getLogger(CoreService.class.getName());
         eventQueue = new LinkedBlockingQueue();
-        taskRunner = new TaskRunner();
-        eventCount = new Integer(0);
     }
 
     /**
@@ -62,14 +58,6 @@ public class CoreService extends Thread {
         return eventQueue;
     }
 
-    /**
-     * Fetches the taskRunner
-     *
-     * @return The taskRunner object
-     */
-    public TaskRunner getTaskRunner() {
-        return taskRunner;
-    }
 
     /**
      * Starts the main loop of the CoreService thread.
@@ -77,12 +65,10 @@ public class CoreService extends Thread {
     @Override
     public void run() {
         running = true;
-        Thread.currentThread().setName("Thread: CoreService");
         log.info("CoreService started.");
         while (running) {
             try {
                 eventQueue.take();
-                eventCount++;
                 log.info("Consumed an event.");
             } catch (InterruptedException e) {
                 e.printStackTrace();
