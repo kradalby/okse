@@ -24,8 +24,11 @@
 
 package no.ntnu.okse.web.controller;
 
+
 import no.ntnu.okse.Application;
 import no.ntnu.okse.core.event.PageLoadEvent;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -40,8 +43,16 @@ import java.util.logging.Logger;
 @Controller
 public class IndexController {
 
+    @Value("${spring.application.name}")
+    private String appName;
+
+    @Value("${server.port}")
+    private String port;
+
     @RequestMapping("/")
     public String index(Model model) {
+        model.addAttribute("projectName", appName);
+        model.addAttribute("serverPort", port);
         model.addAttribute("projectName", "OKSE");
         Application.cs.getExecutor().execute(() -> {
             try {
@@ -52,7 +63,9 @@ public class IndexController {
                 Logger.getLogger(Application.class.getName()).info(e1.getMessage());
             }
         });
+
         return "fragments/index";
+
     }
 
 }
