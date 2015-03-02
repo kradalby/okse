@@ -39,6 +39,14 @@ var Main = (function($) {
             success: success,
             type: "GET"
         })
+    };
+
+    var error = function() {
+        console.log("Error in main ajax")
+    }
+
+    var refresh = function(data) {
+        console.log(JSON.stringify(data))
     }
 
     return {
@@ -46,13 +54,43 @@ var Main = (function($) {
             $(".nav-tabs").on("click", "a", function(e){
                 clearInterval(clickInterval)
                 var clickedElement = $(this).attr("href")
-                if(clickedElement === "#topics"){
+                var updateInterval = $('#settings-update-interval').val() * 1000
+
+                if (clickedElement === "#main")
+                {
+                    ajax(clickedElement, error, refresh)
+                    clickInterval = setInterval( function() {
+                        ajax(clickedElement, error, refresh)
+                    }, updateInterval);
+                } else if(clickedElement === "#topics")
+                {
                     ajax(clickedElement, Topics.error, Topics.refresh)
                     clickInterval = setInterval( function() {
                         ajax(clickedElement, Topics.error, Topics.refresh)
-                    }, ($('#settings-update-interval').val() * 1000));
+                    }, updateInterval);
+                } else if (clickedElement === "#stats")
+                {
+                    ajax(clickedElement, Stats.error, Stats.refresh)
+                    clickInterval = setInterval( function() {
+                        ajax(clickedElement, Stats.error, Stats.refresh)
+                    }, updateInterval);
+                } else if (clickedElement === "#config")
+                {
+                    ajax(clickedElement, Config.error, Config.refresh)
+                    clickInterval = setInterval( function() {
+                        ajax(clickedElement, Config.error, Config.refresh)
+                    }, updateInterval);
+                } else
+                {
+                    console.log("Unknown tab, should not happen!")
                 }
             });
+
+            if ($('#main').length) {
+                clickInterval = setInterval( function() {
+                    ajax("#main", error, refresh)
+                }, 2000);
+            }
         }
     }
 

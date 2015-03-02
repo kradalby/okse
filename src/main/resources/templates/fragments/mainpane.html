@@ -49,7 +49,7 @@
                 <form role="form">
                     <div class="form-group">
                         <label for="active-subscribers">Active subscriptions</label>
-                        <select multiple="multiple" class="form-control" size="8">
+                        <select multiple="multiple" class="form-control" size="8" id="active-subscribers">
                             <option>no/ffi (localhost:812) UseRaw=true, UseMulticast=false</option>
                             <option>no/myTopic (localhost:236) UseRaw=false, UseMulticast=true</option>
                             <option>no/uav (localhost:543) UseRaw=false, UseMulticast=true</option>
@@ -60,7 +60,7 @@
                             <option>no/myTopic (localhost:238) UseRaw=false, UseMulticast=true</option>
                         </select>
                     </div>
-                    <div class="row">
+                    <div class="form-group">
                         <button type="submit" class="btn btn-primary">Delete</button>
                         <button type="submit" class="btn btn-warning">Delete All</button>
                     </div>
