@@ -23,5 +23,6 @@
  */
 
 /**
- * Created by Fredrik on 02/03/15.
+ * Created by Fredrik Tørnvall (freboto) and Håkon Ødegård Løvdal (hakloev) on 02/03/15.
  */
+

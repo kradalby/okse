@@ -47,9 +47,10 @@ var Main = (function($) {
                 clearInterval(clickInterval)
                 var clickedElement = $(this).attr("href")
                 if(clickedElement === "#topics"){
+                    ajax(clickedElement, Topics.error, Topics.refresh)
                     clickInterval = setInterval( function() {
                         ajax(clickedElement, Topics.error, Topics.refresh)
-                    }, 1000);
+                    }, ($('#settings-update-interval').val() * 1000));
                 }
             });
         }
