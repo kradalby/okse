@@ -24,10 +24,60 @@
 
 package no.ntnu.okse.core;
 
+import java.util.HashMap;
+
 /**
  * Created by Aleksander Skraastad (myth) on 3/2/15.
  * <p>
  * okse is licenced under the MIT licence.
  */
 public class InternalMessage {
+    private final int ID;
+    private final String message;
+    private final String topic;
+    private final boolean retain;
+    private boolean delivered;
+    private HashMap<String, String> flags;
+
+    public InternalMessage(int ID, String topic, String message, boolean retain) {
+        this.ID = ID;
+        this.message = message;
+        this.topic = topic;
+        this.retain = retain;
+        this.delivered = false;
+        this.flags = new HashMap<>();
+    }
+
+    /**
+     * Check if the message is flagged as delivered
+     * @return Deliverystatus
+     */
+    public boolean isDelivered() {
+        return delivered;
+    }
+
+    /**
+     * Flags message as delivered
+     */
+    public void setDelivered() {
+        delivered = true;
+    }
+
+    /**
+     * Add a custom flag for this message
+     * @param key: The flag name
+     * @param value: The flag value
+     */
+    public void setFlag(String key, String value) {
+        flags.put(key, value);
+    }
+
+    /**
+     * Retrieve the value of a certain custom flag
+     * @param key: The name of the flag
+     * @return The value of the "key" flag
+     */
+    public String getFlag(String key) {
+        return this.flags.get(key);
+    }
 }
