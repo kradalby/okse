@@ -22,38 +22,37 @@
  * THE SOFTWARE.
  */
 
-package no.ntnu.okse.web.controller;
+package no.ntnu.okse.core.event;
 
-import no.ntnu.okse.Application;
-import no.ntnu.okse.core.event.PageLoadEvent;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.RequestMapping;
-
-import java.util.logging.Logger;
+import java.util.IllegalFormatCodePointException;
 
 /**
- * Created by Håkon Ødegård Løvdal (hakloev) on 25/02/15.
+ * Created by Aleksander Skraastad (myth) on 3/3/15.
  * <p>
  * okse is licenced under the MIT licence.
  */
-@Controller
-public class IndexController {
+public class PageLoadEvent extends Event {
 
-    @RequestMapping("/")
-    public String index(Model model) {
-        model.addAttribute("projectName", "OKSE");
-        Application.cs.getExecutor().execute(() -> {
-            try {
-                Application.cs.getEventQueue().put(new PageLoadEvent("PageLoad", "CorrectDataObject", "String"));
-            } catch (InterruptedException e) {
-                Logger.getLogger(Application.class.getName()).info(e.getMessage());
-            } catch (IllegalArgumentException e1) {
-                Logger.getLogger(Application.class.getName()).info(e1.getMessage());
-            }
-        });
-        return "fragments/index";
+    /**
+     * Mockup Subclass of Event
+     * @param operation: String representing the operation type of the event.
+     * @param data: An object structure containing the payload.
+     * @param dataType: String representing the datatype of the payload
+     */
+    public PageLoadEvent(String operation, Object data, String dataType) throws IllegalArgumentException {
+        super(operation, data, dataType);
+
+        if (!(data instanceof String)) {
+            throw new IllegalArgumentException("Data object must be of type String.");
+        }
     }
 
+    /**
+     * Returns the proper cast of the object payload
+     * @return: A string representation of the data payload.
+     */
+    @Override
+    public String getData() {
+        return (String) this.data;
+    }
 }
-
