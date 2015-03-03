@@ -25,13 +25,15 @@
 package no.ntnu.okse.web.controller;
 
 import no.ntnu.okse.web.model.Topics;
+import org.eclipse.jetty.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.lang.String;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -40,13 +42,37 @@ import java.util.concurrent.atomic.AtomicLong;
  * okse is licenced under the MIT licence.
  */
 @RestController
-public class TopicsController {
+public class ApiController {
     private static final String template = "Hello, %s!";
     private final AtomicLong counter = new AtomicLong();
 
-    @RequestMapping("/topics")
+    @RequestMapping(value = "/api/topics", method = RequestMethod.GET)
     public Topics topics(@RequestParam(value="name", defaultValue="World") String name) {
         return new Topics(counter.incrementAndGet(),
                 String.format(template, name));
+    }
+
+    @RequestMapping(value = "/api/main", method = RequestMethod.GET)
+    public List<Topics> main() {
+        List<Topics> allTheShit = new ArrayList<>();
+        allTheShit.add(new Topics(235, "test topics"));
+        allTheShit.add(new Topics(299, "test topics #2"));
+        return allTheShit;
+    }
+
+    @RequestMapping(value = "/api/stats", method = RequestMethod.GET)
+    public List<Topics> stats() {
+        List<Topics> allTheShit = new ArrayList<>();
+        allTheShit.add(new Topics(235, "test topics"));
+        allTheShit.add(new Topics(299, "test topics #2"));
+        return allTheShit;
+    }
+
+    @RequestMapping(value = "/api/config", method = RequestMethod.GET)
+    public List<Topics> config(){
+        List<Topics> allTheShit = new ArrayList<>();
+        allTheShit.add(new Topics(235, "test topics"));
+        allTheShit.add(new Topics(299, "test topics #2"));
+        return allTheShit;
     }
 }
