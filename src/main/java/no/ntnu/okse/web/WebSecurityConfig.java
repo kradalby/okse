@@ -33,7 +33,7 @@ import org.springframework.security.config.annotation.web.servlet.configuration.
 
 /**
  * Created by Håkon Ødegård Løvdal (hakloev) on 26/02/15.
- * <p/>
+ * <p>
  * okse is licenced under the MIT licence.
  */
 @Configuration
