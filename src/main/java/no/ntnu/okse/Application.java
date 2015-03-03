@@ -43,6 +43,11 @@ public class Application {
     public static CoreService cs;
     public static Server webserver;
 
+    /**
+     * Main application startup
+     * <p>
+     * @param args: Command line inupt argument array
+     */
     public static void main(String[] args) {
         webserver = new Server();
         cs = new CoreService();

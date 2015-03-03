@@ -57,7 +57,7 @@ public class CoreService extends Thread {
 
     /**
      * Fetches the eventQueue.
-     *
+     * <p>
      * @return The eventQueue list
      */
     public LinkedBlockingQueue<Event> getEventQueue() {
@@ -66,6 +66,7 @@ public class CoreService extends Thread {
 
     /**
      * Fetches the ExecutorService responsible for running tasks
+     * <p>
      * @return The ExecutorService
      */
     public ExecutorService getExecutor() { return executor; }

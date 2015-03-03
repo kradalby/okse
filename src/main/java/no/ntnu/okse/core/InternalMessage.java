@@ -32,6 +32,7 @@ import java.util.HashMap;
  * okse is licenced under the MIT licence.
  */
 public class InternalMessage {
+
     private final int ID;
     private final String message;
     private final String topic;
@@ -39,17 +40,29 @@ public class InternalMessage {
     private boolean delivered;
     private HashMap<String, String> flags;
 
+    /**
+     * Constructs an InternalMessage instance which is a container for internal message representation.
+     * The internal message instance only holds the most general, required fields by default, but has
+     * the optional key-value hash-map to store flags that may be required for some protocols, but not
+     * all.
+     * <p>
+     * @param ID: Message ID
+     * @param topic: The topic to which this message is aimed
+     * @param message: The contens of the message itself
+     * @param retain: A flag of wether or not this message should be retained on the topic
+     */
     public InternalMessage(int ID, String topic, String message, boolean retain) {
         this.ID = ID;
         this.message = message;
         this.topic = topic;
         this.retain = retain;
         this.delivered = false;
-        this.flags = new HashMap<>();
+        this.flags = new HashMap();
     }
 
     /**
      * Check if the message is flagged as delivered
+     * <p>
      * @return Deliverystatus
      */
     public boolean isDelivered() {
@@ -65,6 +78,7 @@ public class InternalMessage {
 
     /**
      * Add a custom flag for this message
+     * <p>
      * @param key: The flag name
      * @param value: The flag value
      */
@@ -74,6 +88,7 @@ public class InternalMessage {
 
     /**
      * Retrieve the value of a certain custom flag
+     * <p>
      * @param key: The name of the flag
      * @return The value of the "key" flag
      */
