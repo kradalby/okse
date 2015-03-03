@@ -34,6 +34,10 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.logging.Logger;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Properties;
+
 
 /**
  * Created by Håkon Ødegård Løvdal (hakloev) on 25/02/15.
@@ -49,10 +53,13 @@ public class IndexController {
     @Value("${server.port}")
     private String port;
 
+    private Properties environment = System.getProperties();
+
     @RequestMapping("/")
     public String index(Model model) {
         model.addAttribute("projectName", appName);
         model.addAttribute("serverPort", port);
+        model.addAttribute("environment", createEnvironmentList());
         model.addAttribute("projectName", "OKSE");
         Application.cs.getExecutor().execute(() -> {
             try {
@@ -64,9 +71,21 @@ public class IndexController {
             }
         });
 
+
         return "fragments/index";
 
     }
 
+    private HashMap<String, String> createEnvironmentList() {
+        HashMap<String, String> properties = new HashMap<>();
+        properties.put("Java Runtime Name", environment.getProperty("java.runtime.name"));
+        properties.put("Java Runtime Version", environment.getProperty("java.runtime.version"));
+        properties.put("Java VM Name", environment.getProperty("java.vm.name"));
+        properties.put("Java VM Version", environment.getProperty("java.vm.version"));
+        properties.put("OS Name", environment.getProperty("os.name"));
+        properties.put("OS Version", environment.getProperty("os.version"));
+        properties.put("OS Architecture", environment.getProperty("os.arch"));
+        return properties;
+    }
 }
 
