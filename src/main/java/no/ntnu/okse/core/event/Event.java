@@ -22,62 +22,53 @@
  * THE SOFTWARE.
  */
 
-package no.ntnu.okse.core;
-
-import java.util.HashMap;
+package no.ntnu.okse.core.event;
 
 /**
- * Created by Aleksander Skraastad (myth) on 3/2/15.
+ * Created by Aleksander Skraastad (myth) on 3/3/15.
  * <p>
  * okse is licenced under the MIT licence.
  */
-public class InternalMessage {
-    private final int ID;
-    private final String message;
-    private final String topic;
-    private final boolean retain;
-    private boolean delivered;
-    private HashMap<String, String> flags;
+public abstract class Event {
 
-    public InternalMessage(int ID, String topic, String message, boolean retain) {
-        this.ID = ID;
-        this.message = message;
-        this.topic = topic;
-        this.retain = retain;
-        this.delivered = false;
-        this.flags = new HashMap<>();
+    private String operation;
+    protected Object data;
+    private String dataType;
+
+    /**
+     * Constructs an Event containing an operation, some data and a dataType.
+     * <p/>
+     * @param operation: A string representing the operation to be performed.
+     * @param data: An object containing the data payload.
+     * @param dataType: A string representing the type of data.
+     */
+    public Event(String operation, Object data, String dataType) {
+        this.operation = operation;
+        this.data = data;
+        this.dataType = dataType;
     }
 
     /**
-     * Check if the message is flagged as delivered
-     * @return Deliverystatus
+     * What operation is to be performed from this event.
+     * <p/>
+     * @return: A string representing the operation to be performed.
      */
-    public boolean isDelivered() {
-        return delivered;
+    public String getOperation() {
+        return operation;
     }
 
     /**
-     * Flags message as delivered
+     * An abstract method to retrieve the data payload.
+     * <p/>
+     * @return: An object containing the data payload.
      */
-    public void setDelivered() {
-        delivered = true;
-    }
+    public abstract Object getData();
 
     /**
-     * Add a custom flag for this message
-     * @param key: The flag name
-     * @param value: The flag value
+     * What data type is the data object
+     * @return: A string representing the class instance of the data object
      */
-    public void setFlag(String key, String value) {
-        flags.put(key, value);
-    }
-
-    /**
-     * Retrieve the value of a certain custom flag
-     * @param key: The name of the flag
-     * @return The value of the "key" flag
-     */
-    public String getFlag(String key) {
-        return this.flags.get(key);
+    public String getDataType() {
+        return dataType;
     }
 }
