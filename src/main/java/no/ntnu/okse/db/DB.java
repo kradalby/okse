@@ -61,7 +61,6 @@ public class DB {
 
     //Init database, creates tables and default admin user
     public static void initDB() {
-        //Connection con = null;
         Statement stmt = null;
         String sql = null;
         conDB();
@@ -105,6 +104,7 @@ public class DB {
         }
     }
 
+    //INSERT INTO table (fields) VALUES (values)
     public static void insert(String table, String fields, String values) {
         Statement stmt = null;
         String query = "INSERT INTO " + table + " (" + fields + ") " +
@@ -118,6 +118,8 @@ public class DB {
             e.printStackTrace();
         }
     }
+
+    //SELECT * FROM table
     public static ResultSet selectAll(String table) {
         Statement stmt = null;
         String query = "SELECT * FROM " + table;
@@ -131,33 +133,15 @@ public class DB {
         return null;
     }
 
+    //SELECT * FROM table WHERE colum = value
     public static ResultSet select(String table, String colum, String value) {
-        conDB();
         Statement stmt = null;
         ResultSet rs = null;
+        conDB();
         try {
             stmt = con.createStatement();
             rs = stmt.executeQuery( "SELECT * FROM " + table + " where " + colum + "='" + value + "'");
-            //For testing
-            int id = rs.getInt("id");
-            String usr = rs.getString("username");
-            String pwd = rs.getString("password");
-            String desc = rs.getString("description");
-            System.out.println("selectDB: ");
-            System.out.println(id + " - " + usr + " - " + pwd + " - " + desc);
-            //Slutt testing
             return stmt.executeQuery( "SELECT * FROM " + table + " where " + colum + "='" + value + "'");
-
-            //ResultSet rs = stmt.executeQuery( "SELECT * FROM users;" );
-//            while ( rs.next() ) {
-//                int id = rs.getInt("id");
-//                String  name = rs.getString("name");
-//                System.out.println( "ID = " + id );
-//                System.out.println( "NAME = " + name );
-//            }
-            //rs.close();
-            //stmt.close();
-            //con.close();
         } catch ( Exception e ) {
             System.err.println( e.getClass().getName() + ": " + e.getMessage() );
         }
