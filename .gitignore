@@ -71,3 +71,4 @@ hs_err_pid*
 
 .idea/
 okse.db
+src/main/java/no/ntnu/okse/db/Test.java
