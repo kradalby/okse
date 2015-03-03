@@ -33,7 +33,7 @@ var Main = (function($) {
 
     var ajax = function(location, error, success) {
         $.ajax({
-            url: "http://localhost:8080/" + location.substring(1),
+            url: "http://localhost:8080/api/" + location.substring(1),
             dataType: "json",
             error: error,
             success: success,
