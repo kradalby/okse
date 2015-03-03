@@ -29,13 +29,28 @@
 var Topics = (function($) {
 
 
+
     return {
         error: function() {
           console.log("error in ajax for topics")
         },
         refresh: function(data) {
-            console.log(JSON.stringify(data))
+            //var listItems = $("#data li");
+
+
+            $("#data li").each(function(index) {
+                $(this).replaceWith('<li class="list-group-item">' + 'ID: ' + data.id + ' Content: ' + data.content + '</li>');
+            });
+            $("#data2 li").each(function(index) {
+                $(this).replaceWith('<li class="list-group-item">' + "Testdata for table 2" + '</li>');
+            });
+
+
+           //$('#data').append(JSON.stringify(data));
+           console.log(JSON.stringify(data))
+
         }
     }
 
 })(jQuery);
+
