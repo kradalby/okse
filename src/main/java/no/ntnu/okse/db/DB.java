@@ -41,13 +41,6 @@ public class DB {
         //select("users", "username", "admin");
     }
 
-    //Eksprementering
-    public static ResultSet sqlQuerry(String sql) throws SQLException {
-        Statement sta = con.createStatement();
-        sql = "SELECT * FROM users where username='admin'";
-        return sta.executeQuery(sql);
-    }
-
     //Connectiong to database okse.db
     public static void conDB(){
         try {
@@ -104,6 +97,13 @@ public class DB {
         }
     }
 
+    //run all sql queries
+    public static ResultSet sqlQuery(String sql) throws SQLException {
+        conDB();
+        Statement sta = con.createStatement();
+        return sta.executeQuery(sql);
+    }
+
     //INSERT INTO table (fields) VALUES (values)
     public static void insert(String table, String fields, String values) {
         Statement stmt = null;
@@ -136,12 +136,13 @@ public class DB {
     //SELECT * FROM table WHERE colum = value
     public static ResultSet select(String table, String colum, String value) {
         Statement stmt = null;
-        ResultSet rs = null;
+        //ResultSet rs = null;
         conDB();
         try {
             stmt = con.createStatement();
-            rs = stmt.executeQuery( "SELECT * FROM " + table + " where " + colum + "='" + value + "'");
+            //rs = stmt.executeQuery( "SELECT * FROM " + table + " where " + colum + "='" + value + "'");
             return stmt.executeQuery( "SELECT * FROM " + table + " where " + colum + "='" + value + "'");
+            //return rs;
         } catch ( Exception e ) {
             System.err.println( e.getClass().getName() + ": " + e.getMessage() );
         }
