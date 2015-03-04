@@ -24,7 +24,14 @@
 
 package no.ntnu.okse;
 
+import no.ntnu.okse.core.CoreService;
 import no.ntnu.okse.web.Server;
+
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.logging.Handler;
+import java.util.logging.Logger;
 
 /**
  * Created by Håkon Ødegård Løvdal (hakloev) on 25/02/15.
@@ -33,8 +40,13 @@ import no.ntnu.okse.web.Server;
  */
 public class Application {
 
+    public static CoreService cs;
+    public static Server webserver;
+
     public static void main(String[] args) {
-        Server server = new Server();
-        server.run();
+        webserver = new Server();
+        cs = new CoreService();
+        webserver.run();
+        cs.start();
     }
 }

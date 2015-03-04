@@ -24,8 +24,12 @@
 
 package no.ntnu.okse.core;
 
+import no.ntnu.okse.core.event.Event;
+
 import org.apache.log4j.Logger;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
@@ -35,20 +39,20 @@ import java.util.concurrent.LinkedBlockingQueue;
  */
 public class CoreService extends Thread {
 
-    private boolean running;
+    private volatile boolean running;
     private static Logger log;
-    private LinkedBlockingQueue eventQueue;
-    private TaskRunner taskRunner;
+    private LinkedBlockingQueue<Event> eventQueue;
+    private ExecutorService executor;
 
     /**
-     * Constructs the CoreService thread, initiates the logger,
-     * event queue and task runner.
+     * Constructs the CoreService thread, initiates the logger and eventQueue.
      */
     public CoreService() {
+        super("CoreService");
         running = false;
         log = Logger.getLogger(CoreService.class.getName());
         eventQueue = new LinkedBlockingQueue();
-        taskRunner = new TaskRunner();
+        executor = Executors.newFixedThreadPool(10);
     }
 
     /**
@@ -56,18 +60,16 @@ public class CoreService extends Thread {
      *
      * @return The eventQueue list
      */
-    public LinkedBlockingQueue getEventQueue() {
+    public LinkedBlockingQueue<Event> getEventQueue() {
         return eventQueue;
     }
 
     /**
-     * Fetches the taskRunner
-     *
-     * @return The taskRunner object
+     * Fetches the ExecutorService responsible for running tasks
+     * @return The ExecutorService
      */
-    public TaskRunner getTaskRunner() {
-        return taskRunner;
-    }
+    public ExecutorService getExecutor() { return executor; }
+
 
     /**
      * Starts the main loop of the CoreService thread.
@@ -75,11 +77,11 @@ public class CoreService extends Thread {
     @Override
     public void run() {
         running = true;
-        Thread.currentThread().setName("Thread: CoreService");
         log.info("CoreService started.");
         while (running) {
             try {
-                eventQueue.take();
+                Event e = eventQueue.take();
+                log.info("Consumed an event: " + e.getOperation() + " DataType: " + e.getDataType());
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -87,5 +89,11 @@ public class CoreService extends Thread {
         log.info("CoreService stopped.");
     }
 
+    /**
+     * Stops execution of the CoreService thread.
+     */
+    public void stopThread() {
+        running = false;
+    }
 
 }

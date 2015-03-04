@@ -24,44 +24,60 @@
 
 package no.ntnu.okse.core;
 
-import org.apache.log4j.Logger;
+import java.util.HashMap;
 
 /**
- * Created by Aleksander Skraastad (myth) on 2/27/15.
+ * Created by Aleksander Skraastad (myth) on 3/2/15.
  * <p>
  * okse is licenced under the MIT licence.
  */
-public class CoreTestProgram {
+public class InternalMessage {
+    private final int ID;
+    private final String message;
+    private final String topic;
+    private final boolean retain;
+    private boolean delivered;
+    private HashMap<String, String> flags;
 
-    static CoreService cs;
-    static SomeTask s;
-
-    public CoreTestProgram() {
-        cs = new CoreService();
-        s = new SomeTask();
+    public InternalMessage(int ID, String topic, String message, boolean retain) {
+        this.ID = ID;
+        this.message = message;
+        this.topic = topic;
+        this.retain = retain;
+        this.delivered = false;
+        this.flags = new HashMap<>();
     }
 
-    public CoreService getCoreService() { return cs; }
-    public SomeTask getTask() { return s; }
-
-    public static void main(String[] args) {
-        CoreTestProgram c = new CoreTestProgram();
-        c.getCoreService().start();
-        c.getCoreService().getTaskRunner().run(c.getTask());
+    /**
+     * Check if the message is flagged as delivered
+     * @return Deliverystatus
+     */
+    public boolean isDelivered() {
+        return delivered;
     }
 
-    public class SomeTask implements Runnable {
-        @Override
-        public void run() {
-            Logger log = Logger.getLogger(SomeTask.class.getName());
-            Thread.currentThread().setName("Thread: Tasks [" + Thread.currentThread().getId() + "]");
-            log.info("Starting Task.");
-            try {
-                Thread.sleep(5000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            log.info("Task completed.");
-        }
+    /**
+     * Flags message as delivered
+     */
+    public void setDelivered() {
+        delivered = true;
+    }
+
+    /**
+     * Add a custom flag for this message
+     * @param key: The flag name
+     * @param value: The flag value
+     */
+    public void setFlag(String key, String value) {
+        flags.put(key, value);
+    }
+
+    /**
+     * Retrieve the value of a certain custom flag
+     * @param key: The name of the flag
+     * @return The value of the "key" flag
+     */
+    public String getFlag(String key) {
+        return this.flags.get(key);
     }
 }
