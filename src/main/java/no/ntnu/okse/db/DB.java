@@ -52,6 +52,15 @@ public class DB {
         }
     }
 
+    public static void closeDB(){
+        try {
+            con.close();
+            System.out.println("closeDB: Closed database successfully");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
     //Init database, creates tables and default admin user
     public static void initDB() {
         Statement stmt = null;
