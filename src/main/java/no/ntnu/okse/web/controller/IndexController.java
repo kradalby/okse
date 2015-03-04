@@ -22,15 +22,14 @@
  * THE SOFTWARE.
  */
 
-package no.ntnu.okse;
+package no.ntnu.okse.web.controller;
 
-import no.ntnu.okse.core.CoreService;
-import no.ntnu.okse.web.Server;
+import no.ntnu.okse.Application;
+import no.ntnu.okse.core.event.PageLoadEvent;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestMapping;
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.logging.Handler;
 import java.util.logging.Logger;
 
 /**
@@ -38,15 +37,23 @@ import java.util.logging.Logger;
  * <p>
  * okse is licenced under the MIT licence.
  */
-public class Application {
+@Controller
+public class IndexController {
 
-    public static CoreService cs;
-    public static Server webserver;
-
-    public static void main(String[] args) {
-        webserver = new Server();
-        cs = new CoreService();
-        webserver.run();
-        cs.start();
+    @RequestMapping("/")
+    public String index(Model model) {
+        model.addAttribute("projectName", "OKSE");
+        Application.cs.getExecutor().execute(() -> {
+            try {
+                Application.cs.getEventQueue().put(new PageLoadEvent("PageLoad", "CorrectDataObject", "String"));
+            } catch (InterruptedException e) {
+                Logger.getLogger(Application.class.getName()).info(e.getMessage());
+            } catch (IllegalArgumentException e1) {
+                Logger.getLogger(Application.class.getName()).info(e1.getMessage());
+            }
+        });
+        return "fragments/index";
     }
+
 }
+

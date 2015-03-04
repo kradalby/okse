@@ -22,31 +22,37 @@
  * THE SOFTWARE.
  */
 
-package no.ntnu.okse;
+package no.ntnu.okse.core.event;
 
-import no.ntnu.okse.core.CoreService;
-import no.ntnu.okse.web.Server;
-
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.logging.Handler;
-import java.util.logging.Logger;
+import java.util.IllegalFormatCodePointException;
 
 /**
- * Created by Håkon Ødegård Løvdal (hakloev) on 25/02/15.
+ * Created by Aleksander Skraastad (myth) on 3/3/15.
  * <p>
  * okse is licenced under the MIT licence.
  */
-public class Application {
+public class PageLoadEvent extends Event {
 
-    public static CoreService cs;
-    public static Server webserver;
+    /**
+     * Mockup Subclass of Event
+     * @param operation: String representing the operation type of the event.
+     * @param data: An object structure containing the payload.
+     * @param dataType: String representing the datatype of the payload
+     */
+    public PageLoadEvent(String operation, Object data, String dataType) throws IllegalArgumentException {
+        super(operation, data, dataType);
 
-    public static void main(String[] args) {
-        webserver = new Server();
-        cs = new CoreService();
-        webserver.run();
-        cs.start();
+        if (!(data instanceof String)) {
+            throw new IllegalArgumentException("Data object must be of type String.");
+        }
+    }
+
+    /**
+     * Returns the proper cast of the object payload
+     * @return: A string representation of the data payload.
+     */
+    @Override
+    public String getData() {
+        return (String) this.data;
     }
 }

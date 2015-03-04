@@ -22,31 +22,31 @@
  * THE SOFTWARE.
  */
 
-package no.ntnu.okse;
+package no.ntnu.okse.web.controller;
 
-import no.ntnu.okse.core.CoreService;
-import no.ntnu.okse.web.Server;
+import no.ntnu.okse.web.model.Topics;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.logging.Handler;
-import java.util.logging.Logger;
+import java.lang.String;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Created by Håkon Ødegård Løvdal (hakloev) on 25/02/15.
  * <p>
  * okse is licenced under the MIT licence.
  */
-public class Application {
+@RestController
+public class TopicsController {
+    private static final String template = "Hello, %s!";
+    private final AtomicLong counter = new AtomicLong();
 
-    public static CoreService cs;
-    public static Server webserver;
-
-    public static void main(String[] args) {
-        webserver = new Server();
-        cs = new CoreService();
-        webserver.run();
-        cs.start();
+    @RequestMapping("/topics")
+    public Topics topics(@RequestParam(value="name", defaultValue="World") String name) {
+        return new Topics(counter.incrementAndGet(),
+                String.format(template, name));
     }
 }

@@ -22,31 +22,18 @@
  * THE SOFTWARE.
  */
 
-package no.ntnu.okse;
+package no.ntnu.okse.protocol;
 
-import no.ntnu.okse.core.CoreService;
-import no.ntnu.okse.web.Server;
-
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.logging.Handler;
-import java.util.logging.Logger;
+import no.ntnu.okse.connection.Connector;
+import no.ntnu.okse.protocol.dto.AbstractDTO;
 
 /**
- * Created by Håkon Ødegård Løvdal (hakloev) on 25/02/15.
+ * Created by Aleksander Skraastad (myth) on 2/27/15.
  * <p>
  * okse is licenced under the MIT licence.
  */
-public class Application {
-
-    public static CoreService cs;
-    public static Server webserver;
-
-    public static void main(String[] args) {
-        webserver = new Server();
-        cs = new CoreService();
-        webserver.run();
-        cs.start();
-    }
+public interface Protocol {
+    public String getProtocolName();
+    public Connector getConnector();
+    public AbstractDTO getDTO();
 }

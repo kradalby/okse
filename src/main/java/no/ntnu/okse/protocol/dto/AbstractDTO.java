@@ -22,31 +22,30 @@
  * THE SOFTWARE.
  */
 
-package no.ntnu.okse;
+package no.ntnu.okse.protocol.dto;
 
-import no.ntnu.okse.core.CoreService;
-import no.ntnu.okse.web.Server;
-
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.logging.Handler;
-import java.util.logging.Logger;
+import java.util.HashMap;
 
 /**
- * Created by Håkon Ødegård Løvdal (hakloev) on 25/02/15.
+ * Created by Aleksander Skraastad (myth) on 3/2/15.
  * <p>
  * okse is licenced under the MIT licence.
  */
-public class Application {
+public abstract class AbstractDTO {
 
-    public static CoreService cs;
-    public static Server webserver;
+    public Integer maxMessageLength;
+    public Integer minMessageLength;
+    public String pathSeparator;
+    public String queuePrefix;
+    public String protocolName;
+    public HashMap<String, String> flags;
 
-    public static void main(String[] args) {
-        webserver = new Server();
-        cs = new CoreService();
-        webserver.run();
-        cs.start();
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+
+        return true;
     }
 }

@@ -10,43 +10,34 @@
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
 
-package no.ntnu.okse;
+package no.ntnu.okse.web.model;
 
-import no.ntnu.okse.core.CoreService;
-import no.ntnu.okse.web.Server;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.logging.Handler;
-import java.util.logging.Logger;
+import static org.testng.Assert.*;
 
-/**
- * Created by Håkon Ødegård Løvdal (hakloev) on 25/02/15.
- * <p>
- * okse is licenced under the MIT licence.
- */
-public class Application {
+public class TopicsTest {
 
-    public static CoreService cs;
-    public static Server webserver;
+    @Test()
+    public void testGetId() {
 
-    public static void main(String[] args) {
-        webserver = new Server();
-        cs = new CoreService();
-        webserver.run();
-        cs.start();
+        long id = 1337;
+        Topics obj = new Topics(id, "skeet skeet");
+
+        Assert.assertEquals(id, obj.getId());
+
     }
 }
