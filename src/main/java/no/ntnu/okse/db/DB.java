@@ -35,13 +35,9 @@ import java.sql.*;
 public class DB {
     private static Connection con = null;
 
-    public static void main(String args[]){
-        //conDB();
-        //initDB();
-        //select("users", "username", "admin");
-    }
-
-    //Connectiong to database okse.db
+    /**
+     * Connecting to database okse.db
+     */
     public static void conDB(){
         try {
             Class.forName("org.sqlite.JDBC");
@@ -52,6 +48,9 @@ public class DB {
         }
     }
 
+    /**
+     * Closeing database connection
+     */
     public static void closeDB(){
         try {
             con.close();
@@ -61,18 +60,27 @@ public class DB {
         }
     }
 
-    //Init database, creates tables and default admin user
+    /**
+     * Initiate database, creates tables and default admin user
+     */
     public static void initDB() {
         Statement stmt = null;
         String sql = null;
         conDB();
         try {
             stmt = con.createStatement();
+
             sql = "CREATE TABLE users" +
-                    "(id INT PRIMARY KEY NOT NULL," +
-                    " username TEXT NOT NULL, " +
-                    " password TEXT NOT NULL ," +
-                    " description CHAR(50))";
+                    "(username VARCHAR(50) PRIMARY KEY NOT NULL," +
+                    " password VARCHAR(50) NOT NULL ," +
+                    " enable INT NOT NULL ," +
+                    " description VARCHAR(50))";
+            stmt.executeUpdate(sql);
+
+            sql = "CREATE TABLE authorities" +
+                    "(username VARCHAR(50) NOT NULL," +
+                    " authority VARCHAR(50) NOT NULL ," +
+                    " constraint fk_authorities_users foreign key(username) references users(username))";
             stmt.executeUpdate(sql);
 
             sql = "CREATE TABLE presistance" +
@@ -93,8 +101,12 @@ public class DB {
 
             System.out.println("initDB: Tables created successfully");
 
-            sql = "INSERT INTO users (id,username,password,description) " +
-                    "VALUES (1,'admin','admin','Administrator')";
+            sql = "INSERT INTO users (username,password,enable,description) " +
+                    "VALUES ('admin','password',1,'Administrator')";
+            stmt.executeUpdate(sql);
+
+            sql = "INSERT INTO authorities (username,authority) " +
+                    "VALUES ('admin','ROLE_ADMIN')";
             stmt.executeUpdate(sql);
 
             System.out.println("initDB: User created successfully");
@@ -106,14 +118,24 @@ public class DB {
         }
     }
 
-    //run all sql queries
+    /**
+     * Run SQL queries
+     * @param sql
+     * @return
+     * @throws SQLException
+     */
     public static ResultSet sqlQuery(String sql) throws SQLException {
         conDB();
         Statement sta = con.createStatement();
         return sta.executeQuery(sql);
     }
 
-    //INSERT INTO table (fields) VALUES (values)
+    /**
+     * INSERT INTO table (fields) VALUES (values)
+     * @param table
+     * @param fields
+     * @param values
+     */
     public static void insert(String table, String fields, String values) {
         Statement stmt = null;
         String query = "INSERT INTO " + table + " (" + fields + ") " +
@@ -128,7 +150,11 @@ public class DB {
         }
     }
 
-    //SELECT * FROM table
+    /**
+     * SELECT * FROM table
+     * @param table
+     * @return
+     */
     public static ResultSet selectAll(String table) {
         Statement stmt = null;
         String query = "SELECT * FROM " + table;
@@ -142,16 +168,19 @@ public class DB {
         return null;
     }
 
-    //SELECT * FROM table WHERE colum = value
+    /**
+     * SELECT * FROM tavle WHERE colum = value
+     * @param table
+     * @param colum
+     * @param value
+     * @return
+     */
     public static ResultSet select(String table, String colum, String value) {
         Statement stmt = null;
-        //ResultSet rs = null;
         conDB();
         try {
             stmt = con.createStatement();
-            //rs = stmt.executeQuery( "SELECT * FROM " + table + " where " + colum + "='" + value + "'");
             return stmt.executeQuery( "SELECT * FROM " + table + " where " + colum + "='" + value + "'");
-            //return rs;
         } catch ( Exception e ) {
             System.err.println( e.getClass().getName() + ": " + e.getMessage() );
         }
