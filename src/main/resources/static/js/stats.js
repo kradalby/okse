@@ -22,14 +22,20 @@
  * THE SOFTWARE.
  */
 
-body {
-    padding-top: 70px;
-}
+/**
+ * Created by Håkon Ødegård Løvdal (hakloev) on 02/03/15.
+ */
 
-.tab-content {
-    padding-top: 20px;
-}
+var Stats = (function($) {
 
-select[multiple] {
-    overflow-y: scroll;
-}
+    return {
+        error: function() {
+            console.log("error in ajax for Stats")
+        },
+        refresh: function(data) {
+            console.log(JSON.stringify(data))
+        }
+    }
+
+
+})(jQuery)
