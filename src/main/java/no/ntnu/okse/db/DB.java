@@ -73,7 +73,7 @@ public class DB {
             sql = "CREATE TABLE users" +
                     "(username VARCHAR(50) PRIMARY KEY NOT NULL," +
                     " password VARCHAR(50) NOT NULL ," +
-                    " enable INT NOT NULL ," +
+                    " enabled INT NOT NULL ," +
                     " description VARCHAR(50))";
             stmt.executeUpdate(sql);
 
@@ -101,7 +101,7 @@ public class DB {
 
             System.out.println("initDB: Tables created successfully");
 
-            sql = "INSERT INTO users (username,password,enable,description) " +
+            sql = "INSERT INTO users (username,password,enabled,description) " +
                     "VALUES ('admin','password',1,'Administrator')";
             stmt.executeUpdate(sql);
 
@@ -120,14 +120,15 @@ public class DB {
 
     /**
      * Run SQL queries
-     * @param sql
+     * @param query
      * @return
      * @throws SQLException
      */
-    public static ResultSet sqlQuery(String sql) throws SQLException {
+    public static ResultSet sqlQuery(String query) throws SQLException {
         conDB();
         Statement sta = con.createStatement();
-        return sta.executeQuery(sql);
+        System.out.println(query);
+        return sta.executeQuery(query);
     }
 
     /**
@@ -159,6 +160,7 @@ public class DB {
         Statement stmt = null;
         String query = "SELECT * FROM " + table;
         conDB();
+        System.out.println(query);
         try {
             stmt = con.createStatement();
             return stmt.executeQuery(query);
@@ -177,10 +179,12 @@ public class DB {
      */
     public static ResultSet select(String table, String colum, String value) {
         Statement stmt = null;
+        String query = "SELECT * FROM " + table + " where " + colum + "='" + value + "'";
         conDB();
+        System.out.println(query);
         try {
             stmt = con.createStatement();
-            return stmt.executeQuery( "SELECT * FROM " + table + " where " + colum + "='" + value + "'");
+            return stmt.executeQuery(query);
         } catch ( Exception e ) {
             System.err.println( e.getClass().getName() + ": " + e.getMessage() );
         }
