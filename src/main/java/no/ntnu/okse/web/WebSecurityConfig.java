@@ -41,10 +41,15 @@ import javax.sql.DataSource;
 @Configuration
 @EnableWebMvcSecurity
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
-    
+
     @Autowired
     DataSource dataSource;
 
+    /**
+     * Connects to the dataSource and validates a user log in
+     * @param auth
+     * @throws Exception
+     */
     @Autowired
     public void configAuthentication(AuthenticationManagerBuilder auth) throws Exception {
         auth.jdbcAuthentication().dataSource(dataSource)
@@ -54,6 +59,11 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                         "select username, authority from authorities where username=?");
     }
 
+    /**
+     * Defines rules and access for http-requests
+     * @param http
+     * @throws Exception
+     */
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
@@ -71,13 +81,4 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                     .and()
                 .csrf();
     }
-
-    /*
-    @Autowired
-    public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
-        auth
-                .inMemoryAuthentication()
-                    .withUser("admin").password("password").roles("USER");
-    }
-    */
 }

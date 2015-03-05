@@ -43,6 +43,11 @@ public class Application {
     public static CoreService cs;
     public static Server webserver;
 
+    /**
+     * Main method for the OKSE Message Broker
+     * Used to initate the complete application (CoreService and WebServer)
+     * @param args Command line arguments, most probably not used
+     */
     public static void main(String[] args) {
         webserver = new Server();
         cs = new CoreService();
