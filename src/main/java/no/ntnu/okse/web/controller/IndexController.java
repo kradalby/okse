@@ -31,6 +31,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Properties;
 import java.util.logging.Logger;
@@ -56,6 +58,13 @@ public class IndexController {
         model.addAttribute("projectName", appName);
         model.addAttribute("serverPort", port);
         model.addAttribute("environment", createEnvironmentList());
+
+        try {
+            model.addAttribute("serverAddress", InetAddress.getLocalHost().getHostAddress());
+        } catch (UnknownHostException e) {
+            model.addAttribute("serverAddress", "Unknown");
+        }
+
         Application.cs.getExecutor().execute(() -> {
             try {
                 Application.cs.getEventQueue().put(new PageLoadEvent("PageLoad", "CorrectDataObject", "String"));
