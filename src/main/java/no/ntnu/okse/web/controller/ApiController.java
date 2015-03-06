@@ -24,11 +24,7 @@
 
 package no.ntnu.okse.web.controller;
 
-import no.ntnu.okse.web.model.Topics;
-import org.eclipse.jetty.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
+import no.ntnu.okse.web.model.Topic;
 import org.springframework.web.bind.annotation.*;
 
 import java.lang.String;
@@ -47,32 +43,32 @@ public class ApiController {
     private final AtomicLong counter = new AtomicLong();
 
     @RequestMapping(value = "/api/topics", method = RequestMethod.GET)
-    public Topics topics(@RequestParam(value="name", defaultValue="World") String name) {
-        return new Topics(counter.incrementAndGet(),
-                String.format(template, name));
+    public Topic topics(@RequestParam(value="name", defaultValue="World") String name) {
+        return new Topic(counter.incrementAndGet(),
+                String.format(template, name), "Norsk", "128.0.0.0.0", "8080", "WS");
     }
 
     @RequestMapping(value = "/api/main", method = RequestMethod.GET)
-    public List<Topics> main() {
-        List<Topics> allTheShit = new ArrayList<>();
-        allTheShit.add(new Topics(235, "test topics"));
-        allTheShit.add(new Topics(299, "test topics #2"));
+    public List<Topic> main() {
+        List<Topic> allTheShit = new ArrayList<>();
+        allTheShit.add(new Topic(235, "test topics", "Norsk", "128.0.0.0.0", "8080", "WS"));
+        allTheShit.add(new Topic(299, "test topics #2", "Norsk", "128.0.0.0.0", "8080", "WS"));
         return allTheShit;
     }
 
     @RequestMapping(value = "/api/stats", method = RequestMethod.GET)
-    public List<Topics> stats() {
-        List<Topics> allTheShit = new ArrayList<>();
-        allTheShit.add(new Topics(235, "test topics"));
-        allTheShit.add(new Topics(299, "test topics #2"));
+    public List<Topic> stats() {
+        List<Topic> allTheShit = new ArrayList<>();
+        allTheShit.add(new Topic(235, "test topics", "Norsk", "128.0.0.0.0", "8080", "WS"));
+        allTheShit.add(new Topic(299, "test topics #2", "Norsk", "128.0.0.0.0", "8080", "WS"));
         return allTheShit;
     }
 
     @RequestMapping(value = "/api/config", method = RequestMethod.GET)
-    public List<Topics> config(){
-        List<Topics> allTheShit = new ArrayList<>();
-        allTheShit.add(new Topics(235, "test topics"));
-        allTheShit.add(new Topics(299, "test topics #2"));
+    public List<Topic> config(){
+        List<Topic> allTheShit = new ArrayList<>();
+        allTheShit.add(new Topic(235, "test topics", "Norsk", "128.0.0.0.0", "8080", "WS"));
+        allTheShit.add(new Topic(299, "test topics #2", "Norsk", "128.0.0.0.0", "8080", "WS"));
         return allTheShit;
     }
 }

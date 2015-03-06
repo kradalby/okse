@@ -27,15 +27,13 @@ package no.ntnu.okse.web.model;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import static org.testng.Assert.*;
-
-public class TopicsTest {
+public class TopicTest {
 
     @Test()
     public void testGetId() {
 
         long id = 1337;
-        Topics obj = new Topics(id, "skeet skeet");
+        Topic obj = new Topic(id, "skeet skeet");
 
         Assert.assertEquals(id, obj.getId());
 
