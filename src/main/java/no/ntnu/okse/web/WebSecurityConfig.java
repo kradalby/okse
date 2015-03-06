@@ -31,6 +31,8 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.annotation.web.servlet.configuration.EnableWebMvcSecurity;
 
+import javax.sql.DataSource;
+
 /**
  * Created by Håkon Ødegård Løvdal (hakloev) on 26/02/15.
  * <p/>
@@ -40,6 +42,28 @@ import org.springframework.security.config.annotation.web.servlet.configuration.
 @EnableWebMvcSecurity
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
+    @Autowired
+    DataSource dataSource;
+
+    /**
+     * Connects to the dataSource and validates a user log in
+     * @param auth
+     * @throws Exception
+     */
+    @Autowired
+    public void configAuthentication(AuthenticationManagerBuilder auth) throws Exception {
+        auth.jdbcAuthentication().dataSource(dataSource)
+                .usersByUsernameQuery(
+                        "select username, password, enabled from users where username=?")
+                .authoritiesByUsernameQuery(
+                        "select username, authority from authorities where username=?");
+    }
+
+    /**
+     * Defines rules and access for http-requests
+     * @param http
+     * @throws Exception
+     */
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
@@ -49,17 +73,12 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                     .and()
                 .formLogin()
                     .loginProcessingUrl("/login")
-                    .loginPage("/")
+                    .loginPage("/").usernameParameter("username").passwordParameter("password")
                     .permitAll()
                     .and()
                 .logout()
-                    .permitAll();
-    }
-
-    @Autowired
-    public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
-        auth
-                .inMemoryAuthentication()
-                    .withUser("admin").password("password").roles("USER");
+                    .permitAll()
+                    .and()
+                .csrf();
     }
 }

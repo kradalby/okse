@@ -22,14 +22,35 @@
  * THE SOFTWARE.
  */
 
-body {
-    padding-top: 70px;
-}
+/**
+ * Created by Fredrik on 27/02/15.
+ */
 
-.tab-content {
-    padding-top: 20px;
-}
+var Topics = (function($) {
 
-select[multiple] {
-    overflow-y: scroll;
-}
+
+
+    return {
+        error: function() {
+          console.log("error in ajax for topics")
+        },
+        refresh: function(data) {
+            //var listItems = $("#data li");
+
+
+            $("#data li").each(function(index) {
+                $(this).replaceWith('<li class="list-group-item">' + 'ID: ' + data.id + ' Content: ' + data.content + '</li>');
+            });
+            $("#data2 li").each(function(index) {
+                $(this).replaceWith('<li class="list-group-item">' + "Testdata for table 2" + '</li>');
+            });
+
+
+           //$('#data').append(JSON.stringify(data));
+           console.log(JSON.stringify(data))
+
+        }
+    }
+
+})(jQuery);
+

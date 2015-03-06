@@ -22,14 +22,21 @@
  * THE SOFTWARE.
  */
 
-body {
-    padding-top: 70px;
-}
+/**
+ * Created by Fredrik Tørnvall (freboto) and Håkon Ødegård Løvdal (hakloev) on 02/03/15.
+ */
 
-.tab-content {
-    padding-top: 20px;
-}
 
-select[multiple] {
-    overflow-y: scroll;
-}
+var Config = (function($) {
+
+    return {
+        error: function() {
+            console.log("error in ajax for config")
+        },
+        refresh: function(data) {
+            console.log(JSON.stringify(data))
+        }
+    }
+
+
+})(jQuery)
