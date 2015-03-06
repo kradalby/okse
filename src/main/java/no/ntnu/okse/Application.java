@@ -46,9 +46,9 @@ public class Application {
     public static Server webserver;
 
     /**
-     * Main application startup
-     * <p>
-     * @param args: Command line inupt argument array
+     * Main method for the OKSE Message Broker
+     * Used to initate the complete application (CoreService and WebServer)
+     * @param args Command line arguments, most probably not used
      */
     public static void main(String[] args) {
         webserver = new Server();

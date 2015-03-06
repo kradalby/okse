@@ -22,20 +22,54 @@
  * THE SOFTWARE.
  */
 
-body {
-    padding-top: 70px;
-}
+package no.ntnu.okse.web.model;
 
-.tab-content {
-    padding-top: 20px;
-}
+/**
+ * Created by Fredrik on 06/03/15.
+ */
+public class Stats {
+    private final double ramUse;
+    private final double cpuUse;
+    private final long mbSent;
+    private final long mbReceived;
+    private final long messagesSent;
+    private final long messagesReceived;
 
-.panel-heading a:after {
-    font-family:'Glyphicons Halflings';
-    content:"\e114";
-    float: right;
-    color: grey;
-}
-.panel-heading a.collapsed:after {
-    content:"\e080";
+
+    public Stats(double ramUse, double cpuUse, long mbSent, long mbReceived, long messagesSent, long messagesReceived){
+        this.ramUse = ramUse;
+        this.cpuUse = cpuUse;
+        this.mbSent = mbSent;
+        this.mbReceived = mbReceived;
+        this.messagesSent = messagesSent;
+        this.messagesReceived = messagesReceived;
+    }
+
+
+    public double getRamUse() {
+        return ramUse;
+    }
+
+    public double getCpuUse() {
+        return cpuUse;
+    }
+
+    public long getMbSent() {
+        return mbSent;
+    }
+
+    public long getMbReceived() {
+        return mbReceived;
+    }
+
+    public long getMessagesSent() {
+        return messagesSent;
+    }
+
+    public long getMessagesReceived() {
+        return messagesReceived;
+    }
+
+
+
 }

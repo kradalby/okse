@@ -29,6 +29,166 @@ package no.ntnu.okse.db;
  * <p>
  * okse is licenced under the MIT licence.
  */
-public class DB {
 
+import java.sql.*;
+
+public class DB {
+    private static Connection con = null;
+
+    /**
+     * Connecting to database okse.db
+     */
+    public static void conDB(){
+        try {
+            Class.forName("org.sqlite.JDBC");
+            con = DriverManager.getConnection("jdbc:sqlite:okse.db");
+            System.out.println("conDB: Opened database successfully");
+        } catch (Exception e) {
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+        }
+    }
+
+    /**
+     * Closeing database connection
+     */
+    public static void closeDB(){
+        try {
+            con.close();
+            System.out.println("closeDB: Closed database successfully");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Initiate database, creates tables and default admin user
+     */
+    public static void initDB() {
+        Statement stmt = null;
+        String sql = null;
+        conDB();
+        try {
+            stmt = con.createStatement();
+
+            sql = "CREATE TABLE users" +
+                    "(username VARCHAR(50) PRIMARY KEY NOT NULL," +
+                    " password VARCHAR(50) NOT NULL ," +
+                    " enabled INT NOT NULL ," +
+                    " description VARCHAR(50))";
+            stmt.executeUpdate(sql);
+
+            sql = "CREATE TABLE authorities" +
+                    "(username VARCHAR(50) NOT NULL," +
+                    " authority VARCHAR(50) NOT NULL ," +
+                    " constraint fk_authorities_users foreign key(username) references users(username))";
+            stmt.executeUpdate(sql);
+
+            sql = "CREATE TABLE presistance" +
+                    "(topic CHAR(100), " +
+                    " message CHAR(200) ," +
+                    " protocol CHAR(50))";
+            stmt.executeUpdate(sql);
+
+            sql = "CREATE TABLE presets" +
+                    "(topic CHAR(100), " +
+                    " dialect CHAR(50))";
+            stmt.executeUpdate(sql);
+
+            sql = "CREATE TABLE stats" +
+                    "(stat CHAR(100), " +
+                    " counter INT)";
+            stmt.executeUpdate(sql);
+
+            System.out.println("initDB: Tables created successfully");
+
+            sql = "INSERT INTO users (username,password,enabled,description) " +
+                    "VALUES ('admin','password',1,'Administrator')";
+            stmt.executeUpdate(sql);
+
+            sql = "INSERT INTO authorities (username,authority) " +
+                    "VALUES ('admin','ROLE_ADMIN')";
+            stmt.executeUpdate(sql);
+
+            System.out.println("initDB: User created successfully");
+
+            stmt.close();
+            con.close();
+        } catch (Exception e) {
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+        }
+    }
+
+    /**
+     * Run SQL queries
+     * @param query
+     * @return
+     * @throws SQLException
+     */
+    public static ResultSet sqlQuery(String query) throws SQLException {
+        conDB();
+        Statement sta = con.createStatement();
+        System.out.println(query);
+        return sta.executeQuery(query);
+    }
+
+    /**
+     * INSERT INTO table (fields) VALUES (values)
+     * @param table
+     * @param fields
+     * @param values
+     */
+    public static void insert(String table, String fields, String values) {
+        Statement stmt = null;
+        String query = "INSERT INTO " + table + " (" + fields + ") " +
+                "VALUES (" + values + ")";
+        conDB();
+        System.out.println(query);
+        try {
+            stmt = con.createStatement();
+            stmt.executeUpdate(query);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * SELECT * FROM table
+     * @param table
+     * @return
+     */
+    public static ResultSet selectAll(String table) {
+        Statement stmt = null;
+        String query = "SELECT * FROM " + table;
+        conDB();
+        System.out.println(query);
+        try {
+            stmt = con.createStatement();
+            return stmt.executeQuery(query);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
+     * SELECT * FROM tavle WHERE colum = value
+     * @param table
+     * @param colum
+     * @param value
+     * @return
+     */
+    public static ResultSet select(String table, String colum, String value) {
+        Statement stmt = null;
+        String query = "SELECT * FROM " + table + " where " + colum + "='" + value + "'";
+        conDB();
+        System.out.println(query);
+        try {
+            stmt = con.createStatement();
+            return stmt.executeQuery(query);
+        } catch ( Exception e ) {
+            System.err.println( e.getClass().getName() + ": " + e.getMessage() );
+        }
+        System.out.println("select: Operation done successfully");
+        return null;
+    }
 }

@@ -22,31 +22,40 @@
  * THE SOFTWARE.
  */
 
-package no.ntnu.okse.web.controller;
-
-import no.ntnu.okse.web.model.Topics;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.lang.String;
-import java.util.concurrent.atomic.AtomicLong;
-
 /**
- * Created by Håkon Ødegård Løvdal (hakloev) on 25/02/15.
- * <p>
- * okse is licenced under the MIT licence.
+ * Created by Fredrik on 27/02/15.
  */
-@RestController
-public class TopicsController {
-    private static final String template = "Hello, %s!";
-    private final AtomicLong counter = new AtomicLong();
 
-    @RequestMapping("/topics")
-    public Topics topics(@RequestParam(value="name", defaultValue="World") String name) {
-        return new Topics(counter.incrementAndGet(),
-                String.format(template, name));
+var Topics = (function($) {
+
+
+    return {
+        error: function() {
+          console.log("error in ajax for topics")
+        },
+        refresh: function(data) {
+            //var listItems = $("#data li");
+
+
+            $("#data li").each(function(index) {
+                $(this).replaceWith('<li class="list-group-item">' + 'ID: ' + data.id + ' Content: ' + data.content + '</li>');
+            });
+            $("#data2 li").each(function(index) {
+                $(this).replaceWith('<li class="list-group-item">' + "Testdata for table 2" + '</li>');
+            });
+
+
+           //$('#data').append(JSON.stringify(data));
+           console.log(JSON.stringify(data))
+
+        }
     }
-}
+
+})(jQuery);
+
+$(document).on('load', function() {
+    $('panel-heading').on('click', function() {
+        $()
+    })
+})
+

@@ -22,20 +22,32 @@
  * THE SOFTWARE.
  */
 
-body {
-    padding-top: 70px;
-}
+package no.ntnu.okse.web;
 
-.tab-content {
-    padding-top: 20px;
-}
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
-.panel-heading a:after {
-    font-family:'Glyphicons Halflings';
-    content:"\e114";
-    float: right;
-    color: grey;
-}
-.panel-heading a.collapsed:after {
-    content:"\e080";
+import javax.sql.DataSource;
+
+/**
+ * Created by Håkon Ødegård Løvdal (hakloev) on 05/03/15.
+ * <p/>
+ * okse is licenced under the MIT licence.
+ */
+@Configuration
+public class DatabaseConfig {
+
+    /**
+     * Defines a Bean for Spring. Creates an connection driver to the database
+     * @return the database driver
+     */
+    @Bean(name = "dataSource")
+    public DataSource dataSource() {
+        DriverManagerDataSource dataSource = new DriverManagerDataSource();
+        dataSource.setDriverClassName("org.sqlite.JDBC");
+        dataSource.setUrl("jdbc:sqlite:okse.db");
+        return dataSource;
+    }
+
 }
