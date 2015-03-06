@@ -33,29 +33,15 @@ var Topics = (function($) {
         error: function() {
           console.log("error in ajax for topics")
         },
-        refresh: function(data) {
-            //var listItems = $("#data li");
-
-
-            $("#data li").each(function(index) {
-                $(this).replaceWith('<li class="list-group-item">' + 'ID: ' + data.id + ' Content: ' + data.content + '</li>');
+        refresh: function(response) {
+            console.log(response)
+            var trHTML = '';
+            $.each(response.subscribers, function (i, item) {
+                trHTML += '<tr><td>' + item.ip + '</td><td>' + item.port + '</td><td>' + item.protocol + '</td></tr>';
             });
-            $("#data2 li").each(function(index) {
-                $(this).replaceWith('<li class="list-group-item">' + "Testdata for table 2" + '</li>');
-            });
-
-
-           //$('#data').append(JSON.stringify(data));
-           console.log(JSON.stringify(data))
-
+            $('#topics-column').append(trHTML);
         }
     }
 
 })(jQuery);
-
-$(document).on('load', function() {
-    $('panel-heading').on('click', function() {
-        $()
-    })
-})
 
