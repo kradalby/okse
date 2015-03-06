@@ -12,13 +12,23 @@ package no.ntnu.okse.web.model;
  * Created by Fredrik on 26/02/15.
  */
 
-public class Topics {
+public class Topic {
     private final long id;
     private final String content;
+    private final String dialect;
+    private final String subIp;
+    private final String subPort;
+    private final String subProtocol;
 
-    public Topics(long id, String content) {
+
+    public Topic(long id, String content, String dialect, String subIp, String subPort, String subProtocol) {
         this.id = id;
         this.content = content;
+        this.dialect = dialect;
+        this.subIp = subIp;
+        this.subPort = subPort;
+        this.subProtocol = subProtocol;
+
     }
 
     public long getId() {
@@ -28,6 +38,16 @@ public class Topics {
     public String getContent() {
         return content;
     }
+
+    public String getDialect(){ return dialect; }
+
+    public String getSubProtocol() { return subProtocol; }
+
+    public String getSubIp() { return subIp; }
+
+    public String getSubPort() { return subPort; }
+
+
 }
 
 

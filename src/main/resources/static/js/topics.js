@@ -29,7 +29,6 @@
 var Topics = (function($) {
 
 
-
     return {
         error: function() {
           console.log("error in ajax for topics")
@@ -53,4 +52,10 @@ var Topics = (function($) {
     }
 
 })(jQuery);
+
+$(document).on('load', function() {
+    $('panel-heading').on('click', function() {
+        $()
+    })
+})
 

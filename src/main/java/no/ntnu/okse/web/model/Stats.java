@@ -22,31 +22,54 @@
  * THE SOFTWARE.
  */
 
-package no.ntnu.okse.web.controller;
-
-import no.ntnu.okse.web.model.Topics;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.lang.String;
-import java.util.concurrent.atomic.AtomicLong;
+package no.ntnu.okse.web.model;
 
 /**
- * Created by Håkon Ødegård Løvdal (hakloev) on 25/02/15.
- * <p>
- * okse is licenced under the MIT licence.
+ * Created by Fredrik on 06/03/15.
  */
-@RestController
-public class TopicsController {
-    private static final String template = "Hello, %s!";
-    private final AtomicLong counter = new AtomicLong();
+public class Stats {
+    private final double ramUse;
+    private final double cpuUse;
+    private final long mbSent;
+    private final long mbReceived;
+    private final long messagesSent;
+    private final long messagesReceived;
 
-    @RequestMapping("/topics")
-    public Topics topics(@RequestParam(value="name", defaultValue="World") String name) {
-        return new Topics(counter.incrementAndGet(),
-                String.format(template, name));
+
+    public Stats(double ramUse, double cpuUse, long mbSent, long mbReceived, long messagesSent, long messagesReceived){
+        this.ramUse = ramUse;
+        this.cpuUse = cpuUse;
+        this.mbSent = mbSent;
+        this.mbReceived = mbReceived;
+        this.messagesSent = messagesSent;
+        this.messagesReceived = messagesReceived;
     }
+
+
+    public double getRamUse() {
+        return ramUse;
+    }
+
+    public double getCpuUse() {
+        return cpuUse;
+    }
+
+    public long getMbSent() {
+        return mbSent;
+    }
+
+    public long getMbReceived() {
+        return mbReceived;
+    }
+
+    public long getMessagesSent() {
+        return messagesSent;
+    }
+
+    public long getMessagesReceived() {
+        return messagesReceived;
+    }
+
+
+
 }
