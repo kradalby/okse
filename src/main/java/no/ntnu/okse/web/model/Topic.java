@@ -8,26 +8,22 @@
 
 package no.ntnu.okse.web.model;
 
+import java.util.ArrayList;
+
 /**
  * Created by Fredrik on 26/02/15.
  */
 
 public class Topic {
     private final long id;
-    private final String content;
-    private final String dialect;
-    private final String subIp;
-    private final String subPort;
-    private final String subProtocol;
+    private final String topicName;
+    private final ArrayList<Subscriber> subscribers;
 
 
-    public Topic(long id, String content, String dialect, String subIp, String subPort, String subProtocol) {
+    public Topic(long id, String topicName,  ArrayList subscribers) {
         this.id = id;
-        this.content = content;
-        this.dialect = dialect;
-        this.subIp = subIp;
-        this.subPort = subPort;
-        this.subProtocol = subProtocol;
+        this.topicName = topicName;
+        this.subscribers = subscribers;
 
     }
 
@@ -35,18 +31,11 @@ public class Topic {
         return id;
     }
 
-    public String getContent() {
-        return content;
+    public String getTopicName() {
+        return topicName;
     }
 
-    public String getDialect(){ return dialect; }
-
-    public String getSubProtocol() { return subProtocol; }
-
-    public String getSubIp() { return subIp; }
-
-    public String getSubPort() { return subPort; }
-
+    public ArrayList<Subscriber> getSubscribers() { return subscribers; }
 
 }
 
