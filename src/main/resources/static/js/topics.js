@@ -28,18 +28,43 @@
 
 var Topics = (function($) {
 
+    /*
+        Iterates all the subscribers of this topic and overwrites the table with the new information
+     */
+    var updatePanel = function(subscribers, panel) {
+        var trHTML = '';
+        $.each(subscribers, function (i, subscriber) {
+            trHTML += '<tr><td>' + subscriber.protocol + '</td><td>' + subscriber.ip + '</td><td>' + subscriber.port + '</td></tr>';
+        });
+        $(panel).html(trHTML);
+    }
+
+
+    /*
+        Creates a panel and table and updates it with the new information
+     */
+    var createPanel = function(data) {
+        var trHTML = '';
+        $.each(response.subscribers, function (i, subscriber) {
+            trHTML +=
+                '<tr><td>' + subscriber.protocol + '</td><td>' + subscriber.ip + '</td><td>' + subscriber.port + '</td></tr>';
+        });
+        $('#topics-column').append(trHTML);
+    }
 
     return {
+        // Ajax error function, should preferably update the site with information about this.
         error: function() {
-          console.log("error in ajax for topics")
+          console.log("Error in Ajax for Topics")
         },
+        // Ajax success function (updates all the information
         refresh: function(response) {
-            console.log(response)
-            var trHTML = '';
-            $.each(response.subscribers, function (i, item) {
-                trHTML += '<tr><td>' + item.ip + '</td><td>' + item.port + '</td><td>' + item.protocol + '</td></tr>';
-            });
-            $('#topics-column').append(trHTML);
+            var topicName = response.topicName.toLowerCase()
+            if ($('#' + topicName).length === 0) { // If the topic doesn't already exist
+                createPanel(response)
+            } else { // If the topic exist
+                updatePanel(response.subscribers, $('#' + topicName).find('tbody'))
+            }
         }
     }
 
