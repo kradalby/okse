@@ -29,27 +29,52 @@
 var Topics = (function($) {
 
     /*
-        Iterates all the subscribers of this topic and overwrites the table with the new information
+        Creates, fills and returns a tr element
      */
-    var updatePanel = function(subscribers, panel) {
+    var fillTable = function(subscribers) {
         var trHTML = '';
         $.each(subscribers, function (i, subscriber) {
             trHTML += '<tr><td>' + subscriber.protocol + '</td><td>' + subscriber.ip + '</td><td>' + subscriber.port + '</td></tr>';
         });
-        $(panel).html(trHTML);
+        return trHTML
+    }
+    /*
+        Iterates all the subscribers of this topic and overwrites the table with the new information
+     */
+    var updatePanel = function(subscribers, panel) {
+        $(panel).html(fillTable(subscribers));
     }
 
+    /*
+        Sets up an basic template for a panel
+     */
+    var createPanelAndTableTemplate = function(topicName) {
+        var panel = $('<div class="panel panel-default">' +
+            '<div class="panel-heading">' +
+                '<h3 class="panel-title">' +
+                '<a data-toggle="collapse" data-target="#' + topicName.toLowerCase() + '" href="#' + topicName.toLowerCase() + '" class="collapsed">' + topicName +
+                '</a></h3></div>' +
+            '<div id="' + topicName.toLowerCase() +'" class="panel-collapse collapse">' +
+                '<div class="table-reponsive"><table class="table table-striped">' +
+                '<thead><tr><th>Protocol</th><th>IP</th><th>Port</th></tr></thead><tbody></tbody>' +
+                '</table></div></div></div>')
+        return panel
+    }
 
     /*
         Creates a panel and table and updates it with the new information
      */
     var createPanel = function(data) {
+        var panel = createPanelAndTableTemplate(data.topicName)
+        $(panel).find('tbody').html(fillTable(data.subscribers))
+        /*
         var trHTML = '';
         $.each(response.subscribers, function (i, subscriber) {
             trHTML +=
                 '<tr><td>' + subscriber.protocol + '</td><td>' + subscriber.ip + '</td><td>' + subscriber.port + '</td></tr>';
         });
-        $('#topics-column').append(trHTML);
+        */
+        $('#topics-column').append(panel);
     }
 
     return {

@@ -42,17 +42,26 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 @RestController
 public class ApiController {
-    private static final String template = "Hello, %s!";
-    private final AtomicLong counter = new AtomicLong();
+    private int counter = 0;
 
     @RequestMapping(value = "/api/topics", method = RequestMethod.GET)
     public Topic topics(@RequestParam(value="name", defaultValue="World") String name) {
-
-        return new Topic(1233L, "myTopic", new ArrayList<Subscriber>(Arrays.asList(
-                new Subscriber("128.0.0.1", "8080", "WS", new HashMap<String, String>()),
-                new Subscriber("78.91.14.24", "234", "stomp", new HashMap<String, String>()),
-                new Subscriber("localhost", "235", "amqp", new HashMap<String, String>())
-        )));
+        if (counter % 2 == 0) {
+            counter++;
+            return new Topic(1233L, "myTopic", new ArrayList<Subscriber>(Arrays.asList(
+                    new Subscriber("127.0.1.1", "765", "mqtt", new HashMap<String, String>()),
+                    new Subscriber("0.0.0.0", "60618", "WSN", new HashMap<String, String>()),
+                    new Subscriber("localhost", "235", "amqp", new HashMap<String, String>()),
+                    new Subscriber("localhost", "236", "amqp", new HashMap<String, String>())
+            )));
+        } else {
+            counter++;
+            return new Topic(1233L, "testTopic", new ArrayList<Subscriber>(Arrays.asList(
+                    new Subscriber("128.0.0.1", "8080", "WSN", new HashMap<String, String>()),
+                    new Subscriber("78.91.14.24", "234", "dds", new HashMap<String, String>()),
+                    new Subscriber("localhost", "235", "amqp", new HashMap<String, String>())
+            )));
+        }
     }
 
     @RequestMapping(value = "/api/main", method = RequestMethod.GET)
