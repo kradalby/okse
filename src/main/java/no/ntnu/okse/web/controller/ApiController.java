@@ -54,6 +54,14 @@ public class ApiController {
                     new Subscriber("localhost", "235", "amqp", new HashMap<String, String>()),
                     new Subscriber("localhost", "236", "amqp", new HashMap<String, String>())
             )));
+        } else if (counter % 3 == 0) {
+            counter++;
+            return new Topic(1233L, "myTopic", new ArrayList<Subscriber>(Arrays.asList(
+                    new Subscriber("127.0.1.1", "765", "mqtt", new HashMap<String, String>()),
+                    new Subscriber("0.0.0.0", "60618", "WSN", new HashMap<String, String>()),
+                    new Subscriber("localhost", "235", "amqp", new HashMap<String, String>()),
+                    new Subscriber("localhost", "555", "WSN", new HashMap<String, String>())
+            )));
         } else {
             counter++;
             return new Topic(1233L, "testTopic", new ArrayList<Subscriber>(Arrays.asList(

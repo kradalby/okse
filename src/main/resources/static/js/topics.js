@@ -49,10 +49,10 @@ var Topics = (function($) {
         Sets up an basic template for a panel
      */
     var createPanelAndTableTemplate = function(topicName) {
-        var panel = $('<div class="panel panel-default">' +
+        var panel = $('<div class="panel panel-primary">' +
             '<div class="panel-heading">' +
-                '<h3 class="panel-title">' +
-                '<a data-toggle="collapse" data-target="#' + topicName.toLowerCase() + '" href="#' + topicName.toLowerCase() + '" class="collapsed">' + topicName +
+                '<h3 class="panel-title collapsed" data-toggle="collapse" data-target="#' + topicName.toLowerCase() + '">' +
+                '<a href="#' + topicName.toLowerCase() + '">' + topicName +
                 '</a></h3></div>' +
             '<div id="' + topicName.toLowerCase() +'" class="panel-collapse collapse">' +
                 '<div class="table-reponsive"><table class="table table-striped">' +
