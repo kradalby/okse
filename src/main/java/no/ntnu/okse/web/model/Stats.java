@@ -24,6 +24,8 @@
 
 package no.ntnu.okse.web.model;
 
+import org.hyperic.sigar.*;
+
 /**
  * Created by Fredrik on 06/03/15.
  */
@@ -43,6 +45,10 @@ public class Stats {
         this.mbReceived = mbReceived;
         this.messagesSent = messagesSent;
         this.messagesReceived = messagesReceived;
+
+        Sigar sigar = new Sigar();
+        //final Mem mem = sigar.getMem();
+
     }
 
 

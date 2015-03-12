@@ -24,11 +24,14 @@
 
 package no.ntnu.okse.web.controller;
 
+import no.ntnu.okse.web.model.Subscriber;
 import no.ntnu.okse.web.model.Topic;
 import org.springframework.web.bind.annotation.*;
 
 import java.lang.String;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -39,36 +42,51 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 @RestController
 public class ApiController {
-    private static final String template = "Hello, %s!";
-    private final AtomicLong counter = new AtomicLong();
+    private int counter = 0;
 
     @RequestMapping(value = "/api/topics", method = RequestMethod.GET)
     public Topic topics(@RequestParam(value="name", defaultValue="World") String name) {
-        return new Topic(counter.incrementAndGet(),
-                String.format(template, name), "Norsk", "128.0.0.0.0", "8080", "WS");
+        if (counter % 5 == 0) {
+            counter++;
+            return new Topic(1233L, "myTopic", new ArrayList<Subscriber>(Arrays.asList(
+                    new Subscriber("127.0.1.1", "765", "mqtt", new HashMap<String, String>()),
+                    new Subscriber("0.0.0.0", "60618", "WSN", new HashMap<String, String>()),
+                    new Subscriber("localhost", "235", "amqp", new HashMap<String, String>()),
+                    new Subscriber("127.0.0.1", "324", "ZeroMQ", new HashMap<String, String>())
+            )));
+        } else if (counter % 10 == 0) {
+            counter++;
+            return new Topic(1233L, "myTopic", new ArrayList<Subscriber>(Arrays.asList(
+                    new Subscriber("127.0.1.1", "765", "mqtt", new HashMap<String, String>()),
+                    new Subscriber("0.0.0.0", "60618", "WSN", new HashMap<String, String>()),
+                    new Subscriber("78.91.14.23", "435", "DDS", new HashMap<String, String>()),
+                    new Subscriber("localhost", "555", "WSN", new HashMap<String, String>())
+            )));
+        } else {
+            counter++;
+            return new Topic(1233L, "testTopic", new ArrayList<Subscriber>(Arrays.asList(
+                    new Subscriber("128.0.0.1", "8080", "WSN", new HashMap<String, String>()),
+                    new Subscriber("78.91.14.24", "234", "DDS", new HashMap<String, String>()),
+                    new Subscriber("192.168.1.1", "58080", "ZeroMQ", new HashMap<String, String>())
+            )));
+        }
     }
 
     @RequestMapping(value = "/api/main", method = RequestMethod.GET)
     public List<Topic> main() {
         List<Topic> allTheShit = new ArrayList<>();
-        allTheShit.add(new Topic(235, "test topics", "Norsk", "128.0.0.0.0", "8080", "WS"));
-        allTheShit.add(new Topic(299, "test topics #2", "Norsk", "128.0.0.0.0", "8080", "WS"));
         return allTheShit;
     }
 
     @RequestMapping(value = "/api/stats", method = RequestMethod.GET)
     public List<Topic> stats() {
         List<Topic> allTheShit = new ArrayList<>();
-        allTheShit.add(new Topic(235, "test topics", "Norsk", "128.0.0.0.0", "8080", "WS"));
-        allTheShit.add(new Topic(299, "test topics #2", "Norsk", "128.0.0.0.0", "8080", "WS"));
         return allTheShit;
     }
 
     @RequestMapping(value = "/api/config", method = RequestMethod.GET)
     public List<Topic> config(){
         List<Topic> allTheShit = new ArrayList<>();
-        allTheShit.add(new Topic(235, "test topics", "Norsk", "128.0.0.0.0", "8080", "WS"));
-        allTheShit.add(new Topic(299, "test topics #2", "Norsk", "128.0.0.0.0", "8080", "WS"));
         return allTheShit;
     }
 }
