@@ -25,8 +25,11 @@
 package no.ntnu.okse;
 
 import no.ntnu.okse.core.CoreService;
+import no.ntnu.okse.db.DB;
 import no.ntnu.okse.web.Server;
+import sun.rmi.runtime.Log;
 
+import java.io.File;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -40,6 +43,7 @@ import java.util.logging.Logger;
  */
 public class Application {
 
+    private static Logger log;
     public static CoreService cs;
     public static Server webserver;
 
@@ -49,9 +53,21 @@ public class Application {
      * @param args Command line arguments, most probably not used
      */
     public static void main(String[] args) {
+        log = Logger.getLogger(Application.class.getName());
+
         webserver = new Server();
         cs = new CoreService();
         webserver.run();
         cs.start();
+
+        File dbFile = new File("okse.db");
+
+        if (!dbFile.exists()) {
+            DB.initDB();
+            log.info("okse.db initiated");
+        } else {
+            log.info("okse.db exists");
+        }
+
     }
 }
