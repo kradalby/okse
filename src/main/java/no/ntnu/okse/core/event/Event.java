@@ -22,52 +22,53 @@
  * THE SOFTWARE.
  */
 
-package no.ntnu.okse;
-
-import no.ntnu.okse.core.CoreService;
-import no.ntnu.okse.db.DB;
-import no.ntnu.okse.web.Server;
-import sun.rmi.runtime.Log;
-
-import java.io.File;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.logging.Handler;
-import java.util.logging.Logger;
+package no.ntnu.okse.core.event;
 
 /**
- * Created by Håkon Ødegård Løvdal (hakloev) on 25/02/15.
+ * Created by Aleksander Skraastad (myth) on 3/3/15.
  * <p>
  * okse is licenced under the MIT licence.
  */
-public class Application {
+public abstract class Event {
 
-    private static Logger log;
-    public static CoreService cs;
-    public static Server webserver;
+    private String operation;
+    protected Object data;
+    private String dataType;
 
     /**
-     * Main method for the OKSE Message Broker
-     * Used to initate the complete application (CoreService and WebServer)
-     * @param args Command line arguments, most probably not used
+     * Constructs an Event containing an operation, some data and a dataType.
+     * <p/>
+     * @param operation: A string representing the operation to be performed.
+     * @param data: An object containing the data payload.
+     * @param dataType: A string representing the type of data.
      */
-    public static void main(String[] args) {
-        log = Logger.getLogger(Application.class.getName());
+    public Event(String operation, Object data, String dataType) {
+        this.operation = operation;
+        this.data = data;
+        this.dataType = dataType;
+    }
 
-        webserver = new Server();
-        cs = new CoreService();
-        webserver.run();
-        cs.start();
+    /**
+     * What operation is to be performed from this event.
+     * <p/>
+     * @return: A string representing the operation to be performed.
+     */
+    public String getOperation() {
+        return operation;
+    }
 
-        File dbFile = new File("okse.db");
+    /**
+     * An abstract method to retrieve the data payload.
+     * <p/>
+     * @return: An object containing the data payload.
+     */
+    public abstract Object getData();
 
-        if (!dbFile.exists()) {
-            DB.initDB();
-            log.info("okse.db initiated");
-        } else {
-            log.info("okse.db exists");
-        }
-
+    /**
+     * What data type is the data object
+     * @return: A string representing the class instance of the data object
+     */
+    public String getDataType() {
+        return dataType;
     }
 }

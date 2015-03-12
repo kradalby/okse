@@ -44,7 +44,7 @@
     <![endif]-->
 </head>
 <body>
-    <nav th:replace="fragments/header :: header">
+    <nav layout:replace="fragments/header :: header">
         Fake header, nothing fun to see in this header! The real header is in fragments/header.html
     </nav>
     <div class="container">
@@ -66,5 +66,8 @@
     <!-- Include all compiled plugins (below), or include individual files as needed -->
     <!-- Latest compiled and minified JavaScript -->
     <script th:src="@{/js/bootstrap.min.js}" src="/js/bootstrap.min.js"></script>
+    <div layout:fragment="scripts">
+        Empty shit, for scripts
+    </div>
 </body>
 </html>

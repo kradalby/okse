@@ -22,24 +22,20 @@
  * THE SOFTWARE.
  */
 
-body {
-    padding-top: 70px;
-}
+package no.ntnu.okse.connection;
 
-.tab-content {
-    padding-top: 20px;
-}
+import no.ntnu.okse.protocol.Protocol;
 
-.panel-heading h3 {
-    pointer:cursor;
-}
+import java.util.ArrayList;
 
-.panel-heading h3:after {
-    font-family:'Glyphicons Halflings';
-    content:"\e114";
-    float: right;
-    color: white;
-}
-.panel-heading h3.collapsed:after {
-    content:"\e080";
+/**
+ * Created by Aleksander Skraastad (myth) on 3/2/15.
+ * <p>
+ * okse is licenced under the MIT licence.
+ */
+public interface Connector {
+    public String getBoundAddress();
+    public Integer getPort();
+    public Protocol getProtocolType();
+    public ArrayList<Client> getClients();
 }

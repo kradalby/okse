@@ -35,6 +35,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class Server {
 
+    /**
+     * Initiates the Spring web server
+     */
     public void run() {
         SpringApplication.run(Server.class);
     }

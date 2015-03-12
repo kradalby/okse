@@ -22,24 +22,30 @@
  * THE SOFTWARE.
  */
 
-body {
-    padding-top: 70px;
-}
+package no.ntnu.okse.protocol.dto;
 
-.tab-content {
-    padding-top: 20px;
-}
+import java.util.HashMap;
 
-.panel-heading h3 {
-    pointer:cursor;
-}
+/**
+ * Created by Aleksander Skraastad (myth) on 3/2/15.
+ * <p>
+ * okse is licenced under the MIT licence.
+ */
+public abstract class AbstractDTO {
 
-.panel-heading h3:after {
-    font-family:'Glyphicons Halflings';
-    content:"\e114";
-    float: right;
-    color: white;
-}
-.panel-heading h3.collapsed:after {
-    content:"\e080";
+    public Integer maxMessageLength;
+    public Integer minMessageLength;
+    public String pathSeparator;
+    public String queuePrefix;
+    public String protocolName;
+    public HashMap<String, String> flags;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+
+        return true;
+    }
 }

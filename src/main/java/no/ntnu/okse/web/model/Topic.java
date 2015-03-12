@@ -8,26 +8,35 @@
 
 package no.ntnu.okse.web.model;
 
+import java.util.ArrayList;
+
 /**
  * Created by Fredrik on 26/02/15.
  */
 
-public class Topics {
+public class Topic {
     private final long id;
-    private final String content;
+    private final String topicName;
+    private final ArrayList<Subscriber> subscribers;
 
-    public Topics(long id, String content) {
+
+    public Topic(long id, String topicName,  ArrayList subscribers) {
         this.id = id;
-        this.content = content;
+        this.topicName = topicName;
+        this.subscribers = subscribers;
+
     }
 
     public long getId() {
         return id;
     }
 
-    public String getContent() {
-        return content;
+    public String getTopicName() {
+        return topicName;
     }
+
+    public ArrayList<Subscriber> getSubscribers() { return subscribers; }
+
 }
 
 

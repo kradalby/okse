@@ -22,24 +22,21 @@
  * THE SOFTWARE.
  */
 
-body {
-    padding-top: 70px;
-}
+/**
+ * Created by Fredrik Tørnvall (freboto) and Håkon Ødegård Løvdal (hakloev) on 02/03/15.
+ */
 
-.tab-content {
-    padding-top: 20px;
-}
 
-.panel-heading h3 {
-    pointer:cursor;
-}
+var Config = (function($) {
 
-.panel-heading h3:after {
-    font-family:'Glyphicons Halflings';
-    content:"\e114";
-    float: right;
-    color: white;
-}
-.panel-heading h3.collapsed:after {
-    content:"\e080";
-}
+    return {
+        error: function() {
+            console.log("error in ajax for config")
+        },
+        refresh: function(data) {
+            console.log(JSON.stringify(data))
+        }
+    }
+
+
+})(jQuery)

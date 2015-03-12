@@ -22,24 +22,15 @@
  * THE SOFTWARE.
  */
 
-body {
-    padding-top: 70px;
-}
+package no.ntnu.okse.protocol.dto;
 
-.tab-content {
-    padding-top: 20px;
-}
+/**
+ * Created by Aleksander Skraastad (myth) on 3/2/15.
+ * <p>
+ * okse is licenced under the MIT licence.
+ */
+public class WsnDTO extends AbstractDTO {
 
-.panel-heading h3 {
-    pointer:cursor;
-}
 
-.panel-heading h3:after {
-    font-family:'Glyphicons Halflings';
-    content:"\e114";
-    float: right;
-    color: white;
-}
-.panel-heading h3.collapsed:after {
-    content:"\e080";
+
 }
