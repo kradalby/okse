@@ -26,6 +26,7 @@ package no.ntnu.okse.core;
 
 import no.ntnu.okse.core.event.Event;
 
+import no.ntnu.okse.protocol.WSNotificationServer;
 import org.apache.log4j.Logger;
 
 import java.util.concurrent.ExecutorService;
@@ -43,6 +44,7 @@ public class CoreService extends Thread {
     private static Logger log;
     private LinkedBlockingQueue<Event> eventQueue;
     private ExecutorService executor;
+    private WSNotificationServer wsnServer;
 
     /**
      * Constructs the CoreService thread, initiates the logger and eventQueue.
@@ -53,6 +55,7 @@ public class CoreService extends Thread {
         log = Logger.getLogger(CoreService.class.getName());
         eventQueue = new LinkedBlockingQueue();
         executor = Executors.newFixedThreadPool(10);
+        wsnServer = WSNotificationServer.getInstance();
     }
 
     /**
@@ -71,6 +74,15 @@ public class CoreService extends Thread {
      */
     public ExecutorService getExecutor() { return executor; }
 
+    /**
+     * Fetches the WSNotificationServer instance
+     * <p>
+     * @return: The WSNotificationServer instance
+     */
+    public WSNotificationServer getWsnServer() {
+        return this.wsnServer;
+    }
+
 
     /**
      * Starts the main loop of the CoreService thread.
@@ -79,6 +91,8 @@ public class CoreService extends Thread {
     public void run() {
         running = true;
         log.info("CoreService started.");
+        log.info("Attempting to boot WSNServer");
+        this.wsnServer.boot();
         while (running) {
             try {
                 Event e = eventQueue.take();

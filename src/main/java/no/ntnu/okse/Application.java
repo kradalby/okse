@@ -26,6 +26,7 @@ package no.ntnu.okse;
 
 import no.ntnu.okse.core.CoreService;
 import no.ntnu.okse.web.Server;
+import org.apache.log4j.Logger;
 
 /**
  * Created by Håkon Ødegård Løvdal (hakloev) on 25/02/15.
@@ -36,6 +37,7 @@ public class Application {
 
     public static CoreService cs;
     public static Server webserver;
+    private static Logger log;
 
     /**
      * Main method for the OKSE Message Broker
@@ -43,9 +45,15 @@ public class Application {
      * @param args Command line arguments, most probably not used
      */
     public static void main(String[] args) {
+        log = Logger.getLogger(Application.class.getName());
         webserver = new Server();
         cs = new CoreService();
         webserver.run();
         cs.start();
+        try {
+            cs.join();
+        } catch (InterruptedException e) {
+            log.trace(e.getStackTrace());
+        }
     }
 }
