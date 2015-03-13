@@ -22,24 +22,35 @@
  * THE SOFTWARE.
  */
 
-body {
-    padding-top: 70px;
-}
+package no.ntnu.okse.web.model;
 
-.tab-content {
-    padding-top: 20px;
-}
+import java.util.HashMap;
 
-.panel-heading h3 {
-    pointer:cursor;
-}
+/**
+ * Created by Fredrik on 06/03/15.
+ */
+public class Subscriber {
+    private final String ip;
+    private final String port;
+    private final String protocol;
+    private final HashMap<String, String> flags;
 
-.panel-heading h3:after {
-    font-family:'Glyphicons Halflings';
-    content:"\e114";
-    float: right;
-    color: white;
-}
-.panel-heading h3.collapsed:after {
-    content:"\e080";
+
+    public Subscriber(String ip, String port, String protocol, HashMap<String, String> flags){
+        this.ip = ip;
+        this.port = port;
+        this.protocol = protocol;
+        this.flags = flags;
+    }
+
+    public String getProtocol() { return protocol; }
+
+    public String getIp() { return ip; }
+
+    public String getPort() { return port; }
+
+    public HashMap getFlags(){ return flags; }
+
+
+
 }

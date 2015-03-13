@@ -25,8 +25,12 @@
 package no.ntnu.okse;
 
 import no.ntnu.okse.core.CoreService;
+import no.ntnu.okse.db.DB;
 import no.ntnu.okse.web.Server;
 import org.apache.log4j.Logger;
+
+import java.io.File;
+
 
 /**
  * Created by Håkon Ødegård Løvdal (hakloev) on 25/02/15.
@@ -35,9 +39,9 @@ import org.apache.log4j.Logger;
  */
 public class Application {
 
+    private static Logger log;
     public static CoreService cs;
     public static Server webserver;
-    private static Logger log;
 
     /**
      * Main method for the OKSE Message Broker
@@ -46,10 +50,22 @@ public class Application {
      */
     public static void main(String[] args) {
         log = Logger.getLogger(Application.class.getName());
+
+        File dbFile = new File("okse.db");
+
+        if (!dbFile.exists()) {
+            DB.initDB();
+            log.info("okse.db initiated");
+        } else {
+            log.info("okse.db exists");
+        }
+
+        // Boot system threads and start run processes.
         webserver = new Server();
         cs = new CoreService();
         webserver.run();
         cs.start();
+
         try {
             cs.join();
         } catch (InterruptedException e) {
