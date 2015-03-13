@@ -34,8 +34,14 @@ var Topics = (function($) {
     var fillTable = function(subscribers) {
         var trHTML = '';
         $.each(subscribers, function (i, subscriber) {
-            trHTML += '<tr><td>' + subscriber.protocol + '</td><td>' + subscriber.ip + '</td><td>' + subscriber.port + '</td></tr>';
+            trHTML += '<tr>' +
+            '<td>' + subscriber.protocol + '</td>' +
+            '<td>' + subscriber.ip + '</td>' +
+            '<td>' + subscriber.port + '</td>' +
+            '<td><a class="btn btn-xs btn-danger">Delete</a></td>' +
+            '</tr>';
         });
+        trHTML += '<tr><td colspan="4"><a class="btn btn-block btn-danger">Delete all</a></td></tr>';
         return trHTML
     }
     /*
@@ -56,7 +62,7 @@ var Topics = (function($) {
                 '</a></h3></div>' +
             '<div id="' + topicName.toLowerCase() +'" class="panel-collapse collapse">' +
                 '<div class="table-reponsive"><table class="table table-striped">' +
-                '<thead><tr><th>Protocol</th><th>IP</th><th>Port</th></tr></thead><tbody></tbody>' +
+                '<thead><tr><th>Protocol</th><th>IP</th><th>Port</th><th>Actions</th></tr></thead><tbody></tbody>' +
                 '</table></div></div></div>')
         return panel
     }

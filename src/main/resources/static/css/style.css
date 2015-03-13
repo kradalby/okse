@@ -31,7 +31,7 @@ body {
 }
 
 .panel-heading h3 {
-    pointer:cursor;
+    cursor: pointer;
 }
 
 .panel-heading h3:after {

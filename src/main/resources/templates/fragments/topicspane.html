@@ -51,6 +51,7 @@
                                     <th>Protocol</th>
                                     <th>IP</th>
                                     <th>Port</th>
+                                    <th>Action</th>
                                 </tr>
                                 </thead>
                                 <tbody>
@@ -58,21 +59,30 @@
                                     <td>WSN</td>
                                     <td>78.91.141.25</td>
                                     <td>834</td>
+                                    <td><a class="btn btn-xs btn-danger">Delete</a></td>
                                 </tr>
                                 <tr>
                                     <td>WSN</td>
                                     <td>78.91.141.25</td>
                                     <td>834</td>
+                                    <td><a class="btn btn-xs btn-danger">Delete</a></td>
                                 </tr>
                                 <tr>
                                     <td>AMQP</td>
                                     <td>78.91.141.25</td>
                                     <td>834</td>
+                                    <td><a class="btn btn-xs btn-danger">Delete</a></td>
                                 </tr>
                                 <tr>
                                     <td>stomp</td>
                                     <td>78.91.141.25</td>
                                     <td>834</td>
+                                    <td><a class="btn btn-xs btn-danger">Delete</a></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="4">
+                                        <a class="btn btn-block btn-danger">Delete all</a>
+                                    </td>
                                 </tr>
                                 </tbody>
                             </table>
@@ -96,6 +106,7 @@
                                     <th>Protocol</th>
                                     <th>IP</th>
                                     <th>Port</th>
+                                    <th>Action</th>
                                 </tr>
                                 </thead>
                                 <tbody>
@@ -103,66 +114,30 @@
                                     <td>ZeroMQ</td>
                                     <td>78.91.351.25</td>
                                     <td>645</td>
+                                    <td><a class="btn btn-xs btn-danger">Delete</a></td>
                                 </tr>
                                 <tr>
                                     <td>WSN</td>
                                     <td>78.91.141.25</td>
                                     <td>834</td>
+                                    <td><a class="btn btn-xs btn-danger">Delete</a></td>
                                 </tr>
                                 <tr>
                                     <td>AMQP</td>
                                     <td>78.91.141.25</td>
                                     <td>643</td>
+                                    <td><a class="btn btn-xs btn-danger">Delete</a></td>
                                 </tr>
                                 <tr>
                                     <td>stomp</td>
                                     <td>78.91.141.25</td>
                                     <td>324</td>
-                                </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-                <div class="panel panel-primary">
-                    <!-- Default panel contents -->
-                    <div class="panel-heading">
-                        <h3 class="panel-title collapsed" data-toggle="collapse" data-target="#mytopic">
-                            <a href="#mytopic">
-                                myTopic
-                            </a>
-                        </h3>
-                    </div>
-                    <div id="mytopic" class="panel-collapse collapse">
-                        <div class="table-responsive">
-                            <table class="table table-striped">
-                                <thead>
-                                <tr>
-                                    <th>Protocol</th>
-                                    <th>IP</th>
-                                    <th>Port</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                <tr>
-                                    <td>stomp</td>
-                                    <td>localhost</td>
-                                    <td>945</td>
+                                    <td><a class="btn btn-xs btn-danger">Delete</a></td>
                                 </tr>
                                 <tr>
-                                    <td>DDS</td>
-                                    <td>127.0.0.1</td>
-                                    <td>876</td>
-                                </tr>
-                                <tr>
-                                    <td>WSN</td>
-                                    <td>78.91.141.91</td>
-                                    <td>234</td>
-                                </tr>
-                                <tr>
-                                    <td>AMQP</td>
-                                    <td>78.91.123.34</td>
-                                    <td>8374</td>
+                                    <td colspan="4">
+                                        <a class="btn btn-block btn-danger">Delete all</a>
+                                    </td>
                                 </tr>
                                 </tbody>
                             </table>
@@ -182,6 +157,7 @@
                         <li class="list-group-item"><strong>Bound to port: </strong><span th:text="${serverPort}">Unknown</span></li>
                     </ul>
                 </div>
+                <a id="delete-all-topics" class="btn btn-danger">Delete all topics</a>
             </div>
         </div>
     </div>
