@@ -28,7 +28,7 @@
                     </Array>
                 </Arg>
                 <Set name="host"><SystemProperty name="jetty.host" default="0.0.0.0"></SystemProperty></Set>
-                <Set name="port"><SystemProperty name="jetty.port" default="8080"></SystemProperty></Set>
+                <Set name="port"><SystemProperty name="jetty.port" default="8888"></SystemProperty></Set>
             </New>
         </Arg>
     </Call>
