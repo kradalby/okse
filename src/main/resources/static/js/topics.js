@@ -38,10 +38,10 @@ var Topics = (function($) {
             '<td>' + subscriber.protocol + '</td>' +
             '<td>' + subscriber.ip + '</td>' +
             '<td>' + subscriber.port + '</td>' +
-            '<td><a class="btn btn-xs btn-danger">Delete</a></td>' +
+            '<td><a id="' + i + '" class="btn btn-xs btn-danger delete-subscriber">Delete</a></td>' +
             '</tr>';
         });
-        trHTML += '<tr><td colspan="4"><a class="btn btn-block btn-danger">Delete all</a></td></tr>';
+        trHTML += '<tr><td colspan="4"><a class="btn btn-block btn-danger delete-topic">Delete all</a></td></tr>';
         return trHTML
     }
     /*
@@ -73,14 +73,27 @@ var Topics = (function($) {
     var createPanel = function(data) {
         var panel = createPanelAndTableTemplate(data.topicName)
         $(panel).find('tbody').html(fillTable(data.subscribers))
-        /*
-        var trHTML = '';
-        $.each(response.subscribers, function (i, subscriber) {
-            trHTML +=
-                '<tr><td>' + subscriber.protocol + '</td><td>' + subscriber.ip + '</td><td>' + subscriber.port + '</td></tr>';
-        });
-        */
         $('#topics-column').append(panel);
+    }
+
+    var bindButtons = function() {
+        $('.delete-topic').on('click', function(e) {
+            e.preventDefault();
+            $(this).closest('.panel').remove();
+            console.log("Removing complete topic")
+
+        });
+        $('.delete-subscriber').on('click', function(e) {
+            e.preventDefault();
+            $(this).parent().parent().remove();
+            console.log("Removing single subscriber");
+
+        });
+        $('#delete-all-topics').on('click', function(e) {
+            e.preventDefault()
+            $('#topics-column').html('');
+            console.log("Removing all topics");
+        });
     }
 
     return {
@@ -96,8 +109,11 @@ var Topics = (function($) {
             } else { // If the topic exist
                 updatePanel(response.subscribers, $('#' + topicName).find('tbody'))
             }
+            bindButtons()
         }
+
     }
 
 })(jQuery);
+
 
