@@ -75,15 +75,30 @@ public class WSNotificationServer {
     private HttpClient _client;
     private Thread _serverThread;
 
+    /**
+     * Empty constructor, uses defaults from jetty configuration file for WSNServer
+     */
     private WSNotificationServer() {
         this.init(null);
         this._invoked = true;
     }
 
+    /**
+     * Constructor that takes in a port that the WSNServer jetty instance should
+     * listen to.
+     * <p>
+     * @param port: An integer representing the port the WSNServer should bind to.
+     */
     private WSNotificationServer(Integer port) {
         this.init(port);
     }
 
+    /**
+     * Factory method providing an instance of WSNotificationServer, adhering to the
+     * singleton pattern. (Using default port from config file.)
+     * <p>
+     * @return: The WSNotification instance.
+     */
     public static WSNotificationServer getInstance() {
         if (WSNotificationServer._invoked) return _singleton;
         else {
@@ -94,6 +109,18 @@ public class WSNotificationServer {
         }
     }
 
+    /**
+     * Factory method providing an instance of WSNotificationServer, adhering to the
+     * singleton pattern. (Using default port from config file.
+     *
+     * <p>Note: This factory method will ignore the port argument if an instance is already
+     * running. In that case, one must stop the WSNServer instance and invoke it again to
+     * specify a different port.</p>
+     *
+     * @param port: An integer representing the port WSNServer should bind to.
+     *
+     * @return: The WSNotification instance.
+     */
     public static WSNotificationServer getInstance(Integer port) {
         if (WSNotificationServer._invoked) return _singleton;
         else {
@@ -103,6 +130,12 @@ public class WSNotificationServer {
         }
     }
 
+    /**
+     * Initialization method that reads the wsnserver.xml configuration file and constructs
+     * a jetty server instance.
+     *
+     * @param port: An integer representing the port WSNServer should bind to.
+     */
     private void init(Integer port) {
 
         log = Logger.getLogger(WSNotificationServer.class.getName());
@@ -122,6 +155,14 @@ public class WSNotificationServer {
         }
     }
 
+    /**
+     * The primary boot method for starting a WSNServer instance. Will only perform actions if the
+     * server instance is not already running.
+     * <p>
+     * Initializes a HttpClient, and starts it. Also adds predefined connectors to the jetty server
+     * instance. Constructs a new serverThread and starts the jetty server instance in this new thread.
+     * </p>
+     */
     public void boot() {
         log.info("Booting WSNServer.");
         if (!_running) {
@@ -142,7 +183,9 @@ public class WSNotificationServer {
                         log.trace(serverError.getStackTrace());
                     }
                 });
+                this._serverThread.setName("WSNServer");
                 this._serverThread.start();
+                this._serverThread.join();
                 WSNotificationServer._running = true;
                 log.info("WSNServer Thread started successfully.");
             } catch (Exception e) {

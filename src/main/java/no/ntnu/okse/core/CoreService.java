@@ -98,7 +98,7 @@ public class CoreService extends Thread {
                 Event e = eventQueue.take();
                 log.info("Consumed an event: " + e.getOperation() + " DataType: " + e.getDataType());
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                log.trace(e.getStackTrace());
             }
         }
         log.info("CoreService stopped.");
