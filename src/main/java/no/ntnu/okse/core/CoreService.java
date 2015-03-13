@@ -26,9 +26,11 @@ package no.ntnu.okse.core;
 
 import no.ntnu.okse.core.event.Event;
 
-import no.ntnu.okse.protocol.WSNotificationServer;
+import no.ntnu.okse.protocol.servers.ProtocolServer;
+import no.ntnu.okse.protocol.servers.WSNotificationServer;
 import org.apache.log4j.Logger;
 
+import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -44,7 +46,7 @@ public class CoreService extends Thread {
     private static Logger log;
     private LinkedBlockingQueue<Event> eventQueue;
     private ExecutorService executor;
-    private WSNotificationServer wsnServer;
+    private ArrayList<ProtocolServer> protocolServers;
 
     /**
      * Constructs the CoreService thread, initiates the logger and eventQueue.
@@ -55,7 +57,7 @@ public class CoreService extends Thread {
         log = Logger.getLogger(CoreService.class.getName());
         eventQueue = new LinkedBlockingQueue();
         executor = Executors.newFixedThreadPool(10);
-        wsnServer = WSNotificationServer.getInstance();
+        protocolServers = new ArrayList<>();
     }
 
     /**
@@ -75,12 +77,26 @@ public class CoreService extends Thread {
     public ExecutorService getExecutor() { return executor; }
 
     /**
-     * Fetches the WSNotificationServer instance
-     * <p>
-     * @return: The WSNotificationServer instance
+     * Adds a protocolserver to the protocolservers list.
+     * @param ps: An instance of a subclass of AbstractProtocolServer that implements ProtocolServer
      */
-    public WSNotificationServer getWsnServer() {
-        return this.wsnServer;
+    public void addProtocolServer(ProtocolServer ps) {
+        if (!protocolServers.contains(ps)) protocolServers.add(ps);
+    }
+
+    /**
+     * Removes a protocolserver to the protocolservers list.
+     * @param ps: An instance of a subclass of AbstractProtocolServer that implements ProtocolServer
+     */
+    public void removeProtocolServer(ProtocolServer ps) {
+        if (protocolServers.contains(ps)) protocolServers.remove(ps);
+    }
+
+    /**
+     * Helper method that boots all added protocolservers.
+     */
+    private void bootProtocolServers() {
+        protocolServers.forEach(ps -> ps.boot());
     }
 
 
@@ -91,8 +107,12 @@ public class CoreService extends Thread {
     public void run() {
         running = true;
         log.info("CoreService started.");
-        log.info("Attempting to boot WSNServer");
-        this.wsnServer.boot();
+        log.info("Attempting to boot ProtocolServers.");
+
+        this.bootProtocolServers();
+
+        log.info("Completed booting ProtocolServers.");
+
         while (running) {
             try {
                 Event e = eventQueue.take();

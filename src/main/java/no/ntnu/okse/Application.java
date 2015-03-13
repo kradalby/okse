@@ -26,6 +26,7 @@ package no.ntnu.okse;
 
 import no.ntnu.okse.core.CoreService;
 import no.ntnu.okse.db.DB;
+import no.ntnu.okse.protocol.servers.WSNotificationServer;
 import no.ntnu.okse.web.Server;
 import org.apache.log4j.Logger;
 
@@ -63,7 +64,14 @@ public class Application {
         // Boot system threads and start run processes.
         webserver = new Server();
         cs = new CoreService();
+
+        // Add ProtocolServers to CoreService
+        cs.addProtocolServer(WSNotificationServer.getInstance());
+
+        // Start the admin console
         webserver.run();
+
+        // Start the CoreService
         cs.start();
 
         try {
