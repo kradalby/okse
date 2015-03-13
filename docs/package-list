@@ -1,0 +1,10 @@
+no.ntnu.okse
+no.ntnu.okse.connection
+no.ntnu.okse.core
+no.ntnu.okse.core.event
+no.ntnu.okse.db
+no.ntnu.okse.protocol
+no.ntnu.okse.protocol.dto
+no.ntnu.okse.web
+no.ntnu.okse.web.controller
+no.ntnu.okse.web.model

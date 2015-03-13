@@ -27,14 +27,10 @@ package no.ntnu.okse;
 import no.ntnu.okse.core.CoreService;
 import no.ntnu.okse.db.DB;
 import no.ntnu.okse.web.Server;
-import sun.rmi.runtime.Log;
+import org.apache.log4j.Logger;
 
 import java.io.File;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.logging.Handler;
-import java.util.logging.Logger;
+
 
 /**
  * Created by Håkon Ødegård Løvdal (hakloev) on 25/02/15.
@@ -55,11 +51,6 @@ public class Application {
     public static void main(String[] args) {
         log = Logger.getLogger(Application.class.getName());
 
-        webserver = new Server();
-        cs = new CoreService();
-        webserver.run();
-        cs.start();
-
         File dbFile = new File("okse.db");
 
         if (!dbFile.exists()) {
@@ -69,5 +60,16 @@ public class Application {
             log.info("okse.db exists");
         }
 
+        // Boot system threads and start run processes.
+        webserver = new Server();
+        cs = new CoreService();
+        webserver.run();
+        cs.start();
+
+        try {
+            cs.join();
+        } catch (InterruptedException e) {
+            log.trace(e.getStackTrace());
+        }
     }
 }
