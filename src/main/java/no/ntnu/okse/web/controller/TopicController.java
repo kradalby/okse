@@ -63,17 +63,17 @@ public class TopicController {
         }
     }
 
-    @RequestMapping(method = RequestMethod.DELETE, value = "delete/all")
+    @RequestMapping(method = RequestMethod.POST, value = "/delete/all")
     public void deleteAll() {
         System.out.println("Deleting all topics");
     }
 
-    @RequestMapping(method = RequestMethod.DELETE, value = "delete/{id}")
+    @RequestMapping(method = RequestMethod.POST, value = "/delete/{id}")
     public void deleteOneTopic(@PathVariable String id) {
         System.out.println("Deleting one topic with id: " + id);
     }
 
-    @RequestMapping(method = RequestMethod.DELETE, value="delete/subscriber/{id}")
+    @RequestMapping(method = RequestMethod.POST, value="/delete/subscriber/{id}")
     public void deleteOneSubscriber(@PathVariable String id) {
         System.out.println("Deleting id: " + id);
     }

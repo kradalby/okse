@@ -28,6 +28,8 @@
 
 var Topics = (function($) {
 
+
+
     /*
         Creates, fills and returns a tr element
      */
@@ -77,20 +79,24 @@ var Topics = (function($) {
     }
 
     var bindButtons = function() {
+        // need to unbind all buttons between binding and add an id to topic a elements
         $('.delete-topic').on('click', function(e) {
             e.preventDefault();
+            Main.ajax("topics/delete/testTopic", undefined, undefined, "POST")
             $(this).closest('.panel').remove();
             console.log("Removing complete topic")
 
         });
         $('.delete-subscriber').on('click', function(e) {
             e.preventDefault();
+            Main.ajax("topics/delete/subscriber/subTest", undefined, undefined, "POST", undefined)
             $(this).parent().parent().remove();
             console.log("Removing single subscriber");
 
         });
         $('#delete-all-topics').on('click', function(e) {
             e.preventDefault()
+            Main.ajax("topics/delete/all", undefined, undefined, "POST")
             $('#topics-column').html('');
             console.log("Removing all topics");
         });
@@ -101,7 +107,7 @@ var Topics = (function($) {
         error: function() {
           console.log("Error in Ajax for Topics")
         },
-        // Ajax success function (updates all the information
+        // Ajax success function (updates all the information)
         refresh: function(response) {
             var topicName = response.topicName.toLowerCase()
             if ($('#' + topicName).length === 0) { // If the topic doesn't already exist
