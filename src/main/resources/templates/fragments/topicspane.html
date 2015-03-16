@@ -34,61 +34,7 @@
     <div class="tab-pane" id="topics">
         <div class="row">
             <div class="col-md-8" id="topics-column">
-                <div class="panel panel-primary">
-                    <!-- Default panel contents -->
-                    <div class="panel-heading">
-                        <h3 class="panel-title collapsed" data-toggle="collapse" data-target="#nouav">
-                            <a href="#nouav">
-                                no/uav
-                            </a>
-                        </h3>
-                    </div>
-                    <div id="nouav" class="panel-collapse collapse">
-                        <div class="table-responsive">
-                            <table class="table table-striped">
-                                <thead>
-                                <tr>
-                                    <th>Protocol</th>
-                                    <th>IP</th>
-                                    <th>Port</th>
-                                    <th>Action</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                <tr>
-                                    <td>ZeroMQ</td>
-                                    <td>78.91.351.25</td>
-                                    <td>645</td>
-                                    <td><a class="btn btn-xs btn-danger">Delete</a></td>
-                                </tr>
-                                <tr>
-                                    <td>WSN</td>
-                                    <td>78.91.141.25</td>
-                                    <td>834</td>
-                                    <td><a class="btn btn-xs btn-danger">Delete</a></td>
-                                </tr>
-                                <tr>
-                                    <td>AMQP</td>
-                                    <td>78.91.141.25</td>
-                                    <td>643</td>
-                                    <td><a class="btn btn-xs btn-danger">Delete</a></td>
-                                </tr>
-                                <tr>
-                                    <td>stomp</td>
-                                    <td>78.91.141.25</td>
-                                    <td>324</td>
-                                    <td><a class="btn btn-xs btn-danger">Delete</a></td>
-                                </tr>
-                                <tr>
-                                    <td colspan="4">
-                                        <a class="btn btn-block btn-danger">Delete all</a>
-                                    </td>
-                                </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
+                <!-- All topics will be inserted here -->
             </div>
             <div class="col-md-4">
                 <div class="panel panel-info">
@@ -102,7 +48,7 @@
                         <li class="list-group-item"><strong>Bound to port: </strong><span th:text="${serverPort}">Unknown</span></li>
                     </ul>
                 </div>
-                <a id="delete-all-topics" class="btn btn-danger">Delete all topics</a>
+                <a id="delete-all-topics" class="btn btn-block btn-danger">Delete all topics</a>
             </div>
         </div>
     </div>

@@ -28,8 +28,6 @@
 
 var Topics = (function($) {
 
-
-
     /*
         Creates, fills and returns a tr element
      */
@@ -40,7 +38,7 @@ var Topics = (function($) {
             '<td>' + subscriber.protocol + '</td>' +
             '<td>' + subscriber.ip + '</td>' +
             '<td>' + subscriber.port + '</td>' +
-            '<td><a id="' + subscriber.ip + '" class="btn btn-xs btn-danger delete-subscriber">Delete</a></td>' +
+            '<td><a id="' + subscriber.ip + '" class="btn btn-xs btn-block btn-warning delete-subscriber">Delete</a></td>' +
             '</tr>';
         });
         trHTML += '<tr><td colspan="4"><a id="' + data.topicName.toLowerCase() + '" class="btn btn-block btn-danger delete-topic">Delete all</a></td></tr>';
@@ -60,11 +58,11 @@ var Topics = (function($) {
         var panel = $('<div class="panel panel-primary">' +
             '<div class="panel-heading">' +
                 '<h3 class="panel-title collapsed" data-toggle="collapse" data-target="#' + topicName.toLowerCase() + '">' +
-                '<a href="#' + topicName.toLowerCase() + '">' + topicName +
+                    '<a href="#' + topicName.toLowerCase() + '">' + topicName +
                 '</a></h3></div>' +
             '<div id="' + topicName.toLowerCase() +'" class="panel-collapse collapse">' +
                 '<div class="table-reponsive"><table class="table table-striped">' +
-                '<thead><tr><th>Protocol</th><th>IP</th><th>Port</th><th>Actions</th></tr></thead><tbody></tbody>' +
+                    '<thead><tr><th>Protocol</th><th>IP</th><th>Port</th><th>Actions</th></tr></thead><tbody></tbody>' +
                 '</table></div></div></div>')
         return panel
     }
@@ -107,9 +105,8 @@ var Topics = (function($) {
                 $(e.target).parent().parent().remove();
                 console.log("Removing single subscriber");
             }, "POST")
-
-
         });
+        // TODO: Only need binding once, fix it!
         $('#delete-all-topics').on('click', function(e) {
             e.preventDefault()
 

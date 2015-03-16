@@ -30,6 +30,10 @@ body {
     padding-top: 20px;
 }
 
+#topics-column .table {
+    margin-bottom: 0;
+}
+
 .panel-heading h3 {
     cursor: pointer;
 }
