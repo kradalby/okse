@@ -33,24 +33,24 @@ var Topics = (function($) {
     /*
         Creates, fills and returns a tr element
      */
-    var fillTable = function(subscribers) {
+    var fillTable = function(data) {
         var trHTML = '';
-        $.each(subscribers, function (i, subscriber) {
+        $.each(data.subscribers, function (i, subscriber) {
             trHTML += '<tr>' +
             '<td>' + subscriber.protocol + '</td>' +
             '<td>' + subscriber.ip + '</td>' +
             '<td>' + subscriber.port + '</td>' +
-            '<td><a id="' + i + '" class="btn btn-xs btn-danger delete-subscriber">Delete</a></td>' +
+            '<td><a id="' + subscriber.ip + '" class="btn btn-xs btn-danger delete-subscriber">Delete</a></td>' +
             '</tr>';
         });
-        trHTML += '<tr><td colspan="4"><a class="btn btn-block btn-danger delete-topic">Delete all</a></td></tr>';
+        trHTML += '<tr><td colspan="4"><a id="' + data.topicName.toLowerCase() + '" class="btn btn-block btn-danger delete-topic">Delete all</a></td></tr>';
         return trHTML
     }
     /*
         Iterates all the subscribers of this topic and overwrites the table with the new information
      */
-    var updatePanel = function(subscribers, panel) {
-        $(panel).html(fillTable(subscribers));
+    var updatePanel = function(data, panel) {
+        $(panel).html(fillTable(data));
     }
 
     /*
@@ -74,31 +74,52 @@ var Topics = (function($) {
      */
     var createPanel = function(data) {
         var panel = createPanelAndTableTemplate(data.topicName)
-        $(panel).find('tbody').html(fillTable(data.subscribers))
+        $(panel).find('tbody').html(fillTable(data))
         $('#topics-column').append(panel);
+    }
+
+    var unBindButtons = function() {
+        $('.delete-topic').off('click');
+        $('.delete-subscriber').off('click');
+        $('#delete-all-topics').off('click');
     }
 
     var bindButtons = function() {
         // need to unbind all buttons between binding and add an id to topic a elements
         $('.delete-topic').on('click', function(e) {
             e.preventDefault();
-            Main.ajax("topics/delete/testTopic", undefined, undefined, "POST")
-            $(this).closest('.panel').remove();
-            console.log("Removing complete topic")
+
+            Main.ajax(("topics/delete/" + this.id), function() {
+                console.log("Unable to remove topic")
+            }, function() {
+                $(e.target).closest('.panel').remove();
+                console.log("Removing complete topic")
+            }, "POST")
+
 
         });
         $('.delete-subscriber').on('click', function(e) {
             e.preventDefault();
-            Main.ajax("topics/delete/subscriber/subTest", undefined, undefined, "POST", undefined)
-            $(this).parent().parent().remove();
-            console.log("Removing single subscriber");
+
+            Main.ajax(("topics/delete/subscriber/" + this.id), function() {
+                console.log("Unable to remove subscriber");
+            }, function() {
+                $(e.target).parent().parent().remove();
+                console.log("Removing single subscriber");
+            }, "POST")
+
 
         });
         $('#delete-all-topics').on('click', function(e) {
             e.preventDefault()
-            Main.ajax("topics/delete/all", undefined, undefined, "POST")
-            $('#topics-column').html('');
-            console.log("Removing all topics");
+
+            Main.ajax("topics/delete/all", function() {
+                console.log("Unable to remove all topics");
+            }, function() {
+                $('#topics-column').html('');
+                console.log("Removing all topics");
+            }, "POST")
+
         });
     }
 
@@ -109,13 +130,16 @@ var Topics = (function($) {
         },
         // Ajax success function (updates all the information)
         refresh: function(response) {
+            unBindButtons();
+
             var topicName = response.topicName.toLowerCase()
-            if ($('#' + topicName).length === 0) { // If the topic doesn't already exist
+
+            if ($('#' + topicName).length === 0)  // If the topic doesn't already exist
                 createPanel(response)
-            } else { // If the topic exist
-                updatePanel(response.subscribers, $('#' + topicName).find('tbody'))
-            }
-            bindButtons()
+            else  // If the topic exist
+                updatePanel(response, $('#' + topicName).find('tbody'))
+
+            bindButtons();
         }
 
     }

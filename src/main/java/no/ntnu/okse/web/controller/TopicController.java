@@ -26,11 +26,13 @@ package no.ntnu.okse.web.controller;
 
 import no.ntnu.okse.web.model.Subscriber;
 import no.ntnu.okse.web.model.Topic;
+import org.apache.log4j.Logger;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+
 
 /**
  * Created by Håkon Ødegård Løvdal (hakloev) on 13/03/15.
@@ -40,6 +42,8 @@ import java.util.HashMap;
 @RestController
 @RequestMapping("/api/topics")
 public class TopicController {
+
+    private static Logger log = Logger.getLogger(TopicController.class.getName());
 
     private int counter = 0;
 
@@ -65,17 +69,17 @@ public class TopicController {
 
     @RequestMapping(method = RequestMethod.POST, value = "/delete/all")
     public void deleteAll() {
-        System.out.println("Deleting all topics");
+        log.info("Deleting all topics");
     }
 
     @RequestMapping(method = RequestMethod.POST, value = "/delete/{id}")
     public void deleteOneTopic(@PathVariable String id) {
-        System.out.println("Deleting one topic with id: " + id);
+        log.info("Deleting topic with ID: " + id);
     }
 
     @RequestMapping(method = RequestMethod.POST, value="/delete/subscriber/{id}")
     public void deleteOneSubscriber(@PathVariable String id) {
-        System.out.println("Deleting id: " + id);
+        log.info("Deleting subscriber with ID: " + id);
     }
 
 

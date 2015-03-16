@@ -41,13 +41,13 @@ var Main = (function($) {
         });
     }
 
-    var ajax = function(url, error, success, type, dataType) {
+    var ajax = function(url, error, success, httpMethod, dataType) {
         $.ajax({
             url: "/api/" + url,
             dataType: dataType,
             error: error,
             success: success,
-            type: type
+            type: httpMethod
         })
     };
 
