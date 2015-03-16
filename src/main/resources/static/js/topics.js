@@ -41,7 +41,7 @@ var Topics = (function($) {
             '<td><a id="' + subscriber.ip + '" class="btn btn-xs btn-block btn-warning delete-subscriber">Delete</a></td>' +
             '</tr>';
         });
-        trHTML += '<tr><td colspan="4"><a id="' + data.topicName.toLowerCase() + '" class="btn btn-block btn-danger delete-topic">Delete all</a></td></tr>';
+        trHTML += '<tr><td colspan="4"><a id="' + data.id + '" class="btn btn-block btn-danger delete-topic">Delete all</a></td></tr>';
         return trHTML
     }
     /*
