@@ -34,12 +34,14 @@ var Topics = (function($) {
     var fillTable = function(data) {
         var trHTML = '';
         $.each(data.subscribers, function (i, subscriber) {
-            trHTML += '<tr>' +
-            '<td>' + subscriber.protocol + '</td>' +
-            '<td>' + subscriber.ip + '</td>' +
-            '<td>' + subscriber.port + '</td>' +
-            '<td><a id="' + subscriber.ip + '" class="btn btn-xs btn-block btn-warning delete-subscriber">Delete</a></td>' +
-            '</tr>';
+            if ($('#' + subscriber.ip).length === 0) {
+                trHTML += '<tr>' +
+                '<td>' + subscriber.protocol + '</td>' +
+                '<td>' + subscriber.ip + '</td>' +
+                '<td>' + subscriber.port + '</td>' +
+                '<td><a id="' + subscriber.ip + '" class="btn btn-xs btn-block btn-warning delete-subscriber">Delete</a></td>' +
+                '</tr>';
+            }
         });
         trHTML += '<tr><td colspan="4"><a id="' + data.id + '" class="btn btn-block btn-danger delete-topic">Delete all</a></td></tr>';
         return trHTML
@@ -56,14 +58,14 @@ var Topics = (function($) {
      */
     var createPanelAndTableTemplate = function(topicName) {
         var panel = $('<div class="panel panel-primary">' +
-            '<div class="panel-heading">' +
-                '<h3 class="panel-title collapsed" data-toggle="collapse" data-target="#' + topicName.toLowerCase() + '">' +
-                    '<a href="#' + topicName.toLowerCase() + '">' + topicName +
-                '</a></h3></div>' +
-            '<div id="' + topicName.toLowerCase() +'" class="panel-collapse collapse">' +
-                '<div class="table-reponsive"><table class="table table-striped">' +
-                    '<thead><tr><th>Protocol</th><th>IP</th><th>Port</th><th>Actions</th></tr></thead><tbody></tbody>' +
-                '</table></div></div></div>')
+        '<div class="panel-heading">' +
+        '<h3 class="panel-title collapsed" data-toggle="collapse" data-target="#' + topicName.toLowerCase() + '">' +
+        '<a href="#' + topicName.toLowerCase() + '">' + topicName +
+        '</a></h3></div>' +
+        '<div id="' + topicName.toLowerCase() +'" class="panel-collapse collapse">' +
+        '<div class="table-reponsive"><table class="table table-striped">' +
+        '<thead><tr><th>Protocol</th><th>IP</th><th>Port</th><th>Actions</th></tr></thead><tbody></tbody>' +
+        '</table></div></div></div>')
         return panel
     }
 
