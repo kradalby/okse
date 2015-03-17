@@ -24,14 +24,24 @@
 
 package no.ntnu.okse.protocol.servers;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Enumeration;
 
 import org.apache.log4j.Logger;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.server.Connector;
+import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.xml.XmlConfiguration;
+import org.ntnunotif.wsnu.base.util.InternalMessage;
+
+import javax.servlet.ServletException;
+import javax.servlet.ServletInputStream;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * Created by Aleksander Skraastad (myth) on 3/12/15.
@@ -47,6 +57,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
     private Server _server;
     private final ArrayList<Connector> _connectors = new ArrayList();
     private HttpClient _client;
+    private HttpHandler _handler;
 
     /**
      * Empty constructor, uses defaults from jetty configuration file for WSNServer
@@ -116,11 +127,13 @@ public class WSNotificationServer extends AbstractProtocolServer {
         // TODO: Initialize other needed variables
 
         _client = null;
-        Resource configResource = null;
+        Resource configResource;
         try {
             configResource = Resource.newSystemResource(configurationFile);
             XmlConfiguration config = new XmlConfiguration(configResource.getInputStream());
             this._server = (Server)config.configure();
+            HttpHandler handler = new HttpHandler();
+            this._server.setHandler(handler);
             log.debug("XMLConfig complete, server instanciated.");
 
         } catch (Exception e) {
@@ -141,13 +154,17 @@ public class WSNotificationServer extends AbstractProtocolServer {
         log.info("Booting WSNServer.");
         if (!_running) {
             try {
+                // Initialize a plain HttpClient
                 this._client = new HttpClient();
+                // Turn off following HTTP 30x redirects for the client
                 this._client.setFollowRedirects(false);
                 this._client.start();
                 log.info("Started WSNServer HTTPClient");
 
+                // For all registered connectors in WSNotificationServer, add these to the Jetty Server
                 this._connectors.stream().forEach(c -> this._server.addConnector(c));
 
+                // Create a new thread for the Jetty Server to run in
                 this._serverThread = new Thread(() -> {
                     try {
                         WSNotificationServer.this._server.start();
@@ -158,6 +175,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
                     }
                 });
                 this._serverThread.setName("WSNServer");
+                // Start the Jetty Server
                 this._serverThread.start();
                 this._serverThread.join();
                 WSNotificationServer._running = true;
@@ -168,4 +186,53 @@ public class WSNotificationServer extends AbstractProtocolServer {
         }
     }
 
+    private class HttpHandler extends AbstractHandler {
+
+        @Override
+        public void handle(String target, Request baseRequest, HttpServletRequest request,
+                           HttpServletResponse response) throws IOException, ServletException {
+
+            log.info("HttpHandle invoked.");
+
+            boolean isChunked = false;
+
+            Enumeration headerNames = request.getHeaderNames();
+
+            log.info("Checking headers...");
+            while(headerNames.hasMoreElements()) {
+                String outMessage = (String)headerNames.nextElement();
+                Enumeration returnMessage = request.getHeaders(outMessage);
+
+                while(returnMessage.hasMoreElements()) {
+                    String inputStream = (String)returnMessage.nextElement();
+                    log.info(outMessage + "=" + inputStream);
+                    if(outMessage.equals("Transfer-Encoding") && inputStream.equals("chunked")) {
+                        log.info("Found Transfer-Encoding was chunked.");
+                        isChunked = true;
+                    }
+                }
+            }
+
+            log.info("Accepted message, trying to instantiate WSNu InternalMessage");
+            InternalMessage outMessage1;
+            if(request.getContentLength() <= 0 && !isChunked) {
+                outMessage1 = new InternalMessage(1, null);
+            } else {
+                ServletInputStream returnMessage1 = request.getInputStream();
+                outMessage1 = new InternalMessage(5, returnMessage1);
+            }
+            log.info("InternalMessage: " + outMessage1);
+
+            outMessage1.getRequestInformation().setEndpointReference(request.getRemoteHost());
+            outMessage1.getRequestInformation().setRequestURL(request.getRequestURI());
+            outMessage1.getRequestInformation().setParameters(request.getParameterMap());
+
+            log.info("OutMessage: " + outMessage1);
+
+            // And at this point WSNu forwards the outMessage1 to the forwardingHub, and proceeds to await
+            // a new InternalMessage, named returnMessage with correct status flags and proper content.
+
+            // We need to look into the hub to what the method acceptNetMessage does.
+        }
+    }
 }

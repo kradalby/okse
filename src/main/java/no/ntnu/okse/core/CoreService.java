@@ -119,10 +119,12 @@ public class CoreService extends Thread {
         log.info("CoreService started.");
         log.info("Attempting to boot ProtocolServers.");
 
+        // Call the boot() method on all registered ProtocolServers
         this.bootProtocolServers();
 
         log.info("Completed booting ProtocolServers.");
 
+        // Initiate main run loop, which awaits Events to be committed to the eventQueue
         while (running) {
             try {
                 Event e = eventQueue.take();
