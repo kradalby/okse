@@ -24,36 +24,37 @@
 
 package no.ntnu.okse.web.controller;
 
-import no.ntnu.okse.web.model.Subscriber;
-import no.ntnu.okse.web.model.Topic;
-import org.springframework.web.bind.annotation.*;
-
-import java.lang.String;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
+import no.ntnu.okse.web.model.Stats;
+import org.hyperic.sigar.Mem;
+import org.hyperic.sigar.Sigar;
+import org.hyperic.sigar.SigarException;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Created by Håkon Ødegård Løvdal (hakloev) on 25/02/15.
- * <p>
- * okse is licenced under the MIT licence.
+ * Created by Fredrik on 13/03/15.
  */
+
 @RestController
-public class ApiController {
+@RequestMapping("/api/stats")
+public class StatsController {
+    private static Sigar sigar = new Sigar();
 
-    @RequestMapping(value = "/api/main", method = RequestMethod.GET)
-    public List<Topic> main() {
-        List<Topic> allTheShit = new ArrayList<>();
-        return allTheShit;
+    @RequestMapping(method = RequestMethod.GET)
+    public Stats stats() {
+
+
+        try {
+            Mem mem = sigar.getMem();
+            return new Stats("Test" + mem.getActualFree(), 40, 34, 32323, 232, 232, 2444);
+        } catch (SigarException se) {
+            se.printStackTrace();
+        }
+
+        return null;
     }
 
-
-
-    @RequestMapping(value = "/api/config", method = RequestMethod.GET)
-    public List<Topic> config(){
-        List<Topic> allTheShit = new ArrayList<>();
-        return allTheShit;
-    }
 }
+
+
