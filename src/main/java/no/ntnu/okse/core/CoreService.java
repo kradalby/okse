@@ -93,12 +93,22 @@ public class CoreService extends Thread {
     }
 
     /**
+     * Fetches the ArrayList of ProtocolServers currently added to CoreService.
+     * @return: An ArrayList of ProtocolServers
+     */
+    public ArrayList<ProtocolServer> getAllProtocolServers() { return this.protocolServers; }
+
+    /**
      * Helper method that boots all added protocolservers.
      */
     private void bootProtocolServers() {
         protocolServers.forEach(ps -> ps.boot());
     }
 
+
+    // TODO: Create a method called getProtocolServer(Class classname) that locates the PS
+    // TODO: that is an instance of the given class, and returns it, allowing for correct casting
+    // TODO: on the recieving end.
 
     /**
      * Starts the main loop of the CoreService thread.

@@ -47,7 +47,7 @@ public class Application {
     /**
      * Main method for the OKSE Message Broker
      * Used to initate the complete application (CoreService and WebServer)
-     * @param args Command line arguments, most probably not used
+     * @param args Command line arguments
      */
     public static void main(String[] args) {
         log = Logger.getLogger(Application.class.getName());
@@ -61,7 +61,7 @@ public class Application {
             log.info("okse.db exists");
         }
 
-        // Boot system threads and start run processes.
+        // Initialize system threads
         webserver = new Server();
         cs = new CoreService();
 
