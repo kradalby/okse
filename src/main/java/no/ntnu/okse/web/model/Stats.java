@@ -36,9 +36,13 @@ public class Stats {
     private final long mbReceived;
     private final long messagesSent;
     private final long messagesReceived;
+    String mem = null;
 
 
-    public Stats(double ramUse, double cpuUse, long mbSent, long mbReceived, long messagesSent, long messagesReceived){
+
+
+    public Stats(String mem, double ramUse, double cpuUse, long mbSent, long mbReceived, long messagesSent, long messagesReceived){
+        this.mem = mem;
         this.ramUse = ramUse;
         this.cpuUse = cpuUse;
         this.mbSent = mbSent;
