@@ -24,7 +24,6 @@
 
 package no.ntnu.okse.core;
 
-import no.ntnu.okse.protocol.Protocol;
 import no.ntnu.okse.protocol.servers.ProtocolServer;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -80,18 +79,22 @@ public class CoreServiceTest {
     @Test
     public void testRemoveProtocolServer() throws Exception {
         ProtocolServer testProtocolServer = () -> System.out.println("ProtocolServer initialized.");
+        ProtocolServer testProtocolServer2 = () -> System.out.println("ProtocolServer initialized.");
 
-        // Test that removing a non-existant PS has no effect
-        cs.removeProtocolServer(testProtocolServer);
-        assertEquals(cs.getAllProtocolServers().size(), 0,
-                "The amount of PS should still be 0 at this point.");
-
-        // Test adding and removing a PS works
+        // Add a PS
         cs.addProtocolServer(testProtocolServer);
         assertEquals(cs.getAllProtocolServers().size(), 1,
                 "The amount of registered ProtocolServers should be 1 at this point.");
+
+        // Try removing a PS not in the list
+        cs.removeProtocolServer(testProtocolServer2);
+        assertEquals(cs.getAllProtocolServers().size(), 1,
+                "The amount of PS should still be 1 at this point.");
+
+        // Try removing a PS in the list
         cs.removeProtocolServer(testProtocolServer);
         assertEquals(cs.getAllProtocolServers().size(), 0,
                 "The amount of registered ProtocolServers should be 0 at this point.");
+
     }
 }
