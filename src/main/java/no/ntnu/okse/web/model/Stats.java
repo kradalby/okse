@@ -31,39 +31,37 @@ import java.lang.management.*;
  * Created by Fredrik on 06/03/15.
  */
 public class Stats {
-    private final double ramTotal;
-    private final double ramFee;
-    private final double ramUse;
-    private final double cpuUse;
+    private final long ramTotal;
+    private final long ramFee;
+    private final long ramUse;
+    private final double cpuAvailable;
 
 
 
 
-    public Stats(double ramFree, double ramUse, double ramTotal, double cpuUse){
+    public Stats(long ramFree, long ramUse, long ramTotal, double cpuAvailable){
 
         this.ramFee = ramFree;
         this.ramUse = ramUse;
         this.ramTotal = ramTotal;
-        this.cpuUse = cpuUse;
+        this.cpuAvailable = cpuAvailable;
     }
 
 
-    public double getRamUse() {
+    public long getRamUse() {
         return ramUse;
     }
 
     public double getCpuUse() {
-        return cpuUse;
+        return cpuAvailable;
     }
 
 
-    public double getRamTotal(){
+    public long getRamTotal(){
       return ramTotal;
     }
 
-    public double getRamFree(){
-        return ramFee;
-    }
+    public double getRamFree(){ return ramFee; }
 
 
 

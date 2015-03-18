@@ -34,16 +34,20 @@ import org.springframework.web.bind.annotation.RestController;
  */
 
 @RestController
-@RequestMapping(value = "/api/stats", method = RequestMethod.GET)
+@RequestMapping(value = "/api/stats")
 public class StatsController {
+    @RequestMapping(method = RequestMethod.GET)
     public Stats stats() {
+        int mb = 1024*1024;
+
         double cpuAvailable = Runtime.getRuntime().availableProcessors();
-        double freeRam = Runtime.getRuntime().availableProcessors();
-        double totalRam = Runtime.getRuntime().totalMemory();
 
-        Stats stat = new Stats(22, 23, 22, 22);
+        long totalRam = Runtime.getRuntime().totalMemory()/mb;
+        long freeRam = Runtime.getRuntime().freeMemory()/mb;
+        long useRam = (totalRam - freeRam)/mb;
+
+        Stats stat = new Stats(freeRam, useRam, totalRam, cpuAvailable);
         return stat;
-
 
     }
 }
