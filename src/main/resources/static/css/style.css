@@ -34,6 +34,10 @@ body {
     margin-bottom: 0;
 }
 
+.panel.panel-collapse {
+    margin-bottom: 0;
+}
+
 .panel-heading h3 {
     cursor: pointer;
 }
