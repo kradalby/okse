@@ -24,31 +24,27 @@
 
 package no.ntnu.okse.web.model;
 
+import java.lang.management.*;
+
 
 /**
  * Created by Fredrik on 06/03/15.
  */
 public class Stats {
+    private final double ramTotal;
+    private final double ramFee;
     private final double ramUse;
     private final double cpuUse;
-    private final long mbSent;
-    private final long mbReceived;
-    private final long messagesSent;
-    private final long messagesReceived;
 
 
 
 
+    public Stats(double ramFree, double ramUse, double ramTotal, double cpuUse){
 
-    public Stats(double ramUse, double cpuUse, long mbSent, long mbReceived, long messagesSent, long messagesReceived){
+        this.ramFee = ramFree;
         this.ramUse = ramUse;
+        this.ramTotal = ramTotal;
         this.cpuUse = cpuUse;
-        this.mbSent = mbSent;
-        this.mbReceived = mbReceived;
-        this.messagesSent = messagesSent;
-        this.messagesReceived = messagesReceived;
-
-
     }
 
 
@@ -60,21 +56,15 @@ public class Stats {
         return cpuUse;
     }
 
-    public long getMbSent() {
-        return mbSent;
+
+    public double getRamTotal(){
+      return ramTotal;
     }
 
-    public long getMbReceived() {
-        return mbReceived;
+    public double getRamFree(){
+        return ramFee;
     }
 
-    public long getMessagesSent() {
-        return messagesSent;
-    }
-
-    public long getMessagesReceived() {
-        return messagesReceived;
-    }
 
 
 
