@@ -47,27 +47,63 @@
                     </div>
                 </form>
             </div>
-            <div class="col-md-4">
-                <div class="panel panel-default">
+            <div class="col-md-8">
+                <div class="panel panel-primary">
                     <!-- Default panel contents -->
-                    <div class="panel-heading">Topics</div>
-                    <div class="panel-body">
-                        <p>Config here</p>
+                    <div class="panel-heading">
+                        <h3 class="panel-title" data-toggle="collapse" data-target="#gloshaugen-map" aria-expanded="true">
+                            <a href="#gloshaugen-map">gloshaugen</a>
+                        </h3>
                     </div>
-
+                    <div id="gloshaugen-map" class="panel panel-collapse collapse">
+                        <div class="panel-body">
+                            <p>This is a list of the topic that <strong>gloshaugen</strong> is mapped against. To add your own mappings please enter a topic in the input field below or choose from the dropdown list of active topics.</p>
+                        </div>
+                        <!-- List group -->
+                        <ul class="list-group">
+                            <li class="list-group-item">oslo</li>
+                            <li class="list-group-item">bedpress</li>
+                            <li class="list-group-item">ekskursjon</li>
+                            <li class="list-group-item">trondheim</li>
+                            <li class="list-group-item">
+                                <div class="input-group">
+                                    <span class="input-group-addon" id="basic-addon2">gloshaugen <span class="glyphicon glyphicon-arrow-right" aria-hidden="true"></span></span>
+                                    <input type="text" class="form-control" placeholder="topic to map against..." aria-describedby="basic-addon2" />
+                                    <span class="input-group-btn">
+                                        <button class="btn btn-success" type="button">Add</button>
+                                    </span>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
-            </div>
-            <div class="col-md-4">
-                <div class="panel panel-default">
+                <div class="panel panel-primary">
                     <!-- Default panel contents -->
-                    <div class="panel-heading">Service</div>
-                    <!-- <div class="panel-body"></div> -->
-                    <!-- List group -->
-                    <ul class="list-group">
-                        <li class="list-group-item">Service oriented config</li>
-                        <li class="list-group-item">Placeholder text</li>
-                        <li class="list-group-item">Vestibulum at eros</li>
-                    </ul>
+                    <div class="panel-heading">
+                        <h3 class="panel-title" data-toggle="collapse" data-target="#beer-map" aria-expanded="true">
+                            <a href="#beer-map">beer</a>
+                        </h3>
+                    </div>
+                    <div id="beer-map" class="panel panel-collapse collapse">
+                        <div class="panel-body">
+                            <p>This is a list of the topic that <strong>beer</strong> is mapped against. To add your own mappings please enter a topic in the input field below or choose from the dropdown list of active topics.</p>
+                        </div>
+                        <!-- List group -->
+                        <ul class="list-group">
+                            <li class="list-group-item">ntnu</li>
+                            <li class="list-group-item">bedpress</li>
+                            <li class="list-group-item">ekskursjon</li>
+                            <li class="list-group-item">
+                                <div class="input-group">
+                                    <span class="input-group-addon" id="basic-addon3">beer <span class="glyphicon glyphicon-arrow-right" aria-hidden="true"></span></span>
+                                    <input type="text" class="form-control" placeholder="topic to map against..." aria-describedby="basic-addon3" />
+                                    <span class="input-group-btn">
+                                        <button class="btn btn-success" type="button">Add</button>
+                                    </span>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>

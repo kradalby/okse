@@ -50,10 +50,4 @@ public class ApiController {
     }
 
 
-
-    @RequestMapping(value = "/api/config", method = RequestMethod.GET)
-    public List<Topic> config(){
-        List<Topic> allTheShit = new ArrayList<>();
-        return allTheShit;
-    }
 }

@@ -31,24 +31,26 @@ var Topics = (function($) {
     /*
         Creates, fills and returns a tr element
      */
-    var fillTable = function(subscribers) {
+    var fillTable = function(data) {
         var trHTML = '';
-        $.each(subscribers, function (i, subscriber) {
-            trHTML += '<tr>' +
-            '<td>' + subscriber.protocol + '</td>' +
-            '<td>' + subscriber.ip + '</td>' +
-            '<td>' + subscriber.port + '</td>' +
-            '<td><a id="' + i + '" class="btn btn-xs btn-danger delete-subscriber">Delete</a></td>' +
-            '</tr>';
+        $.each(data.subscribers, function (i, subscriber) {
+            if ($('#' + subscriber.ip).length === 0) {
+                trHTML += '<tr>' +
+                '<td>' + subscriber.protocol + '</td>' +
+                '<td>' + subscriber.ip + '</td>' +
+                '<td>' + subscriber.port + '</td>' +
+                '<td><a id="' + subscriber.ip + '" class="btn btn-xs btn-block btn-warning delete-subscriber">Delete</a></td>' +
+                '</tr>';
+            }
         });
-        trHTML += '<tr><td colspan="4"><a class="btn btn-block btn-danger delete-topic">Delete all</a></td></tr>';
+        trHTML += '<tr><td colspan="4"><a id="' + data.id + '" class="btn btn-block btn-danger delete-topic">Delete all</a></td></tr>';
         return trHTML
     }
     /*
         Iterates all the subscribers of this topic and overwrites the table with the new information
      */
-    var updatePanel = function(subscribers, panel) {
-        $(panel).html(fillTable(subscribers));
+    var updatePanel = function(data, panel) {
+        $(panel).html(fillTable(data));
     }
 
     /*
@@ -56,14 +58,14 @@ var Topics = (function($) {
      */
     var createPanelAndTableTemplate = function(topicName) {
         var panel = $('<div class="panel panel-primary">' +
-            '<div class="panel-heading">' +
-                '<h3 class="panel-title collapsed" data-toggle="collapse" data-target="#' + topicName.toLowerCase() + '">' +
-                '<a href="#' + topicName.toLowerCase() + '">' + topicName +
-                '</a></h3></div>' +
-            '<div id="' + topicName.toLowerCase() +'" class="panel-collapse collapse">' +
-                '<div class="table-reponsive"><table class="table table-striped">' +
-                '<thead><tr><th>Protocol</th><th>IP</th><th>Port</th><th>Actions</th></tr></thead><tbody></tbody>' +
-                '</table></div></div></div>')
+        '<div class="panel-heading">' +
+        '<h3 class="panel-title collapsed" data-toggle="collapse" data-target="#' + topicName.toLowerCase() + '">' +
+        '<a href="#' + topicName.toLowerCase() + '">' + topicName +
+        '</a></h3></div>' +
+        '<div id="' + topicName.toLowerCase() +'" class="panel-collapse collapse">' +
+        '<div class="table-reponsive"><table class="table table-striped">' +
+        '<thead><tr><th>Protocol</th><th>IP</th><th>Port</th><th>Actions</th></tr></thead><tbody></tbody>' +
+        '</table></div></div></div>')
         return panel
     }
 
@@ -72,27 +74,51 @@ var Topics = (function($) {
      */
     var createPanel = function(data) {
         var panel = createPanelAndTableTemplate(data.topicName)
-        $(panel).find('tbody').html(fillTable(data.subscribers))
+        $(panel).find('tbody').html(fillTable(data))
         $('#topics-column').append(panel);
     }
 
+    var unBindButtons = function() {
+        $('.delete-topic').off('click');
+        $('.delete-subscriber').off('click');
+        $('#delete-all-topics').off('click');
+    }
+
     var bindButtons = function() {
+        // need to unbind all buttons between binding and add an id to topic a elements
         $('.delete-topic').on('click', function(e) {
             e.preventDefault();
-            $(this).closest('.panel').remove();
-            console.log("Removing complete topic")
+
+            Main.ajax(("topics/delete/" + this.id), function() {
+                console.log("Unable to remove topic")
+            }, function() {
+                $(e.target).closest('.panel').remove();
+                console.log("Removing complete topic")
+            }, "POST")
+
 
         });
         $('.delete-subscriber').on('click', function(e) {
             e.preventDefault();
-            $(this).parent().parent().remove();
-            console.log("Removing single subscriber");
 
+            Main.ajax(("topics/delete/subscriber/" + this.id), function() {
+                console.log("Unable to remove subscriber");
+            }, function() {
+                $(e.target).parent().parent().remove();
+                console.log("Removing single subscriber");
+            }, "POST")
         });
+        // TODO: Only need binding once, fix it!
         $('#delete-all-topics').on('click', function(e) {
             e.preventDefault()
-            $('#topics-column').html('');
-            console.log("Removing all topics");
+
+            Main.ajax("topics/delete/all", function() {
+                console.log("Unable to remove all topics");
+            }, function() {
+                $('#topics-column').html('');
+                console.log("Removing all topics");
+            }, "POST")
+
         });
     }
 
@@ -101,15 +127,18 @@ var Topics = (function($) {
         error: function() {
           console.log("Error in Ajax for Topics")
         },
-        // Ajax success function (updates all the information
+        // Ajax success function (updates all the information)
         refresh: function(response) {
+            unBindButtons();
+
             var topicName = response.topicName.toLowerCase()
-            if ($('#' + topicName).length === 0) { // If the topic doesn't already exist
+
+            if ($('#' + topicName).length === 0)  // If the topic doesn't already exist
                 createPanel(response)
-            } else { // If the topic exist
-                updatePanel(response.subscribers, $('#' + topicName).find('tbody'))
-            }
-            bindButtons()
+            else  // If the topic exist
+                updatePanel(response, $('#' + topicName).find('tbody'))
+
+            bindButtons();
         }
 
     }
