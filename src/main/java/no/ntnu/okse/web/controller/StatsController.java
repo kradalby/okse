@@ -25,9 +25,6 @@
 package no.ntnu.okse.web.controller;
 
 import no.ntnu.okse.web.model.Stats;
-import org.hyperic.sigar.Mem;
-import org.hyperic.sigar.Sigar;
-import org.hyperic.sigar.SigarException;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -37,24 +34,14 @@ import org.springframework.web.bind.annotation.RestController;
  */
 
 @RestController
-@RequestMapping("/api/stats")
+@RequestMapping(value = "/api/stats", method = RequestMethod.GET)
 public class StatsController {
-    private static Sigar sigar = new Sigar();
-
-    @RequestMapping(method = RequestMethod.GET)
     public Stats stats() {
-
-
-        try {
-            Mem mem = sigar.getMem();
-            return new Stats("Test" + mem.getActualFree(), 40, 34, 32323, 232, 232, 2444);
-        } catch (SigarException se) {
-            se.printStackTrace();
-        }
-
-        return null;
+        Stats stat = new Stats(40, 32, 32, 32, 32, 32);
+        return stat;
     }
-
 }
+
+
 
 

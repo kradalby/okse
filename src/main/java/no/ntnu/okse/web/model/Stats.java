@@ -24,7 +24,6 @@
 
 package no.ntnu.okse.web.model;
 
-import org.hyperic.sigar.*;
 
 /**
  * Created by Fredrik on 06/03/15.
@@ -36,13 +35,12 @@ public class Stats {
     private final long mbReceived;
     private final long messagesSent;
     private final long messagesReceived;
-    String mem = null;
 
 
 
 
-    public Stats(String mem, double ramUse, double cpuUse, long mbSent, long mbReceived, long messagesSent, long messagesReceived){
-        this.mem = mem;
+
+    public Stats(double ramUse, double cpuUse, long mbSent, long mbReceived, long messagesSent, long messagesReceived){
         this.ramUse = ramUse;
         this.cpuUse = cpuUse;
         this.mbSent = mbSent;
@@ -50,8 +48,6 @@ public class Stats {
         this.messagesSent = messagesSent;
         this.messagesReceived = messagesReceived;
 
-        Sigar sigar = new Sigar();
-        //final Mem mem = sigar.getMem();
 
     }
 
