@@ -60,7 +60,22 @@ public class CoreServiceTest {
 
     @Test
     public void testAddProtocolServer() throws Exception {
-        ProtocolServer testProtocolServer = () -> System.out.println("ProtocolServer initialized.");
+        ProtocolServer testProtocolServer = new ProtocolServer() {
+            @Override
+            public int getTotalRequests() {
+                return 0;
+            }
+
+            @Override
+            public int getTotalMessages() {
+                return 0;
+            }
+
+            @Override
+            public void boot() {
+                System.out.println("ProtocolServer initialized.");
+            }
+        };
 
         // Test that adding a new ProtocolServer works.
         cs.addProtocolServer(testProtocolServer);
@@ -78,8 +93,39 @@ public class CoreServiceTest {
 
     @Test
     public void testRemoveProtocolServer() throws Exception {
-        ProtocolServer testProtocolServer = () -> System.out.println("ProtocolServer initialized.");
-        ProtocolServer testProtocolServer2 = () -> System.out.println("ProtocolServer initialized.");
+        ProtocolServer testProtocolServer = new ProtocolServer() {
+            @Override
+            public int getTotalRequests() {
+                return 0;
+            }
+
+            @Override
+            public int getTotalMessages() {
+                return 0;
+            }
+
+            @Override
+            public void boot() {
+
+            }
+        };
+
+        ProtocolServer testProtocolServer2 = new ProtocolServer() {
+            @Override
+            public int getTotalRequests() {
+                return 0;
+            }
+
+            @Override
+            public int getTotalMessages() {
+                return 0;
+            }
+
+            @Override
+            public void boot() {
+                System.out.println("ProtocolServer initialized.");
+            }
+        };
 
         // Add a PS
         cs.addProtocolServer(testProtocolServer);

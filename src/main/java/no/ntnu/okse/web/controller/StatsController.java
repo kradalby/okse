@@ -24,6 +24,7 @@
 
 package no.ntnu.okse.web.controller;
 
+import no.ntnu.okse.Application;
 import no.ntnu.okse.web.model.Stats;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -41,10 +42,15 @@ import java.lang.management.ManagementFactory;
 public class StatsController {
     @RequestMapping(method = RequestMethod.GET)
     public Stats stats() {
+
+        // Baseformat
         int mb = 1024*1024;
 
-        MBeanServer mbs    = ManagementFactory.getPlatformMBeanServer();
+        // ProtocolServer statistics
+        int totalMessages = Application.cs.getTotalMessagesFromProtocolServers();
+        int totalRequests = Application.cs.getTotalRequestsFromProtocolServers();
 
+        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
 
         double cpuAvailable = Runtime.getRuntime().availableProcessors();
 
@@ -52,7 +58,7 @@ public class StatsController {
         long freeRam = Runtime.getRuntime().freeMemory()/mb;
         long useRam = (totalRam - freeRam)/mb;
 
-        Stats stat = new Stats(freeRam, useRam, totalRam, cpuAvailable);
+        Stats stat = new Stats(freeRam, useRam, totalRam, cpuAvailable, totalRequests, totalMessages);
         return stat;
 
     }
