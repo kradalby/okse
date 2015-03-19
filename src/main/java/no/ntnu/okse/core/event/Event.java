@@ -37,7 +37,7 @@ public abstract class Event {
 
     /**
      * Constructs an Event containing an operation, some data and a dataType.
-     * <p/>
+     * <p>
      * @param operation: A string representing the operation to be performed.
      * @param data: An object containing the data payload.
      * @param dataType: A string representing the type of data.
@@ -50,7 +50,7 @@ public abstract class Event {
 
     /**
      * What operation is to be performed from this event.
-     * <p/>
+     * <p>
      * @return: A string representing the operation to be performed.
      */
     public String getOperation() {
@@ -59,13 +59,14 @@ public abstract class Event {
 
     /**
      * An abstract method to retrieve the data payload.
-     * <p/>
+     * <p>
      * @return: An object containing the data payload.
      */
     public abstract Object getData();
 
     /**
      * What data type is the data object
+     * <p>
      * @return: A string representing the class instance of the data object
      */
     public String getDataType() {

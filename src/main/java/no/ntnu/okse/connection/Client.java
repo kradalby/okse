@@ -31,6 +31,7 @@ import no.ntnu.okse.protocol.Protocol;
  * Created by Aleksander Skraastad (myth) on 3/2/15.
  * <p>
  * okse is licenced under the MIT licence.
+ * </p>
  */
 public interface Client {
     public String getClientAddress();

@@ -26,15 +26,12 @@ package no.ntnu.okse;
 
 import no.ntnu.okse.core.CoreService;
 import no.ntnu.okse.db.DB;
+import no.ntnu.okse.protocol.wsn.WSNotificationServer;
 import no.ntnu.okse.web.Server;
-import sun.rmi.runtime.Log;
+import org.apache.log4j.Logger;
 
 import java.io.File;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.logging.Handler;
-import java.util.logging.Logger;
+
 
 /**
  * Created by Håkon Ødegård Løvdal (hakloev) on 25/02/15.
@@ -50,15 +47,10 @@ public class Application {
     /**
      * Main method for the OKSE Message Broker
      * Used to initate the complete application (CoreService and WebServer)
-     * @param args Command line arguments, most probably not used
+     * @param args Command line arguments
      */
     public static void main(String[] args) {
         log = Logger.getLogger(Application.class.getName());
-
-        webserver = new Server();
-        cs = new CoreService();
-        webserver.run();
-        cs.start();
 
         File dbFile = new File("okse.db");
 
@@ -69,5 +61,23 @@ public class Application {
             log.info("okse.db exists");
         }
 
+        // Initialize system threads
+        webserver = new Server();
+        cs = new CoreService();
+
+        // Add ProtocolServers to CoreService
+        cs.addProtocolServer(WSNotificationServer.getInstance());
+
+        // Start the admin console
+        webserver.run();
+
+        // Start the CoreService
+        cs.start();
+
+        try {
+            cs.join();
+        } catch (InterruptedException e) {
+            log.trace(e.getStackTrace());
+        }
     }
 }

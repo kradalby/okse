@@ -29,6 +29,10 @@
 
 var Config = (function($) {
 
+    var createPanel = function() {
+
+    }
+
     return {
         error: function() {
             console.log("error in ajax for config")
