@@ -30,7 +30,7 @@
 var Config = (function($) {
 
     var createPanel = function() {
-        
+
     }
 
     return {
