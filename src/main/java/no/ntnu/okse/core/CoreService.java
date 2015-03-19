@@ -26,8 +26,7 @@ package no.ntnu.okse.core;
 
 import no.ntnu.okse.core.event.Event;
 
-import no.ntnu.okse.protocol.servers.ProtocolServer;
-import no.ntnu.okse.protocol.servers.WSNotificationServer;
+import no.ntnu.okse.protocol.ProtocolServer;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;

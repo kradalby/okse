@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-package no.ntnu.okse.protocol.servers;
+package no.ntnu.okse.protocol;
 
 import org.apache.log4j.Logger;
 

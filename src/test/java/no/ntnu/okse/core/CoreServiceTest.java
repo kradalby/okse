@@ -24,7 +24,7 @@
 
 package no.ntnu.okse.core;
 
-import no.ntnu.okse.protocol.servers.ProtocolServer;
+import no.ntnu.okse.protocol.ProtocolServer;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;

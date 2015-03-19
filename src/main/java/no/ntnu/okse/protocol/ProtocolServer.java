@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-package no.ntnu.okse.protocol.servers;
+package no.ntnu.okse.protocol;
 
 /**
  * Created by Aleksander Skraastad (myth) on 3/13/15.

@@ -22,13 +22,14 @@
  * THE SOFTWARE.
  */
 
-package no.ntnu.okse.protocol.servers;
+package no.ntnu.okse.protocol.wsn;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Enumeration;
 
+import no.ntnu.okse.protocol.AbstractProtocolServer;
 import org.apache.log4j.Logger;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.server.Connector;

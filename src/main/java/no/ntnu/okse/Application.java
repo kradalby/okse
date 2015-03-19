@@ -26,7 +26,7 @@ package no.ntnu.okse;
 
 import no.ntnu.okse.core.CoreService;
 import no.ntnu.okse.db.DB;
-import no.ntnu.okse.protocol.servers.WSNotificationServer;
+import no.ntnu.okse.protocol.wsn.WSNotificationServer;
 import no.ntnu.okse.web.Server;
 import org.apache.log4j.Logger;
 
