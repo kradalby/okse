@@ -29,6 +29,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.management.MBeanServer;
+import java.lang.management.ManagementFactory;
+
 /**
  * Created by Fredrik on 13/03/15.
  */
@@ -39,6 +42,9 @@ public class StatsController {
     @RequestMapping(method = RequestMethod.GET)
     public Stats stats() {
         int mb = 1024*1024;
+
+        MBeanServer mbs    = ManagementFactory.getPlatformMBeanServer();
+
 
         double cpuAvailable = Runtime.getRuntime().availableProcessors();
 
