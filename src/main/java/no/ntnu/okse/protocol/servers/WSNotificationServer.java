@@ -25,6 +25,7 @@
 package no.ntnu.okse.protocol.servers;
 
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Enumeration;
 
@@ -132,7 +133,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
             configResource = Resource.newSystemResource(configurationFile);
             XmlConfiguration config = new XmlConfiguration(configResource.getInputStream());
             this._server = (Server)config.configure();
-            HttpHandler handler = new HttpHandler();
+            HttpHandler handler = new WSNotificationServer.HttpHandler();
             this._server.setHandler(handler);
             log.debug("XMLConfig complete, server instanciated.");
 
@@ -192,7 +193,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
         public void handle(String target, Request baseRequest, HttpServletRequest request,
                            HttpServletResponse response) throws IOException, ServletException {
 
-            log.info("HttpHandle invoked.");
+            log.info("HttpHandle invoked on target: " + target);
 
             boolean isChunked = false;
 
@@ -227,7 +228,18 @@ public class WSNotificationServer extends AbstractProtocolServer {
             outMessage1.getRequestInformation().setRequestURL(request.getRequestURI());
             outMessage1.getRequestInformation().setParameters(request.getParameterMap());
 
-            log.info("OutMessage: " + outMessage1);
+            //log.info("OutMessage: " + outMessage1.getMessage());
+            log.info("OutMessage: " + outMessage1.getRequestInformation().getEndpointReference());
+            log.info("OutMessage: " + outMessage1.getRequestInformation().getRequestURL());
+            log.info("OutMessage: " + outMessage1.getRequestInformation().getHttpStatus());
+
+            OutputStreamWriter writer = new OutputStreamWriter(response.getOutputStream());
+            writer.write("Success, you tried to access " + target + " from " +
+                    request.getRemoteAddr());
+            writer.flush();
+
+            response.setStatus(200);
+            baseRequest.setHandled(true);
 
             // And at this point WSNu forwards the outMessage1 to the forwardingHub, and proceeds to await
             // a new InternalMessage, named returnMessage with correct status flags and proper content.
