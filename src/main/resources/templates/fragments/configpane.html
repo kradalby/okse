@@ -47,27 +47,93 @@
                     </div>
                 </form>
             </div>
-            <div class="col-md-4">
-                <div class="panel panel-default">
-                    <!-- Default panel contents -->
-                    <div class="panel-heading">Topics</div>
-                    <div class="panel-body">
-                        <p>Config here</p>
+            <div class="col-md-8">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h4>Topic mapping</h4>
                     </div>
-
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="panel panel-default">
-                    <!-- Default panel contents -->
-                    <div class="panel-heading">Service</div>
-                    <!-- <div class="panel-body"></div> -->
-                    <!-- List group -->
-                    <ul class="list-group">
-                        <li class="list-group-item">Service oriented config</li>
-                        <li class="list-group-item">Placeholder text</li>
-                        <li class="list-group-item">Vestibulum at eros</li>
-                    </ul>
+                    <div class="col-md-6">
+                        <h4>Topic mapping</h4>
+                        <p>This is a list of the topics that have active subscriptions in the server and their mappings. To add your own mappings please enter a topic in the input field and click "Add".</p>
+                        <div class="panel panel-primary">
+                            <!-- Default panel contents -->
+                            <div class="panel-heading">
+                                <h3 class="panel-title" data-toggle="collapse" data-target="#gloshaugen-map" aria-expanded="true">
+                                    <a href="#gloshaugen-map">gloshaugen</a>
+                                </h3>
+                            </div>
+                            <div id="gloshaugen-map" class="panel panel-collapse collapse">
+                                <div class="panel-body">
+                                    <div class="input-group">
+                                        <span class="input-group-addon" id="basic-addon2">gloshaugen &nbsp;<span class="glyphicon glyphicon-arrow-right" aria-hidden="true"></span></span>
+                                        <input type="text" class="form-control" placeholder="topic to map gloshaugen against..." aria-describedby="basic-addon2" />
+                                    <span class="input-group-btn">
+                                        <button class="btn btn-success" type="button">Add</button>
+                                    </span>
+                                    </div>
+                                </div>
+                                <div class="table-reponsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                        <tr>
+                                            <th>Topic</th>
+                                            <th>Action</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>fjas</td>
+                                                <td><a id="fjas" class="btn btn-xs btn-block btn-warning">Delete</a></td>
+                                            </tr>
+                                            <tr>
+                                                <td>ntnu</td>
+                                                <td><a id="ntnu" class="btn btn-xs btn-block btn-warning">Delete</a></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel panel-primary">
+                            <!-- Default panel contents -->
+                            <div class="panel-heading">
+                                <h3 class="panel-title" data-toggle="collapse" data-target="#beer-map" aria-expanded="true">
+                                    <a href="#beer-map">beer</a>
+                                </h3>
+                            </div>
+                            <div id="beer-map" class="panel panel-collapse collapse">
+                                <div class="panel-body">
+                                    <div class="input-group">
+                                        <span class="input-group-addon" id="basic-addon3">beer &nbsp;<span class="glyphicon glyphicon-arrow-right" aria-hidden="true"></span></span>
+                                        <input type="text" class="form-control" placeholder="topic to map beer against..." aria-describedby="basic-addon3" />
+                                    <span class="input-group-btn">
+                                        <button class="btn btn-success" type="button">Add</button>
+                                    </span>
+                                    </div>
+                                </div>
+                                <div class="table-reponsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                        <tr>
+                                            <th>Topic</th>
+                                            <th>Action</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr>
+                                            <td>fjas</td>
+                                            <td><a id="fjas" class="btn btn-xs btn-block btn-warning">Delete</a></td>
+                                        </tr>
+                                        <tr>
+                                            <td>ntnu</td>
+                                            <td><a id="ntnu" class="btn btn-xs btn-block btn-warning">Delete</a></td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

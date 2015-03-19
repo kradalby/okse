@@ -40,8 +40,9 @@
                     <!-- <div class="panel-body"></div> -->
                     <!-- List group -->
                     <ul class="list-group">
-                        <li class="list-group-item"><strong>OS: </strong>Mac OS X</li>
-                        <li class="list-group-item"><strong>Architecture: </strong>amd64</li>
+                        <li class="list-group-item" th:each="entry : ${environment}">
+                            <strong th:text="${entry.key} + ': '"></strong><span th:text="${entry.value}"></span>
+                        </li>
                     </ul>
                 </div>
             </div>

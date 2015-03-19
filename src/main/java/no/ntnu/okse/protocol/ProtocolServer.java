@@ -22,25 +22,19 @@
  * THE SOFTWARE.
  */
 
+package no.ntnu.okse.protocol;
+
 /**
- * Created by Fredrik Tørnvall (freboto) and Håkon Ødegård Løvdal (hakloev) on 02/03/15.
+ * Created by Aleksander Skraastad (myth) on 3/13/15.
+ * <p>
+ * okse is licenced under the MIT licence.
  */
+public interface ProtocolServer {
 
+    // Statistics methods
+    public int getTotalRequests();
 
-var Config = (function($) {
+    public int getTotalMessages();
 
-    var createPanel = function() {
-
-    }
-
-    return {
-        error: function() {
-            console.log("error in ajax for config")
-        },
-        refresh: function(data) {
-            console.log(JSON.stringify(data))
-        }
-    }
-
-
-})(jQuery)
+    public void boot();
+}

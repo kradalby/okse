@@ -31,13 +31,23 @@ var Main = (function($) {
 
     var clickInterval;
 
-    var ajax = function(location, error, success) {
+    var setupAjax = function() {
+        var token = $("input[name='_csrf']").val();
+        var header = "X-CSRF-TOKEN";
+        $.ajaxSetup({
+            beforeSend: function(xhr) {
+                xhr.setRequestHeader(header, token);
+            }
+        });
+    }
+
+    var ajax = function(url, error, success, httpMethod, dataType) {
         $.ajax({
-            url: "/api/" + location.substring(1),
-            dataType: "json",
+            url: "/api/" + url,
+            dataType: dataType,
             error: error,
             success: success,
-            type: "GET"
+            type: httpMethod
         })
     };
 
@@ -50,7 +60,9 @@ var Main = (function($) {
     }
 
     return {
+        ajax: ajax,
         init: function() {
+            setupAjax()
             $(".nav-tabs").on("click", "a", function(e){
                 clearInterval(clickInterval)
                 var clickedElement = $(this).attr("href")
@@ -58,27 +70,27 @@ var Main = (function($) {
 
                 if (clickedElement === "#main")
                 {
-                    ajax(clickedElement, error, refresh)
+                    ajax(clickedElement.substring(1), error, refresh, "GET", "json")
                     clickInterval = setInterval( function() {
-                        ajax(clickedElement, error, refresh)
+                        ajax(clickedElement.substring(1), error, refresh, "GET", "json")
                     }, updateInterval);
                 } else if(clickedElement === "#topics")
                 {
-                    ajax(clickedElement, Topics.error, Topics.refresh)
+                    ajax(clickedElement.substring(1), Topics.error, Topics.refresh, "GET", "json")
                     clickInterval = setInterval( function() {
-                        ajax(clickedElement, Topics.error, Topics.refresh)
+                        ajax(clickedElement.substring(1), Topics.error, Topics.refresh, "GET", "json")
                     }, updateInterval);
                 } else if (clickedElement === "#stats")
                 {
-                    ajax(clickedElement, Stats.error, Stats.refresh)
+                    ajax(clickedElement.substring(1), Stats.error, Stats.refresh, "GET", "json")
                     clickInterval = setInterval( function() {
-                        ajax(clickedElement, Stats.error, Stats.refresh)
+                        ajax(clickedElement.substring(1), Stats.error, Stats.refresh, "GET", "json")
                     }, updateInterval);
                 } else if (clickedElement === "#config")
                 {
-                    ajax(clickedElement, Config.error, Config.refresh)
+                    ajax(clickedElement.substring(1), Config.error, Config.refresh, "GET", "json")
                     clickInterval = setInterval( function() {
-                        ajax(clickedElement, Config.error, Config.refresh)
+                        ajax(clickedElement.substring(1), Config.error, Config.refresh, "GET", "json")
                     }, updateInterval);
                 } else
                 {
@@ -88,7 +100,7 @@ var Main = (function($) {
 
             if ($('#main').length) {
                 clickInterval = setInterval( function() {
-                    ajax("#main", error, refresh)
+                    ajax("main", error, refresh, "GET", "json")
                 }, 2000);
             }
         }
@@ -98,5 +110,6 @@ var Main = (function($) {
 
 $(document).ready(function(){
     Main.init()
+    Topics.init()
 });
 

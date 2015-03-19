@@ -22,25 +22,30 @@
  * THE SOFTWARE.
  */
 
+package no.ntnu.okse.protocol;
+
+import org.apache.log4j.Logger;
+
 /**
- * Created by Fredrik Tørnvall (freboto) and Håkon Ødegård Løvdal (hakloev) on 02/03/15.
+ * Created by Aleksander Skraastad (myth) on 3/13/15.
+ * <p>
+ * okse is licenced under the MIT licence.
  */
+public abstract class AbstractProtocolServer implements ProtocolServer {
 
+    protected static String protocolServerType = null;
 
-var Config = (function($) {
+    // Runstate variables
+    protected static boolean _invoked = false;
+    protected static boolean _running = false;
 
-    var createPanel = function() {
+    // Logger singleton
+    protected static Logger log;
 
-    }
+    // Server wrapping thread
+    protected Thread _serverThread;
 
-    return {
-        error: function() {
-            console.log("error in ajax for config")
-        },
-        refresh: function(data) {
-            console.log(JSON.stringify(data))
-        }
-    }
+    // Initializer
+    protected abstract void init(Integer port);
 
-
-})(jQuery)
+}

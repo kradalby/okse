@@ -24,57 +24,53 @@
 
 package no.ntnu.okse.web.model;
 
-import org.hyperic.sigar.*;
+import java.lang.management.*;
+
 
 /**
  * Created by Fredrik on 06/03/15.
  */
 public class Stats {
-    private final double ramUse;
-    private final double cpuUse;
-    private final long mbSent;
-    private final long mbReceived;
-    private final long messagesSent;
-    private final long messagesReceived;
+    private final long ramTotal;
+    private final long ramFee;
+    private final long ramUse;
+    private final double cpuAvailable;
+    private final int totalRequests;
+    private final int totalMessages;
 
+    public Stats(long ramFree, long ramUse, long ramTotal, double cpuAvailable, int totalRequests, int totalMessages){
 
-    public Stats(double ramUse, double cpuUse, long mbSent, long mbReceived, long messagesSent, long messagesReceived){
+        this.ramFee = ramFree;
         this.ramUse = ramUse;
-        this.cpuUse = cpuUse;
-        this.mbSent = mbSent;
-        this.mbReceived = mbReceived;
-        this.messagesSent = messagesSent;
-        this.messagesReceived = messagesReceived;
-
-        Sigar sigar = new Sigar();
-        //final Mem mem = sigar.getMem();
-
+        this.ramTotal = ramTotal;
+        this.cpuAvailable = cpuAvailable;
+        this.totalRequests = totalRequests;
+        this.totalMessages = totalMessages;
     }
 
+    public int getTotalRequests() {
+        return totalRequests;
+    }
 
-    public double getRamUse() {
+    public int getTotalMessages() {
+        return totalMessages;
+    }
+
+    public long getRamUse() {
         return ramUse;
     }
 
     public double getCpuUse() {
-        return cpuUse;
+        return cpuAvailable;
     }
 
-    public long getMbSent() {
-        return mbSent;
+
+    public long getRamTotal(){
+      return ramTotal;
     }
 
-    public long getMbReceived() {
-        return mbReceived;
-    }
+    public double getRamFree(){ return ramFee; }
 
-    public long getMessagesSent() {
-        return messagesSent;
-    }
-
-    public long getMessagesReceived() {
-        return messagesReceived;
-    }
 
 
 

@@ -26,6 +26,7 @@ package no.ntnu.okse;
 
 import no.ntnu.okse.core.CoreService;
 import no.ntnu.okse.db.DB;
+import no.ntnu.okse.protocol.wsn.WSNotificationServer;
 import no.ntnu.okse.web.Server;
 import org.apache.log4j.Logger;
 
@@ -46,7 +47,7 @@ public class Application {
     /**
      * Main method for the OKSE Message Broker
      * Used to initate the complete application (CoreService and WebServer)
-     * @param args Command line arguments, most probably not used
+     * @param args Command line arguments
      */
     public static void main(String[] args) {
         log = Logger.getLogger(Application.class.getName());
@@ -60,10 +61,17 @@ public class Application {
             log.info("okse.db exists");
         }
 
-        // Boot system threads and start run processes.
+        // Initialize system threads
         webserver = new Server();
         cs = new CoreService();
+
+        // Add ProtocolServers to CoreService
+        cs.addProtocolServer(WSNotificationServer.getInstance());
+
+        // Start the admin console
         webserver.run();
+
+        // Start the CoreService
         cs.start();
 
         try {

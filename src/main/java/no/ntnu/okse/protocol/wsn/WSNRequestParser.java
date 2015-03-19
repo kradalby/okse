@@ -22,25 +22,19 @@
  * THE SOFTWARE.
  */
 
+package no.ntnu.okse.protocol.wsn;
+
 /**
- * Created by Fredrik Tørnvall (freboto) and Håkon Ødegård Løvdal (hakloev) on 02/03/15.
+ * Created by Aleksander Skraastad (myth) on 3/19/15.
+ * <p>
+ * okse is licenced under the MIT licence.
  */
+public class WSNRequestParser {
 
 
-var Config = (function($) {
 
-    var createPanel = function() {
+    public WSNRequestParser() {
 
     }
 
-    return {
-        error: function() {
-            console.log("error in ajax for config")
-        },
-        refresh: function(data) {
-            console.log(JSON.stringify(data))
-        }
-    }
-
-
-})(jQuery)
+}

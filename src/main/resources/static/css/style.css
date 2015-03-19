@@ -30,8 +30,16 @@ body {
     padding-top: 20px;
 }
 
+.table {
+    margin-bottom: 0;
+}
+
+.panel.panel-collapse {
+    margin-bottom: 0;
+}
+
 .panel-heading h3 {
-    pointer:cursor;
+    cursor: pointer;
 }
 
 .panel-heading h3:after {
