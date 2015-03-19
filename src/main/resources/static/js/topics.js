@@ -57,15 +57,15 @@ var Topics = (function($) {
         Sets up an basic template for a panel
      */
     var createPanelAndTableTemplate = function(topicName) {
-        var panel = $('<div class="panel panel-primary">' +
+        var panel = '<div class="panel panel-primary">' +
         '<div class="panel-heading">' +
-        '<h3 class="panel-title collapsed" data-toggle="collapse" data-target="#' + topicName.toLowerCase() + '">' +
-        '<a href="#' + topicName.toLowerCase() + '">' + topicName +
+            '<h3 class="panel-title collapsed" data-toggle="collapse" data-target="#' + topicName.toLowerCase() + '">' +
+                '<a href="#' + topicName.toLowerCase() + '">' + topicName +
         '</a></h3></div>' +
         '<div id="' + topicName.toLowerCase() +'" class="panel-collapse collapse">' +
-        '<div class="table-reponsive"><table class="table table-striped">' +
-        '<thead><tr><th>Protocol</th><th>IP</th><th>Port</th><th>Actions</th></tr></thead><tbody></tbody>' +
-        '</table></div></div></div>')
+            '<div class="table-reponsive"><table class="table table-striped">' +
+                '<thead><tr><th>Protocol</th><th>IP</th><th>Port</th><th>Actions</th></tr></thead><tbody></tbody>' +
+        '</table></div></div></div>'
         return panel
     }
 
@@ -81,7 +81,6 @@ var Topics = (function($) {
     var unBindButtons = function() {
         $('.delete-topic').off('click');
         $('.delete-subscriber').off('click');
-        $('#delete-all-topics').off('click');
     }
 
     var bindButtons = function() {
@@ -108,21 +107,22 @@ var Topics = (function($) {
                 console.log("Removing single subscriber");
             }, "POST")
         });
-        // TODO: Only need binding once, fix it!
-        $('#delete-all-topics').on('click', function(e) {
-            e.preventDefault()
-
-            Main.ajax("topics/delete/all", function() {
-                console.log("Unable to remove all topics");
-            }, function() {
-                $('#topics-column').html('');
-                console.log("Removing all topics");
-            }, "POST")
-
-        });
     }
 
     return {
+        init: function() {
+            $('#delete-all-topics').on('click', function(e) {
+                e.preventDefault()
+
+                Main.ajax("topics/delete/all", function() {
+                    console.log("Unable to remove all topics");
+                }, function() {
+                    $('#topics-column').html('');
+                    console.log("Removing all topics");
+                }, "POST")
+
+            });
+        },
         // Ajax error function, should preferably update the site with information about this.
         error: function() {
           console.log("Error in Ajax for Topics")

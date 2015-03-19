@@ -110,5 +110,6 @@ var Main = (function($) {
 
 $(document).ready(function(){
     Main.init()
+    Topics.init()
 });
 
