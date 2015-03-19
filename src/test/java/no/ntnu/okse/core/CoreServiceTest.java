@@ -24,11 +24,13 @@
 
 package no.ntnu.okse.core;
 
+import no.ntnu.okse.protocol.ProtocolServer;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import static org.testng.Assert.*;
 
@@ -43,40 +45,56 @@ public class CoreServiceTest {
 
     @AfterMethod
     public void tearDown() throws Exception {
-        cs.stopThread();
+        // STUB
     }
 
     @Test
     public void testGetEventQueue() throws Exception {
-        assertTrue(cs.getEventQueue() instanceof LinkedBlockingQueue,
-                "getEventQueue should return an instance of LinkedBlockingQueue");
-    }
-
-
-    @Test
-    public void testRun() throws Exception {
-        assertTrue(cs.getState() == Thread.State.NEW,
-                "State of CoreService thread should be NEW before start() has been called but it was " +
-                cs.getState()
-        );
-        cs.start();
-        Thread.sleep(100);
-        assertTrue(cs.getState() == Thread.State.WAITING,
-                "State of CoreService thread should be WAITING after entering the run loop, but it was" +
-                cs.getState()
-        );
+        assertTrue(cs.getEventQueue() instanceof LinkedBlockingQueue);
     }
 
     @Test
-    public void testStopThread() throws Exception {
-        cs.start();
-        Thread.sleep(100);
-        cs.stopThread();
-        cs.interrupt();
-        Thread.sleep(100);
-        assertTrue(cs.getState() == Thread.State.TERMINATED,
-                "The state of CoreService thread should be TERMINATED after stopThread has been called, but it was " +
-                        cs.getState()
-        );
+    public void testGetExecutor() throws Exception {
+        assertTrue(cs.getExecutor() instanceof ThreadPoolExecutor);
+    }
+
+    @Test
+    public void testAddProtocolServer() throws Exception {
+        ProtocolServer testProtocolServer = () -> System.out.println("ProtocolServer initialized.");
+
+        // Test that adding a new ProtocolServer works.
+        cs.addProtocolServer(testProtocolServer);
+        assertEquals(cs.getAllProtocolServers().size(), 1,
+                "The amount of registered ProtocolServers should be 1 at this point.");
+
+        // Adding the same ProtocolServer should not have any effect
+        cs.addProtocolServer(testProtocolServer);
+        assertEquals(cs.getAllProtocolServers().size(), 1,
+                "The amount of registered ProtocolServers should still be 1 at this point.");
+
+        // Remove it again.
+        cs.removeProtocolServer(testProtocolServer);
+    }
+
+    @Test
+    public void testRemoveProtocolServer() throws Exception {
+        ProtocolServer testProtocolServer = () -> System.out.println("ProtocolServer initialized.");
+        ProtocolServer testProtocolServer2 = () -> System.out.println("ProtocolServer initialized.");
+
+        // Add a PS
+        cs.addProtocolServer(testProtocolServer);
+        assertEquals(cs.getAllProtocolServers().size(), 1,
+                "The amount of registered ProtocolServers should be 1 at this point.");
+
+        // Try removing a PS not in the list
+        cs.removeProtocolServer(testProtocolServer2);
+        assertEquals(cs.getAllProtocolServers().size(), 1,
+                "The amount of PS should still be 1 at this point.");
+
+        // Try removing a PS in the list
+        cs.removeProtocolServer(testProtocolServer);
+        assertEquals(cs.getAllProtocolServers().size(), 0,
+                "The amount of registered ProtocolServers should be 0 at this point.");
+
     }
 }
