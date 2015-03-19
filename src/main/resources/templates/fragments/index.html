@@ -33,7 +33,7 @@
             <div th:switch="${#authorization.expression('isAuthenticated()')}" class="row">
                 <div th:case="false" class="jumbotron">
                     <h1>OKSE Admin Console</h1>
-                    <p>Plase log in!</p>
+                    <p>Please log in!</p>
                 </div>
                 <div th:case="true" id="tabs-root">
                     <ul class="nav nav-tabs">

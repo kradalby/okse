@@ -22,25 +22,39 @@
  * THE SOFTWARE.
  */
 
+package no.ntnu.okse.web.controller;
+
+import no.ntnu.okse.web.model.Stats;
+import org.hyperic.sigar.Mem;
+import org.hyperic.sigar.Sigar;
+import org.hyperic.sigar.SigarException;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
+
 /**
- * Created by Fredrik Tørnvall (freboto) and Håkon Ødegård Løvdal (hakloev) on 02/03/15.
+ * Created by Fredrik on 13/03/15.
  */
 
+@RestController
+@RequestMapping("/api/stats")
+public class StatsController {
+    private static Sigar sigar = new Sigar();
 
-var Config = (function($) {
+    @RequestMapping(method = RequestMethod.GET)
+    public Stats stats() {
 
-    var createPanel = function() {
 
-    }
-
-    return {
-        error: function() {
-            console.log("error in ajax for config")
-        },
-        refresh: function(data) {
-            console.log(JSON.stringify(data))
+        try {
+            Mem mem = sigar.getMem();
+            return new Stats("Test" + mem.getActualFree(), 40, 34, 32323, 232, 232, 2444);
+        } catch (SigarException se) {
+            se.printStackTrace();
         }
+
+        return null;
     }
 
+}
 
-})(jQuery)
+
