@@ -24,12 +24,19 @@
 
 package no.ntnu.okse.protocol.wsn;
 
+import org.ntnunotif.wsnu.base.internal.Hub;
+import org.ntnunotif.wsnu.base.internal.ServiceConnection;
+import org.ntnunotif.wsnu.base.util.InternalMessage;
+
+import java.io.OutputStream;
+import java.util.Collection;
+
 /**
  * Created by Aleksander Skraastad (myth) on 3/19/15.
  * <p>
  * okse is licenced under the MIT licence.
  */
-public class WSNRequestParser {
+public class WSNRequestParser implements Hub {
 
     
 
@@ -37,4 +44,39 @@ public class WSNRequestParser {
 
     }
 
+    @Override
+    public InternalMessage acceptNetMessage(InternalMessage internalMessage, OutputStream outputStream) {
+
+        return null;
+    }
+
+    @Override
+    public InternalMessage acceptLocalMessage(InternalMessage internalMessage) {
+        return null;
+    }
+
+    @Override
+    public String getInetAdress() {
+        return null;
+    }
+
+    @Override
+    public void registerService(ServiceConnection serviceConnection) {
+
+    }
+
+    @Override
+    public void removeService(ServiceConnection serviceConnection) {
+
+    }
+
+    @Override
+    public boolean isServiceRegistered(ServiceConnection serviceConnection) {
+        return false;
+    }
+
+    @Override
+    public Collection<ServiceConnection> getServices() {
+        return null;
+    }
 }
