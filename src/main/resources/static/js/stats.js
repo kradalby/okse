@@ -29,13 +29,13 @@
 var Stats = (function($) {
 
     return {
-        error: function() {
-            console.log("error in ajax for Stats")
+        error: function(xhr, statusText, thrownError) {
+            console.log("[Error] in ajax for Stats with error: " + xhr.statusText)
         },
         refresh: function(data) {
-            console.log(JSON.stringify(data))
+            $('#stats-total-messages').html('<strong>Messages sent: </strong>' + data.totalMessages)
+            $('#stats-total-requests').html('<strong>Requests handled: </strong>' + data.totalRequests)
         }
     }
-
 
 })(jQuery)
