@@ -31,7 +31,7 @@ package no.ntnu.okse.protocol.wsn;
  */
 public class WSNRequestParser {
 
-    
+
 
     public WSNRequestParser() {
 

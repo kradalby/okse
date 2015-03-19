@@ -52,11 +52,18 @@ import javax.servlet.http.HttpServletResponse;
  */
 public class WSNotificationServer extends AbstractProtocolServer {
 
+    // Statistics
+    private static int totalRequests;
+    private static int totalMessages;
+
+    // Path to configuration file on classpath
     private static final String configurationFile = "/config/wsnserver.xml";
 
+    // The singleton containing the WSNotificationServer instance
     private static WSNotificationServer _singleton;
 
     private Server _server;
+    private WSNRequestParser _reqparser;
     private final ArrayList<Connector> _connectors = new ArrayList();
     private HttpClient _client;
     private HttpHandler _handler;
@@ -126,6 +133,13 @@ public class WSNotificationServer extends AbstractProtocolServer {
 
         log = Logger.getLogger(WSNotificationServer.class.getName());
 
+        // Initialize statistics
+        totalRequests = 0;
+        totalMessages = 0;
+
+        // Set the servertype
+        protocolServerType = "WSNotification";
+
         // TODO: Initialize other needed variables
 
         _client = null;
@@ -134,6 +148,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
             configResource = Resource.newSystemResource(configurationFile);
             XmlConfiguration config = new XmlConfiguration(configResource.getInputStream());
             this._server = (Server)config.configure();
+            this._reqparser = new WSNRequestParser();
             HttpHandler handler = new WSNotificationServer.HttpHandler();
             this._server.setHandler(handler);
             log.debug("XMLConfig complete, server instanciated.");
@@ -141,6 +156,24 @@ public class WSNotificationServer extends AbstractProtocolServer {
         } catch (Exception e) {
             log.error("Unable to start WSNotificationServer: " + e.getMessage());
         }
+    }
+
+    /**
+     * Total amount of requests from this WSNotificationServer that has passed through this server instance.
+     * @return: An integer representing the total amount of request.
+     */
+    @Override
+    public int getTotalRequests() {
+        return totalRequests;
+    }
+
+    /**
+     * Total amount of messages from this WSNotificationServer that has passed through this server instance.
+     * @return: An integer representing the total amount of messages.
+     */
+    @Override
+    public int getTotalMessages() {
+        return totalMessages;
     }
 
     /**
@@ -238,6 +271,9 @@ public class WSNotificationServer extends AbstractProtocolServer {
             writer.write("Success, you tried to access " + target + " from " +
                     request.getRemoteAddr());
             writer.flush();
+
+            // Do some stats.
+            totalRequests++;
 
             response.setStatus(200);
             baseRequest.setHandled(true);

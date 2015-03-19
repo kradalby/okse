@@ -30,5 +30,11 @@ package no.ntnu.okse.protocol;
  * okse is licenced under the MIT licence.
  */
 public interface ProtocolServer {
+
+    // Statistics methods
+    public int getTotalRequests();
+
+    public int getTotalMessages();
+
     public void boot();
 }

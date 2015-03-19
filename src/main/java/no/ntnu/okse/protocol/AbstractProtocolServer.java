@@ -33,13 +33,19 @@ import org.apache.log4j.Logger;
  */
 public abstract class AbstractProtocolServer implements ProtocolServer {
 
+    protected static String protocolServerType = null;
+
+    // Runstate variables
     protected static boolean _invoked = false;
     protected static boolean _running = false;
 
+    // Logger singleton
     protected static Logger log;
 
+    // Server wrapping thread
     protected Thread _serverThread;
 
+    // Initializer
     protected abstract void init(Integer port);
 
 }

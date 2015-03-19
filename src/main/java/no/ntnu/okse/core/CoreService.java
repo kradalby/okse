@@ -26,6 +26,8 @@ package no.ntnu.okse.core;
 
 import no.ntnu.okse.core.event.Event;
 
+import no.ntnu.okse.protocol.AbstractProtocolServer;
+import no.ntnu.okse.protocol.Protocol;
 import no.ntnu.okse.protocol.ProtocolServer;
 import org.apache.log4j.Logger;
 
@@ -89,6 +91,22 @@ public class CoreService extends Thread {
      */
     public void removeProtocolServer(ProtocolServer ps) {
         if (protocolServers.contains(ps)) protocolServers.remove(ps);
+    }
+
+    /**
+     * Statistics for total number of requests that has passed through all protocol servers
+     * @return: An integer representing the total amount of requests.
+     */
+    public int getTotalRequestsFromProtocolServers() {
+        return protocolServers.stream().map(ProtocolServer::getTotalRequests).reduce(0, (a, b) -> a + b);
+    }
+
+    /**
+     * Statistics for total number of messages that has passed through all protocol servers
+     * @return: An integer representing the total amount of messages.
+     */
+    public int getTotalMessagesFromProtocolServers() {
+        return protocolServers.stream().map(ProtocolServer::getTotalMessages).reduce(0, (a, b) -> a + b);
     }
 
     /**
