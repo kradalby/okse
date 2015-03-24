@@ -27,10 +27,8 @@ package no.ntnu.okse.protocol.wsn;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.function.BinaryOperator;
 
 import com.google.common.io.ByteStreams;
 import no.ntnu.okse.protocol.AbstractProtocolServer;
@@ -46,7 +44,6 @@ import org.eclipse.jetty.xml.XmlConfiguration;
 import org.ntnunotif.wsnu.base.util.InternalMessage;
 
 import javax.servlet.ServletException;
-import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -68,7 +65,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
     private static WSNotificationServer _singleton;
 
     private Server _server;
-    private WSNRequestParser _reqparser;
+    private WSNRequestParser _requestParser;
     private final ArrayList<Connector> _connectors = new ArrayList();
     private HttpClient _client;
     private HttpHandler _handler;
@@ -145,17 +142,24 @@ public class WSNotificationServer extends AbstractProtocolServer {
         // Set the servertype
         protocolServerType = "WSNotification";
 
-        // TODO: Initialize other needed variables
-
+        // Declare HttpClient field
         _client = null;
+
+        // Declare configResource (Fetched from classpath as a Resource from system)
         Resource configResource;
         try {
+            // Try to parse the configFile for WSNServer to set up the Server instance
             configResource = Resource.newSystemResource(configurationFile);
             XmlConfiguration config = new XmlConfiguration(configResource.getInputStream());
             this._server = (Server)config.configure();
-            this._reqparser = new WSNRequestParser();
+
+            // Initialize the RequestParser for WSNotification
+            this._requestParser = new WSNRequestParser();
+
+            // Initialize and set the HTTPHandler for the Server instance
             HttpHandler handler = new WSNotificationServer.HttpHandler();
             this._server.setHandler(handler);
+
             log.debug("XMLConfig complete, server instanciated.");
 
         } catch (Exception e) {
@@ -286,15 +290,14 @@ public class WSNotificationServer extends AbstractProtocolServer {
             outgoingMessage.getRequestInformation().setRequestURL(request.getRequestURI());
             outgoingMessage.getRequestInformation().setParameters(request.getParameterMap());
 
-            log.info("OutMessage: " + outgoingMessage.getRequestInformation().getEndpointReference());
-            log.info("OutMessage: " + outgoingMessage.getRequestInformation().getRequestURL());
-            log.info("OutMessage: " + outgoingMessage.getRequestInformation().getHttpStatus());
+            log.info("EndpointReference: " + outgoingMessage.getRequestInformation().getEndpointReference());
+            log.info("Request URI: " + outgoingMessage.getRequestInformation().getRequestURL());
 
             log.info("Forwarding message to requestParser...");
 
             // Push the outgoingMessage to the request parser. Based on the status flags of the return message
             // we should know what has happened, and which response we should send.
-            WSNInternalMessage returnMessage = WSNotificationServer.this._reqparser.parseMessage(outgoingMessage, response.getOutputStream());
+            WSNInternalMessage returnMessage = WSNotificationServer.this._requestParser.parseMessage(outgoingMessage, response.getOutputStream());
 
             // Improper response from WSNRequestParser! FC WHAT DO?
             if (returnMessage == null) {
@@ -302,7 +305,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
                 baseRequest.setHandled(true);
             }
 
-                      /* Handle possible errors */
+            /* Handle possible errors */
             if ((returnMessage.statusCode & InternalMessage.STATUS_FAULT) > 0){
 
                 /* Have we got an error message to return? */
@@ -322,56 +325,69 @@ public class WSNotificationServer extends AbstractProtocolServer {
                     return;
                 }
 
+                /* If no valid destination was found for the request (Endpoint non-existant) */
                 if ((returnMessage.statusCode & InternalMessage.STATUS_FAULT_INVALID_DESTINATION) > 0) {
                     response.setStatus(HttpStatus.NOT_FOUND_404);
                     baseRequest.setHandled(true);
 
                     return;
 
+                /* If there was an internal server error */
                 } else if ((returnMessage.statusCode & InternalMessage.STATUS_FAULT_INTERNAL_ERROR) > 0) {
                     response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR_500);
                     baseRequest.setHandled(true);
 
                     return;
 
+                /* If there was syntactical errors or otherwise malformed request content */
                 } else if ((returnMessage.statusCode & InternalMessage.STATUS_FAULT_INVALID_PAYLOAD) > 0) {
                     response.setStatus(HttpStatus.BAD_REQUEST_400);
                     baseRequest.setHandled(true);
 
                     return;
 
+                /* If the requested method or access to endpoint is forbidden */
                 } else if ((returnMessage.statusCode & InternalMessage.STATUS_FAULT_ACCESS_NOT_ALLOWED) > 0) {
                     response.setStatus(HttpStatus.FORBIDDEN_403);
                     baseRequest.setHandled(true);
+
+                    return;
                 }
 
+                /*
+                    Otherwise, there has been an exception of some sort with no message attached,
+                    and we will reply with a server error
+                */
                 response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR_500);
                 baseRequest.setHandled(true);
 
                 return;
 
-                // Check if we have status=OK and also we have a message
+            // Check if we have status=OK and also we have a message
             } else if (((InternalMessage.STATUS_OK & returnMessage.statusCode) > 0) &&
                     (InternalMessage.STATUS_HAS_MESSAGE & returnMessage.statusCode) > 0){
 
                 /* Liar liar pants on fire */
                 if (returnMessage.getMessage() == null) {
 
-                    log.error("The HAS_RETURNING_MESSAGE flag was checked, but there was no returning message");
+                    log.error("The HAS_RETURNING_MESSAGE flag was checked, but there was no returning message content");
                     response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR_500);
                     baseRequest.setHandled(true);
 
                     return;
                 }
 
+                // Prepare the response content type
                 response.setContentType("application/soap+xml;charset=utf-8");
 
+                // Allocate the input and output streams
                 InputStream inputStream = (InputStream)returnMessage.getMessage();
                 OutputStream outputStream = response.getOutputStream();
 
-                /* google.commons helper function*/
+                /* Copy the contents of the input stream into the output stream */
                 ByteStreams.copy(inputStream, outputStream);
 
+                /* Set proper OK status and flush out the stream for response to be sent */
                 response.setStatus(HttpStatus.OK_200);
                 outputStream.flush();
 
@@ -384,11 +400,11 @@ public class WSNotificationServer extends AbstractProtocolServer {
                 baseRequest.setHandled(true);
 
             } else {
-
-                log.warn("HandleMessage: The message returned to the ApplcationServer was not flagged with either STATUS_OK or" +
+                // We obviously should never land in this block, hence we set the 500 status.
+                log.error("HandleMessage: The message returned to the WSNotificationServer was not flagged with either STATUS_OK or" +
                         "STATUS_FAULT. Please set either of these flags at all points");
 
-                response.setStatus(HttpStatus.OK_200);
+                response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR_500);
                 baseRequest.setHandled(true);
 
             }

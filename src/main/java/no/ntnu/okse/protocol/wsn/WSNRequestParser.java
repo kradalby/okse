@@ -55,6 +55,8 @@ public class WSNRequestParser {
     public WSNInternalMessage parseMessage(WSNInternalMessage message, OutputStream streamToRequestor) {
         // TODO: Write method to parse and locate which service the message is destined for.
 
+        // We set up the initial returnmessage as having no destination, so we can just return it
+        // if we cannot locate where it should go, even though it might be syntactically correct.
         WSNInternalMessage returnMessage = new WSNInternalMessage(InternalMessage.STATUS_FAULT |
                 InternalMessage.STATUS_FAULT_INVALID_DESTINATION, null);
 
@@ -104,11 +106,11 @@ public class WSNRequestParser {
                     return new WSNInternalMessage(InternalMessage.STATUS_FAULT | InternalMessage.STATUS_FAULT_INVALID_PAYLOAD, null);
                 }
             } catch (JAXBException initialJaxbParsingException) {
-                log.error("Parsing error: " + initialJaxbParsingException.getMessage());
+                log.error("Parsing error: " + initialJaxbParsingException.getLinkedException().getMessage());
 
                 try {
                     XMLParser.writeObjectToStream(Utilities.createSoapFault("Client", "Invalid formatted message"), streamToRequestor);
-                    return new WSNInternalMessage(InternalMessage.STATUS_FAULT, null);
+                    return new WSNInternalMessage(InternalMessage.STATUS_FAULT | InternalMessage.STATUS_FAULT_INVALID_PAYLOAD, null);
                 } catch (JAXBException faultGeneratingJaxbException) {
                     log.error("Failed to generate SOAP fault message: " + faultGeneratingJaxbException.getMessage());
                     return new WSNInternalMessage(InternalMessage.STATUS_FAULT | InternalMessage.STATUS_FAULT_INTERNAL_ERROR, null);
@@ -150,9 +152,11 @@ public class WSNRequestParser {
             * Notably the ApplicationServer does accept other form of messages, but it is more logical to convert
             * it at this point */
 
-             if ((returnMessage.statusCode & InternalMessage.STATUS_HAS_MESSAGE) > 0) {
+            // Do we have a message to handle?
+            if ((returnMessage.statusCode & InternalMessage.STATUS_HAS_MESSAGE) > 0) {
 
-                log.debug("Returning message");
+                log.debug("Returning message...");
+                // Is it an InputStream?
                 if ((returnMessage.statusCode & InternalMessage.STATUS_MESSAGE_IS_INPUTSTREAM) > 0) {
                     try {
                         ByteStreams.copy((InputStream) returnMessage.getMessage(), streamToRequestor);
@@ -201,9 +205,10 @@ public class WSNRequestParser {
             } else {
                 return returnMessage;
             }
-
+        /* We have a fault of some sort, figure out what it is and create proper response */
         } else {
 
+            /* THere is an exception that should be handled */
             if ((returnMessage.statusCode & InternalMessage.STATUS_EXCEPTION_SHOULD_BE_HANDLED) > 0) {
 
                 log.debug("Exception thrown up the stack");
@@ -224,9 +229,9 @@ public class WSNRequestParser {
                     log.error("parseMessage(): The returned exception is not a subclass of Exception.");
                     return new WSNInternalMessage(InternalMessage.STATUS_FAULT | InternalMessage.STATUS_FAULT_INVALID_PAYLOAD, null);
                 }
-                // Create a generic soap fault
+            /* We have no unhandled exceptions at least */
             } else {
-
+                // Is it an invalid or non-existant endpoint reference requested?
                 if ((returnMessage.statusCode & InternalMessage.STATUS_FAULT_INVALID_DESTINATION) > 0) {
 
                     try {
@@ -240,11 +245,12 @@ public class WSNRequestParser {
                         log.trace(e.getStackTrace());
 
                     }
+                    // If all else fails, generate a generic soap fault message using the Server fault-type
                 } else {
 
                     try {
 
-                        XMLParser.writeObjectToStream(Utilities.createSoapFault("Server", "Something went wrong at the server."), streamToRequestor);
+                        XMLParser.writeObjectToStream(Utilities.createSoapFault("Server", "There was an unexpected error while processing the request."), streamToRequestor);
                         return returnMessage;
 
                     } catch (JAXBException e) {
