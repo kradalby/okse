@@ -36,6 +36,7 @@ import org.xmlsoap.schemas.soap.envelope.ObjectFactory;
 
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
+import javax.xml.stream.XMLStreamException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
@@ -106,7 +107,11 @@ public class WSNRequestParser {
                     return new WSNInternalMessage(InternalMessage.STATUS_FAULT | InternalMessage.STATUS_FAULT_INVALID_PAYLOAD, null);
                 }
             } catch (JAXBException initialJaxbParsingException) {
-                log.error("Parsing error: " + initialJaxbParsingException.getLinkedException().getMessage());
+                if (initialJaxbParsingException.getLinkedException() != null) {
+                    log.error("Parsing error: " + initialJaxbParsingException.getLinkedException().getMessage());
+                } else {
+                    log.error("Parsing error: " + initialJaxbParsingException);
+                }
 
                 try {
                     XMLParser.writeObjectToStream(Utilities.createSoapFault("Client", "Invalid formatted message"), streamToRequestor);
