@@ -35,6 +35,9 @@ var Stats = (function($) {
         refresh: function(data) {
             $('#stats-total-messages').html('<strong>Messages sent: </strong>' + data.totalMessages)
             $('#stats-total-requests').html('<strong>Requests handled: </strong>' + data.totalRequests)
+            $('#totalram').html('<strong>Total RAM: </strong>' + data.ramTotal + ' MB')
+            $('#freeram').html('<strong>Free RAM: </strong>' + data.ramFree + ' MB')
+            $('#ramuse').html('<strong>Used RAM: </strong>' + data.ramUse + ' MB')
         }
     }
 

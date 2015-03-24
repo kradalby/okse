@@ -40,25 +40,19 @@ import java.lang.management.ManagementFactory;
 @RestController
 @RequestMapping(value = "/api/stats")
 public class StatsController {
+    
     @RequestMapping(method = RequestMethod.GET)
     public Stats stats() {
-
-        // Baseformat
-        int mb = 1024*1024;
 
         // ProtocolServer statistics
         int totalMessages = Application.cs.getTotalMessagesFromProtocolServers();
         int totalRequests = Application.cs.getTotalRequestsFromProtocolServers();
 
-        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
-
         double cpuAvailable = Runtime.getRuntime().availableProcessors();
+        long totalRam = Runtime.getRuntime().totalMemory();
+        long freeRam = Runtime.getRuntime().freeMemory();
 
-        long totalRam = Runtime.getRuntime().totalMemory()/mb;
-        long freeRam = Runtime.getRuntime().freeMemory()/mb;
-        long useRam = (totalRam - freeRam)/mb;
-
-        Stats stat = new Stats(freeRam, useRam, totalRam, cpuAvailable, totalRequests, totalMessages);
+        Stats stat = new Stats(freeRam, totalRam, cpuAvailable, totalRequests, totalMessages);
         return stat;
 
     }

@@ -33,15 +33,16 @@ import java.lang.management.*;
 public class Stats {
     private final long ramTotal;
     private final long ramFee;
-    private final long ramUse;
+
     private final double cpuAvailable;
     private final int totalRequests;
     private final int totalMessages;
+    // Baseformat
+    int mb = 1024*1024;
 
-    public Stats(long ramFree, long ramUse, long ramTotal, double cpuAvailable, int totalRequests, int totalMessages){
+    public Stats(long ramFree, long ramTotal, double cpuAvailable, int totalRequests, int totalMessages){
 
         this.ramFee = ramFree;
-        this.ramUse = ramUse;
         this.ramTotal = ramTotal;
         this.cpuAvailable = cpuAvailable;
         this.totalRequests = totalRequests;
@@ -57,7 +58,7 @@ public class Stats {
     }
 
     public long getRamUse() {
-        return ramUse;
+        return (ramTotal - ramFee)/mb;
     }
 
     public double getCpuUse() {
@@ -66,10 +67,10 @@ public class Stats {
 
 
     public long getRamTotal(){
-      return ramTotal;
+      return ramTotal/mb;
     }
 
-    public double getRamFree(){ return ramFee; }
+    public double getRamFree(){ return ramFee/mb; }
 
 
 
