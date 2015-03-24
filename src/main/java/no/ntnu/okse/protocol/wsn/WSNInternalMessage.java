@@ -22,21 +22,26 @@
  * THE SOFTWARE.
  */
 
-package no.ntnu.okse.protocol;
+package no.ntnu.okse.protocol.wsn;
+
+import org.ntnunotif.wsnu.base.util.InternalMessage;
+import org.ntnunotif.wsnu.base.util.RequestInformation;
 
 /**
- * Created by Aleksander Skraastad (myth) on 3/13/15.
+ * Created by Aleksander Skraastad (myth) on 3/24/15.
  * <p>
  * okse is licenced under the MIT licence.
  */
-public interface ProtocolServer {
 
-    // Statistics methods
-    public int getTotalRequests();
+/**
+ * Wrapper for WSN InternalMessage
+ */
+public class WSNInternalMessage extends InternalMessage {
+    public WSNInternalMessage(int statusCode, Object message) {
+        super(statusCode, message);
+    }
 
-    public int getTotalMessages();
-
-    public void boot();
-
-    public void stopServer();
+    public WSNInternalMessage(int statusCode, Object message, RequestInformation requestInformation) {
+        super(statusCode, message, requestInformation);
+    }
 }
