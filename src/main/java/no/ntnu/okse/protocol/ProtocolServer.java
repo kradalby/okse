@@ -37,4 +37,6 @@ public interface ProtocolServer {
     public int getTotalMessages();
 
     public void boot();
+
+    public void stopServer();
 }

@@ -73,7 +73,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
      */
     private WSNotificationServer() {
         this.init(null);
-        this._invoked = true;
+        _invoked = true;
     }
 
     /**
@@ -160,7 +160,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
 
     /**
      * Total amount of requests from this WSNotificationServer that has passed through this server instance.
-     * @return: An integer representing the total amount of request.
+     * @return An integer representing the total amount of request.
      */
     @Override
     public int getTotalRequests() {
@@ -212,12 +212,23 @@ public class WSNotificationServer extends AbstractProtocolServer {
                 this._serverThread.setName("WSNServer");
                 // Start the Jetty Server
                 this._serverThread.start();
-                this._serverThread.join();
                 WSNotificationServer._running = true;
                 log.info("WSNServer Thread started successfully.");
             } catch (Exception e) {
                 log.trace(e.getStackTrace());
             }
+        }
+    }
+
+    @Override
+    public void stopServer() {
+        try {
+            log.info("Stopping WSNServer...");
+            this._client.stop();
+            this._server.stop();
+            log.info("WSNServer Client and ServerThread stopped");
+        } catch (Exception e) {
+            log.trace(e.getStackTrace());
         }
     }
 
@@ -227,28 +238,28 @@ public class WSNotificationServer extends AbstractProtocolServer {
         public void handle(String target, Request baseRequest, HttpServletRequest request,
                            HttpServletResponse response) throws IOException, ServletException {
 
-            log.info("HttpHandle invoked on target: " + target);
+            log.debug("HttpHandle invoked on target: " + target);
 
             boolean isChunked = false;
 
             Enumeration headerNames = request.getHeaderNames();
 
-            log.info("Checking headers...");
+            log.debug("Checking headers...");
             while(headerNames.hasMoreElements()) {
                 String outMessage = (String)headerNames.nextElement();
                 Enumeration returnMessage = request.getHeaders(outMessage);
 
                 while(returnMessage.hasMoreElements()) {
                     String inputStream = (String)returnMessage.nextElement();
-                    log.info(outMessage + "=" + inputStream);
+                    log.debug(outMessage + "=" + inputStream);
                     if(outMessage.equals("Transfer-Encoding") && inputStream.equals("chunked")) {
-                        log.info("Found Transfer-Encoding was chunked.");
+                        log.debug("Found Transfer-Encoding was chunked.");
                         isChunked = true;
                     }
                 }
             }
 
-            log.info("Accepted message, trying to instantiate WSNu InternalMessage");
+            log.debug("Accepted message, trying to instantiate WSNu InternalMessage");
             InternalMessage outMessage1;
             if(request.getContentLength() <= 0 && !isChunked) {
                 outMessage1 = new InternalMessage(1, null);
@@ -256,16 +267,16 @@ public class WSNotificationServer extends AbstractProtocolServer {
                 ServletInputStream returnMessage1 = request.getInputStream();
                 outMessage1 = new InternalMessage(5, returnMessage1);
             }
-            log.info("InternalMessage: " + outMessage1);
+            log.debug("InternalMessage: " + outMessage1);
 
             outMessage1.getRequestInformation().setEndpointReference(request.getRemoteHost());
             outMessage1.getRequestInformation().setRequestURL(request.getRequestURI());
             outMessage1.getRequestInformation().setParameters(request.getParameterMap());
 
             //log.info("OutMessage: " + outMessage1.getMessage());
-            log.info("OutMessage: " + outMessage1.getRequestInformation().getEndpointReference());
-            log.info("OutMessage: " + outMessage1.getRequestInformation().getRequestURL());
-            log.info("OutMessage: " + outMessage1.getRequestInformation().getHttpStatus());
+            log.debug("OutMessage: " + outMessage1.getRequestInformation().getEndpointReference());
+            log.debug("OutMessage: " + outMessage1.getRequestInformation().getRequestURL());
+            log.debug("OutMessage: " + outMessage1.getRequestInformation().getHttpStatus());
 
             OutputStreamWriter writer = new OutputStreamWriter(response.getOutputStream());
             writer.write("Success, you tried to access " + target + " from " +
