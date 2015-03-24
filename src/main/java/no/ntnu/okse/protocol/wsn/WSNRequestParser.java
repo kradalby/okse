@@ -82,6 +82,7 @@ public class WSNRequestParser {
                  */
             }
         }
+
         // There is content that should be dealt with
         else {
             log.info("Forwarding message with content...");
