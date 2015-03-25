@@ -3,7 +3,6 @@ package no.ntnu.okse.protocol.wsn;
 import org.ntnunotif.wsnu.base.internal.Hub;
 import org.ntnunotif.wsnu.base.internal.ServiceConnection;
 import org.ntnunotif.wsnu.base.util.InternalMessage;
-
 import java.io.OutputStream;
 import java.util.Collection;
 
@@ -11,6 +10,13 @@ import java.util.Collection;
  * Created by Trond Walleraunet on 25.03.2015.
  */
 public class WSNTransparentHUB implements Hub {
+
+    private WSNotificationServer _server;
+
+    public WSNTransparentHUB() {
+        this._server = WSNotificationServer.getInstance();
+    }
+
     @Override
     public InternalMessage acceptNetMessage(InternalMessage internalMessage, OutputStream outputStream) {
         return null;
@@ -23,7 +29,7 @@ public class WSNTransparentHUB implements Hub {
 
     @Override
     public String getInetAdress() {
-        return null;
+        return WSNotificationServer.getURI();
     }
 
     @Override
