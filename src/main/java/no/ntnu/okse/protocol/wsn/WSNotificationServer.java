@@ -29,6 +29,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashSet;
 
 import com.google.common.io.ByteStreams;
 import no.ntnu.okse.protocol.AbstractProtocolServer;
@@ -41,6 +42,7 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.xml.XmlConfiguration;
+import org.ntnunotif.wsnu.base.internal.ServiceConnection;
 import org.ntnunotif.wsnu.base.util.InternalMessage;
 
 import javax.servlet.ServletException;
@@ -69,6 +71,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
     private final ArrayList<Connector> _connectors = new ArrayList();
     private HttpClient _client;
     private HttpHandler _handler;
+    private HashSet<ServiceConnection> _services;
 
     /**
      * Empty constructor, uses defaults from jetty configuration file for WSNServer
@@ -239,6 +242,11 @@ public class WSNotificationServer extends AbstractProtocolServer {
         } catch (Exception e) {
             log.trace(e.getStackTrace());
         }
+    }
+
+    @Override
+    public String getProtocolServerType() {
+        return protocolServerType;
     }
 
     private class HttpHandler extends AbstractHandler {

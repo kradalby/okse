@@ -39,4 +39,6 @@ public interface ProtocolServer {
     public void boot();
 
     public void stopServer();
+
+    public String getProtocolServerType();
 }

@@ -36,7 +36,6 @@ import org.xmlsoap.schemas.soap.envelope.ObjectFactory;
 
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
-import javax.xml.stream.XMLStreamException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
@@ -366,6 +365,4 @@ public class WSNRequestParser {
             return message;
         }
     }
-
-
 }
