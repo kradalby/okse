@@ -35,6 +35,9 @@ import com.google.common.io.ByteStreams;
 import no.ntnu.okse.protocol.AbstractProtocolServer;
 import org.apache.log4j.Logger;
 import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.client.api.ContentResponse;
+import org.eclipse.jetty.client.util.InputStreamContentProvider;
+import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.http.HttpStatus;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Request;
@@ -44,6 +47,7 @@ import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.xml.XmlConfiguration;
 import org.ntnunotif.wsnu.base.internal.ServiceConnection;
 import org.ntnunotif.wsnu.base.util.InternalMessage;
+import org.ntnunotif.wsnu.base.util.RequestInformation;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -296,6 +300,14 @@ public class WSNotificationServer extends AbstractProtocolServer {
         _services.remove(webServiceConnector);
     }
 
+    /**
+     * Fetch the WSNRequestParser object
+     * @return WSNRequestParser
+     */
+    public WSNRequestParser getRequestParser() {
+        return this._requestParser;
+    }
+
     // This is the HTTP Handler that the WSNServer uses to process all incoming requests
     private class HttpHandler extends AbstractHandler {
 
@@ -331,12 +343,12 @@ public class WSNotificationServer extends AbstractProtocolServer {
             log.info("Accepted message, trying to instantiate WSNu InternalMessage");
 
             // Get message content, if any
-            WSNInternalMessage outgoingMessage;
+            InternalMessage outgoingMessage;
             if(request.getContentLength() > 0 || isChunked) {
                 InputStream inputStream = request.getInputStream();
-                outgoingMessage = new WSNInternalMessage(InternalMessage.STATUS_OK | InternalMessage.STATUS_HAS_MESSAGE, inputStream);
+                outgoingMessage = new InternalMessage(InternalMessage.STATUS_OK | InternalMessage.STATUS_HAS_MESSAGE, inputStream);
             } else {
-                outgoingMessage = new WSNInternalMessage(InternalMessage.STATUS_OK, null);
+                outgoingMessage = new InternalMessage(InternalMessage.STATUS_OK, null);
             }
 
             log.info("WSNInternalMessage: " + outgoingMessage);
@@ -353,13 +365,13 @@ public class WSNotificationServer extends AbstractProtocolServer {
 
             // Push the outgoingMessage to the request parser. Based on the status flags of the return message
             // we should know what has happened, and which response we should send.
-            WSNInternalMessage returnMessage = WSNotificationServer.this._requestParser.parseMessage(outgoingMessage, response.getOutputStream());
+            InternalMessage returnMessage = WSNotificationServer.this._requestParser.parseMessage(outgoingMessage, response.getOutputStream());
 
             // Improper response from WSNRequestParser! FC WHAT DO?
             if (returnMessage == null) {
                 response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR_500);
                 baseRequest.setHandled(true);
-                returnMessage = new WSNInternalMessage(InternalMessage.STATUS_FAULT_INTERNAL_ERROR, null);
+                returnMessage = new InternalMessage(InternalMessage.STATUS_FAULT_INTERNAL_ERROR, null);
             }
 
             /* Handle possible errors */
@@ -467,4 +479,77 @@ public class WSNotificationServer extends AbstractProtocolServer {
             }
         }
     }
+
+    public InternalMessage sendMessage(InternalMessage message) {
+
+        // Fetch the requestInformation from the message, and extract the endpoint
+        RequestInformation requestInformation = message.getRequestInformation();
+        String endpoint = requestInformation.getEndpointReference();
+
+        /* If we have nowhere to send the message */
+        if(endpoint == null){
+            log.error("Endpoint reference not set");
+            return new InternalMessage(InternalMessage.STATUS_FAULT, null);
+        }
+
+        /* Create the actual http-request*/
+        org.eclipse.jetty.client.api.Request request = _client.newRequest(requestInformation.getEndpointReference());
+
+        /* Try to send the message */
+        try{
+            /* Raw request */
+            if ((message.statusCode & InternalMessage.STATUS_HAS_MESSAGE) == 0) {
+
+                request.method(HttpMethod.GET);
+                log.info("Sending message without content to " + requestInformation.getEndpointReference());
+                ContentResponse response = request.send();
+
+                return new InternalMessage(InternalMessage.STATUS_OK | InternalMessage.STATUS_HAS_MESSAGE, response.getContentAsString());
+            /* Request with message */
+            } else {
+
+                // Set proper request method
+                request.method(HttpMethod.POST);
+
+                // If the statusflag has set a message and it is not an input stream
+                if ((message.statusCode & InternalMessage.STATUS_MESSAGE_IS_INPUTSTREAM) == 0) {
+                    log.error("sendMessage(): " + "The message contained something else than an inputStream." +
+                            "Please convert your message to an InputStream before calling this methbod.");
+
+                    return new InternalMessage(InternalMessage.STATUS_FAULT | InternalMessage.STATUS_FAULT_INVALID_PAYLOAD, null);
+
+                } else {
+
+                    // Check if we should have had a message, but there was none
+                    if(message.getMessage() == null){
+                        log.error("No content was found to send");
+                        return new InternalMessage(InternalMessage.STATUS_FAULT | InternalMessage.STATUS_FAULT_INVALID_PAYLOAD, null);
+                    }
+
+                    // Send the request to the specified endpoint reference
+                    log.info("Sending message with content to " + requestInformation.getEndpointReference());
+                    request.content(new InputStreamContentProvider((InputStream) message.getMessage()), "application/soap+xml;charset/utf-8");
+                    ContentResponse response = request.send();
+
+                    // Check what HTTP status we recieved, if is not A-OK, flag the internalmessage as fault
+                    // and make the response content the message of the InternalMessage returned
+                    if (response.getStatus() != HttpStatus.OK_200) {
+                        return new InternalMessage(InternalMessage.STATUS_FAULT | InternalMessage.STATUS_HAS_MESSAGE, response.getContentAsString());
+                    } else {
+                        return new InternalMessage(InternalMessage.STATUS_OK | InternalMessage.STATUS_HAS_MESSAGE, response.getContentAsString());
+                    }
+                }
+            }
+        } catch(ClassCastException e) {
+            log.error("sendMessage(): The message contained something else than an inputStream." +
+                    "Please convert your message to an InputStream before calling this method.");
+
+            return new InternalMessage(InternalMessage.STATUS_FAULT | InternalMessage.STATUS_FAULT_INVALID_PAYLOAD, null);
+
+        } catch(Exception e) {
+            log.error("sendMessage(): Unable to establish connection: " + e.getMessage());
+            return new InternalMessage(InternalMessage.STATUS_FAULT_INTERNAL_ERROR, null);
+        }
+    }
 }
+

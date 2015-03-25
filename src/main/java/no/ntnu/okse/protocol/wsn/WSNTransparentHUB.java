@@ -19,7 +19,7 @@ public class WSNTransparentHUB implements Hub {
 
     @Override
     public InternalMessage acceptNetMessage(InternalMessage internalMessage, OutputStream outputStream) {
-        return null;
+        return this._server.getRequestParser().parseMessage(internalMessage, outputStream);
     }
 
     @Override
