@@ -24,11 +24,13 @@
 
 package no.ntnu.okse.core;
 
+import no.ntnu.okse.Application;
 import no.ntnu.okse.core.event.Event;
 
 import no.ntnu.okse.protocol.AbstractProtocolServer;
 import no.ntnu.okse.protocol.Protocol;
 import no.ntnu.okse.protocol.ProtocolServer;
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
@@ -145,7 +147,7 @@ public class CoreService extends Thread {
         while (running) {
             try {
                 Event e = eventQueue.take();
-                log.info("Consumed an event: " + e.getOperation() + " DataType: " + e.getDataType());
+                log.debug("Consumed an event: " + e.getOperation() + " DataType: " + e.getDataType());
             } catch (InterruptedException e) {
                 log.trace(e.getStackTrace());
             }
@@ -157,6 +159,7 @@ public class CoreService extends Thread {
      * Stops execution of the CoreService thread.
      */
     public void stopThread() {
+        this.protocolServers.forEach(p -> p.stopServer());
         running = false;
     }
 

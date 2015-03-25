@@ -75,6 +75,9 @@ public class CoreServiceTest {
             public void boot() {
                 System.out.println("ProtocolServer initialized.");
             }
+
+            @Override
+            public void stopServer() { }
         };
 
         // Test that adding a new ProtocolServer works.
@@ -108,6 +111,11 @@ public class CoreServiceTest {
             public void boot() {
 
             }
+
+            @Override
+            public void stopServer() {
+
+            }
         };
 
         ProtocolServer testProtocolServer2 = new ProtocolServer() {
@@ -124,6 +132,11 @@ public class CoreServiceTest {
             @Override
             public void boot() {
                 System.out.println("ProtocolServer initialized.");
+            }
+
+            @Override
+            public void stopServer() {
+
             }
         };
 

@@ -25,23 +25,27 @@
 package no.ntnu.okse.protocol.wsn;
 
 import java.io.IOException;
-import java.io.OutputStreamWriter;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashSet;
 
+import com.google.common.io.ByteStreams;
 import no.ntnu.okse.protocol.AbstractProtocolServer;
 import org.apache.log4j.Logger;
 import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.http.HttpStatus;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.xml.XmlConfiguration;
+import org.ntnunotif.wsnu.base.internal.ServiceConnection;
 import org.ntnunotif.wsnu.base.util.InternalMessage;
 
 import javax.servlet.ServletException;
-import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -63,17 +67,18 @@ public class WSNotificationServer extends AbstractProtocolServer {
     private static WSNotificationServer _singleton;
 
     private Server _server;
-    private WSNRequestParser _reqparser;
+    private WSNRequestParser _requestParser;
     private final ArrayList<Connector> _connectors = new ArrayList();
     private HttpClient _client;
     private HttpHandler _handler;
+    private HashSet<ServiceConnection> _services;
 
     /**
      * Empty constructor, uses defaults from jetty configuration file for WSNServer
      */
     private WSNotificationServer() {
         this.init(null);
-        this._invoked = true;
+        _invoked = true;
     }
 
     /**
@@ -140,17 +145,24 @@ public class WSNotificationServer extends AbstractProtocolServer {
         // Set the servertype
         protocolServerType = "WSNotification";
 
-        // TODO: Initialize other needed variables
-
+        // Declare HttpClient field
         _client = null;
+
+        // Declare configResource (Fetched from classpath as a Resource from system)
         Resource configResource;
         try {
+            // Try to parse the configFile for WSNServer to set up the Server instance
             configResource = Resource.newSystemResource(configurationFile);
             XmlConfiguration config = new XmlConfiguration(configResource.getInputStream());
             this._server = (Server)config.configure();
-            this._reqparser = new WSNRequestParser();
+
+            // Initialize the RequestParser for WSNotification
+            this._requestParser = new WSNRequestParser();
+
+            // Initialize and set the HTTPHandler for the Server instance
             HttpHandler handler = new WSNotificationServer.HttpHandler();
             this._server.setHandler(handler);
+
             log.debug("XMLConfig complete, server instanciated.");
 
         } catch (Exception e) {
@@ -160,7 +172,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
 
     /**
      * Total amount of requests from this WSNotificationServer that has passed through this server instance.
-     * @return: An integer representing the total amount of request.
+     * @return An integer representing the total amount of request.
      */
     @Override
     public int getTotalRequests() {
@@ -212,7 +224,6 @@ public class WSNotificationServer extends AbstractProtocolServer {
                 this._serverThread.setName("WSNServer");
                 // Start the Jetty Server
                 this._serverThread.start();
-                this._serverThread.join();
                 WSNotificationServer._running = true;
                 log.info("WSNServer Thread started successfully.");
             } catch (Exception e) {
@@ -221,67 +232,190 @@ public class WSNotificationServer extends AbstractProtocolServer {
         }
     }
 
+    @Override
+    public void stopServer() {
+        try {
+            log.info("Stopping WSNServer...");
+            this._client.stop();
+            this._server.stop();
+            log.info("WSNServer Client and ServerThread stopped");
+        } catch (Exception e) {
+            log.trace(e.getStackTrace());
+        }
+    }
+
+    @Override
+    public String getProtocolServerType() {
+        return protocolServerType;
+    }
+
     private class HttpHandler extends AbstractHandler {
 
         @Override
         public void handle(String target, Request baseRequest, HttpServletRequest request,
                            HttpServletResponse response) throws IOException, ServletException {
 
-            log.info("HttpHandle invoked on target: " + target);
+            log.debug("HttpHandle invoked on target: " + target);
+
+            // Do some stats.
+            totalRequests++;
 
             boolean isChunked = false;
 
             Enumeration headerNames = request.getHeaderNames();
 
-            log.info("Checking headers...");
+            log.debug("Checking headers...");
+
             while(headerNames.hasMoreElements()) {
                 String outMessage = (String)headerNames.nextElement();
                 Enumeration returnMessage = request.getHeaders(outMessage);
 
                 while(returnMessage.hasMoreElements()) {
                     String inputStream = (String)returnMessage.nextElement();
-                    log.info(outMessage + "=" + inputStream);
+                    log.debug(outMessage + "=" + inputStream);
                     if(outMessage.equals("Transfer-Encoding") && inputStream.equals("chunked")) {
-                        log.info("Found Transfer-Encoding was chunked.");
+                        log.debug("Found Transfer-Encoding was chunked.");
                         isChunked = true;
                     }
                 }
             }
 
             log.info("Accepted message, trying to instantiate WSNu InternalMessage");
-            InternalMessage outMessage1;
-            if(request.getContentLength() <= 0 && !isChunked) {
-                outMessage1 = new InternalMessage(1, null);
+
+            // Get message content, if any
+            WSNInternalMessage outgoingMessage;
+            if(request.getContentLength() > 0 || isChunked) {
+                InputStream inputStream = request.getInputStream();
+                outgoingMessage = new WSNInternalMessage(InternalMessage.STATUS_OK | InternalMessage.STATUS_HAS_MESSAGE, inputStream);
             } else {
-                ServletInputStream returnMessage1 = request.getInputStream();
-                outMessage1 = new InternalMessage(5, returnMessage1);
+                outgoingMessage = new WSNInternalMessage(InternalMessage.STATUS_OK, null);
             }
-            log.info("InternalMessage: " + outMessage1);
 
-            outMessage1.getRequestInformation().setEndpointReference(request.getRemoteHost());
-            outMessage1.getRequestInformation().setRequestURL(request.getRequestURI());
-            outMessage1.getRequestInformation().setParameters(request.getParameterMap());
+            log.info("WSNInternalMessage: " + outgoingMessage);
 
-            //log.info("OutMessage: " + outMessage1.getMessage());
-            log.info("OutMessage: " + outMessage1.getRequestInformation().getEndpointReference());
-            log.info("OutMessage: " + outMessage1.getRequestInformation().getRequestURL());
-            log.info("OutMessage: " + outMessage1.getRequestInformation().getHttpStatus());
+            // Update the outgoingMessage with correct information from the Jetty ServletRequest Object
+            outgoingMessage.getRequestInformation().setEndpointReference(request.getRemoteHost());
+            outgoingMessage.getRequestInformation().setRequestURL(request.getRequestURI());
+            outgoingMessage.getRequestInformation().setParameters(request.getParameterMap());
 
-            OutputStreamWriter writer = new OutputStreamWriter(response.getOutputStream());
-            writer.write("Success, you tried to access " + target + " from " +
-                    request.getRemoteAddr());
-            writer.flush();
+            log.info("EndpointReference: " + outgoingMessage.getRequestInformation().getEndpointReference());
+            log.info("Request URI: " + outgoingMessage.getRequestInformation().getRequestURL());
 
-            // Do some stats.
-            totalRequests++;
+            log.info("Forwarding message to requestParser...");
 
-            response.setStatus(200);
-            baseRequest.setHandled(true);
+            // Push the outgoingMessage to the request parser. Based on the status flags of the return message
+            // we should know what has happened, and which response we should send.
+            WSNInternalMessage returnMessage = WSNotificationServer.this._requestParser.parseMessage(outgoingMessage, response.getOutputStream());
 
-            // And at this point WSNu forwards the outMessage1 to the forwardingHub, and proceeds to await
-            // a new InternalMessage, named returnMessage with correct status flags and proper content.
+            // Improper response from WSNRequestParser! FC WHAT DO?
+            if (returnMessage == null) {
+                response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR_500);
+                baseRequest.setHandled(true);
+            }
 
-            // We need to look into the hub to what the method acceptNetMessage does.
+            /* Handle possible errors */
+            if ((returnMessage.statusCode & InternalMessage.STATUS_FAULT) > 0){
+
+                /* Have we got an error message to return? */
+                if ((returnMessage.statusCode & InternalMessage.STATUS_HAS_MESSAGE) > 0){
+                    response.setContentType("application/soap+xml;charset=utf-8");
+
+                    InputStream inputStream = (InputStream)returnMessage.getMessage();
+                    OutputStream outputStream = response.getOutputStream();
+
+                    /* google.commons helper function*/
+                    ByteStreams.copy(inputStream, outputStream);
+
+                    response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR_500);
+                    outputStream.flush();
+                    baseRequest.setHandled(true);
+
+                    return;
+                }
+
+                /* If no valid destination was found for the request (Endpoint non-existant) */
+                if ((returnMessage.statusCode & InternalMessage.STATUS_FAULT_INVALID_DESTINATION) > 0) {
+                    response.setStatus(HttpStatus.NOT_FOUND_404);
+                    baseRequest.setHandled(true);
+
+                    return;
+
+                /* If there was an internal server error */
+                } else if ((returnMessage.statusCode & InternalMessage.STATUS_FAULT_INTERNAL_ERROR) > 0) {
+                    response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR_500);
+                    baseRequest.setHandled(true);
+
+                    return;
+
+                /* If there was syntactical errors or otherwise malformed request content */
+                } else if ((returnMessage.statusCode & InternalMessage.STATUS_FAULT_INVALID_PAYLOAD) > 0) {
+                    response.setStatus(HttpStatus.BAD_REQUEST_400);
+                    baseRequest.setHandled(true);
+
+                    return;
+
+                /* If the requested method or access to endpoint is forbidden */
+                } else if ((returnMessage.statusCode & InternalMessage.STATUS_FAULT_ACCESS_NOT_ALLOWED) > 0) {
+                    response.setStatus(HttpStatus.FORBIDDEN_403);
+                    baseRequest.setHandled(true);
+
+                    return;
+                }
+
+                /*
+                    Otherwise, there has been an exception of some sort with no message attached,
+                    and we will reply with a server error
+                */
+                response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR_500);
+                baseRequest.setHandled(true);
+
+                return;
+
+            // Check if we have status=OK and also we have a message
+            } else if (((InternalMessage.STATUS_OK & returnMessage.statusCode) > 0) &&
+                    (InternalMessage.STATUS_HAS_MESSAGE & returnMessage.statusCode) > 0){
+
+                /* Liar liar pants on fire */
+                if (returnMessage.getMessage() == null) {
+
+                    log.error("The HAS_RETURNING_MESSAGE flag was checked, but there was no returning message content");
+                    response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR_500);
+                    baseRequest.setHandled(true);
+
+                    return;
+                }
+
+                // Prepare the response content type
+                response.setContentType("application/soap+xml;charset=utf-8");
+
+                // Allocate the input and output streams
+                InputStream inputStream = (InputStream)returnMessage.getMessage();
+                OutputStream outputStream = response.getOutputStream();
+
+                /* Copy the contents of the input stream into the output stream */
+                ByteStreams.copy(inputStream, outputStream);
+
+                /* Set proper OK status and flush out the stream for response to be sent */
+                response.setStatus(HttpStatus.OK_200);
+                outputStream.flush();
+
+                baseRequest.setHandled(true);
+
+            /* Everything is fine, and nothing is expected */
+            } else if ((InternalMessage.STATUS_OK & returnMessage.statusCode) > 0) {
+
+                response.setStatus(HttpStatus.OK_200);
+                baseRequest.setHandled(true);
+
+            } else {
+                // We obviously should never land in this block, hence we set the 500 status.
+                log.error("HandleMessage: The message returned to the WSNotificationServer was not flagged with either STATUS_OK or" +
+                        "STATUS_FAULT. Please set either of these flags at all points");
+
+                response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR_500);
+                baseRequest.setHandled(true);
+
+            }
         }
     }
 }
