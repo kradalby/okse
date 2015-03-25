@@ -25,6 +25,7 @@
 package no.ntnu.okse.core;
 
 import no.ntnu.okse.protocol.ProtocolServer;
+import no.ntnu.okse.protocol.wsn.WSNotificationServer;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -37,10 +38,66 @@ import static org.testng.Assert.*;
 public class CoreServiceTest {
 
     CoreService cs;
+    ProtocolServer testProtocolServer, testProtocolServer2;
+    WSNotificationServer wsnserver;
 
     @BeforeMethod
     public void setUp() throws Exception {
         cs = new CoreService();
+        wsnserver = WSNotificationServer.getInstance();
+        testProtocolServer = new ProtocolServer() {
+            @Override
+            public int getTotalRequests() {
+                return 0;
+            }
+
+            @Override
+            public int getTotalMessages() {
+                return 0;
+            }
+
+            @Override
+            public void boot() {
+
+            }
+
+            @Override
+            public void stopServer() {
+
+            }
+
+            @Override
+            public String getProtocolServerType() {
+                return null;
+            }
+        };
+
+        testProtocolServer2 = new ProtocolServer() {
+            @Override
+            public int getTotalRequests() {
+                return 0;
+            }
+
+            @Override
+            public int getTotalMessages() {
+                return 0;
+            }
+
+            @Override
+            public void boot() {
+                System.out.println("ProtocolServer initialized.");
+            }
+
+            @Override
+            public void stopServer() {
+
+            }
+
+            @Override
+            public String getProtocolServerType() {
+                return null;
+            }
+        };
     }
 
     @AfterMethod
@@ -101,59 +158,6 @@ public class CoreServiceTest {
 
     @Test
     public void testRemoveProtocolServer() throws Exception {
-        ProtocolServer testProtocolServer = new ProtocolServer() {
-            @Override
-            public int getTotalRequests() {
-                return 0;
-            }
-
-            @Override
-            public int getTotalMessages() {
-                return 0;
-            }
-
-            @Override
-            public void boot() {
-
-            }
-
-            @Override
-            public void stopServer() {
-
-            }
-
-            @Override
-            public String getProtocolServerType() {
-                return null;
-            }
-        };
-
-        ProtocolServer testProtocolServer2 = new ProtocolServer() {
-            @Override
-            public int getTotalRequests() {
-                return 0;
-            }
-
-            @Override
-            public int getTotalMessages() {
-                return 0;
-            }
-
-            @Override
-            public void boot() {
-                System.out.println("ProtocolServer initialized.");
-            }
-
-            @Override
-            public void stopServer() {
-
-            }
-
-            @Override
-            public String getProtocolServerType() {
-                return null;
-            }
-        };
 
         // Add a PS
         cs.addProtocolServer(testProtocolServer);
@@ -170,5 +174,38 @@ public class CoreServiceTest {
         assertEquals(cs.getAllProtocolServers().size(), 0,
                 "The amount of registered ProtocolServers should be 0 at this point.");
 
+    }
+
+    @Test
+    public void testRemoveAllProtocolServers() throws Exception {
+        cs.addProtocolServer(testProtocolServer);
+        cs.addProtocolServer(testProtocolServer2);
+        cs.addProtocolServer(wsnserver);
+        cs.removeAllProtocolServers();
+        assertEquals(cs.getAllProtocolServers().size(), 0,
+                "The amount of protocol servers should be 0 at this point.");
+    }
+
+    @Test
+    public void testGetAllProtocolServers() throws Exception {
+        cs.addProtocolServer(testProtocolServer);
+        cs.addProtocolServer(testProtocolServer2);
+        cs.addProtocolServer(wsnserver);
+        assertEquals(cs.getAllProtocolServers().size(), 3,
+                "The amount of registered protocolservers should be 3 at this point.");
+        cs.removeAllProtocolServers();
+    }
+
+    @Test
+    public void testGetProtocolServer() throws Exception {
+        cs.addProtocolServer(wsnserver);
+        assertEquals(cs.getProtocolServer("WSNotification"), wsnserver,
+                "The returned protocol server should be the WSNotification Instance.");
+        assertEquals(cs.getProtocolServer(WSNotificationServer.class), wsnserver,
+                "The returned protocol server should be the WSNotification Instance.");
+        assertEquals(cs.getProtocolServer("HerpaDerp"), null,
+                "The returned protocol server should be null.");
+        assertEquals(cs.getProtocolServer(CoreService.class), null,
+                "The returned protocol server should be null.");
     }
 }
