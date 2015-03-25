@@ -31,14 +31,34 @@ package no.ntnu.okse.protocol;
  */
 public interface ProtocolServer {
 
-    // Statistics methods
+    /**
+     * This interface method must return the total amount of requests the protocol server has handled.
+     * @return An integer representing the total amount of requests handled.
+     */
     public int getTotalRequests();
 
+    /**
+     * This interface method must return the total amount of messages that has been processed by the
+     * protocol server.
+     * @return An integer representing the total amount of processed messages.
+     */
     public int getTotalMessages();
 
+    /**
+     * This interface method must implement a complete initialization and startup process of a protocol server.
+     * As it is used in the Core Service to fire up all registered protocol servers upon application start.
+     */
     public void boot();
 
+    /**
+     * This interface method must implement a complete shutdown procedure of the protocol server.
+     */
     public void stopServer();
 
+    /**
+     * This interface method must return a string with the name of the protocol for which the protocol server
+     * is responsible for handling.
+     * @return A string representing the name of the protocol in question.
+     */
     public String getProtocolServerType();
 }
