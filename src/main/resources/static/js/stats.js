@@ -28,6 +28,23 @@
 
 var Stats = (function($) {
 
+
+    var fillTable = function(data) {
+        var trHTML = '';
+        $.each(data.protocol, function (i, protocol) {
+            if ($('#' + protocol.name).length === 0) {
+                trHTML += '<tr>' +
+                '<td>' + subscriber.protocol + '</td>' +
+                '<td>' + subscriber.ip + '</td>' +
+                '<td>' + subscriber.port + '</td>'
+            }
+        });
+        return trHTML
+    }
+
+
+
+
     return {
         error: function(xhr, statusText, thrownError) {
             console.log("[Error] in ajax for Stats with error: " + xhr.statusText)
@@ -38,6 +55,7 @@ var Stats = (function($) {
             $('#totalram').html('<strong>Total RAM: </strong>' + data.ramTotal + ' MB')
             $('#freeram').html('<strong>Free RAM: </strong>' + data.ramFree + ' MB')
             $('#ramuse').html('<strong>Used RAM: </strong>' + data.ramUse + ' MB')
+            $('#cpucores').html('<strong>CPU cores : </strong>' + data.cpuUse)
         }
     }
 

@@ -33,7 +33,7 @@ import org.apache.log4j.Logger;
  */
 public abstract class AbstractProtocolServer implements ProtocolServer {
 
-    protected static String protocolServerType = null;
+    protected String protocolServerType;
 
     // Runstate variables
     protected static boolean _invoked = false;

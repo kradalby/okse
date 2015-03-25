@@ -24,63 +24,35 @@
 
 package no.ntnu.okse.web.model;
 
-import no.ntnu.okse.protocol.Protocol;
-import no.ntnu.okse.protocol.ProtocolServer;
-
-import java.lang.management.*;
-import java.util.ArrayList;
-
-
 /**
- * Created by Fredrik on 06/03/15.
+ * Created by Fredrik on 25/03/15.
  */
-public class Stats {
-    private final long ramTotal;
-    private final long ramFee;
+public class ProtocolStats {
 
-    private final double cpuAvailable;
+    private final String protocolServerType;
     private final int totalRequests;
     private final int totalMessages;
-    private final ArrayList<ProtocolStats> protocolstats;
-    // Baseformat
-    int mb = 1024*1024;
 
-    public Stats(long ramFree, long ramTotal, double cpuAvailable, int totalRequests, int totalMessages, ArrayList<ProtocolStats> protocolstats){
 
-        this.ramFee = ramFree;
-        this.ramTotal = ramTotal;
-        this.cpuAvailable = cpuAvailable;
+    public ProtocolStats(String protocolServerType, int totalRequests, int totalMessages) {
+        this.protocolServerType = protocolServerType;
         this.totalRequests = totalRequests;
         this.totalMessages = totalMessages;
-        this.protocolstats = protocolstats;
+    }
 
+
+
+    public int getTotalMessages() {
+        return totalMessages;
     }
 
     public int getTotalRequests() {
         return totalRequests;
     }
 
-    public int getTotalMessages() {
-        return totalMessages;
+    public String getProtocolServerType() {
+        return protocolServerType;
     }
-
-    public long getRamUse() {
-        return (ramTotal - ramFee)/mb;
-    }
-
-    public double getCpuUse() {
-        return cpuAvailable;
-    }
-
-
-    public long getRamTotal(){
-      return ramTotal/mb;
-    }
-
-    public double getRamFree(){ return ramFee/mb; }
-
-    public ArrayList<ProtocolStats> getProtocols() { return protocolstats; }
-
 
 
 
