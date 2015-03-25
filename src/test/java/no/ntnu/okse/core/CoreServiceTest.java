@@ -78,6 +78,11 @@ public class CoreServiceTest {
 
             @Override
             public void stopServer() { }
+
+            @Override
+            public String getProtocolServerType() {
+                return null;
+            }
         };
 
         // Test that adding a new ProtocolServer works.
@@ -116,6 +121,11 @@ public class CoreServiceTest {
             public void stopServer() {
 
             }
+
+            @Override
+            public String getProtocolServerType() {
+                return null;
+            }
         };
 
         ProtocolServer testProtocolServer2 = new ProtocolServer() {
@@ -137,6 +147,11 @@ public class CoreServiceTest {
             @Override
             public void stopServer() {
 
+            }
+
+            @Override
+            public String getProtocolServerType() {
+                return null;
             }
         };
 
