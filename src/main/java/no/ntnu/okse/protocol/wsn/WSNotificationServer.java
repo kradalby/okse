@@ -56,6 +56,9 @@ import javax.servlet.http.HttpServletResponse;
  */
 public class WSNotificationServer extends AbstractProtocolServer {
 
+    // Runstate variables
+    private static boolean _invoked, _running;
+
     // Statistics
     private static int totalRequests;
     private static int totalMessages;
@@ -78,6 +81,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
      */
     private WSNotificationServer() {
         this.init(null);
+        _running = false;
         _invoked = true;
     }
 
@@ -157,7 +161,10 @@ public class WSNotificationServer extends AbstractProtocolServer {
             this._server = (Server)config.configure();
 
             // Initialize the RequestParser for WSNotification
-            this._requestParser = new WSNRequestParser();
+            this._requestParser = new WSNRequestParser(this);
+
+            // Initialize the collection of ServiceConnections
+            this._services = new HashSet<>();
 
             // Initialize and set the HTTPHandler for the Server instance
             HttpHandler handler = new WSNotificationServer.HttpHandler();
@@ -232,7 +239,16 @@ public class WSNotificationServer extends AbstractProtocolServer {
         }
     }
 
+    /**
+     * Fetch the HashSet containing all WebServices registered to the protocol server
+     * @return A HashSet of ServiceConnections for all the registered web services.
+     */
+    public HashSet<ServiceConnection> getServices() {
+        return _services;
+    }
+
     @Override
+
     public void stopServer() {
         try {
             log.info("Stopping WSNServer...");
@@ -244,11 +260,43 @@ public class WSNotificationServer extends AbstractProtocolServer {
         }
     }
 
+    /**
+     * Fetches the specified String representation of the Protocol that this ProtocolServer handles.
+     * @return A string representing the name of the protocol that this ProtocolServer handles.
+     */
     @Override
     public String getProtocolServerType() {
         return protocolServerType;
     }
 
+    /**
+     * Fetches the complete URI of this ProtocolServer
+     * @return A string representing the complete URI of this ProtocolServer
+     */
+    public static String getURI(){
+        if(_singleton._server.getURI() == null){
+            return "http://0.0.0.0:8080";
+        }
+        return "http://" + _singleton._server.getURI().getHost()+ ":" + (_singleton._server.getURI().getPort() > -1 ? _singleton._server.getURI().getPort() : 8080);
+    }
+
+    /**
+     * Registers the specified ServiceConnection to the ProtocolServer
+     * @param webServiceConnector: The ServiceConnection you wish to register.
+     */
+    public void registerService(ServiceConnection webServiceConnector) {
+        _services.add(webServiceConnector);
+    }
+
+    /**
+     * Unregisters the specified ServiceConnection from the ProtocolServer
+     * @param webServiceConnector: The ServiceConnection you wish to remove.
+     */
+    public void removeService(ServiceConnection webServiceConnector) {
+        _services.remove(webServiceConnector);
+    }
+
+    // This is the HTTP Handler that the WSNServer uses to process all incoming requests
     private class HttpHandler extends AbstractHandler {
 
         @Override
@@ -311,21 +359,24 @@ public class WSNotificationServer extends AbstractProtocolServer {
             if (returnMessage == null) {
                 response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR_500);
                 baseRequest.setHandled(true);
+                returnMessage = new WSNInternalMessage(InternalMessage.STATUS_FAULT_INTERNAL_ERROR, null);
             }
 
             /* Handle possible errors */
-            if ((returnMessage.statusCode & InternalMessage.STATUS_FAULT) > 0){
+            if ((returnMessage.statusCode & InternalMessage.STATUS_FAULT) > 0) {
 
                 /* Have we got an error message to return? */
-                if ((returnMessage.statusCode & InternalMessage.STATUS_HAS_MESSAGE) > 0){
+                if ((returnMessage.statusCode & InternalMessage.STATUS_HAS_MESSAGE) > 0) {
                     response.setContentType("application/soap+xml;charset=utf-8");
 
+                    // Declare input and output streams
                     InputStream inputStream = (InputStream)returnMessage.getMessage();
                     OutputStream outputStream = response.getOutputStream();
 
-                    /* google.commons helper function*/
+                    // Pipe the data from input to output stream
                     ByteStreams.copy(inputStream, outputStream);
 
+                    // Set proper HTTP status, flush the output stream and set the handled flag
                     response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR_500);
                     outputStream.flush();
                     baseRequest.setHandled(true);
@@ -368,8 +419,6 @@ public class WSNotificationServer extends AbstractProtocolServer {
                 */
                 response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR_500);
                 baseRequest.setHandled(true);
-
-                return;
 
             // Check if we have status=OK and also we have a message
             } else if (((InternalMessage.STATUS_OK & returnMessage.statusCode) > 0) &&
