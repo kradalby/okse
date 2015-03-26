@@ -26,6 +26,7 @@ package no.ntnu.okse.protocol.wsn;
 
 import com.google.common.io.ByteStreams;
 import org.apache.log4j.Logger;
+import org.ntnunotif.wsnu.base.internal.ServiceConnection;
 import org.ntnunotif.wsnu.base.net.XMLParser;
 import org.ntnunotif.wsnu.base.util.InternalMessage;
 import org.ntnunotif.wsnu.base.util.Utilities;
@@ -47,41 +48,42 @@ import java.io.OutputStream;
 public class WSNRequestParser {
 
     private static Logger log;
+    private static WSNotificationServer _protocolServer;
 
-    public WSNRequestParser() {
+    public WSNRequestParser(WSNotificationServer server) {
         log = Logger.getLogger(WSNRequestParser.class.getName());
+        _protocolServer = server;
     }
 
-    public WSNInternalMessage parseMessage(WSNInternalMessage message, OutputStream streamToRequestor) {
-        // TODO: Write method to parse and locate which service the message is destined for.
+    public InternalMessage parseMessage(InternalMessage message, OutputStream streamToRequestor) {
+
+        ServiceConnection recipient = findRecipientService(message.getRequestInformation().getEndpointReference());
 
         // We set up the initial returnmessage as having no destination, so we can just return it
         // if we cannot locate where it should go, even though it might be syntactically correct.
-        WSNInternalMessage returnMessage = new WSNInternalMessage(InternalMessage.STATUS_FAULT |
+        InternalMessage returnMessage = new InternalMessage(InternalMessage.STATUS_FAULT |
                 InternalMessage.STATUS_FAULT_INVALID_DESTINATION, null);
 
-        boolean foundRecipient = true;
+        boolean foundRecipient = recipient != null ? true : false;
 
-        // Is it just a request message and has no content
+        // Is it just a request and has no content
         if ((message.statusCode & InternalMessage.STATUS_HAS_MESSAGE) == 0) {
-            log.info("Forwarding request-message...");
+            log.info("Forwarding request...");
 
             if (foundRecipient) {
-                // returnMessage = someService.accept(message);
+                returnMessage = recipient.acceptMessage(message);
             } else {
-                /*
-                for (Service s: services) {
-                    returnMessage = s.accept(message);
-                    if (returnMessage.statusCode & STATUS_FAULT_INVALID_DESTINATION > 0) {
+                for (ServiceConnection s: _protocolServer.getServices()) {
+                    returnMessage = s.acceptMessage(message);
+                    if ((returnMessage.statusCode & InternalMessage.STATUS_FAULT_INVALID_DESTINATION) > 0) {
                         continue;
-                    } else if (returnMessage.statusCode & STATUS_OK > 0) {
+                    } else if ((returnMessage.statusCode & InternalMessage.STATUS_OK) > 0) {
                         break;
-                    } else if (returnMessage.statusCode & STATUS_FAULT_INTERNAL_ERROR > 0) {
+                    } else if ((returnMessage.statusCode & InternalMessage.STATUS_FAULT_INTERNAL_ERROR) > 0) {
                         break;
                     }
                     break;
                 }
-                 */
             }
         }
 
@@ -103,7 +105,7 @@ public class WSNRequestParser {
                     }
                 } catch (ClassCastException classcastex) {
                     log.error("Failed to cast a message to a SOAP envelope");
-                    return new WSNInternalMessage(InternalMessage.STATUS_FAULT | InternalMessage.STATUS_FAULT_INVALID_PAYLOAD, null);
+                    return new InternalMessage(InternalMessage.STATUS_FAULT | InternalMessage.STATUS_FAULT_INVALID_PAYLOAD, null);
                 }
             } catch (JAXBException initialJaxbParsingException) {
                 if (initialJaxbParsingException.getLinkedException() != null) {
@@ -114,10 +116,10 @@ public class WSNRequestParser {
 
                 try {
                     XMLParser.writeObjectToStream(Utilities.createSoapFault("Client", "Invalid formatted message"), streamToRequestor);
-                    return new WSNInternalMessage(InternalMessage.STATUS_FAULT | InternalMessage.STATUS_FAULT_INVALID_PAYLOAD, null);
+                    return new InternalMessage(InternalMessage.STATUS_FAULT | InternalMessage.STATUS_FAULT_INVALID_PAYLOAD, null);
                 } catch (JAXBException faultGeneratingJaxbException) {
                     log.error("Failed to generate SOAP fault message: " + faultGeneratingJaxbException.getMessage());
-                    return new WSNInternalMessage(InternalMessage.STATUS_FAULT | InternalMessage.STATUS_FAULT_INTERNAL_ERROR, null);
+                    return new InternalMessage(InternalMessage.STATUS_FAULT | InternalMessage.STATUS_FAULT_INTERNAL_ERROR, null);
                 }
             }
         }
@@ -128,26 +130,24 @@ public class WSNRequestParser {
 
         if (foundRecipient) {
             log.debug("Have recipient service, sending to recipient object");
-            // returnMessage = someService.accept(message);
+            returnMessage = recipient.acceptMessage(message);
             log.debug("Recieved returnMessage from recipient object");
         } else {
             log.debug("Looking for service to send to...");
-            /*
-            for (ServiceConnection s: services) {
-                log.debug("Attempting to forward request to " + s)
-                returnMessage = s.accept(message);
+            for (ServiceConnection s: _protocolServer.getServices()) {
+                log.debug("Attempting to forward request to " + s);
+                returnMessage = s.acceptMessage(message);
 
-                if((returnMessage.statusCode & STATUS_FAULT_INVALID_DESTINATION) > 0){
+                if ((returnMessage.statusCode & InternalMessage.STATUS_FAULT_INVALID_DESTINATION) > 0) {
                     continue;
-                } else if((returnMessage.statusCode & STATUS_OK) > 0){
+                } else if ((returnMessage.statusCode & InternalMessage.STATUS_OK) > 0) {
                     break;
-                } else if((returnMessage.statusCode & STATUS_FAULT_INTERNAL_ERROR) > 0){
+                } else if ((returnMessage.statusCode & InternalMessage.STATUS_FAULT_INTERNAL_ERROR) > 0) {
                     break;
-                } else if((returnMessage.statusCode & STATUS_EXCEPTION_SHOULD_BE_HANDLED) > 0){
+                } else if ((returnMessage.statusCode & InternalMessage.STATUS_EXCEPTION_SHOULD_BE_HANDLED) > 0) {
                     break;
                 }
             }
-             */
         }
 
         /* Everything is processed properly, and we can figure out what to return */
@@ -164,11 +164,11 @@ public class WSNRequestParser {
                 if ((returnMessage.statusCode & InternalMessage.STATUS_MESSAGE_IS_INPUTSTREAM) > 0) {
                     try {
                         ByteStreams.copy((InputStream) returnMessage.getMessage(), streamToRequestor);
-                        return new WSNInternalMessage(InternalMessage.STATUS_OK, null);
+                        return new InternalMessage(InternalMessage.STATUS_OK, null);
                     } catch(Exception e) {
                         log.error("Casting the returnMessage to InputStream failed, " +
                                 "even though someone set the MESSAGE_IS_INPUTSTREAM flag.");
-                        return new WSNInternalMessage(InternalMessage.STATUS_FAULT | InternalMessage.STATUS_FAULT_INTERNAL_ERROR, null);
+                        return new InternalMessage(InternalMessage.STATUS_FAULT | InternalMessage.STATUS_FAULT_INTERNAL_ERROR, null);
                     }
                 } else {
 
@@ -178,7 +178,7 @@ public class WSNRequestParser {
                     try {
 
                         XMLParser.writeObjectToStream(messageToParse, streamToRequestor);
-                        return new WSNInternalMessage(InternalMessage.STATUS_OK, null);
+                        return new InternalMessage(InternalMessage.STATUS_OK, null);
 
                     /* This was not do-able */
                     } catch (JAXBException e) {
@@ -201,7 +201,7 @@ public class WSNRequestParser {
                         log.error("Unable to marshal returnMessage. Consider converting the " +
                                 "message-payload at an earlier point. Reason given:\n\t" + faultMessage);
 
-                        return new WSNInternalMessage(InternalMessage.STATUS_FAULT | InternalMessage.STATUS_FAULT_INTERNAL_ERROR, null);
+                        return new InternalMessage(InternalMessage.STATUS_FAULT | InternalMessage.STATUS_FAULT_INTERNAL_ERROR, null);
                     }
                 }
 
@@ -221,17 +221,17 @@ public class WSNRequestParser {
 
                     Utilities.attemptToParseException((Exception) returnMessage.getMessage(), streamToRequestor);
                     log.debug("Returning parsed error");
-                    return new WSNInternalMessage(InternalMessage.STATUS_FAULT, null);
+                    return new InternalMessage(InternalMessage.STATUS_FAULT, null);
 
                 } catch (IllegalArgumentException e) {
 
                     log.error("parseMessage(): Error not parseable, the error can not be a wsdl-specified one.");
-                    return new WSNInternalMessage(InternalMessage.STATUS_FAULT | InternalMessage.STATUS_FAULT_INVALID_PAYLOAD, null);
+                    return new InternalMessage(InternalMessage.STATUS_FAULT | InternalMessage.STATUS_FAULT_INVALID_PAYLOAD, null);
 
                 } catch (ClassCastException e) {
 
                     log.error("parseMessage(): The returned exception is not a subclass of Exception.");
-                    return new WSNInternalMessage(InternalMessage.STATUS_FAULT | InternalMessage.STATUS_FAULT_INVALID_PAYLOAD, null);
+                    return new InternalMessage(InternalMessage.STATUS_FAULT | InternalMessage.STATUS_FAULT_INVALID_PAYLOAD, null);
                 }
             /* We have no unhandled exceptions at least */
             } else {
@@ -279,7 +279,7 @@ public class WSNRequestParser {
      * this declared type, it just returns it. If it is an accepted envelope, it creates the corresponding JAXBElement
      * to wrap it in. If it is something else, it wraps it in an Envelope from namespace
      * http://schemas.xmlsoap.org/soap/envelope/
-     *
+     * <p></p>
      * @param o the <code>Object</code> to wrap
      * @return the wrapped JAXBElement
      */
@@ -316,10 +316,11 @@ public class WSNRequestParser {
 
     /**
      * Function to accept a message from a local service, and forward it out into the internet.
+     * <p>
      * @param message The message to be sent out
      */
     //TODO: Generate meaningful soap headers
-    public WSNInternalMessage generateOutgoingMessage(WSNInternalMessage message) {
+    public InternalMessage generateOutgoingMessage(InternalMessage message) {
         Object messageContent = message.getMessage();
 
         if ((message.statusCode & InternalMessage.STATUS_HAS_MESSAGE) > 0) {
@@ -364,5 +365,38 @@ public class WSNRequestParser {
         } else {
             return message;
         }
+    }
+
+    /**
+     * Try to locate a specific ServiceConnection based on the endpoint reference.
+     * <p>
+     * @param endpointReference: A string representing the endpoint reference.
+     * @return The ServiceConnection that matches the specified endpoint reference argument, null if not found.
+     */
+    public ServiceConnection findRecipientService(String endpointReference) {
+        if(endpointReference == null || endpointReference.equals(""))
+            return null;
+
+        for(ServiceConnection connection : _protocolServer.getServices()){
+
+            // Ensure we have connection with endpoint
+            if (connection == null || connection.getServiceEndpoint() == null) {
+                continue;
+            }
+
+            // Try to match the ip in one of two ways
+            // Is this first one strictly necessary?
+            if(endpointReference.matches("^/?" + connection.getServiceEndpoint().replaceAll("^"+WSNotificationServer.getURI(), "") +"(.*)?")){
+                return connection;
+            }
+
+            if(endpointReference.matches("/?" + Utilities.stripUrlOfProtocolAndHost(connection.getServiceEndpoint()) + "(.*)") ||
+                    ("/"+endpointReference).matches("/?" + Utilities.stripUrlOfProtocolAndHost(connection.getServiceEndpoint()) + "(.*)")){
+                return connection;
+            }
+
+        }
+        log.info("Found no matching connection for URL: " + endpointReference);
+        return null;
     }
 }

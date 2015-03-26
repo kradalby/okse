@@ -118,16 +118,46 @@ public class CoreService extends Thread {
     public ArrayList<ProtocolServer> getAllProtocolServers() { return this.protocolServers; }
 
     /**
+     * Helper method to fetch a protocol server defined by the actual Class
+     * @param className: The class which the protocol server should be an actual instance of (e.g not subclass etc)
+     * @return The ProtocolServer that matches the specified Class, null otherwise. If not null, the returned object
+     *         can be safely cast to the specified Class.
+     */
+    public ProtocolServer getProtocolServer(Class className) {
+        for (ProtocolServer ps: protocolServers) {
+            if (className.equals(ps.getClass())) return ps;
+        }
+        return null;
+    }
+
+    /**
+     * Shuts down and removes all protocol servers.
+     */
+    public void removeAllProtocolServers() {
+        protocolServers.forEach(p -> p.stopServer());
+        protocolServers.clear();
+    }
+
+    /**
+     * Helper method to fetch a protocol server defined by a protocolServerType string.
+     * @param protocolServerType: A string representing the type of the protocol server you want to fetch.
+     * @return The ProtocolServer that matches the specified string, null otherwise. If not null, the returned object
+     *         can be safely cast to the class that has a defined protocolServerType field equal to the specified
+     *         argument.
+     */
+    public ProtocolServer getProtocolServer(String protocolServerType) {
+        for (ProtocolServer ps: protocolServers) {
+            if (ps.getProtocolServerType().equalsIgnoreCase(protocolServerType)) return ps;
+        }
+        return null;
+    }
+
+    /**
      * Helper method that boots all added protocolservers.
      */
     private void bootProtocolServers() {
         protocolServers.forEach(ps -> ps.boot());
     }
-
-
-    // TODO: Create a method called getProtocolServer(Class classname) that locates the PS
-    // TODO: that is an instance of the given class, and returns it, allowing for correct casting
-    // TODO: on the recieving end.
 
     /**
      * Starts the main loop of the CoreService thread.

@@ -37,6 +37,11 @@ import org.ntnunotif.wsnu.base.util.RequestInformation;
  * Wrapper for WSN InternalMessage
  */
 public class WSNInternalMessage extends InternalMessage {
+
+    public WSNInternalMessage(InternalMessage originalMessage) {
+        super(originalMessage.statusCode, originalMessage.getMessage());
+    }
+
     public WSNInternalMessage(int statusCode, Object message) {
         super(statusCode, message);
     }
