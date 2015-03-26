@@ -28,23 +28,6 @@
 
 var Stats = (function($) {
 
-
-    var fillTable = function(data) {
-        var trHTML = '';
-        $.each(data.protocol, function (i, protocol) {
-            if ($('#' + protocol.name).length === 0) {
-                trHTML += '<tr>' +
-                '<td>' + subscriber.protocol + '</td>' +
-                '<td>' + subscriber.ip + '</td>' +
-                '<td>' + subscriber.port + '</td>'
-            }
-        });
-        return trHTML
-    }
-
-
-
-
     return {
         error: function(xhr, statusText, thrownError) {
             console.log("[Error] in ajax for Stats with error: " + xhr.statusText)
