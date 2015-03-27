@@ -48,6 +48,7 @@ import org.eclipse.jetty.xml.XmlConfiguration;
 import org.ntnunotif.wsnu.base.internal.ServiceConnection;
 import org.ntnunotif.wsnu.base.util.InternalMessage;
 import org.ntnunotif.wsnu.base.util.RequestInformation;
+import org.ntnunotif.wsnu.services.implementations.subscriptionmanager.SimpleSubscriptionManager;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -210,6 +211,9 @@ public class WSNotificationServer extends AbstractProtocolServer {
     public void boot() {
 
         log.info("Booting WSNServer.");
+        ServiceConnection submanager = (ServiceConnection) new WSNSubscriptionManager();
+        registerService(submanager);
+
         if (!_running) {
             try {
                 // Initialize a plain HttpClient
@@ -354,7 +358,8 @@ public class WSNotificationServer extends AbstractProtocolServer {
             log.info("WSNInternalMessage: " + outgoingMessage);
 
             // Update the outgoingMessage with correct information from the Jetty ServletRequest Object
-            outgoingMessage.getRequestInformation().setEndpointReference(request.getRemoteHost());
+            //outgoingMessage.getRequestInformation().setEndpointReference(request.getRemoteHost()); //getEndpointReferance() fra InternalMessage
+            outgoingMessage.getRequestInformation().setEndpointReference(request.getRequestURI()); //Hm...
             outgoingMessage.getRequestInformation().setRequestURL(request.getRequestURI());
             outgoingMessage.getRequestInformation().setParameters(request.getParameterMap());
 
