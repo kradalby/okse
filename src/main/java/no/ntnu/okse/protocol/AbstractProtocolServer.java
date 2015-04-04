@@ -40,6 +40,8 @@ public abstract class AbstractProtocolServer implements ProtocolServer {
         protocolServerType = "";
         totalMessages = 0;
         totalRequests = 0;
+        totalBadRequests = 0;
+        totalErrors = 0;
     }
 
     // Logger singleton

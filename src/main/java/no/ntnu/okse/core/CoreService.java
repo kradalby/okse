@@ -112,6 +112,22 @@ public class CoreService extends Thread {
     }
 
     /**
+     * Statistics for total number of bad or malformed requests that has passed through all protocol servers
+     * @return: An integer representing the total amount of bad or malformed requests
+     */
+    public int getTotalBadRequestsFromProtocolServers() {
+        return protocolServers.stream().map(ProtocolServer::getTotalBadRequests).reduce(0, (a, b) -> a + b);
+    }
+
+    /**
+     * Statistics for total number of errors generated through all protocol servers
+     * @return: An integer representing the total amount of errors from protocol servers.
+     */
+    public int getTotalErrorsFromProtocolServers() {
+        return protocolServers.stream().map(ProtocolServer::getTotalErrors).reduce(0, (a, b) -> a + b);
+    }
+
+    /**
      * Fetches the ArrayList of ProtocolServers currently added to CoreService.
      * @return: An ArrayList of ProtocolServers
      */
