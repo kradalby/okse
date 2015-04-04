@@ -222,6 +222,9 @@ public class WSNotificationServer extends AbstractProtocolServer {
     public void boot() {
 
         log.info("Booting WSNServer.");
+        ServiceConnection submanager = (ServiceConnection) new WSNSubscriptionManager();
+        registerService(submanager);
+
         if (!_running) {
             try {
                 // Initialize a plain HttpClient
@@ -402,7 +405,6 @@ public class WSNotificationServer extends AbstractProtocolServer {
 
             log.info("WSNInternalMessage: " + outgoingMessage);
 
-            // Update the outgoingMessage with correct information from the Jetty ServletRequest Object
             outgoingMessage.getRequestInformation().setEndpointReference(request.getRemoteHost());
             outgoingMessage.getRequestInformation().setRequestURL(request.getRequestURI());
             outgoingMessage.getRequestInformation().setParameters(request.getParameterMap());
