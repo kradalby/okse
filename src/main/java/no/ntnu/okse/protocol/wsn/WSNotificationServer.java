@@ -47,13 +47,10 @@ import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.xml.XmlConfiguration;
 import org.ntnunotif.wsnu.base.internal.ServiceConnection;
-import org.ntnunotif.wsnu.base.internal.UnpackingConnector;
 import org.ntnunotif.wsnu.base.util.InternalMessage;
 import org.ntnunotif.wsnu.base.util.RequestInformation;
 import org.ntnunotif.wsnu.services.implementations.notificationbroker.NotificationBrokerImpl;
-import org.ntnunotif.wsnu.services.implementations.notificationproducer.NotificationProducerImpl;
 import org.ntnunotif.wsnu.services.implementations.publisherregistrationmanager.SimplePublisherRegistrationManager;
-import org.ntnunotif.wsnu.services.implementations.subscriptionmanager.SimplePausableSubscriptionManager;
 import org.ntnunotif.wsnu.services.implementations.subscriptionmanager.SimpleSubscriptionManager;
 
 import javax.servlet.ServletException;
@@ -69,10 +66,6 @@ public class WSNotificationServer extends AbstractProtocolServer {
 
     // Runstate variables
     private static boolean _invoked, _running;
-
-    // Statistics
-    private static int totalRequests;
-    private static int totalMessages;
 
     // Path to configuration file on classpath
     private static final String configurationFile = "/config/wsnserver.xml";
@@ -153,10 +146,6 @@ public class WSNotificationServer extends AbstractProtocolServer {
 
         log = Logger.getLogger(WSNotificationServer.class.getName());
 
-        // Initialize statistics
-        totalRequests = 0;
-        totalMessages = 0;
-
         // Set the servertype
         protocolServerType = "WSNotification";
 
@@ -191,24 +180,6 @@ public class WSNotificationServer extends AbstractProtocolServer {
         } catch (Exception e) {
             log.error("Unable to start WSNotificationServer: " + e.getMessage());
         }
-    }
-
-    /**
-     * Total amount of requests from this WSNotificationServer that has passed through this server instance.
-     * @return An integer representing the total amount of request.
-     */
-    @Override
-    public int getTotalRequests() {
-        return totalRequests;
-    }
-
-    /**
-     * Total amount of messages from this WSNotificationServer that has passed through this server instance.
-     * @return: An integer representing the total amount of messages.
-     */
-    @Override
-    public int getTotalMessages() {
-        return totalMessages;
     }
 
     /**
