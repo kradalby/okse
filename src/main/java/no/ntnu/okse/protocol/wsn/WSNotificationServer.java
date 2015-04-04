@@ -42,12 +42,19 @@ import org.eclipse.jetty.http.HttpStatus;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.xml.XmlConfiguration;
 import org.ntnunotif.wsnu.base.internal.ServiceConnection;
+import org.ntnunotif.wsnu.base.internal.UnpackingConnector;
 import org.ntnunotif.wsnu.base.util.InternalMessage;
 import org.ntnunotif.wsnu.base.util.RequestInformation;
+import org.ntnunotif.wsnu.services.implementations.notificationbroker.NotificationBrokerImpl;
+import org.ntnunotif.wsnu.services.implementations.notificationproducer.NotificationProducerImpl;
+import org.ntnunotif.wsnu.services.implementations.publisherregistrationmanager.SimplePublisherRegistrationManager;
+import org.ntnunotif.wsnu.services.implementations.subscriptionmanager.SimplePausableSubscriptionManager;
+import org.ntnunotif.wsnu.services.implementations.subscriptionmanager.SimpleSubscriptionManager;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -164,6 +171,11 @@ public class WSNotificationServer extends AbstractProtocolServer {
             XmlConfiguration config = new XmlConfiguration(configResource.getInputStream());
             this._server = (Server)config.configure();
 
+            if (port != null) {
+                this.addStandardConnector("0.0.0.0", port);
+                this._server.setConnectors((Connector[]) this._connectors.toArray());
+            }
+
             // Initialize the RequestParser for WSNotification
             this._requestParser = new WSNRequestParser(this);
 
@@ -221,6 +233,17 @@ public class WSNotificationServer extends AbstractProtocolServer {
 
                 // For all registered connectors in WSNotificationServer, add these to the Jetty Server
                 this._connectors.stream().forEach(c -> this._server.addConnector(c));
+
+                // Register the needed web service proxies
+                NotificationBrokerImpl producer = new NotificationBrokerImpl();
+                SimpleSubscriptionManager subscriptionManager = new SimpleSubscriptionManager();
+                SimplePublisherRegistrationManager publisherRegistrationManager = new SimplePublisherRegistrationManager();
+
+                producer.quickBuild("broker", this._requestParser);
+                subscriptionManager.quickBuild("subscriptionManager", this._requestParser);
+                publisherRegistrationManager.quickBuild("publisherRegistrationManager", this._requestParser);
+                producer.setSubscriptionManager(subscriptionManager);
+                producer.setRegistrationManager(publisherRegistrationManager);
 
                 // Create a new thread for the Jetty Server to run in
                 this._serverThread = new Thread(() -> {
@@ -288,7 +311,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
      * Registers the specified ServiceConnection to the ProtocolServer
      * @param webServiceConnector: The ServiceConnection you wish to register.
      */
-    public void registerService(ServiceConnection webServiceConnector) {
+    public synchronized void registerService(ServiceConnection webServiceConnector) {
         _services.add(webServiceConnector);
     }
 
@@ -296,8 +319,34 @@ public class WSNotificationServer extends AbstractProtocolServer {
      * Unregisters the specified ServiceConnection from the ProtocolServer
      * @param webServiceConnector: The ServiceConnection you wish to remove.
      */
-    public void removeService(ServiceConnection webServiceConnector) {
+    public synchronized void removeService(ServiceConnection webServiceConnector) {
         _services.remove(webServiceConnector);
+    }
+
+    /**
+     * Add a standard serverconnector to the server instance.
+     * @param address The IP address you wish to bind the serverconnector to
+     * @param port The port you with to bind the serverconnector to
+     */
+    public void addStandardConnector(String address, int port){
+        ServerConnector connector = new ServerConnector(_server);
+        connector.setHost(address);
+        if(port == 80){
+            log.warn("You have requested to use port 80. This will not work unless you are running as root." +
+                    "Are you running as root? You shouldn't. Reroute port 80 to 8080 instead.");
+        }
+        connector.setPort(port);
+        _connectors.add(connector);
+        _server.addConnector(connector);
+    }
+
+    /**
+     * Add a predefined serverconnector to the server instance.
+     * @param connector A jetty ServerConnector
+     */
+    public void addConnector(Connector connector){
+        _connectors.add(connector);
+        this._server.addConnector(connector);
     }
 
     /**
@@ -480,7 +529,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
         }
     }
 
-    public InternalMessage sendMessage(InternalMessage message) {
+    public synchronized InternalMessage sendMessage(InternalMessage message) {
 
         // Fetch the requestInformation from the message, and extract the endpoint
         RequestInformation requestInformation = message.getRequestInformation();

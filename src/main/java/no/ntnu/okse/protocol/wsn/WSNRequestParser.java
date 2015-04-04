@@ -26,6 +26,7 @@ package no.ntnu.okse.protocol.wsn;
 
 import com.google.common.io.ByteStreams;
 import org.apache.log4j.Logger;
+import org.ntnunotif.wsnu.base.internal.Hub;
 import org.ntnunotif.wsnu.base.internal.ServiceConnection;
 import org.ntnunotif.wsnu.base.net.XMLParser;
 import org.ntnunotif.wsnu.base.util.InternalMessage;
@@ -39,13 +40,14 @@ import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Collection;
 
 /**
  * Created by Aleksander Skraastad (myth) on 3/19/15.
  * <p>
  * okse is licenced under the MIT licence.
  */
-public class WSNRequestParser {
+public class WSNRequestParser implements Hub {
 
     private static Logger log;
     private static WSNotificationServer _protocolServer;
@@ -57,7 +59,7 @@ public class WSNRequestParser {
 
     public InternalMessage parseMessage(InternalMessage message, OutputStream streamToRequestor) {
 
-        ServiceConnection recipient = findRecipientService(message.getRequestInformation().getEndpointReference());
+        ServiceConnection recipient = findRecipientService(message.getRequestInformation().getRequestURL());
 
         // We set up the initial returnmessage as having no destination, so we can just return it
         // if we cannot locate where it should go, even though it might be syntactically correct.
@@ -71,15 +73,20 @@ public class WSNRequestParser {
             log.info("Forwarding request...");
 
             if (foundRecipient) {
+                log.info("We found a recipient: " + recipient);
                 returnMessage = recipient.acceptMessage(message);
             } else {
+                log.info("Did not immediately find a recipient... Looping through services...");
                 for (ServiceConnection s: _protocolServer.getServices()) {
                     returnMessage = s.acceptMessage(message);
                     if ((returnMessage.statusCode & InternalMessage.STATUS_FAULT_INVALID_DESTINATION) > 0) {
+                        log.info("Found an invalid destination: " + s);
                         continue;
                     } else if ((returnMessage.statusCode & InternalMessage.STATUS_OK) > 0) {
+                        log.info("Hooray, found a service that accepted the message: " + s);
                         break;
                     } else if ((returnMessage.statusCode & InternalMessage.STATUS_FAULT_INTERNAL_ERROR) > 0) {
+                        log.info("There was an error while trying to get service " + s + " to accept the message.");
                         break;
                     }
                     break;
@@ -94,13 +101,17 @@ public class WSNRequestParser {
             try {
 
                 XMLParser.parse(message);
+                log.info("Successfully parsed message.");
 
                 try {
 
+                    log.info("Attempting to cast to JAXBElement");
                     JAXBElement msg = (JAXBElement) message.getMessage();
                     Class messageClass = msg.getDeclaredType();
 
                     if (messageClass.equals(org.w3._2001._12.soap_envelope.Envelope.class)) {
+                        message.setMessage(msg.getValue());
+                    } else if (messageClass.equals(org.xmlsoap.schemas.soap.envelope.Envelope.class)) {
                         message.setMessage(msg.getValue());
                     }
                 } catch (ClassCastException classcastex) {
@@ -377,7 +388,7 @@ public class WSNRequestParser {
         if(endpointReference == null || endpointReference.equals(""))
             return null;
 
-        for(ServiceConnection connection : _protocolServer.getServices()){
+        for(ServiceConnection connection : _protocolServer.getServices()) {
 
             // Ensure we have connection with endpoint
             if (connection == null || connection.getServiceEndpoint() == null) {
@@ -398,5 +409,42 @@ public class WSNRequestParser {
         }
         log.info("Found no matching connection for URL: " + endpointReference);
         return null;
+    }
+
+    // HUB OVERRIDES
+
+    @Override
+    public InternalMessage acceptNetMessage(InternalMessage internalMessage, OutputStream outputStream) {
+        return this.parseMessage(internalMessage, outputStream);
+    }
+
+    @Override
+    public InternalMessage acceptLocalMessage(InternalMessage internalMessage) {
+        return this._protocolServer.sendMessage(this.generateOutgoingMessage(internalMessage));
+    }
+
+    @Override
+    public String getInetAdress() {
+        return WSNotificationServer.getURI();
+    }
+
+    @Override
+    public void registerService(ServiceConnection serviceConnection) {
+        this._protocolServer.registerService(serviceConnection);
+    }
+
+    @Override
+    public void removeService(ServiceConnection serviceConnection) {
+        this._protocolServer.removeService(serviceConnection);
+    }
+
+    @Override
+    public boolean isServiceRegistered(ServiceConnection serviceConnection) {
+        return this._protocolServer.getServices().contains(serviceConnection);
+    }
+
+    @Override
+    public Collection<ServiceConnection> getServices() {
+        return this._protocolServer.getServices();
     }
 }
