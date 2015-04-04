@@ -222,8 +222,6 @@ public class WSNotificationServer extends AbstractProtocolServer {
     public void boot() {
 
         log.info("Booting WSNServer.");
-        ServiceConnection submanager = (ServiceConnection) new WSNSubscriptionManager();
-        registerService(submanager);
 
         if (!_running) {
             try {
