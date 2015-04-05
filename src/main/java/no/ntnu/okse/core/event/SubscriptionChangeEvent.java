@@ -22,31 +22,54 @@
  * THE SOFTWARE.
  */
 
-package no.ntnu.okse.protocol.wsn;
+package no.ntnu.okse.core.event;
 
-import org.ntnunotif.wsnu.base.util.InternalMessage;
-import org.ntnunotif.wsnu.base.util.RequestInformation;
+import no.ntnu.okse.core.subscription.Subscriber;
 
 /**
- * Created by Aleksander Skraastad (myth) on 3/24/15.
+ * Created by Aleksander Skraastad (myth) on 4/5/15.
  * <p>
  * okse is licenced under the MIT licence.
  */
+public class SubscriptionChangeEvent extends Event {
 
-/**
- * Wrapper for WSN InternalMessage
- */
-public class WSNInternalMessage extends InternalMessage {
-
-    public WSNInternalMessage(InternalMessage originalMessage) {
-        super(originalMessage.statusCode, originalMessage.getMessage());
+    // The different types of subscription changes that might occur
+    public static enum Type {
+        SUBSCRIBE,
+        UNSUBSCRIBE,
+        RENEW,
+        PAUSE
     }
 
-    public WSNInternalMessage(int statusCode, Object message) {
-        super(statusCode, message);
+    private Type eventType;
+
+    /**
+     * Constructs a SubscriptionChangeEvent of a certain Type, with associated Subscriber object.
+     * <p>
+     *
+     * @param eventType : The type of subscription event this is
+     * @param data      : The subscriber object in question.
+     */
+    public SubscriptionChangeEvent(Type eventType, Subscriber data) {
+        super(data);
+        this.eventType = eventType;
     }
 
-    public WSNInternalMessage(int statusCode, Object message, RequestInformation requestInformation) {
-        super(statusCode, message, requestInformation);
+    /**
+     * Fetch the related Subscriber object.
+     * @return The Subscriber object associated with this event.
+     */
+    @Override
+    public Subscriber getData() {
+        return (Subscriber) data;
+    }
+
+    /**
+     * Fetch the event type of this event.
+     * @return A SubscriptionChangeEvent
+     */
+    @Override
+    public Type getType() {
+        return this.eventType;
     }
 }
