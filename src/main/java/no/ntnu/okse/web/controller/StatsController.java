@@ -49,6 +49,8 @@ public class StatsController {
         // ProtocolServer statistics
         int totalMessages = Application.cs.getTotalMessagesFromProtocolServers();
         int totalRequests = Application.cs.getTotalRequestsFromProtocolServers();
+        int totalBadRequests = Application.cs.getTotalBadRequestsFromProtocolServers();
+        int totalErrors = Application.cs.getTotalErrorsFromProtocolServers();
 
         MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
 
@@ -58,7 +60,7 @@ public class StatsController {
         long freeRam = Runtime.getRuntime().freeMemory()/mb;
         long useRam = (totalRam - freeRam)/mb;
 
-        Stats stat = new Stats(freeRam, useRam, totalRam, cpuAvailable, totalRequests, totalMessages);
+        Stats stat = new Stats(freeRam, useRam, totalRam, cpuAvailable, totalRequests, totalMessages, totalBadRequests, totalErrors);
         return stat;
 
     }
