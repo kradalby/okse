@@ -26,7 +26,6 @@ package no.ntnu.okse.web.controller;
 
 import org.springframework.beans.factory.annotation.Value;
 import no.ntnu.okse.Application;
-import no.ntnu.okse.core.event.PageLoadEvent;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -65,15 +64,6 @@ public class IndexController {
             model.addAttribute("serverAddress", "Unknown");
         }
 
-        Application.cs.getExecutor().execute(() -> {
-            try {
-                Application.cs.getEventQueue().put(new PageLoadEvent("PageLoad", "CorrectDataObject", "String"));
-            } catch (InterruptedException e) {
-                Logger.getLogger(Application.class.getName()).info(e.getMessage());
-            } catch (IllegalArgumentException e1) {
-                Logger.getLogger(Application.class.getName()).info(e1.getMessage());
-            }
-        });
         return "fragments/index";
 
     }
