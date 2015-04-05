@@ -25,23 +25,35 @@
 package no.ntnu.okse.protocol.wsn;
 
 import java.io.IOException;
-import java.io.OutputStreamWriter;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashSet;
 
+import com.google.common.io.ByteStreams;
 import no.ntnu.okse.protocol.AbstractProtocolServer;
 import org.apache.log4j.Logger;
 import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.client.api.ContentResponse;
+import org.eclipse.jetty.client.util.InputStreamContentProvider;
+import org.eclipse.jetty.http.HttpMethod;
+import org.eclipse.jetty.http.HttpStatus;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.xml.XmlConfiguration;
+import org.ntnunotif.wsnu.base.internal.ServiceConnection;
 import org.ntnunotif.wsnu.base.util.InternalMessage;
+import org.ntnunotif.wsnu.base.util.RequestInformation;
+import org.ntnunotif.wsnu.services.implementations.notificationbroker.NotificationBrokerImpl;
+import org.ntnunotif.wsnu.services.implementations.publisherregistrationmanager.SimplePublisherRegistrationManager;
+import org.ntnunotif.wsnu.services.implementations.subscriptionmanager.SimpleSubscriptionManager;
 
 import javax.servlet.ServletException;
-import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -52,9 +64,8 @@ import javax.servlet.http.HttpServletResponse;
  */
 public class WSNotificationServer extends AbstractProtocolServer {
 
-    // Statistics
-    private static int totalRequests;
-    private static int totalMessages;
+    // Runstate variables
+    private static boolean _invoked, _running;
 
     // Path to configuration file on classpath
     private static final String configurationFile = "/config/wsnserver.xml";
@@ -63,17 +74,19 @@ public class WSNotificationServer extends AbstractProtocolServer {
     private static WSNotificationServer _singleton;
 
     private Server _server;
-    private WSNRequestParser _reqparser;
+    private WSNRequestParser _requestParser;
     private final ArrayList<Connector> _connectors = new ArrayList();
     private HttpClient _client;
     private HttpHandler _handler;
+    private HashSet<ServiceConnection> _services;
 
     /**
      * Empty constructor, uses defaults from jetty configuration file for WSNServer
      */
     private WSNotificationServer() {
         this.init(null);
-        this._invoked = true;
+        _running = false;
+        _invoked = true;
     }
 
     /**
@@ -133,47 +146,40 @@ public class WSNotificationServer extends AbstractProtocolServer {
 
         log = Logger.getLogger(WSNotificationServer.class.getName());
 
-        // Initialize statistics
-        totalRequests = 0;
-        totalMessages = 0;
-
         // Set the servertype
         protocolServerType = "WSNotification";
 
-        // TODO: Initialize other needed variables
-
+        // Declare HttpClient field
         _client = null;
+
+        // Declare configResource (Fetched from classpath as a Resource from system)
         Resource configResource;
         try {
+            // Try to parse the configFile for WSNServer to set up the Server instance
             configResource = Resource.newSystemResource(configurationFile);
             XmlConfiguration config = new XmlConfiguration(configResource.getInputStream());
             this._server = (Server)config.configure();
-            this._reqparser = new WSNRequestParser();
+
+            if (port != null) {
+                this.addStandardConnector("0.0.0.0", port);
+                this._server.setConnectors((Connector[]) this._connectors.toArray());
+            }
+
+            // Initialize the RequestParser for WSNotification
+            this._requestParser = new WSNRequestParser(this);
+
+            // Initialize the collection of ServiceConnections
+            this._services = new HashSet<>();
+
+            // Initialize and set the HTTPHandler for the Server instance
             HttpHandler handler = new WSNotificationServer.HttpHandler();
             this._server.setHandler(handler);
+
             log.debug("XMLConfig complete, server instanciated.");
 
         } catch (Exception e) {
             log.error("Unable to start WSNotificationServer: " + e.getMessage());
         }
-    }
-
-    /**
-     * Total amount of requests from this WSNotificationServer that has passed through this server instance.
-     * @return: An integer representing the total amount of request.
-     */
-    @Override
-    public int getTotalRequests() {
-        return totalRequests;
-    }
-
-    /**
-     * Total amount of messages from this WSNotificationServer that has passed through this server instance.
-     * @return: An integer representing the total amount of messages.
-     */
-    @Override
-    public int getTotalMessages() {
-        return totalMessages;
     }
 
     /**
@@ -187,6 +193,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
     public void boot() {
 
         log.info("Booting WSNServer.");
+
         if (!_running) {
             try {
                 // Initialize a plain HttpClient
@@ -199,6 +206,18 @@ public class WSNotificationServer extends AbstractProtocolServer {
                 // For all registered connectors in WSNotificationServer, add these to the Jetty Server
                 this._connectors.stream().forEach(c -> this._server.addConnector(c));
 
+                // Register the needed web service proxies
+                NotificationBrokerImpl producer = new NotificationBrokerImpl();
+                SimpleSubscriptionManager subscriptionManager = new SimpleSubscriptionManager();
+                SimplePublisherRegistrationManager publisherRegistrationManager = new SimplePublisherRegistrationManager();
+
+                // Pure WS-Nu quickbuilds and service registry
+                producer.quickBuild("broker", this._requestParser);
+                subscriptionManager.quickBuild("subscriptionManager", this._requestParser);
+                publisherRegistrationManager.quickBuild("publisherRegistrationManager", this._requestParser);
+                producer.setSubscriptionManager(subscriptionManager);
+                producer.setRegistrationManager(publisherRegistrationManager);
+
                 // Create a new thread for the Jetty Server to run in
                 this._serverThread = new Thread(() -> {
                     try {
@@ -206,82 +225,371 @@ public class WSNotificationServer extends AbstractProtocolServer {
                         WSNotificationServer.this._server.join();
 
                     } catch (Exception serverError) {
+                        totalErrors++;
                         log.trace(serverError.getStackTrace());
                     }
                 });
                 this._serverThread.setName("WSNServer");
                 // Start the Jetty Server
                 this._serverThread.start();
-                this._serverThread.join();
                 WSNotificationServer._running = true;
                 log.info("WSNServer Thread started successfully.");
             } catch (Exception e) {
+                totalErrors++;
                 log.trace(e.getStackTrace());
             }
         }
     }
 
+    /**
+     * Fetch the HashSet containing all WebServices registered to the protocol server
+     * @return A HashSet of ServiceConnections for all the registered web services.
+     */
+    public HashSet<ServiceConnection> getServices() {
+        return _services;
+    }
+
+    @Override
+
+    public void stopServer() {
+        try {
+            log.info("Stopping WSNServer...");
+            this._client.stop();
+            this._server.stop();
+            log.info("WSNServer Client and ServerThread stopped");
+        } catch (Exception e) {
+            totalErrors++;
+            log.trace(e.getStackTrace());
+        }
+    }
+
+    /**
+     * Fetches the specified String representation of the Protocol that this ProtocolServer handles.
+     * @return A string representing the name of the protocol that this ProtocolServer handles.
+     */
+    @Override
+    public String getProtocolServerType() {
+        return protocolServerType;
+    }
+
+    /**
+     * Fetches the complete URI of this ProtocolServer
+     * @return A string representing the complete URI of this ProtocolServer
+     */
+    public static String getURI(){
+        if(_singleton._server.getURI() == null){
+            return "http://0.0.0.0:8080";
+        }
+        return "http://" + _singleton._server.getURI().getHost()+ ":" + (_singleton._server.getURI().getPort() > -1 ? _singleton._server.getURI().getPort() : 8080);
+    }
+
+    /**
+     * Registers the specified ServiceConnection to the ProtocolServer
+     * @param webServiceConnector: The ServiceConnection you wish to register.
+     */
+    public synchronized void registerService(ServiceConnection webServiceConnector) {
+        _services.add(webServiceConnector);
+    }
+
+    /**
+     * Unregisters the specified ServiceConnection from the ProtocolServer
+     * @param webServiceConnector: The ServiceConnection you wish to remove.
+     */
+    public synchronized void removeService(ServiceConnection webServiceConnector) {
+        _services.remove(webServiceConnector);
+    }
+
+    /**
+     * Add a standard serverconnector to the server instance.
+     * @param address The IP address you wish to bind the serverconnector to
+     * @param port The port you with to bind the serverconnector to
+     */
+    public void addStandardConnector(String address, int port){
+        ServerConnector connector = new ServerConnector(_server);
+        connector.setHost(address);
+        if(port == 80){
+            log.warn("You have requested to use port 80. This will not work unless you are running as root." +
+                    "Are you running as root? You shouldn't. Reroute port 80 to 8080 instead.");
+        }
+        connector.setPort(port);
+        _connectors.add(connector);
+        _server.addConnector(connector);
+    }
+
+    /**
+     * Add a predefined serverconnector to the server instance.
+     * @param connector A jetty ServerConnector
+     */
+    public void addConnector(Connector connector){
+        _connectors.add(connector);
+        this._server.addConnector(connector);
+    }
+
+    /**
+     * Fetch the WSNRequestParser object
+     * @return WSNRequestParser
+     */
+    public WSNRequestParser getRequestParser() {
+        return this._requestParser;
+    }
+
+    // This is the HTTP Handler that the WSNServer uses to process all incoming requests
     private class HttpHandler extends AbstractHandler {
 
         @Override
         public void handle(String target, Request baseRequest, HttpServletRequest request,
                            HttpServletResponse response) throws IOException, ServletException {
 
-            log.info("HttpHandle invoked on target: " + target);
+            log.debug("HttpHandle invoked on target: " + target);
+
+            // Do some stats.
+            totalRequests++;
 
             boolean isChunked = false;
 
             Enumeration headerNames = request.getHeaderNames();
 
-            log.info("Checking headers...");
+            log.debug("Checking headers...");
+
             while(headerNames.hasMoreElements()) {
                 String outMessage = (String)headerNames.nextElement();
                 Enumeration returnMessage = request.getHeaders(outMessage);
 
                 while(returnMessage.hasMoreElements()) {
                     String inputStream = (String)returnMessage.nextElement();
-                    log.info(outMessage + "=" + inputStream);
+                    log.debug(outMessage + "=" + inputStream);
                     if(outMessage.equals("Transfer-Encoding") && inputStream.equals("chunked")) {
-                        log.info("Found Transfer-Encoding was chunked.");
+                        log.debug("Found Transfer-Encoding was chunked.");
                         isChunked = true;
                     }
                 }
             }
 
             log.info("Accepted message, trying to instantiate WSNu InternalMessage");
-            InternalMessage outMessage1;
-            if(request.getContentLength() <= 0 && !isChunked) {
-                outMessage1 = new InternalMessage(1, null);
+
+            // Get message content, if any
+            InternalMessage outgoingMessage;
+            if(request.getContentLength() > 0 || isChunked) {
+                InputStream inputStream = request.getInputStream();
+                outgoingMessage = new InternalMessage(InternalMessage.STATUS_OK | InternalMessage.STATUS_HAS_MESSAGE, inputStream);
             } else {
-                ServletInputStream returnMessage1 = request.getInputStream();
-                outMessage1 = new InternalMessage(5, returnMessage1);
+                outgoingMessage = new InternalMessage(InternalMessage.STATUS_OK, null);
             }
-            log.info("InternalMessage: " + outMessage1);
 
-            outMessage1.getRequestInformation().setEndpointReference(request.getRemoteHost());
-            outMessage1.getRequestInformation().setRequestURL(request.getRequestURI());
-            outMessage1.getRequestInformation().setParameters(request.getParameterMap());
+            log.info("WSNInternalMessage: " + outgoingMessage);
 
-            //log.info("OutMessage: " + outMessage1.getMessage());
-            log.info("OutMessage: " + outMessage1.getRequestInformation().getEndpointReference());
-            log.info("OutMessage: " + outMessage1.getRequestInformation().getRequestURL());
-            log.info("OutMessage: " + outMessage1.getRequestInformation().getHttpStatus());
+            outgoingMessage.getRequestInformation().setEndpointReference(request.getRemoteHost());
+            outgoingMessage.getRequestInformation().setRequestURL(request.getRequestURI());
+            outgoingMessage.getRequestInformation().setParameters(request.getParameterMap());
 
-            OutputStreamWriter writer = new OutputStreamWriter(response.getOutputStream());
-            writer.write("Success, you tried to access " + target + " from " +
-                    request.getRemoteAddr());
-            writer.flush();
+            log.info("EndpointReference: " + outgoingMessage.getRequestInformation().getEndpointReference());
+            log.info("Request URI: " + outgoingMessage.getRequestInformation().getRequestURL());
 
-            // Do some stats.
-            totalRequests++;
+            log.info("Forwarding message to requestParser...");
 
-            response.setStatus(200);
-            baseRequest.setHandled(true);
+            // Push the outgoingMessage to the request parser. Based on the status flags of the return message
+            // we should know what has happened, and which response we should send.
+            InternalMessage returnMessage = WSNotificationServer.this._requestParser.parseMessage(outgoingMessage, response.getOutputStream());
 
-            // And at this point WSNu forwards the outMessage1 to the forwardingHub, and proceeds to await
-            // a new InternalMessage, named returnMessage with correct status flags and proper content.
+            // Improper response from WSNRequestParser! FC WHAT DO?
+            if (returnMessage == null) {
+                response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR_500);
+                totalErrors++;
+                baseRequest.setHandled(true);
+                returnMessage = new InternalMessage(InternalMessage.STATUS_FAULT_INTERNAL_ERROR, null);
+            }
 
-            // We need to look into the hub to what the method acceptNetMessage does.
+            /* Handle possible errors */
+            if ((returnMessage.statusCode & InternalMessage.STATUS_FAULT) > 0) {
+
+                /* Have we got an error message to return? */
+                if ((returnMessage.statusCode & InternalMessage.STATUS_HAS_MESSAGE) > 0) {
+                    response.setContentType("application/soap+xml;charset=utf-8");
+
+                    // Declare input and output streams
+                    InputStream inputStream = (InputStream)returnMessage.getMessage();
+                    OutputStream outputStream = response.getOutputStream();
+
+                    // Pipe the data from input to output stream
+                    ByteStreams.copy(inputStream, outputStream);
+
+                    // Set proper HTTP status, flush the output stream and set the handled flag
+                    response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR_500);
+                    outputStream.flush();
+                    baseRequest.setHandled(true);
+                    totalErrors++;
+
+                    return;
+                }
+
+                /* If no valid destination was found for the request (Endpoint non-existant) */
+                if ((returnMessage.statusCode & InternalMessage.STATUS_FAULT_INVALID_DESTINATION) > 0) {
+                    response.setStatus(HttpStatus.NOT_FOUND_404);
+                    baseRequest.setHandled(true);
+                    totalBadRequests++;
+
+                    return;
+
+                /* If there was an internal server error */
+                } else if ((returnMessage.statusCode & InternalMessage.STATUS_FAULT_INTERNAL_ERROR) > 0) {
+                    response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR_500);
+                    baseRequest.setHandled(true);
+                    totalErrors++;
+
+                    return;
+
+                /* If there was syntactical errors or otherwise malformed request content */
+                } else if ((returnMessage.statusCode & InternalMessage.STATUS_FAULT_INVALID_PAYLOAD) > 0) {
+                    response.setStatus(HttpStatus.BAD_REQUEST_400);
+                    baseRequest.setHandled(true);
+                    totalBadRequests++;
+
+                    return;
+
+                /* If the requested method or access to endpoint is forbidden */
+                } else if ((returnMessage.statusCode & InternalMessage.STATUS_FAULT_ACCESS_NOT_ALLOWED) > 0) {
+                    response.setStatus(HttpStatus.FORBIDDEN_403);
+                    baseRequest.setHandled(true);
+                    totalBadRequests++;
+
+                    return;
+                }
+
+                /*
+                    Otherwise, there has been an exception of some sort with no message attached,
+                    and we will reply with a server error
+                */
+                response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR_500);
+                baseRequest.setHandled(true);
+                totalErrors++;
+
+            // Check if we have status=OK and also we have a message
+            } else if (((InternalMessage.STATUS_OK & returnMessage.statusCode) > 0) &&
+                    (InternalMessage.STATUS_HAS_MESSAGE & returnMessage.statusCode) > 0){
+
+                /* Liar liar pants on fire */
+                if (returnMessage.getMessage() == null) {
+
+                    log.error("The HAS_RETURNING_MESSAGE flag was checked, but there was no returning message content");
+                    response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR_500);
+                    baseRequest.setHandled(true);
+                    totalErrors++;
+
+                    return;
+                }
+
+                // Prepare the response content type
+                response.setContentType("application/soap+xml;charset=utf-8");
+
+                // Allocate the input and output streams
+                InputStream inputStream = (InputStream)returnMessage.getMessage();
+                OutputStream outputStream = response.getOutputStream();
+
+                /* Copy the contents of the input stream into the output stream */
+                ByteStreams.copy(inputStream, outputStream);
+
+                /* Set proper OK status and flush out the stream for response to be sent */
+                response.setStatus(HttpStatus.OK_200);
+                outputStream.flush();
+
+                baseRequest.setHandled(true);
+
+            /* Everything is fine, and nothing is expected */
+            } else if ((InternalMessage.STATUS_OK & returnMessage.statusCode) > 0) {
+
+                response.setStatus(HttpStatus.OK_200);
+                baseRequest.setHandled(true);
+
+            } else {
+                // We obviously should never land in this block, hence we set the 500 status.
+                log.error("HandleMessage: The message returned to the WSNotificationServer was not flagged with either STATUS_OK or" +
+                        "STATUS_FAULT. Please set either of these flags at all points");
+
+                response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR_500);
+                baseRequest.setHandled(true);
+                totalErrors++;
+
+            }
+        }
+    }
+
+    public synchronized InternalMessage sendMessage(InternalMessage message) {
+
+        // Fetch the requestInformation from the message, and extract the endpoint
+        RequestInformation requestInformation = message.getRequestInformation();
+        String endpoint = requestInformation.getEndpointReference();
+
+        /* If we have nowhere to send the message */
+        if(endpoint == null){
+            log.error("Endpoint reference not set");
+            totalErrors++;
+            return new InternalMessage(InternalMessage.STATUS_FAULT, null);
+        }
+
+        /* Create the actual http-request*/
+        org.eclipse.jetty.client.api.Request request = _client.newRequest(requestInformation.getEndpointReference());
+
+        /* Try to send the message */
+        try{
+            /* Raw request */
+            if ((message.statusCode & InternalMessage.STATUS_HAS_MESSAGE) == 0) {
+
+                request.method(HttpMethod.GET);
+                log.info("Sending message without content to " + requestInformation.getEndpointReference());
+                ContentResponse response = request.send();
+                totalMessages++;
+
+                return new InternalMessage(InternalMessage.STATUS_OK | InternalMessage.STATUS_HAS_MESSAGE, response.getContentAsString());
+            /* Request with message */
+            } else {
+
+                // Set proper request method
+                request.method(HttpMethod.POST);
+
+                // If the statusflag has set a message and it is not an input stream
+                if ((message.statusCode & InternalMessage.STATUS_MESSAGE_IS_INPUTSTREAM) == 0) {
+                    log.error("sendMessage(): " + "The message contained something else than an inputStream." +
+                            "Please convert your message to an InputStream before calling this methbod.");
+
+                    return new InternalMessage(InternalMessage.STATUS_FAULT | InternalMessage.STATUS_FAULT_INVALID_PAYLOAD, null);
+
+                } else {
+
+                    // Check if we should have had a message, but there was none
+                    if(message.getMessage() == null){
+                        log.error("No content was found to send");
+                        totalErrors++;
+                        return new InternalMessage(InternalMessage.STATUS_FAULT | InternalMessage.STATUS_FAULT_INVALID_PAYLOAD, null);
+                    }
+
+                    // Send the request to the specified endpoint reference
+                    log.info("Sending message with content to " + requestInformation.getEndpointReference());
+                    request.content(new InputStreamContentProvider((InputStream) message.getMessage()), "application/soap+xml;charset/utf-8");
+                    ContentResponse response = request.send();
+                    totalMessages++;
+
+                    // Check what HTTP status we recieved, if is not A-OK, flag the internalmessage as fault
+                    // and make the response content the message of the InternalMessage returned
+                    if (response.getStatus() != HttpStatus.OK_200) {
+                        totalBadRequests++;
+                        return new InternalMessage(InternalMessage.STATUS_FAULT | InternalMessage.STATUS_HAS_MESSAGE, response.getContentAsString());
+                    } else {
+                        return new InternalMessage(InternalMessage.STATUS_OK | InternalMessage.STATUS_HAS_MESSAGE, response.getContentAsString());
+                    }
+                }
+            }
+        } catch(ClassCastException e) {
+            log.error("sendMessage(): The message contained something else than an inputStream." +
+                    "Please convert your message to an InputStream before calling this method.");
+            totalErrors++;
+
+            return new InternalMessage(InternalMessage.STATUS_FAULT | InternalMessage.STATUS_FAULT_INVALID_PAYLOAD, null);
+
+        } catch(Exception e) {
+            totalErrors++;
+            log.error("sendMessage(): Unable to establish connection: " + e.getMessage());
+            return new InternalMessage(InternalMessage.STATUS_FAULT_INTERNAL_ERROR, null);
         }
     }
 }
+

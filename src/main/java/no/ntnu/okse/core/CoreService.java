@@ -24,11 +24,13 @@
 
 package no.ntnu.okse.core;
 
+import no.ntnu.okse.Application;
 import no.ntnu.okse.core.event.Event;
 
 import no.ntnu.okse.protocol.AbstractProtocolServer;
 import no.ntnu.okse.protocol.Protocol;
 import no.ntnu.okse.protocol.ProtocolServer;
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
@@ -110,10 +112,61 @@ public class CoreService extends Thread {
     }
 
     /**
+     * Statistics for total number of bad or malformed requests that has passed through all protocol servers
+     * @return: An integer representing the total amount of bad or malformed requests
+     */
+    public int getTotalBadRequestsFromProtocolServers() {
+        return protocolServers.stream().map(ProtocolServer::getTotalBadRequests).reduce(0, (a, b) -> a + b);
+    }
+
+    /**
+     * Statistics for total number of errors generated through all protocol servers
+     * @return: An integer representing the total amount of errors from protocol servers.
+     */
+    public int getTotalErrorsFromProtocolServers() {
+        return protocolServers.stream().map(ProtocolServer::getTotalErrors).reduce(0, (a, b) -> a + b);
+    }
+
+    /**
      * Fetches the ArrayList of ProtocolServers currently added to CoreService.
      * @return: An ArrayList of ProtocolServers
      */
     public ArrayList<ProtocolServer> getAllProtocolServers() { return this.protocolServers; }
+
+    /**
+     * Helper method to fetch a protocol server defined by the actual Class
+     * @param className: The class which the protocol server should be an actual instance of (e.g not subclass etc)
+     * @return The ProtocolServer that matches the specified Class, null otherwise. If not null, the returned object
+     *         can be safely cast to the specified Class.
+     */
+    public ProtocolServer getProtocolServer(Class className) {
+        for (ProtocolServer ps: protocolServers) {
+            if (className.equals(ps.getClass())) return ps;
+        }
+        return null;
+    }
+
+    /**
+     * Shuts down and removes all protocol servers.
+     */
+    public void removeAllProtocolServers() {
+        protocolServers.forEach(p -> p.stopServer());
+        protocolServers.clear();
+    }
+
+    /**
+     * Helper method to fetch a protocol server defined by a protocolServerType string.
+     * @param protocolServerType: A string representing the type of the protocol server you want to fetch.
+     * @return The ProtocolServer that matches the specified string, null otherwise. If not null, the returned object
+     *         can be safely cast to the class that has a defined protocolServerType field equal to the specified
+     *         argument.
+     */
+    public ProtocolServer getProtocolServer(String protocolServerType) {
+        for (ProtocolServer ps: protocolServers) {
+            if (ps.getProtocolServerType().equalsIgnoreCase(protocolServerType)) return ps;
+        }
+        return null;
+    }
 
     /**
      * Helper method that boots all added protocolservers.
@@ -121,11 +174,6 @@ public class CoreService extends Thread {
     private void bootProtocolServers() {
         protocolServers.forEach(ps -> ps.boot());
     }
-
-
-    // TODO: Create a method called getProtocolServer(Class classname) that locates the PS
-    // TODO: that is an instance of the given class, and returns it, allowing for correct casting
-    // TODO: on the recieving end.
 
     /**
      * Starts the main loop of the CoreService thread.
@@ -145,7 +193,7 @@ public class CoreService extends Thread {
         while (running) {
             try {
                 Event e = eventQueue.take();
-                log.info("Consumed an event: " + e.getOperation() + " DataType: " + e.getDataType());
+                log.debug("Consumed an event: " + e.getOperation() + " DataType: " + e.getDataType());
             } catch (InterruptedException e) {
                 log.trace(e.getStackTrace());
             }
@@ -157,6 +205,7 @@ public class CoreService extends Thread {
      * Stops execution of the CoreService thread.
      */
     public void stopThread() {
+        this.protocolServers.forEach(p -> p.stopServer());
         running = false;
     }
 

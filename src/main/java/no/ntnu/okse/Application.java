@@ -28,6 +28,7 @@ import no.ntnu.okse.core.CoreService;
 import no.ntnu.okse.db.DB;
 import no.ntnu.okse.protocol.wsn.WSNotificationServer;
 import no.ntnu.okse.web.Server;
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -67,6 +68,7 @@ public class Application {
 
         // Add ProtocolServers to CoreService
         cs.addProtocolServer(WSNotificationServer.getInstance());
+
 
         // Start the admin console
         webserver.run();

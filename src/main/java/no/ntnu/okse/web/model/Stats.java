@@ -37,8 +37,10 @@ public class Stats {
     private final double cpuAvailable;
     private final int totalRequests;
     private final int totalMessages;
+    private final int totalBadRequests;
+    private final int totalErrors;
 
-    public Stats(long ramFree, long ramUse, long ramTotal, double cpuAvailable, int totalRequests, int totalMessages){
+    public Stats(long ramFree, long ramUse, long ramTotal, double cpuAvailable, int totalRequests, int totalMessages, int totalBadRequests, int totalErrors) {
 
         this.ramFee = ramFree;
         this.ramUse = ramUse;
@@ -46,6 +48,8 @@ public class Stats {
         this.cpuAvailable = cpuAvailable;
         this.totalRequests = totalRequests;
         this.totalMessages = totalMessages;
+        this.totalBadRequests = totalBadRequests;
+        this.totalErrors = totalErrors;
     }
 
     public int getTotalRequests() {
@@ -54,6 +58,14 @@ public class Stats {
 
     public int getTotalMessages() {
         return totalMessages;
+    }
+
+    public int getTotalBadRequests() {
+        return totalBadRequests;
+    }
+
+    public int getTotalErrors() {
+        return totalErrors;
     }
 
     public long getRamUse() {
