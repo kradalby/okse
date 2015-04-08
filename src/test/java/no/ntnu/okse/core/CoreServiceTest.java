@@ -57,6 +57,16 @@ public class CoreServiceTest {
             }
 
             @Override
+            public int getTotalBadRequests() {
+                return 0;
+            }
+
+            @Override
+            public int getTotalErrors() {
+                return 0;
+            }
+
+            @Override
             public void boot() {
 
             }
@@ -80,6 +90,16 @@ public class CoreServiceTest {
 
             @Override
             public int getTotalMessages() {
+                return 0;
+            }
+
+            @Override
+            public int getTotalBadRequests() {
+                return 0;
+            }
+
+            @Override
+            public int getTotalErrors() {
                 return 0;
             }
 
@@ -125,6 +145,16 @@ public class CoreServiceTest {
 
             @Override
             public int getTotalMessages() {
+                return 0;
+            }
+
+            @Override
+            public int getTotalBadRequests() {
+                return 0;
+            }
+
+            @Override
+            public int getTotalErrors() {
                 return 0;
             }
 

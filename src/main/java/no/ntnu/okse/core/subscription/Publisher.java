@@ -22,42 +22,12 @@
  * THE SOFTWARE.
  */
 
-package no.ntnu.okse.core.event;
-
-import java.util.IllegalFormatCodePointException;
+package no.ntnu.okse.core.subscription;
 
 /**
- * Created by Aleksander Skraastad (myth) on 3/3/15.
+ * Created by Aleksander Skraastad (myth) on 4/5/15.
  * <p>
  * okse is licenced under the MIT licence.
- * </p>
  */
-public class PageLoadEvent extends Event {
-
-    /**
-     * Mockup Subclass of Event
-     * <p>
-     * @param operation: String representing the operation type of the event.
-     * @param data: An object structure containing the payload.
-     * @param dataType: String representing the datatype of the payload
-     * </p>
-     */
-    public PageLoadEvent(String operation, Object data, String dataType) throws IllegalArgumentException {
-        super(operation, data, dataType);
-
-        if (!(data instanceof String)) {
-            throw new IllegalArgumentException("Data object must be of type String.");
-        }
-    }
-
-    /**
-     * Returns the proper cast of the object payload
-     * <p>
-     * @return: A string representation of the data payload.
-     * </p>
-     */
-    @Override
-    public String getData() {
-        return (String) this.data;
-    }
+public class Publisher {
 }

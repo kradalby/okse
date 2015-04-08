@@ -51,6 +51,10 @@ public class StatsController {
         // ProtocolServer statistics
         int totalMessages = Application.cs.getTotalMessagesFromProtocolServers();
         int totalRequests = Application.cs.getTotalRequestsFromProtocolServers();
+
+        int totalBadRequests = Application.cs.getTotalBadRequestsFromProtocolServers();
+        int totalErrors = Application.cs.getTotalErrorsFromProtocolServers();
+
         double cpuAvailable = Runtime.getRuntime().availableProcessors();
         long totalRam = Runtime.getRuntime().totalMemory();
         long freeRam = Runtime.getRuntime().freeMemory();
@@ -61,7 +65,8 @@ public class StatsController {
             protocolstats.add(new ProtocolStats(each.getProtocolServerType(), each.getTotalRequests(), each.getTotalMessages()));
         }
 
-        Stats stat = new Stats(freeRam, totalRam, cpuAvailable, totalRequests, totalMessages, protocolstats);
+        Stats stat = new Stats(freeRam, totalRam, cpuAvailable, totalRequests, totalMessages, totalBadRequests, totalErrors, protocolstats);
+
 
         return stat;
 

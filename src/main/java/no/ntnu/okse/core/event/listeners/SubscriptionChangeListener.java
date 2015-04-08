@@ -22,36 +22,17 @@
  * THE SOFTWARE.
  */
 
-package no.ntnu.okse.core.event;
+package no.ntnu.okse.core.event.listeners;
+
+import no.ntnu.okse.core.event.SubscriptionChangeEvent;
 
 /**
- * Created by Aleksander Skraastad (myth) on 3/3/15.
+ * Created by Aleksander Skraastad (myth) on 4/5/15.
  * <p>
  * okse is licenced under the MIT licence.
  */
-public abstract class Event {
+public interface SubscriptionChangeListener {
 
-    protected Object data;
+    public void subscriptionChanged(SubscriptionChangeEvent e);
 
-    /**
-     * Constructs an Event containing an operation, some data and a dataType.
-     * <p>
-     * @param data: An object containing the data payload.
-     */
-    protected Event(Object data) {
-        this.data = data;
-    }
-
-    /**
-     * An abstract method to retrieve the data payload.
-     * <p>
-     * @return: An object containing the data payload casted to proper type in subclass.
-     */
-    public abstract Object getData();
-
-    /**
-     * An abstract method that should return a subclass enum type
-     * @return Type enum implemented in subclass
-     */
-    public abstract Object getType();
 }

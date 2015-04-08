@@ -27,6 +27,7 @@ package no.ntnu.okse.core;
 import no.ntnu.okse.Application;
 import no.ntnu.okse.core.event.Event;
 
+import no.ntnu.okse.core.subscription.SubscriptionService;
 import no.ntnu.okse.protocol.AbstractProtocolServer;
 import no.ntnu.okse.protocol.Protocol;
 import no.ntnu.okse.protocol.ProtocolServer;
@@ -50,6 +51,7 @@ public class CoreService extends Thread {
     private LinkedBlockingQueue<Event> eventQueue;
     private ExecutorService executor;
     private ArrayList<ProtocolServer> protocolServers;
+    private SubscriptionService subscriptionService;
 
     /**
      * Constructs the CoreService thread, initiates the logger and eventQueue.
@@ -61,6 +63,7 @@ public class CoreService extends Thread {
         eventQueue = new LinkedBlockingQueue();
         executor = Executors.newFixedThreadPool(10);
         protocolServers = new ArrayList<>();
+        subscriptionService = new SubscriptionService();
     }
 
     /**
@@ -78,6 +81,12 @@ public class CoreService extends Thread {
      * @return The ExecutorService
      */
     public ExecutorService getExecutor() { return executor; }
+
+    /**
+     * Fetches the SubscriptionService handling all subs.
+     * @return The SubscriptionService instance.
+     */
+    public SubscriptionService getSubscriptionService() { return subscriptionService; }
 
     /**
      * Adds a protocolserver to the protocolservers list.
@@ -109,6 +118,22 @@ public class CoreService extends Thread {
      */
     public int getTotalMessagesFromProtocolServers() {
         return protocolServers.stream().map(ProtocolServer::getTotalMessages).reduce(0, (a, b) -> a + b);
+    }
+
+    /**
+     * Statistics for total number of bad or malformed requests that has passed through all protocol servers
+     * @return: An integer representing the total amount of bad or malformed requests
+     */
+    public int getTotalBadRequestsFromProtocolServers() {
+        return protocolServers.stream().map(ProtocolServer::getTotalBadRequests).reduce(0, (a, b) -> a + b);
+    }
+
+    /**
+     * Statistics for total number of errors generated through all protocol servers
+     * @return: An integer representing the total amount of errors from protocol servers.
+     */
+    public int getTotalErrorsFromProtocolServers() {
+        return protocolServers.stream().map(ProtocolServer::getTotalErrors).reduce(0, (a, b) -> a + b);
     }
 
     /**
@@ -177,7 +202,7 @@ public class CoreService extends Thread {
         while (running) {
             try {
                 Event e = eventQueue.take();
-                log.debug("Consumed an event: " + e.getOperation() + " DataType: " + e.getDataType());
+                log.debug("Consumed an event: " + e);
             } catch (InterruptedException e) {
                 log.trace(e.getStackTrace());
             }
