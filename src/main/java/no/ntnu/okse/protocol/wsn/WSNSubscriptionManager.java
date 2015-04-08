@@ -8,6 +8,7 @@ import org.oasis_open.docs.wsn.b_2.Renew;
 import org.oasis_open.docs.wsn.b_2.RenewResponse;
 import org.oasis_open.docs.wsn.b_2.Unsubscribe;
 import org.oasis_open.docs.wsn.b_2.UnsubscribeResponse;
+import org.oasis_open.docs.wsn.bw_2.SubscriptionManager;
 import org.oasis_open.docs.wsn.bw_2.UnableToDestroySubscriptionFault;
 import org.oasis_open.docs.wsn.bw_2.UnacceptableTerminationTimeFault;
 import org.oasis_open.docs.wsrf.rw_2.ResourceUnknownFault;
@@ -26,6 +27,7 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager {
     private SubscriptionService _subscriptionService;
 
     public WSNSubscriptionManager() {
+        log = Logger.getLogger(WSNSubscriptionManager.class.getName());
         _subscriptionService = Application.cs.getSubscriptionService();
     }
 
