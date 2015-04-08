@@ -350,7 +350,7 @@ public class WSNRequestParser implements Hub {
                     log.error("Someone set the RETURNING_MESSAGE_IS_INPUTSTREAM when in fact it wasn't.");
                     log.trace(castexception.getStackTrace());
 
-                    return new WSNInternalMessage(InternalMessage.STATUS_FAULT_INVALID_PAYLOAD | InternalMessage.STATUS_FAULT, null);
+                    return new InternalMessage(InternalMessage.STATUS_FAULT_INVALID_PAYLOAD | InternalMessage.STATUS_FAULT, null);
                 }
 
             } else {

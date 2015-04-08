@@ -33,6 +33,12 @@ import org.apache.log4j.Logger;
  */
 public abstract class AbstractProtocolServer implements ProtocolServer {
 
+
+
+    // Runstate variables
+    protected static boolean _invoked = false;
+    protected static boolean _running = false;
+
     protected String protocolServerType;
     protected int totalRequests, totalMessages, totalBadRequests, totalErrors;
 
@@ -43,6 +49,7 @@ public abstract class AbstractProtocolServer implements ProtocolServer {
         totalBadRequests = 0;
         totalErrors = 0;
     }
+
 
     // Logger singleton
     protected Logger log;

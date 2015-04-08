@@ -24,7 +24,11 @@
 
 package no.ntnu.okse.web.model;
 
+import no.ntnu.okse.protocol.Protocol;
+import no.ntnu.okse.protocol.ProtocolServer;
+
 import java.lang.management.*;
+import java.util.ArrayList;
 
 
 /**
@@ -33,23 +37,32 @@ import java.lang.management.*;
 public class Stats {
     private final long ramTotal;
     private final long ramFee;
-    private final long ramUse;
+
     private final double cpuAvailable;
     private final int totalRequests;
     private final int totalMessages;
     private final int totalBadRequests;
     private final int totalErrors;
 
-    public Stats(long ramFree, long ramUse, long ramTotal, double cpuAvailable, int totalRequests, int totalMessages, int totalBadRequests, int totalErrors) {
+    private final ArrayList<ProtocolStats> protocolstats;
+    // Baseformat
+    int mb = 1024*1024;
+
+    public Stats(long ramFree, long ramTotal, double cpuAvailable, int totalRequests, int totalMessages, int totalBadRequests, int totalErrors, ArrayList<ProtocolStats> protocolstats) {
+
 
         this.ramFee = ramFree;
-        this.ramUse = ramUse;
         this.ramTotal = ramTotal;
         this.cpuAvailable = cpuAvailable;
         this.totalRequests = totalRequests;
         this.totalMessages = totalMessages;
+
+        this.protocolstats = protocolstats;
+
+
         this.totalBadRequests = totalBadRequests;
         this.totalErrors = totalErrors;
+
     }
 
     public int getTotalRequests() {
@@ -69,7 +82,7 @@ public class Stats {
     }
 
     public long getRamUse() {
-        return ramUse;
+        return (ramTotal - ramFee)/mb;
     }
 
     public double getCpuUse() {
@@ -78,10 +91,12 @@ public class Stats {
 
 
     public long getRamTotal(){
-      return ramTotal;
+      return ramTotal/mb;
     }
 
-    public double getRamFree(){ return ramFee; }
+    public double getRamFree(){ return ramFee/mb; }
+
+    public ArrayList<ProtocolStats> getProtocols() { return protocolstats; }
 
 
 
