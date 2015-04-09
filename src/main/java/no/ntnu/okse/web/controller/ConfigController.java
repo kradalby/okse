@@ -23,9 +23,14 @@ public class ConfigController {
         log.info("Config called");
     }
 
-    @RequestMapping(method = RequestMethod.POST, value="/mapping/add/{topic}/{newTopic}")
-    public void addMapping(@PathVariable String topic, @PathVariable String newTopic) {
-        log.info("Trying to add mapping between  " + topic + " --> " + newTopic);
+    @RequestMapping(method = RequestMethod.POST, value="/mapping/exsisting/add/{topic}/{newTopic}")
+    public void addExsistingMapping(@PathVariable String topic, @PathVariable String newTopic) {
+        log.info("Trying to add exsisting mapping between  " + topic + " --> " + newTopic);
+    }
+
+    @RequestMapping(method = RequestMethod.POST, value = "/mapping/predefined/{topic}/{newTopic}")
+    public void addPredefinedMapping(@PathVariable String topic, @PathVariable String newTopic) {
+        log.info("Trying to add predefined mapping between " + topic + " --> " + newTopic);
     }
 
     @RequestMapping(method = RequestMethod.POST, value = "/encoding")

@@ -34,11 +34,16 @@ var Config = (function($) {
     }
 
     var bindButtons = function() {
-        $('#chunked-encoding').on('click', function() {
+        $('#chunked-encoding').on('click', function(e) {
            Main.ajax('config/encoding/', null, function() {
                console.log("[Debug] Chunked encoding set to: " + $('#chunked-encoding').is(":checked"))
            }, "POST");
         });
+
+        $("#add-predefined-mapping").on('click', function(e) {
+            console.log('[Debug] Add predefined mapping between ' + $('#from-topic').val() + ' --> ' + $('#to-topic').val())
+
+        })
     }
 
     return {
