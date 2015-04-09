@@ -22,42 +22,38 @@
  * THE SOFTWARE.
  */
 
-package no.ntnu.okse.core.event;
-
-import java.util.IllegalFormatCodePointException;
+package no.ntnu.okse.web.model;
 
 /**
- * Created by Aleksander Skraastad (myth) on 3/3/15.
- * <p>
- * okse is licenced under the MIT licence.
- * </p>
+ * Created by Fredrik on 25/03/15.
  */
-public class PageLoadEvent extends Event {
+public class ProtocolStats {
 
-    /**
-     * Mockup Subclass of Event
-     * <p>
-     * @param operation: String representing the operation type of the event.
-     * @param data: An object structure containing the payload.
-     * @param dataType: String representing the datatype of the payload
-     * </p>
-     */
-    public PageLoadEvent(String operation, Object data, String dataType) throws IllegalArgumentException {
-        super(operation, data, dataType);
+    private final String protocolServerType;
+    private final int totalRequests;
+    private final int totalMessages;
 
-        if (!(data instanceof String)) {
-            throw new IllegalArgumentException("Data object must be of type String.");
-        }
+
+    public ProtocolStats(String protocolServerType, int totalRequests, int totalMessages) {
+        this.protocolServerType = protocolServerType;
+        this.totalRequests = totalRequests;
+        this.totalMessages = totalMessages;
     }
 
-    /**
-     * Returns the proper cast of the object payload
-     * <p>
-     * @return: A string representation of the data payload.
-     * </p>
-     */
-    @Override
-    public String getData() {
-        return (String) this.data;
+
+
+    public int getTotalMessages() {
+        return totalMessages;
     }
+
+    public int getTotalRequests() {
+        return totalRequests;
+    }
+
+    public String getProtocolServerType() {
+        return protocolServerType;
+    }
+
+
+
 }

@@ -68,6 +68,8 @@ public class Application {
         // Add ProtocolServers to CoreService
         cs.addProtocolServer(WSNotificationServer.getInstance());
 
+
+
         // Start the admin console
         webserver.run();
 

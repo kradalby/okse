@@ -24,34 +24,52 @@
 
 package no.ntnu.okse.core.event;
 
+import no.ntnu.okse.core.subscription.Subscriber;
+
 /**
- * Created by Aleksander Skraastad (myth) on 3/3/15.
+ * Created by Aleksander Skraastad (myth) on 4/5/15.
  * <p>
  * okse is licenced under the MIT licence.
  */
-public abstract class Event {
+public class SubscriptionChangeEvent extends Event {
 
-    protected Object data;
+    // The different types of subscription changes that might occur
+    public static enum Type {
+        SUBSCRIBE,
+        UNSUBSCRIBE,
+        RENEW,
+        PAUSE
+    }
+
+    private Type eventType;
 
     /**
-     * Constructs an Event containing an operation, some data and a dataType.
+     * Constructs a SubscriptionChangeEvent of a certain Type, with associated Subscriber object.
      * <p>
-     * @param data: An object containing the data payload.
+     *
+     * @param eventType : The type of subscription event this is
+     * @param data      : The subscriber object in question.
      */
-    protected Event(Object data) {
-        this.data = data;
+    public SubscriptionChangeEvent(Type eventType, Subscriber data) {
+        super(data);
+        this.eventType = eventType;
     }
 
     /**
-     * An abstract method to retrieve the data payload.
-     * <p>
-     * @return: An object containing the data payload casted to proper type in subclass.
+     * Fetch the related Subscriber object.
+     * @return The Subscriber object associated with this event.
      */
-    public abstract Object getData();
+    @Override
+    public Subscriber getData() {
+        return (Subscriber) data;
+    }
 
     /**
-     * An abstract method that should return a subclass enum type
-     * @return Type enum implemented in subclass
+     * Fetch the event type of this event.
+     * @return A SubscriptionChangeEvent
      */
-    public abstract Object getType();
+    @Override
+    public Type getType() {
+        return this.eventType;
+    }
 }
