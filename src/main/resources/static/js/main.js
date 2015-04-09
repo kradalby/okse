@@ -88,9 +88,9 @@ var Main = (function($) {
                     }, updateInterval);
                 } else if (clickedElement === "#config")
                 {
-                    ajax(clickedElement.substring(1), Config.error, Config.refresh, "GET", "json")
+                    ajax(clickedElement.substring(1), Config.error, Config.refresh, "GET")
                     clickInterval = setInterval( function() {
-                        ajax(clickedElement.substring(1), Config.error, Config.refresh, "GET", "json")
+                        ajax(clickedElement.substring(1), Config.error, Config.refresh, "GET")
                     }, updateInterval);
                 } else
                 {
@@ -111,5 +111,6 @@ var Main = (function($) {
 $(document).ready(function(){
     Main.init()
     Topics.init()
+    Config.init()
 });
 

@@ -17,15 +17,20 @@ public class ConfigController {
 
     private static Logger log = Logger.getLogger(ConfigController.class.getName());
 
-
     @RequestMapping(method = RequestMethod.GET)
     public void config() {
-        // should return configs
+        // should return
+        log.info("Config called");
     }
 
     @RequestMapping(method = RequestMethod.POST, value="/mapping/add/{topic}/{newTopic}")
     public void addMapping(@PathVariable String topic, @PathVariable String newTopic) {
         log.info("Trying to add mapping between  " + topic + " --> " + newTopic);
+    }
+
+    @RequestMapping(method = RequestMethod.POST, value = "/encoding")
+    public void setEncoding() {
+        log.info("Changing chuncked transfer encoding");
     }
 
 }

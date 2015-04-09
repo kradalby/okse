@@ -124,8 +124,8 @@ var Topics = (function($) {
             });
         },
         // Ajax error function, should preferably update the site with information about this.
-        error: function() {
-          console.log("Error in Ajax for Topics")
+        error: function(xhr) {
+          console.log("[Error] in Ajax for Topics with status: " + xhr.statusText)
         },
         // Ajax success function (updates all the information)
         refresh: function(response) {

@@ -33,12 +33,23 @@ var Config = (function($) {
 
     }
 
+    var bindButtons = function() {
+        $('#chunked-encoding').on('click', function() {
+           Main.ajax('config/encoding/', null, function() {
+               console.log("[Debug] Chunked encoding set to: " + $('#chunked-encoding').is(":checked"))
+           }, "POST");
+        });
+    }
+
     return {
-        error: function() {
-            console.log("error in ajax for config")
+        error: function(xhr, statusText, thrownError) {
+            console.log("[Error] in Ajax for config with status: " + xhr.statusText)
         },
-        refresh: function(data) {
-            console.log(JSON.stringify(data))
+        refresh: function(response) {
+            console.log(JSON.stringify(response))
+        },
+        init: function() {
+            bindButtons()
         }
     }
 
