@@ -24,9 +24,13 @@
 
 package no.ntnu.okse.protocol.wsn;
 
+import no.ntnu.okse.Application;
+import no.ntnu.okse.core.subscription.SubscriptionService;
+import org.ntnunotif.wsnu.base.internal.Hub;
 import org.ntnunotif.wsnu.base.net.NuNamespaceContextResolver;
 import org.ntnunotif.wsnu.services.eventhandling.PublisherRegistrationEvent;
 import org.ntnunotif.wsnu.services.eventhandling.SubscriptionEvent;
+import org.ntnunotif.wsnu.services.filterhandling.FilterSupport;
 import org.ntnunotif.wsnu.services.implementations.notificationbroker.AbstractNotificationBroker;
 import org.oasis_open.docs.wsn.b_2.*;
 import org.oasis_open.docs.wsn.br_2.RegisterPublisher;
@@ -36,31 +40,56 @@ import org.oasis_open.docs.wsn.brw_2.PublisherRegistrationRejectedFault;
 import org.oasis_open.docs.wsn.bw_2.*;
 import org.oasis_open.docs.wsrf.rw_2.ResourceUnknownFault;
 
+import javax.jws.WebMethod;
+import javax.jws.WebService;
+import javax.jws.soap.SOAPBinding;
+import javax.xml.bind.annotation.XmlSeeAlso;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by Aleksander Skraastad (myth) on 4/10/15.
  * <p>
  * okse is licenced under the MIT licence.
  */
+@WebService(targetNamespace = "http://docs.oasis-open.org/wsn/brw-2", name = "NotificationBroker")
+@XmlSeeAlso({org.oasis_open.docs.wsn.t_1.ObjectFactory.class, org.oasis_open.docs.wsn.br_2.ObjectFactory.class, org.oasis_open.docs.wsrf.r_2.ObjectFactory.class, org.oasis_open.docs.wsrf.bf_2.ObjectFactory.class, org.oasis_open.docs.wsn.b_2.ObjectFactory.class})
+@SOAPBinding(parameterStyle = SOAPBinding.ParameterStyle.BARE)
 public class WSNCommandProxy extends AbstractNotificationBroker {
-    @Override
-    public boolean keyExists(String s) {
-        return false;
+
+    private FilterSupport filterSupport;
+    private boolean cacheMessages;
+    private final Map<String, NotificationMessageHolderType> latestMessages = new HashMap<>();
+    private WSNSubscriptionManager subscriptionManager;
+
+    public WSNCommandProxy(Hub hub, WSNSubscriptionManager subscriptionManager) {
+        this.setHub(hub);
+        this.filterSupport = FilterSupport.createDefaultFilterSupport();
+        this.cacheMessages = true;
+        this.subscriptionManager = subscriptionManager;
     }
 
     @Override
+    @WebMethod(exclude = true)
+    public boolean keyExists(String s) {
+        return subscriptionManager.keyExists(s);
+    }
+
+    @Override
+    @WebMethod(exclude = true)
     protected Collection<String> getAllRecipients() {
-        return null;
+        return subscriptionManager.getAllRecipients();
+    }
+
+    @Override
+    protected String getEndpointReferenceOfRecipient(String subscriptionKey) {
+        return this.subscriptionManager.getSubscriptionHandle(subscriptionKey).endpointTerminationTuple.endpoint;
     }
 
     @Override
     protected Notify getRecipientFilteredNotify(String s, Notify notify, NuNamespaceContextResolver nuNamespaceContextResolver) {
-        return null;
-    }
-
-    @Override
-    protected String getEndpointReferenceOfRecipient(String s) {
         return null;
     }
 

@@ -40,17 +40,19 @@ public class Subscriber {
     private HashMap<String, String> attributes;
     private Topic topic;
     private Long timeout;
+    private String originProtocol;
 
-    public Subscriber(String address, Integer port, Topic topic) {
-        init(address, port, topic);
+    public Subscriber(String address, Integer port, Topic topic, String originProtocol) {
+        init(address, port, topic, originProtocol);
     }
 
-    private void init(String address, Integer port, Topic topic) {
+    private void init(String address, Integer port, Topic topic, String originProtocol) {
         this.timeout = null;
         this.address = address;
         this.port = port;
         this.attributes = new HashMap<>();
         this.topic = topic;
+        this.originProtocol = originProtocol;
     }
 
     public String getAddress() {
@@ -103,6 +105,10 @@ public class Subscriber {
     public boolean shouldExpire() {
         if (timeout == null) return true;
         return false;
+    }
+
+    public String getOriginProtocol() {
+        return this.originProtocol;
     }
 
     @Override
