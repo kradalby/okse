@@ -36,6 +36,19 @@
             <div class="col-md-4">
                 <div class="panel panel-info">
                     <!-- Default panel contents -->
+                    <div class="panel-heading">Operating environment</div>
+                    <!-- <div class="panel-body"></div> -->
+                    <!-- List group -->
+                    <ul class="list-group">
+                        <li class="list-group-item" th:each="entry : ${environment}">
+                            <strong th:text="${entry.key} + ': '"></strong><span th:text="${entry.value}"></span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="panel panel-info">
+                    <!-- Default panel contents -->
                     <div class="panel-heading">Status</div>
                     <!-- <div class="panel-body"></div> -->
                     <!-- List group -->
@@ -49,19 +62,6 @@
             </div>
             <div class="col-md-4">
                 <p>Nothing to see here at the moment!</p>
-            </div>
-            <div class="col-md-4">
-                <div class="panel panel-info">
-                    <!-- Default panel contents -->
-                    <div class="panel-heading">Operating environment</div>
-                    <!-- <div class="panel-body"></div> -->
-                    <!-- List group -->
-                    <ul class="list-group">
-                        <li class="list-group-item" th:each="entry : ${environment}">
-                            <strong th:text="${entry.key} + ': '"></strong><span th:text="${entry.value}"></span>
-                        </li>
-                    </ul>
-                </div>
             </div>
         </div>
     </div>

@@ -36,19 +36,6 @@
             <div class="col-md-4">
                 <div class="panel panel-info">
                     <!-- Default panel contents -->
-                    <div class="panel-heading">Operating environment</div>
-                    <!-- <div class="panel-body"></div> -->
-                    <!-- List group -->
-                    <ul class="list-group">
-                        <li class="list-group-item" th:each="entry : ${environment}">
-                            <strong th:text="${entry.key} + ': '"></strong><span th:text="${entry.value}"></span>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="panel panel-info">
-                    <!-- Default panel contents -->
                     <div class="panel-heading">System</div>
                     <!-- <div class="panel-body"></div> -->
                     <!-- List group -->
@@ -74,19 +61,19 @@
                         <li class="list-group-item" id="stats-total-megabytes-recieved"><strong>MB recieved: </strong>0</li>
                         <li class="list-group-item" id="stats-total-megabytes-sent"><strong>MB sent: </strong>0</li>
                     </ul>
+
                 </div>
+            </div>
+            <div class="col-md-4">
                 <div class="panel panel-info">
                     <!-- Default panel contents -->
                     <div class="panel-heading">Protocols</div>
                     <!-- <div class="panel-body"></div> -->
                     <!-- List group -->
-
-                    <ul class="list-group" id="test">
+                    <ul class="list-group" id="protocols-info">
                     </ul>
                 </div>
             </div>
-
-
         </div>
     </div>
 </th:block>

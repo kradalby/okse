@@ -62,7 +62,7 @@ var Stats = (function($) {
             $('#freeram').html('<strong>Free RAM: </strong>' + data.ramFree + ' MB')
             $('#ramuse').html('<strong>Used RAM: </strong>' + data.ramUse + ' MB')
             $('#cpucores').html('<strong>CPU cores: </strong>' + data.cpuUse)
-            $('#test').html(fillTable(data))
+            $('#protocols-info').html(fillTable(data))
 
         }
     }
