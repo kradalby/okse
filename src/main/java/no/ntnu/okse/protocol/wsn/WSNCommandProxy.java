@@ -26,8 +26,11 @@ package no.ntnu.okse.protocol.wsn;
 
 import no.ntnu.okse.Application;
 import no.ntnu.okse.core.subscription.SubscriptionService;
+import org.apache.log4j.Logger;
 import org.ntnunotif.wsnu.base.internal.Hub;
 import org.ntnunotif.wsnu.base.net.NuNamespaceContextResolver;
+import org.ntnunotif.wsnu.base.topics.TopicUtils;
+import org.ntnunotif.wsnu.base.topics.TopicValidator;
 import org.ntnunotif.wsnu.services.eventhandling.PublisherRegistrationEvent;
 import org.ntnunotif.wsnu.services.eventhandling.SubscriptionEvent;
 import org.ntnunotif.wsnu.services.filterhandling.FilterSupport;
@@ -40,14 +43,14 @@ import org.oasis_open.docs.wsn.brw_2.PublisherRegistrationRejectedFault;
 import org.oasis_open.docs.wsn.bw_2.*;
 import org.oasis_open.docs.wsrf.rw_2.ResourceUnknownFault;
 
+import javax.jws.Oneway;
 import javax.jws.WebMethod;
+import javax.jws.WebParam;
 import javax.jws.WebService;
 import javax.jws.soap.SOAPBinding;
 import javax.xml.bind.annotation.XmlSeeAlso;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import javax.xml.namespace.QName;
+import java.util.*;
 
 /**
  * Created by Aleksander Skraastad (myth) on 4/10/15.
@@ -59,12 +62,14 @@ import java.util.Map;
 @SOAPBinding(parameterStyle = SOAPBinding.ParameterStyle.BARE)
 public class WSNCommandProxy extends AbstractNotificationBroker {
 
+    private Logger log;
     private FilterSupport filterSupport;
     private boolean cacheMessages;
     private final Map<String, NotificationMessageHolderType> latestMessages = new HashMap<>();
     private WSNSubscriptionManager subscriptionManager;
 
     public WSNCommandProxy(Hub hub, WSNSubscriptionManager subscriptionManager) {
+        this.log = Logger.getLogger(WSNCommandProxy.class.getName());
         this.setHub(hub);
         this.filterSupport = FilterSupport.createDefaultFilterSupport();
         this.cacheMessages = true;
@@ -89,22 +94,78 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
     }
 
     @Override
+    @WebMethod(exclude = true)
     protected Notify getRecipientFilteredNotify(String s, Notify notify, NuNamespaceContextResolver nuNamespaceContextResolver) {
-        return null;
+        // Check if we have the current recipient registered
+        if (!this.subscriptionManager.hasSubscription(s)) {
+            return null;
+        }
+
+        // If we dont have filter support, nothing more to do.
+        if (this.filterSupport == null) {
+            return notify;
+        }
+
+        // Find the current recipient to notify
+        SubscriptionHandle subscriptionHandle = this.subscriptionManager.getSubscriptionHandle(s);
+
+        return filterSupport.evaluateNotifyToSubscription(notify, subscriptionHandle.subscriptionInfo, nuNamespaceContextResolver);
     }
 
     @Override
-    public void notify(Notify notify) {
+    public void sendNotification(Notify notify, NuNamespaceContextResolver namespaceContextResolver) {
+        // Check if we should cache message
+        if (cacheMessages) {
+            // Take out the latest messages
+            for (NotificationMessageHolderType messageHolderType : notify.getNotificationMessage()) {
+                TopicExpressionType topic = messageHolderType.getTopic();
 
+                // If it is connected to a topic, remember it
+                if (topic != null) {
+
+                    try {
+
+                        List<QName> topicQNames = TopicValidator.evaluateTopicExpressionToQName(topic, namespaceContextResolver.resolveNamespaceContext(topic));
+                        String topicName = TopicUtils.topicToString(topicQNames);
+                        latestMessages.put(topicName, messageHolderType);
+
+                    } catch (InvalidTopicExpressionFault invalidTopicExpressionFault) {
+                        log.warn("Tried to send a topic with an invalid expression");
+                        invalidTopicExpressionFault.printStackTrace();
+                    } catch (MultipleTopicsSpecifiedFault multipleTopicsSpecifiedFault) {
+                        log.warn("Tried to send a message with multiple topics");
+                        multipleTopicsSpecifiedFault.printStackTrace();
+                    } catch (TopicExpressionDialectUnknownFault topicExpressionDialectUnknownFault) {
+                        log.warn("Tried to send a topic with an invalid expression dialect");
+                        topicExpressionDialectUnknownFault.printStackTrace();
+                    }
+                }
+            }
+        }
+        // Super type can do the rest
+        super.sendNotification(notify, namespaceContextResolver);
     }
 
+    /**
+     * Implementation of the NotificationBroker's notify. This method does nothing but forward the notify by calling
+     * {@link #sendNotification(org.oasis_open.docs.wsn.b_2.Notify)}
+     * @param notify The Notify object.
+     */
     @Override
-    public RegisterPublisherResponse registerPublisher(RegisterPublisher registerPublisher) throws InvalidTopicExpressionFault, PublisherRegistrationFailedFault, ResourceUnknownFault, PublisherRegistrationRejectedFault, UnacceptableInitialTerminationTimeFault, TopicNotSupportedFault {
-        return null;
+    @Oneway
+    @WebMethod(operationName = "Notify")
+    public void notify(@WebParam(partName = "Notify", name = "Notify", targetNamespace = "http://docs.oasis-open.org/wsn/b-2")
+                       Notify notify) {
+        this.sendNotification(notify);
     }
 
     @Override
     public SubscribeResponse subscribe(Subscribe subscribe) throws NotifyMessageNotSupportedFault, UnrecognizedPolicyRequestFault, TopicExpressionDialectUnknownFault, ResourceUnknownFault, InvalidTopicExpressionFault, UnsupportedPolicyRequestFault, InvalidFilterFault, InvalidProducerPropertiesExpressionFault, UnacceptableInitialTerminationTimeFault, SubscribeCreationFailedFault, TopicNotSupportedFault, InvalidMessageContentExpressionFault {
+        return null;
+    }
+
+    @Override
+    public RegisterPublisherResponse registerPublisher(RegisterPublisher registerPublisher) throws InvalidTopicExpressionFault, PublisherRegistrationFailedFault, ResourceUnknownFault, PublisherRegistrationRejectedFault, UnacceptableInitialTerminationTimeFault, TopicNotSupportedFault {
         return null;
     }
 
