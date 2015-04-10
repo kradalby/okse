@@ -60,9 +60,25 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
         return localSubscriberMap.containsKey(s);
     }
 
+    // This should not be called in any of the OKSE Custom/Proxy web service implementations.
+    // Use addSubscriber(Subscriber s, SubscriptionHandle subHandle) instead.
     @Override
     public void addSubscriber(String s, long l) {
+        log.warn("WS-Nu default addSubscriber with hashKey and terminationTime called. " +
+                "Locate offending method and change to addSubscriber(Subscriber s).");
+    }
 
+    /**
+     * This is the main OKSE implementation of the subscription manager addSubscriber method that should be used.
+     * It will delegate core subscriber registry to the core SubscriptionService, as well as update the local
+     * mappings from WS-Nu subscriptionKey to the relevant Subscriber and SubscriptionHandle objects.
+     * @param s An instance of OKSE Subscriber with proper fields and attributes set.
+     * @param subHandle An instance of WS-Nu SubscriptionHandle with proper fields and attributes set.
+     */
+    public void addSubscriber(Subscriber s, AbstractNotificationProducer.SubscriptionHandle subHandle) {
+        _subscriptionService.addSubscriber(s);
+        localSubscriberMap.put(s.getAttribute(WSN_SUBSCRIBER_TOKEN), s);
+        localSubscriberHandle.put(s.getAttribute(WSN_SUBSCRIBER_TOKEN), subHandle);
     }
 
     @Override
@@ -99,14 +115,24 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
         return null;
     }
 
+    // We catch subscriptionchange events to update local maps upon remove, renew etc
+    // But not on subscribe, since we are the initiating source we can update the local maps first,
+    // and only delegate the subscriber object to the core SubscriptionService.
     @Override
     public void subscriptionChanged(SubscriptionChangeEvent e) {
-        if (e.getType().equals(SubscriptionChangeEvent.Type.UNSUBSCRIBE)) {
-            localSubscriberMap.remove(e.getData().getAttribute(WSN_SUBSCRIBER_TOKEN));
-            localSubscriberHandle.remove(e.getData().getAttribute(WSN_SUBSCRIBER_TOKEN));
-        } else if (e.getType().equals(SubscriptionChangeEvent.Type.SUBSCRIBE)) {
-            // TODO: Call generateHash method and create a wsn local subscription mapping with proper
-            // handles and wrapper classes
+        // If it is WSNotification subscriber
+        if (e.getData().getOriginProtocol().equals(WSNotificationServer.getInstance().getProtocolServerType())) {
+            // If we are dealing with an Unsubscribe
+            if (e.getType().equals(SubscriptionChangeEvent.Type.UNSUBSCRIBE)) {
+                log.info("Recieved an UNSUBSCRIBE event");
+                // Remove the local mappings from WS-Nu subscriptionKey to OKSE Subscriber object and WS-Nu subscriptionHandle
+                localSubscriberMap.remove(e.getData().getAttribute(WSN_SUBSCRIBER_TOKEN));
+                localSubscriberHandle.remove(e.getData().getAttribute(WSN_SUBSCRIBER_TOKEN));
+
+            } else if (e.getType().equals(SubscriptionChangeEvent.Type.SUBSCRIBE)) {
+                log.info("Recieved a SUBSCRIBE event");
+                // TODO: Investigate if we really need to do anything here...
+            }
         }
     }
 }

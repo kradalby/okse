@@ -25,16 +25,23 @@
 package no.ntnu.okse.protocol.wsn;
 
 import no.ntnu.okse.Application;
+import no.ntnu.okse.core.subscription.Subscriber;
 import no.ntnu.okse.core.subscription.SubscriptionService;
 import org.apache.log4j.Logger;
 import org.ntnunotif.wsnu.base.internal.Hub;
 import org.ntnunotif.wsnu.base.net.NuNamespaceContextResolver;
 import org.ntnunotif.wsnu.base.topics.TopicUtils;
 import org.ntnunotif.wsnu.base.topics.TopicValidator;
+import org.ntnunotif.wsnu.base.util.Utilities;
 import org.ntnunotif.wsnu.services.eventhandling.PublisherRegistrationEvent;
 import org.ntnunotif.wsnu.services.eventhandling.SubscriptionEvent;
 import org.ntnunotif.wsnu.services.filterhandling.FilterSupport;
+import org.ntnunotif.wsnu.services.general.ExceptionUtilities;
+import org.ntnunotif.wsnu.services.general.HelperClasses;
+import org.ntnunotif.wsnu.services.general.ServiceUtilities;
+import org.ntnunotif.wsnu.services.general.WsnUtilities;
 import org.ntnunotif.wsnu.services.implementations.notificationbroker.AbstractNotificationBroker;
+import org.ntnunotif.wsnu.services.implementations.subscriptionmanager.AbstractSubscriptionManager;
 import org.oasis_open.docs.wsn.b_2.*;
 import org.oasis_open.docs.wsn.br_2.RegisterPublisher;
 import org.oasis_open.docs.wsn.br_2.RegisterPublisherResponse;
@@ -48,8 +55,15 @@ import javax.jws.WebMethod;
 import javax.jws.WebParam;
 import javax.jws.WebService;
 import javax.jws.soap.SOAPBinding;
+import javax.xml.bind.JAXBElement;
 import javax.xml.bind.annotation.XmlSeeAlso;
+import javax.xml.datatype.DatatypeConfigurationException;
+import javax.xml.datatype.DatatypeFactory;
+import javax.xml.datatype.XMLGregorianCalendar;
+import javax.xml.namespace.NamespaceContext;
 import javax.xml.namespace.QName;
+import javax.xml.ws.wsaddressing.W3CEndpointReference;
+import javax.xml.ws.wsaddressing.W3CEndpointReferenceBuilder;
 import java.util.*;
 
 /**
@@ -68,12 +82,24 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
     private final Map<String, NotificationMessageHolderType> latestMessages = new HashMap<>();
     private WSNSubscriptionManager subscriptionManager;
 
-    public WSNCommandProxy(Hub hub, WSNSubscriptionManager subscriptionManager) {
+    public WSNCommandProxy(Hub hub) {
         this.log = Logger.getLogger(WSNCommandProxy.class.getName());
         this.setHub(hub);
         this.filterSupport = FilterSupport.createDefaultFilterSupport();
         this.cacheMessages = true;
-        this.subscriptionManager = subscriptionManager;
+        this.subscriptionManager = null;
+    }
+
+    public WSNCommandProxy() {
+        this.log = Logger.getLogger(WSNCommandProxy.class.getName());
+        this.filterSupport = FilterSupport.createDefaultFilterSupport();
+        this.cacheMessages = true;
+        this.subscriptionManager = null;
+    }
+
+    // For now, set both WS-Nu submanager and OKSE submanager fields.
+    public void setSubscriptionManager(WSNSubscriptionManager subManager) {
+        this.subscriptionManager = subManager;
     }
 
     @Override
@@ -159,9 +185,154 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         this.sendNotification(notify);
     }
 
+    /**
+     * The Subscribe request message as defined by the WS-N specification.
+     *
+     * More information can be found at <href>http://docs.oasis-open.org/wsn/wsn-ws_base_notification-1.3-spec-os.htm#_Toc133735624</href>
+     * @param subscribeRequest A {@link org.oasis_open.docs.wsn.b_2.Subscribe} object.
+     * @return A {@link org.oasis_open.docs.wsn.b_2.SubscribeResponse} if the subscription was added successfully.
+     * @throws NotifyMessageNotSupportedFault Never.
+     * @throws UnrecognizedPolicyRequestFault Never, policies will not be added until 2.0.
+     * @throws TopicExpressionDialectUnknownFault  If the topic expression was not valid.
+     * @throws ResourceUnknownFault Never, WS-Resources is not added as of 0.3
+     * @throws InvalidTopicExpressionFault If any topic expression added was invalid.
+     * @throws UnsupportedPolicyRequestFault Never, policies will not be added until 2.0
+     * @throws InvalidFilterFault If the filter was invalid.
+     * @throws InvalidProducerPropertiesExpressionFault Never.
+     * @throws UnacceptableInitialTerminationTimeFault If the subscription termination time was invalid.
+     * @throws SubscribeCreationFailedFault If any internal or general fault occured during the processing of a subscription request.
+     * @throws TopicNotSupportedFault If the topic in some way is unknown or unsupported.
+     * @throws InvalidMessageContentExpressionFault Never.
+     */
     @Override
-    public SubscribeResponse subscribe(Subscribe subscribe) throws NotifyMessageNotSupportedFault, UnrecognizedPolicyRequestFault, TopicExpressionDialectUnknownFault, ResourceUnknownFault, InvalidTopicExpressionFault, UnsupportedPolicyRequestFault, InvalidFilterFault, InvalidProducerPropertiesExpressionFault, UnacceptableInitialTerminationTimeFault, SubscribeCreationFailedFault, TopicNotSupportedFault, InvalidMessageContentExpressionFault {
-        return null;
+    @WebMethod(operationName = "Subscribe")
+    public SubscribeResponse subscribe(@WebParam(partName = "SubscribeRequest", name = "Subscribe",
+            targetNamespace = "http://docs.oasis-open.org/wsn/b-2") Subscribe subscribeRequest) throws NotifyMessageNotSupportedFault, UnrecognizedPolicyRequestFault, TopicExpressionDialectUnknownFault, ResourceUnknownFault, InvalidTopicExpressionFault, UnsupportedPolicyRequestFault, InvalidFilterFault, InvalidProducerPropertiesExpressionFault, UnacceptableInitialTerminationTimeFault, SubscribeCreationFailedFault, TopicNotSupportedFault, InvalidMessageContentExpressionFault {
+
+        W3CEndpointReference consumerEndpoint = subscribeRequest.getConsumerReference();
+
+        if (consumerEndpoint == null) {
+            ExceptionUtilities.throwSubscribeCreationFailedFault("en", "Missing endpointreference");
+        }
+
+        String endpointReference = ServiceUtilities.getAddress(consumerEndpoint);
+
+        // EndpointReference is returned as "" from getAddress if something went wrong.
+        if(endpointReference.equals("")){
+            ExceptionUtilities.throwSubscribeCreationFailedFault("en", "EndpointReference malformatted or missing.");
+        }
+
+        FilterType filters = subscribeRequest.getFilter();
+        Map<QName, Object> filtersPresent = null;
+
+        if (filters != null) {
+            log.info("Filters present. Attempting to iterate over filters...");
+            filtersPresent = new HashMap<>();
+
+            for (Object o : filters.getAny()) {
+
+                if (o instanceof JAXBElement) {
+                    JAXBElement filter = (JAXBElement) o;
+
+                    log.info("Fetching namespacecontext of filter value");
+                    // Get the namespace context for this filter
+                    NamespaceContext namespaceContext = connection.getRequestInformation().getNamespaceContext(filter.getValue());
+
+                    // Filter legality checks
+                    if (filterSupport != null &&
+                            filterSupport.supportsFilter(filter.getName(), filter.getValue(), namespaceContext)) {
+
+                        QName fName = filter.getName();
+
+                        log.info("Subscription request contained filter: " + fName + " Value: " + filter.getValue());
+
+                        filtersPresent.put(fName, filter.getValue());
+                    } else {
+                        log.warn("Subscription attempt with non-supported filter: " + filter.getName());
+                        ExceptionUtilities.throwInvalidFilterFault("en", "Filter not supported for this producer: " +
+                                filter.getName(), filter.getName());
+                    }
+
+                }
+            }
+        }
+
+        long terminationTime = 0;
+
+        if (subscribeRequest.getInitialTerminationTime() != null) {
+            try {
+                terminationTime = ServiceUtilities.interpretTerminationTime(subscribeRequest.getInitialTerminationTime().getValue());
+
+                if (terminationTime < System.currentTimeMillis()) {
+                    ExceptionUtilities.throwUnacceptableInitialTerminationTimeFault("en", "Termination time can not be before 'now'");
+                }
+
+            } catch (UnacceptableTerminationTimeFault unacceptableTerminationTimeFault) {
+                ExceptionUtilities.throwUnacceptableInitialTerminationTimeFault("en", "Malformated termination time");
+            }
+        } else {
+            /* Set it to terminate in half a year */
+            terminationTime = System.currentTimeMillis() + Application.DEFAULT_SUBSCRIPTION_TERMINATION_TIME;
+        }
+
+        SubscribeResponse response = new SubscribeResponse();
+
+        // Create a gregCalendar instance so we can create a xml object from it
+        GregorianCalendar gregorianCalendar = new GregorianCalendar();
+        gregorianCalendar.setTimeInMillis(terminationTime);
+
+        try {
+            XMLGregorianCalendar calendar = DatatypeFactory.newInstance().newXMLGregorianCalendar(gregorianCalendar);
+            response.setTerminationTime(calendar);
+        } catch (DatatypeConfigurationException e) {
+            log.debug("Could not convert date time, is it formatted properly?");
+            ExceptionUtilities.throwUnacceptableInitialTerminationTimeFault("en", "Internal error: The date was not " +
+                    "convertable to a gregorian calendar-instance. If the problem persists," +
+                    "please post an issue at http://github.com/tOgg1/WS-Nu");
+        }
+
+        /* Generate WS-Nu subscription hash */
+        String newSubscriptionKey = generateSubscriptionKey();
+        String subscriptionEndpoint = generateHashedURLFromKey(WsnUtilities.subscriptionString, newSubscriptionKey);
+
+        /* Build endpoint reference */
+        W3CEndpointReferenceBuilder builder = new W3CEndpointReferenceBuilder();
+        builder.address(subscriptionEndpoint);
+
+        // Set the subscription reference on the SubscribeResponse object
+        response.setSubscriptionReference(builder.build());
+
+        /* Prepare WS-Nu components needed for a subscription */
+        FilterSupport.SubscriptionInfo subscriptionInfo = new FilterSupport.SubscriptionInfo(filtersPresent, connection.getRequestInformation().getNamespaceContextResolver());
+        HelperClasses.EndpointTerminationTuple endpointTerminationTuple;
+        endpointTerminationTuple = new HelperClasses.EndpointTerminationTuple(endpointReference, terminationTime);
+        SubscriptionHandle subscriptionHandle = new SubscriptionHandle(endpointTerminationTuple, subscriptionInfo);
+
+        /* Prepare needed information for OKSE Subscriber object */
+        String requestAddress = connection.getRequestInformation().getEndpointReference();
+        Integer port = 80;
+        if (requestAddress.contains(":")) {
+            String[] components = requestAddress.split(":");
+            if (components.length == 2) {
+                requestAddress = components[0];
+                port = Integer.parseInt(components[1]);
+            }
+        }
+
+        // Attempt some output to see if we can extract topic information
+        for (QName q : subscriptionInfo.getFilterSet()) {
+            log.info("QName: " + q.toString());
+        }
+
+        // Instanciate new OKSE Subscriber object
+        Subscriber subscriber = new Subscriber(requestAddress, port, null, WSNotificationServer.getInstance().getProtocolServerType());
+        // Set the wsn-subscriber hash key in attributes
+        subscriber.setAttribute(WSNSubscriptionManager.WSN_SUBSCRIBER_TOKEN, newSubscriptionKey);
+
+        // Register the OKSE subscriber to the SubscriptionService, via the WSNSubscriptionManager
+        subscriptionManager.addSubscriber(subscriber, subscriptionHandle);
+
+        return response;
     }
 
     @Override

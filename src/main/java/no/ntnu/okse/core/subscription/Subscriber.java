@@ -125,4 +125,7 @@ public class Subscriber {
                 this.topic.equals(other.getTopic()));
     }
 
+    public String toString() {
+        return "[" + originProtocol + "] " + address + ":" + port + " on topic: " + topic;
+    }
 }

@@ -41,6 +41,9 @@ import java.io.File;
  */
 public class Application {
 
+    /* Default global variables */
+    public static long DEFAULT_SUBSCRIPTION_TERMINATION_TIME = 180 * 24 * 3600 * 1000; // Half a year
+
     private static Logger log;
     public static CoreService cs;
     public static Server webserver;

@@ -29,6 +29,7 @@ import no.ntnu.okse.core.event.SubscriptionChangeEvent;
 import no.ntnu.okse.core.event.listeners.RegistrationChangeListener;
 import no.ntnu.okse.core.event.listeners.SubscriptionChangeListener;
 import no.ntnu.okse.core.topic.Topic;
+import org.apache.log4j.Logger;
 
 import java.util.HashSet;
 
@@ -39,12 +40,15 @@ import java.util.HashSet;
  */
 public class SubscriptionService {
 
+    private Logger log;
+
     private HashSet<SubscriptionChangeListener> _subscriptionListeners;
     private HashSet<RegistrationChangeListener> _registrationListeners;
     private HashSet<Subscriber> _subscribers;
     private HashSet<Publisher> _publishers;
 
     public SubscriptionService() {
+        log = Logger.getLogger(SubscriptionService.class.getName());
         _subscribers = new HashSet<>();
         _publishers = new HashSet<>();
         _registrationListeners = new HashSet<>();
@@ -54,21 +58,25 @@ public class SubscriptionService {
     /* Begin subscriber public API */
     public synchronized void addSubscriber(Subscriber s) {
         _subscribers.add(s);
+        log.info("Added new subscriber: " + s);
         fireSubcriptionChangeEvent(s, SubscriptionChangeEvent.Type.SUBSCRIBE);
     }
 
     public synchronized void removeSubscriber(Subscriber s) {
         _subscribers.remove(s);
+        log.info("Removed subscriber: " + s);
         fireSubcriptionChangeEvent(s, SubscriptionChangeEvent.Type.UNSUBSCRIBE);
     }
 
     public synchronized void pauseSubscriber(Subscriber s) {
         s.setAttribute("paused", "true");
+        log.info("Subscriber paused: " + s);
         fireSubcriptionChangeEvent(s, SubscriptionChangeEvent.Type.PAUSE);
     }
 
     public synchronized void renewSubscriber(Subscriber s, Long timeout) {
         s.setTimeout(timeout);
+        log.info("Subscriber renewed: " + s);
         fireSubcriptionChangeEvent(s, SubscriptionChangeEvent.Type.RENEW);
     }
     /* End subscriber public API */
@@ -76,11 +84,13 @@ public class SubscriptionService {
     /* Begin publisher public API */
     public synchronized void addPublisher(Publisher p) {
         _publishers.add(p);
+        log.info("Publisher registered: " + p);
         fireRegistrationChangeEvent(p, RegistrationChangeEvent.Type.REGISTER);
     }
 
     public synchronized void removePublisher(Publisher p) {
         _publishers.remove(p);
+        log.info("Publisher removed: " + p);
         fireRegistrationChangeEvent(p, RegistrationChangeEvent.Type.REGISTER);
     }
     /* End publisher public API */
