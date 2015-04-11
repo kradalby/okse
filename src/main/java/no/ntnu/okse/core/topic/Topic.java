@@ -27,6 +27,7 @@ package no.ntnu.okse.core.topic;
 import javax.validation.constraints.NotNull;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 
 /**
  * Created by Aleksander Skraastad (myth) on 4/5/15.
@@ -119,7 +120,7 @@ public class Topic {
         // Do we have a parent? e.g not null
         if (newParent != null) {
             // Are we switching to a new parent? If so, remove ourselves from the children set of the old parent.
-            if (this.parent != newParent) {
+            if (this.parent != newParent && this.parent != null) {
                 this.parent.children.remove(this);
             }
             // Add ourselves to the children set of the new parent
@@ -160,6 +161,17 @@ public class Topic {
     }
 
     /**
+     * Removes all children from this node, by disconnecting their parent relation to this Topic node.
+     */
+    public void clearChildren() {
+        Iterator<Topic> iterator = this.children.iterator();
+        while (iterator.hasNext()) {
+            Topic t = iterator.next();
+            t.setParent(null);
+        }
+    }
+
+    /**
      * Checks to see wether this topic is the root node in the hierarchy.
      * @return true if this is the root node, false otherwise.
      */
@@ -169,11 +181,24 @@ public class Topic {
     }
 
     /**
-     * Checks to see wether this topic is a leaf node in the hierarchy
+     * Checks to see wether this topic is a leaf node in the hierarchy.
      * @return true if this is a leaf node, false otherwise.
      */
     public boolean isLeaf() {
         return this.children.isEmpty();
+    }
+
+    /**
+     * Traverses up the tree quasi-recursively to generate a complete topic string.
+     * @return A string containing the full topic path of this node.
+     */
+    public String getFullTopicString() {
+        String localTopicName = this.getName();
+        if (!this.isRoot()) {
+            return this.parent.getFullTopicString() + "/" + localTopicName;
+        } else {
+            return this.name;
+        }
     }
 
     @Override

@@ -28,6 +28,8 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import java.util.HashSet;
+
 import static org.testng.Assert.*;
 
 public class TopicTest {
@@ -104,6 +106,9 @@ public class TopicTest {
         assertEquals(childThree.getParent(), rootOne);
         assertEquals(rootOne.getChildren().size(), 3);
         assertEquals(rootTwo.getChildren().size(), 0);
+        childThree.setParent(null);
+        assertFalse(rootOne.getChildren().contains(childThree));
+        assertEquals(childThree.getParent(), null);
     }
 
     @Test
@@ -116,27 +121,90 @@ public class TopicTest {
         rootTwo.addChild(childFour);
         rootTwo.addChild(childFive);
         assertEquals(rootTwo.getChildren().size(), origChildCount + 2);
+        assertTrue(rootTwo.getChildren().contains(childFour));
+        assertTrue(rootTwo.getChildren().contains(childFive));
         assertEquals(childFour.getParent(), rootTwo);
         assertEquals(childFive.getParent(), rootTwo);
     }
 
     @Test
     public void testRemoveChild() throws Exception {
+        Topic childSix = new Topic();
+        rootTwo.addChild(childSix);
+        assertTrue(rootTwo.getChildren().contains(childSix));
+        assertEquals(childSix.getParent(), rootTwo);
+        rootTwo.removeChild(childSix);
 
     }
 
     @Test
     public void testGetChildren() throws Exception {
+        HashSet<Topic> localChildren = rootTwo.getChildren();
 
+        assertFalse(rootTwo.getChildren() == localChildren);
+
+        rootTwo.getChildren().stream().forEach(c -> assertTrue(localChildren.contains(c)));
+
+        Topic childSeven = new Topic();
+        Topic childEight = new Topic();
+
+        localChildren.add(childSeven);
+        localChildren.add(childEight);
+
+        rootTwo.addChild(childSeven);
+        rootTwo.addChild(childEight);
+
+        for (Topic t: rootTwo.getChildren()) {
+            assertTrue(localChildren.contains(t));
+        }
+    }
+
+    @Test
+    public void testClearChildren() throws Exception {
+        HashSet<Topic> localChildren = rootTwo.getChildren();
+        localChildren.stream().forEach(c -> assertEquals(c.getParent(), rootTwo));
+        rootTwo.clearChildren();
+        assertEquals(rootTwo.getChildren().size(), 0);
+        localChildren.stream().forEach(c -> assertEquals(c.getParent(), null));
     }
 
     @Test
     public void testIsRoot() throws Exception {
-
+        assertTrue(rootOne.isRoot());
+        assertTrue(rootTwo.isRoot());
+        Topic t = new Topic();
+        rootOne.setParent(t);
+        assertFalse(rootOne.isRoot());
+        assertTrue(t.isRoot());
     }
 
     @Test
     public void testIsLeaf() throws Exception {
+        assertTrue(childOne.isLeaf());
+        assertTrue(childTwo.isLeaf());
+        assertTrue(childThree.isLeaf());
+        Topic t = new Topic();
+        childThree.addChild(t);
+        assertFalse(childThree.isLeaf());
+        assertFalse(childThree.isRoot());
+        assertTrue(t.isLeaf());
+    }
 
+    @Test
+    public void testGetFullTopicString() {
+        Topic childTen = new Topic();
+        Topic childEleven = new Topic();
+        childTen.setName("ChildTen");
+        childEleven.setName("ChildEleven");
+        childTen.addChild(childEleven);
+        childThree.addChild(childTen);
+
+        String fullTopicForChildEleven = "RootTwo/ChildThree/ChildTen/ChildEleven";
+        String fullTopicForChildTen = "RootTwo/ChildThree/ChildTen";
+        String fullTopicForChildThree = "RootTwo/ChildThree";
+
+        assertEquals(childEleven.getFullTopicString(), fullTopicForChildEleven);
+        assertEquals(childTen.getFullTopicString(), fullTopicForChildTen);
+        assertEquals(childThree.getFullTopicString(), fullTopicForChildThree);
     }
 }
