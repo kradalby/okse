@@ -25,6 +25,7 @@
 package no.ntnu.okse.core.topic;
 
 import javax.validation.constraints.NotNull;
+import java.util.Collections;
 import java.util.HashSet;
 
 /**
@@ -148,6 +149,14 @@ public class Topic {
     public void removeChild(@NotNull Topic topic) {
         // We reuse the logic from the setParent method
         topic.setParent(null);
+    }
+
+    /**
+     * Get a HashSet of the children of this node.
+     * @return A shallow copy of the children set for this node, to prevent alterations to set set itself outside setters.
+     */
+    public HashSet<Topic> getChildren() {
+        return (HashSet<Topic>) this.children.clone();
     }
 
     /**

@@ -30,5 +30,5 @@ package no.ntnu.okse.core.topic;
  * okse is licenced under the MIT licence.
  */
 public class TopicTools {
-    
+
 }
