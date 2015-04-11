@@ -24,6 +24,7 @@
 
 package no.ntnu.okse.core.topic;
 
+import no.ntnu.okse.core.event.listeners.TopicChangeListener;
 import org.apache.log4j.Logger;
 
 import java.util.HashSet;
@@ -43,6 +44,7 @@ public class TopicService {
     private static Thread _serverThread;
     private LinkedBlockingQueue<TopicTask> queue;
     private HashSet<Topic> allTopics, rootTopics, leafTopics;
+    private HashSet<TopicChangeListener> _listeners;
 
     private TopicService() {
         init();
@@ -66,6 +68,7 @@ public class TopicService {
         queue = new LinkedBlockingQueue<>();
         rootTopics = new HashSet<>();
         allTopics = new HashSet<>();
+        leafTopics = new HashSet<>();
         _invoked = true;
         // TODO: Read some shit from config or database to initialize pre-set topics with attributes. Or should
         // TODO: that maybe be done in the Subscriber objets? Who knows.
@@ -91,6 +94,8 @@ public class TopicService {
 
     /**
      * This method Stops the TopicService
+     * @throws InterruptedException An exception that might occur if thread is interrupted while waiting for put
+     * command thread lock to open up.
      */
     public void stop() throws InterruptedException {
         _running = false;
@@ -143,5 +148,21 @@ public class TopicService {
      */
     public HashSet<Topic> getAllLeafTopics() {
         return (HashSet<Topic>) leafTopics.clone();
+    }
+
+    /**
+     * This method allows registration for TopicChange listeners.
+     * @param listener An object implementing the TopicChangeListener interface
+     */
+    public void addTopicChangeListener(TopicChangeListener listener) {
+        this._listeners.add(listener);
+    }
+
+    /**
+     * This method allows removal of TopicChange listeners.
+     * @param listener The object implementing TopigChangeListener interface that is to be removed.
+     */
+    public void removeTopicChangeListener(TopicChangeListener listener) {
+        if (this._listeners.contains(listener)) this._listeners.remove(listener);
     }
 }

@@ -196,6 +196,9 @@ public class CoreService extends Thread {
         log.info("CoreService started.");
         log.info("Attempting to boot ProtocolServers.");
 
+        // Boot up the topic service
+        this.topicService.boot();
+
         // Call the boot() method on all registered ProtocolServers
         this.bootProtocolServers();
 
@@ -218,6 +221,11 @@ public class CoreService extends Thread {
      */
     public void stopThread() {
         this.protocolServers.forEach(p -> p.stopServer());
+        try {
+            this.topicService.stop();
+        } catch (InterruptedException e) {
+            log.warn("Caught interrupt from TopicService while trying to shut it down gracefully");
+        }
         running = false;
     }
 
