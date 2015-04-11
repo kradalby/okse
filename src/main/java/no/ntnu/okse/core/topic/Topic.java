@@ -201,6 +201,18 @@ public class Topic {
         }
     }
 
+    /**
+     * Traverses up the tree quasi-recursively to generate a complete topic string.
+     * @return A string containing the full topic path of this node.
+     */
+    public String getFullTopicStringIgnoreCase() {
+        if (!this.isRoot()) {
+            return this.parent.getFullTopicStringIgnoreCase() + "/" + this.getNameIgnoreCase();
+        } else {
+            return this.getNameIgnoreCase();
+        }
+    }
+
     @Override
     public String toString() {
         return "Topic{" +

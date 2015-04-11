@@ -207,4 +207,22 @@ public class TopicTest {
         assertEquals(childTen.getFullTopicString(), fullTopicForChildTen);
         assertEquals(childThree.getFullTopicString(), fullTopicForChildThree);
     }
+
+    @Test
+    public void testGetFullTopicStringIgnoreCase() {
+        Topic childTen = new Topic();
+        Topic childEleven = new Topic();
+        childTen.setName("ChildTen");
+        childEleven.setName("ChildEleven");
+        childTen.addChild(childEleven);
+        childThree.addChild(childTen);
+
+        String fullTopicForChildEleven = "roottwo/childthree/childten/childeleven";
+        String fullTopicForChildTen = "roottwo/childthree/childten";
+        String fullTopicForChildThree = "roottwo/childthree";
+
+        assertEquals(childEleven.getFullTopicStringIgnoreCase(), fullTopicForChildEleven);
+        assertEquals(childTen.getFullTopicStringIgnoreCase(), fullTopicForChildTen);
+        assertEquals(childThree.getFullTopicStringIgnoreCase(), fullTopicForChildThree);
+    }
 }
