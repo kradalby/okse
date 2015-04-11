@@ -28,6 +28,7 @@ import no.ntnu.okse.Application;
 import no.ntnu.okse.core.event.Event;
 
 import no.ntnu.okse.core.subscription.SubscriptionService;
+import no.ntnu.okse.core.topic.TopicService;
 import no.ntnu.okse.protocol.AbstractProtocolServer;
 import no.ntnu.okse.protocol.Protocol;
 import no.ntnu.okse.protocol.ProtocolServer;
@@ -52,6 +53,7 @@ public class CoreService extends Thread {
     private ExecutorService executor;
     private ArrayList<ProtocolServer> protocolServers;
     private SubscriptionService subscriptionService;
+    private TopicService topicService;
 
     /**
      * Constructs the CoreService thread, initiates the logger and eventQueue.
@@ -64,6 +66,7 @@ public class CoreService extends Thread {
         executor = Executors.newFixedThreadPool(10);
         protocolServers = new ArrayList<>();
         subscriptionService = new SubscriptionService();
+        topicService = TopicService.getInstance();
     }
 
     /**
