@@ -22,46 +22,30 @@
  * THE SOFTWARE.
  */
 
-package no.ntnu.okse.core.topic;
-
-import java.util.HashSet;
-import java.util.Stack;
+package no.ntnu.okse.exceptions;
 
 /**
  * Created by Aleksander Skraastad (myth) on 4/11/15.
  * <p>
  * okse is licenced under the MIT licence.
  */
-public class TopicTools {
+public class TopicExceptions {
 
     /**
-     * Static iterative implementation of Depth-First-Search to discover all Topic nodes from a root node.
-     * @param root
-     * @return
+     * Exception for when a root node was expected, but was in fact not.
      */
-    private static HashSet<Topic> DFS(Topic root) {
+    public class NonRootNodeException extends Exception {
+        public NonRootNodeException () {
 
-
-
-        HashSet<Topic> discovered = new HashSet<Topic>();
-        Stack<Topic> queue = new Stack<>();
-        queue.push(root);
-
-        while (!queue.empty()) {
-            Topic t = queue.pop();
-            if (!discovered.contains(t)) {
-                discovered.add(t);
-                t.getChildren().stream().forEach(c -> queue.push(c));
-            }
         }
-
-        return discovered;
+        public NonRootNodeException (String message) {
+            super (message);
+        }
+        public NonRootNodeException (Throwable cause) {
+            super (cause);
+        }
+        public NonRootNodeException (String message, Throwable cause) {
+            super (message, cause);
+        }
     }
-
-    public static HashSet<Topic> getAllTopicNodesFromRootNodeSet(HashSet<Topic> rootNodes) {
-        HashSet<Topic> returnSet = new HashSet<>();
-
-        return returnSet;
-    }
-
 }
