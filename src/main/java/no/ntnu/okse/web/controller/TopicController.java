@@ -37,7 +37,7 @@ import java.util.Random;
 
 /**
  * Created by Håkon Ødegård Løvdal (hakloev) on 13/03/15.
- * <p/>
+ *
  * okse is licenced under the MIT licence.
  */
 @RestController

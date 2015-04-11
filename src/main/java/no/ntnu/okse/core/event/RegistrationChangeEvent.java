@@ -43,9 +43,10 @@ public class RegistrationChangeEvent extends Event {
      * Constructs an Event containing an operation, some data and a dataType.
      * <p>
      *
+     * @param type : A Type enum value from RegistrationChangeEvent class.
      * @param data : An object containing the data payload.
      */
-    public RegistrationChangeEvent(Type type, Publisher data) {
+    public RegistrationChangeEvent(RegistrationChangeEvent.Type type, Publisher data) {
         super(data);
     }
 

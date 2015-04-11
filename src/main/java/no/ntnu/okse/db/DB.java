@@ -120,9 +120,9 @@ public class DB {
 
     /**
      * Run SQL queries
-     * @param query
-     * @return
-     * @throws SQLException
+     * @param query An SQL query string.
+     * @return A resultset with the returned results
+     * @throws SQLException An SQLException instance with returned error from SQLite driver
      */
     public static ResultSet sqlQuery(String query) throws SQLException {
         conDB();
@@ -133,9 +133,9 @@ public class DB {
 
     /**
      * INSERT INTO table (fields) VALUES (values)
-     * @param table
-     * @param fields
-     * @param values
+     * @param table A string representing the table
+     * @param fields A string representing the fields
+     * @param values A string representing the values
      */
     public static void insert(String table, String fields, String values) {
         Statement stmt = null;
@@ -153,8 +153,8 @@ public class DB {
 
     /**
      * SELECT * FROM table
-     * @param table
-     * @return
+     * @param table A string representing the table
+     * @return A resultSet of all returned results
      */
     public static ResultSet selectAll(String table) {
         Statement stmt = null;
@@ -172,10 +172,10 @@ public class DB {
 
     /**
      * SELECT * FROM tavle WHERE colum = value
-     * @param table
-     * @param colum
-     * @param value
-     * @return
+     * @param table A string representing the table
+     * @param colum A string representing the column
+     * @param value A string representing the value
+     * @return A ResultSet of the returned results
      */
     public static ResultSet select(String table, String colum, String value) {
         Statement stmt = null;

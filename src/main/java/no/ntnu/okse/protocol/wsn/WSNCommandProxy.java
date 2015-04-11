@@ -188,7 +188,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
     /**
      * The Subscribe request message as defined by the WS-N specification.
      *
-     * More information can be found at <href>http://docs.oasis-open.org/wsn/wsn-ws_base_notification-1.3-spec-os.htm#_Toc133735624</href>
+     * More information can be found at http://docs.oasis-open.org/wsn/wsn-ws_base_notification-1.3-spec-os.htm#_Toc133735624
      * @param subscribeRequest A {@link org.oasis_open.docs.wsn.b_2.Subscribe} object.
      * @return A {@link org.oasis_open.docs.wsn.b_2.SubscribeResponse} if the subscription was added successfully.
      * @throws NotifyMessageNotSupportedFault Never.
@@ -234,7 +234,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
                 if (o instanceof JAXBElement) {
                     JAXBElement filter = (JAXBElement) o;
 
-                    log.info("Fetching namespacecontext of filter value");
+                    log.debug("Fetching namespacecontext of filter value");
                     // Get the namespace context for this filter
                     NamespaceContext namespaceContext = connection.getRequestInformation().getNamespaceContext(filter.getValue());
 
@@ -244,7 +244,11 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
 
                         QName fName = filter.getName();
 
-                        log.info("Subscription request contained filter: " + fName + " Value: " + filter.getValue());
+                        log.debug("Subscription request contained filter: " + fName + " Value: " + filter.getValue());
+                        TopicExpressionType type = (TopicExpressionType) filter.getValue();
+                        log.debug("Attributes: " + type.getOtherAttributes());
+                        type.getContent().stream().forEach(p -> log.info("Content: " + p.toString()));
+                        log.info("Dialect: " + type.getDialect());
 
                         filtersPresent.put(fName, filter.getValue());
                     } else {
@@ -319,10 +323,19 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
             }
         }
 
-        // Attempt some output to see if we can extract topic information
+        ArrayList<String> rawTopicContent = new ArrayList<>();
+        ArrayList<String> requestDialect = new ArrayList<>();
+
+        // Extract topic information
         for (QName q : subscriptionInfo.getFilterSet()) {
-            log.info("QName: " + q.toString());
+            ((TopicExpressionType) filtersPresent.get(q)).getContent().stream().forEach(p -> {
+                rawTopicContent.add(p.toString());
+            });
+            requestDialect.add(((TopicExpressionType) filtersPresent.get(q)).getDialect());
         }
+
+        log.info(rawTopicContent);
+        log.info(requestDialect);
 
         // Instanciate new OKSE Subscriber object
         Subscriber subscriber = new Subscriber(requestAddress, port, null, WSNotificationServer.getInstance().getProtocolServerType());
@@ -331,6 +344,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
 
         // Register the OKSE subscriber to the SubscriptionService, via the WSNSubscriptionManager
         subscriptionManager.addSubscriber(subscriber, subscriptionHandle);
+
 
         return response;
     }

@@ -290,7 +290,7 @@ public class WSNRequestParser implements Hub {
      * this declared type, it just returns it. If it is an accepted envelope, it creates the corresponding JAXBElement
      * to wrap it in. If it is something else, it wraps it in an Envelope from namespace
      * http://schemas.xmlsoap.org/soap/envelope/
-     * <p></p>
+     *
      * @param o the <code>Object</code> to wrap
      * @return the wrapped JAXBElement
      */
@@ -329,6 +329,7 @@ public class WSNRequestParser implements Hub {
      * Function to accept a message from a local service, and forward it out into the internet.
      * <p>
      * @param message The message to be sent out
+     * @return An InternalMessage ready to be processed and sent across the wire.
      */
     //TODO: Generate meaningful soap headers
     public InternalMessage generateOutgoingMessage(InternalMessage message) {
