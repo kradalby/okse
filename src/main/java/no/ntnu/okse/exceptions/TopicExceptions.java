@@ -34,7 +34,7 @@ public class TopicExceptions {
     /**
      * Exception for when a root node was expected, but was in fact not.
      */
-    public class NonRootNodeException extends Exception {
+    public static class NonRootNodeException extends Exception {
         public NonRootNodeException () {
 
         }
