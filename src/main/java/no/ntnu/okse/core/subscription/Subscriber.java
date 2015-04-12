@@ -38,19 +38,21 @@ public class Subscriber {
     private String address;
     private Integer port;
     private HashMap<String, String> attributes;
-    private Topic topic;
+    private String topic;
     private Long timeout;
+    private String originProtocol;
 
-    public Subscriber(String address, Integer port, Topic topic) {
-        init(address, port, topic);
+    public Subscriber(String address, Integer port, String topic, String originProtocol) {
+        init(address, port, topic, originProtocol);
     }
 
-    private void init(String address, Integer port, Topic topic) {
+    private void init(String address, Integer port, String topic, String originProtocol) {
         this.timeout = null;
         this.address = address;
         this.port = port;
         this.attributes = new HashMap<>();
         this.topic = topic;
+        this.originProtocol = originProtocol;
     }
 
     public String getAddress() {
@@ -70,11 +72,11 @@ public class Subscriber {
         else this.port = port;
     }
 
-    public Topic getTopic() {
+    public String getTopic() {
         return topic;
     }
 
-    public void setTopic(Topic topic) {
+    public void setTopic(String topic) {
         this.topic = topic;
     }
 
@@ -105,6 +107,10 @@ public class Subscriber {
         return false;
     }
 
+    public String getOriginProtocol() {
+        return this.originProtocol;
+    }
+
     @Override
     public boolean equals(Object o) {
         Subscriber other;
@@ -119,4 +125,7 @@ public class Subscriber {
                 this.topic.equals(other.getTopic()));
     }
 
+    public String toString() {
+        return "[" + originProtocol + "] " + address + ":" + port + " on topic: " + topic;
+    }
 }

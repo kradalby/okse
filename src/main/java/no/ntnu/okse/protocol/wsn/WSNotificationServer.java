@@ -32,6 +32,7 @@ import java.util.Enumeration;
 import java.util.HashSet;
 
 import com.google.common.io.ByteStreams;
+import no.ntnu.okse.Application;
 import no.ntnu.okse.protocol.AbstractProtocolServer;
 import org.apache.log4j.Logger;
 import org.eclipse.jetty.client.HttpClient;
@@ -207,16 +208,26 @@ public class WSNotificationServer extends AbstractProtocolServer {
                 this._connectors.stream().forEach(c -> this._server.addConnector(c));
 
                 // Register the needed web service proxies
-                NotificationBrokerImpl producer = new NotificationBrokerImpl();
-                SimpleSubscriptionManager subscriptionManager = new SimpleSubscriptionManager();
-                SimplePublisherRegistrationManager publisherRegistrationManager = new SimplePublisherRegistrationManager();
+                //NotificationBrokerImpl producer = new NotificationBrokerImpl();
+                //SimpleSubscriptionManager subscriptionManager = new SimpleSubscriptionManager();
+                //SimplePublisherRegistrationManager publisherRegistrationManager = new SimplePublisherRegistrationManager();
+
+                /* OKSE CUSTOM WEB SERVICES HERE BE DRAGONS */
+                WSNCommandProxy broker = new WSNCommandProxy();
+                WSNSubscriptionManager subscriptionManager = new WSNSubscriptionManager();
+                Application.cs.getSubscriptionService().addSubscriptionChangeListener(subscriptionManager);
+
+                broker.quickBuild("broker", this._requestParser);
+                subscriptionManager.quickBuild("subscriptionManager", this._requestParser);
+                subscriptionManager.initCoreSubscriptionService(Application.cs.getSubscriptionService());
+                broker.setSubscriptionManager(subscriptionManager);
 
                 // Pure WS-Nu quickbuilds and service registry
-                producer.quickBuild("broker", this._requestParser);
+                /*producer.quickBuild("broker", this._requestParser);
                 subscriptionManager.quickBuild("subscriptionManager", this._requestParser);
                 publisherRegistrationManager.quickBuild("publisherRegistrationManager", this._requestParser);
                 producer.setSubscriptionManager(subscriptionManager);
-                producer.setRegistrationManager(publisherRegistrationManager);
+                producer.setRegistrationManager(publisherRegistrationManager);*/
 
                 // Create a new thread for the Jetty Server to run in
                 this._serverThread = new Thread(() -> {
