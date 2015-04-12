@@ -33,6 +33,7 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
 
     public static final String WSN_SUBSCRIBER_TOKEN = "wsn-subscriberkey";
     public static final String WSN_PUBLISHER_TOKEN = "wsn-publisherkey";
+    public static final String WSN_DIALECT_TOKEN = "wsn-dialect";
 
     private static Logger log;
     private SubscriptionService _subscriptionService;

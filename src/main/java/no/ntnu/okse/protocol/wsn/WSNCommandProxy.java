@@ -323,24 +323,25 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
             }
         }
 
-        ArrayList<String> rawTopicContent = new ArrayList<>();
-        ArrayList<String> requestDialect = new ArrayList<>();
+        String rawTopicContent = "";
+        String requestDialect = "";
 
         // Extract topic information
         for (QName q : subscriptionInfo.getFilterSet()) {
-            ((TopicExpressionType) filtersPresent.get(q)).getContent().stream().forEach(p -> {
-                rawTopicContent.add(p.toString());
-            });
-            requestDialect.add(((TopicExpressionType) filtersPresent.get(q)).getDialect());
+            for (Object o : ((TopicExpressionType) filtersPresent.get(q)).getContent()) {
+                rawTopicContent = o.toString();
+            }
+            requestDialect = ((TopicExpressionType) filtersPresent.get(q)).getDialect();
         }
 
-        log.info(rawTopicContent);
-        log.info(requestDialect);
+        log.debug(rawTopicContent);
+        log.debug(requestDialect);
 
         // Instanciate new OKSE Subscriber object
         Subscriber subscriber = new Subscriber(requestAddress, port, null, WSNotificationServer.getInstance().getProtocolServerType());
         // Set the wsn-subscriber hash key in attributes
         subscriber.setAttribute(WSNSubscriptionManager.WSN_SUBSCRIBER_TOKEN, newSubscriptionKey);
+        subscriber.setAttribute(WSNSubscriptionManager.WSN_DIALECT_TOKEN, requestDialect);
 
         // Register the OKSE subscriber to the SubscriptionService, via the WSNSubscriptionManager
         subscriptionManager.addSubscriber(subscriber, subscriptionHandle);

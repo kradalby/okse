@@ -92,6 +92,12 @@ public class CoreService extends Thread {
     public SubscriptionService getSubscriptionService() { return subscriptionService; }
 
     /**
+     * Fetches the TopicService handling all topic related operations.
+     * @return The TopicService instance
+     */
+    public TopicService getTopicService() { return topicService; }
+
+    /**
      * Adds a protocolserver to the protocolservers list.
      * @param ps: An instance of a subclass of AbstractProtocolServer that implements ProtocolServer
      */

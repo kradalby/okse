@@ -25,7 +25,6 @@
 package no.ntnu.okse.core.topic;
 
 import javax.validation.constraints.NotNull;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 
@@ -215,11 +214,6 @@ public class Topic {
 
     @Override
     public String toString() {
-        return "Topic{" +
-                "name='" + name + '\'' +
-                ", type='" + type + '\'' +
-                ", parent=" + parent +
-                ", children=" + children +
-                '}';
+        return "Topic{" + this.getFullTopicString() + "}";
     }
 }
