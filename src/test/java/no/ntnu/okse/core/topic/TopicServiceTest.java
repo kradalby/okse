@@ -100,6 +100,11 @@ public class TopicServiceTest {
     }
 
     @Test
+    public void testGetTopic() throws Exception {
+        assertEquals(three, ts.getTopic(three.getFullTopicString()));
+    }
+
+    @Test
     public void testGetAllLeafTopics() throws Exception {
         HashSet<Topic> leafTopics = ts.getAllLeafTopics();
         leafs.forEach(t -> assertTrue(leafTopics.contains(t)));
@@ -127,6 +132,17 @@ public class TopicServiceTest {
         partNames.put("test", null);
         collector.forEach(t -> assertTrue(partNames.containsKey(t.getName())));
         collector.forEach(t -> partNames.put(t.getName(), t));
+        assertEquals(partNames.get("test").getParent(), partNames.get("ffi"));
+        assertEquals(partNames.get("ffi").getParent(), partNames.get("no"));
+        collector.forEach(t -> ts.addTopicLocal(t));
+        collector = ts.generateTopicNodesFromRawTopicString("no/ffi/test/sub");
+        partNames.put("sub", null);
+        collector.forEach(t -> {
+            if (t.getName().equals("sub")) {
+                partNames.put("sub", t);
+            }
+        });
+        assertEquals(partNames.get("sub").getParent(), partNames.get("test"));
         assertEquals(partNames.get("test").getParent(), partNames.get("ffi"));
         assertEquals(partNames.get("ffi").getParent(), partNames.get("no"));
     }

@@ -95,7 +95,6 @@ public class TopicService implements Runnable {
             });
             _serverThread.setName("TopicService");
             _serverThread.start();
-            log.info("TopicService started");
         }
     }
 
@@ -114,6 +113,7 @@ public class TopicService implements Runnable {
      * This method is called after the singleton has been invoked and booted
      */
     public void run() {
+        log.info("TopicService booted successfully");
         while (_running) {
             try {
                 TopicTask task = queue.take();
@@ -131,6 +131,14 @@ public class TopicService implements Runnable {
      */
     public LinkedBlockingQueue<TopicTask> getQueue() {
         return queue;
+    }
+
+    /**
+     * Retrieves the amount of topics currently registered.
+     * @return An integer representing the total number of registered topics.
+     */
+    public Integer getTotalNumberOfTopics() {
+        return allTopics.size();
     }
 
     /**
@@ -158,6 +166,16 @@ public class TopicService implements Runnable {
      */
     public HashSet<Topic> getAllLeafTopics() {
         return (HashSet<Topic>) leafTopics.clone();
+    }
+
+    /**
+     * Attempts to fetch a topic based on a raw topic string.
+     * @param rawTopicString The topic string to use in search.
+     * @return A Topic if we found one, null otherwise.
+     */
+    public Topic getTopic(String rawTopicString) {
+        if (allTopics.containsKey(rawTopicString)) return allTopics.get(rawTopicString);
+        return null;
     }
 
     /**
@@ -221,15 +239,16 @@ public class TopicService implements Runnable {
         currentTopic.setName(topicParts.get(topicParts.size() - 1));
         currentTopic.setType("Default");
         collector.add(currentTopic);
-        topicParts.remove(currentTopic.getName());
+        topicParts.remove(topicParts.size() - 1);
 
-        // While there
-        while (topicParts.size() > 0) {
+        // While there are more topic part names left
+        while (!topicParts.isEmpty()) {
             // Concatenate the remaining parts
             String activeRawTopicString = String.join("/", topicParts);
 
             // Does this topic level exist?
             if (allTopics.containsKey(activeRawTopicString)) {
+                log.debug("Found match for existing topic, setting parent of currentTopic to " + allTopics.get(activeRawTopicString));
                 currentTopic.setParent(allTopics.get(activeRawTopicString));
                 break;
             } else {
@@ -243,7 +262,7 @@ public class TopicService implements Runnable {
                 // Add the new parent to the collector
                 collector.add(parentTopic);
                 // Remove the most recently used topic sub part
-                topicParts.remove(parentTopic.getName());
+                topicParts.remove(topicParts.size() - 1);
                 // Set the parentTopic as our new currentTopic
                 currentTopic = parentTopic;
             }

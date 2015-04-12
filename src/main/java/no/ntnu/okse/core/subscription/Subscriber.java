@@ -38,15 +38,15 @@ public class Subscriber {
     private String address;
     private Integer port;
     private HashMap<String, String> attributes;
-    private Topic topic;
+    private String topic;
     private Long timeout;
     private String originProtocol;
 
-    public Subscriber(String address, Integer port, Topic topic, String originProtocol) {
+    public Subscriber(String address, Integer port, String topic, String originProtocol) {
         init(address, port, topic, originProtocol);
     }
 
-    private void init(String address, Integer port, Topic topic, String originProtocol) {
+    private void init(String address, Integer port, String topic, String originProtocol) {
         this.timeout = null;
         this.address = address;
         this.port = port;
@@ -72,11 +72,11 @@ public class Subscriber {
         else this.port = port;
     }
 
-    public Topic getTopic() {
+    public String getTopic() {
         return topic;
     }
 
-    public void setTopic(Topic topic) {
+    public void setTopic(String topic) {
         this.topic = topic;
     }
 

@@ -27,6 +27,7 @@ package no.ntnu.okse.protocol.wsn;
 import no.ntnu.okse.Application;
 import no.ntnu.okse.core.subscription.Subscriber;
 import no.ntnu.okse.core.subscription.SubscriptionService;
+import no.ntnu.okse.core.topic.Topic;
 import org.apache.log4j.Logger;
 import org.ntnunotif.wsnu.base.internal.Hub;
 import org.ntnunotif.wsnu.base.net.NuNamespaceContextResolver;
@@ -334,18 +335,16 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
             requestDialect = ((TopicExpressionType) filtersPresent.get(q)).getDialect();
         }
 
-        log.debug(rawTopicContent);
-        log.debug(requestDialect);
+        Application.cs.getTopicService().addTopic(rawTopicContent);
 
         // Instanciate new OKSE Subscriber object
-        Subscriber subscriber = new Subscriber(requestAddress, port, null, WSNotificationServer.getInstance().getProtocolServerType());
+        Subscriber subscriber = new Subscriber(requestAddress, port, rawTopicContent, WSNotificationServer.getInstance().getProtocolServerType());
         // Set the wsn-subscriber hash key in attributes
         subscriber.setAttribute(WSNSubscriptionManager.WSN_SUBSCRIBER_TOKEN, newSubscriptionKey);
         subscriber.setAttribute(WSNSubscriptionManager.WSN_DIALECT_TOKEN, requestDialect);
 
         // Register the OKSE subscriber to the SubscriptionService, via the WSNSubscriptionManager
         subscriptionManager.addSubscriber(subscriber, subscriptionHandle);
-
 
         return response;
     }
