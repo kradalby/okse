@@ -47,7 +47,6 @@ public class TopicService implements Runnable {
     private static TopicService _singleton = null;
     private static Thread _serverThread;
     private LinkedBlockingQueue<TopicTask> queue;
-    private HashSet<Topic> rootTopics, leafTopics;
     private HashMap<String, Topic> allTopics;
     private HashSet<TopicChangeListener> _listeners;
 
@@ -71,9 +70,7 @@ public class TopicService implements Runnable {
         log = Logger.getLogger(TopicService.class.getName());
         log.info("Initializing TopicService");
         queue = new LinkedBlockingQueue<>();
-        rootTopics = new HashSet<>();
         allTopics = new HashMap<>();
-        leafTopics = new HashSet<>();
         _listeners = new HashSet<>();
         _invoked = true;
         // TODO: Read some shit from config or database to initialize pre-set topics with attributes. Or should
@@ -146,7 +143,13 @@ public class TopicService implements Runnable {
      * @return A HashSet of all the root topic nodes.
      */
     public HashSet<Topic> getAllRootTopics() {
-        return (HashSet<Topic>) rootTopics.clone();
+        HashSet<Topic> collector = new HashSet<Topic>();
+        // Iterate over the key value pairs and add topic to roots if it is indeed a root topic node
+        allTopics.forEach((k, t) -> {
+            if (t.isRoot()) collector.add(t);
+        });
+
+        return collector;
     }
 
     /**
@@ -165,7 +168,13 @@ public class TopicService implements Runnable {
      * @return A HashSet of all leaf topic nodes.
      */
     public HashSet<Topic> getAllLeafTopics() {
-        return (HashSet<Topic>) leafTopics.clone();
+        HashSet<Topic> collector = new HashSet<>();
+        // Iterate over the key value pairs and add the topic if it is indeed a leaf topic node.
+        allTopics.forEach((k, t) -> {
+            if (t.isLeaf()) collector.add(t);
+        });
+
+        return collector;
     }
 
     /**
@@ -200,8 +209,6 @@ public class TopicService implements Runnable {
      */
     public void addTopicLocal(Topic t) {
         this.allTopics.put(t.getFullTopicString(), t);
-        if (t.isRoot()) this.rootTopics.add(t);
-        if (t.isLeaf()) this.leafTopics.add(t);
         log.info("Added new topic: " + t);
         fireTopicChangeEvent(t, TopicChangeEvent.Type.NEW);
     }

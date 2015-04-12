@@ -101,6 +101,8 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
     // For now, set both WS-Nu submanager and OKSE submanager fields.
     public void setSubscriptionManager(WSNSubscriptionManager subManager) {
         this.subscriptionManager = subManager;
+        this.manager = this.subscriptionManager;
+        this.usesManager = true;
     }
 
     @Override
@@ -169,6 +171,8 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
                 }
             }
         }
+        // TODO: Investigate what we must override in the supertype to properly pass the notify to OKSE core services
+        // TODO: if the notify passes WS-Nu validation and is accepted.
         // Super type can do the rest
         super.sendNotification(notify, namespaceContextResolver);
     }
@@ -227,7 +231,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         Map<QName, Object> filtersPresent = null;
 
         if (filters != null) {
-            log.info("Filters present. Attempting to iterate over filters...");
+            log.debug("Filters present. Attempting to iterate over filters...");
             filtersPresent = new HashMap<>();
 
             for (Object o : filters.getAny()) {
@@ -235,7 +239,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
                 if (o instanceof JAXBElement) {
                     JAXBElement filter = (JAXBElement) o;
 
-                    log.debug("Fetching namespacecontext of filter value");
+                    log.info("Fetching namespacecontext of filter value");
                     // Get the namespace context for this filter
                     NamespaceContext namespaceContext = connection.getRequestInformation().getNamespaceContext(filter.getValue());
 
@@ -245,10 +249,10 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
 
                         QName fName = filter.getName();
 
-                        log.debug("Subscription request contained filter: " + fName + " Value: " + filter.getValue());
+                        log.info("Subscription request contained filter: " + fName + " Value: " + filter.getValue());
                         TopicExpressionType type = (TopicExpressionType) filter.getValue();
-                        log.debug("Attributes: " + type.getOtherAttributes());
                         type.getContent().stream().forEach(p -> log.info("Content: " + p.toString()));
+                        log.info("Attributes: " + type.getOtherAttributes());
                         log.info("Dialect: " + type.getDialect());
 
                         filtersPresent.put(fName, filter.getValue());
@@ -277,6 +281,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
             }
         } else {
             /* Set it to terminate in half a year */
+            log.info("Subscribe request had no termination time set, using default");
             terminationTime = System.currentTimeMillis() + Application.DEFAULT_SUBSCRIPTION_TERMINATION_TIME;
         }
 
@@ -290,29 +295,36 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
             XMLGregorianCalendar calendar = DatatypeFactory.newInstance().newXMLGregorianCalendar(gregorianCalendar);
             response.setTerminationTime(calendar);
         } catch (DatatypeConfigurationException e) {
-            log.debug("Could not convert date time, is it formatted properly?");
+            log.error("Could not convert date time, is it formatted properly?");
             ExceptionUtilities.throwUnacceptableInitialTerminationTimeFault("en", "Internal error: The date was not " +
                     "convertable to a gregorian calendar-instance. If the problem persists," +
                     "please post an issue at http://github.com/tOgg1/WS-Nu");
         }
 
+        log.info("Generating WS-Nu subscription hash");
         /* Generate WS-Nu subscription hash */
         String newSubscriptionKey = generateSubscriptionKey();
-        String subscriptionEndpoint = generateHashedURLFromKey(WsnUtilities.subscriptionString, newSubscriptionKey);
+        log.info("Generating WS-Nu endpoint reference url to subscriptionManager using key: " + newSubscriptionKey + " and prefix: " + WsnUtilities.subscriptionString);
 
+        String subscriptionEndpoint = this.generateHashedURLFromKey(WsnUtilities.subscriptionString, newSubscriptionKey);
+
+        log.info("Setting up W3C endpoint reference builder");
         /* Build endpoint reference */
         W3CEndpointReferenceBuilder builder = new W3CEndpointReferenceBuilder();
         builder.address(subscriptionEndpoint);
 
+        log.info("Building endpoint reference to response");
         // Set the subscription reference on the SubscribeResponse object
         response.setSubscriptionReference(builder.build());
 
+        log.info("Preparing WS-Nu components needed for subscription");
         /* Prepare WS-Nu components needed for a subscription */
         FilterSupport.SubscriptionInfo subscriptionInfo = new FilterSupport.SubscriptionInfo(filtersPresent, connection.getRequestInformation().getNamespaceContextResolver());
         HelperClasses.EndpointTerminationTuple endpointTerminationTuple;
         endpointTerminationTuple = new HelperClasses.EndpointTerminationTuple(endpointReference, terminationTime);
         SubscriptionHandle subscriptionHandle = new SubscriptionHandle(endpointTerminationTuple, subscriptionInfo);
 
+        log.info("Preparing OKSE subscriber objects");
         /* Prepare needed information for OKSE Subscriber object */
         String requestAddress = connection.getRequestInformation().getEndpointReference();
         Integer port = 80;
@@ -327,6 +339,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         String rawTopicContent = "";
         String requestDialect = "";
 
+        log.info("Extracting topic information");
         // Extract topic information
         for (QName q : subscriptionInfo.getFilterSet()) {
             for (Object o : ((TopicExpressionType) filtersPresent.get(q)).getContent()) {
@@ -335,8 +348,10 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
             requestDialect = ((TopicExpressionType) filtersPresent.get(q)).getDialect();
         }
 
+        log.info("Sending addTopic request to TopicService");
         Application.cs.getTopicService().addTopic(rawTopicContent);
 
+        log.info("Initializing OKSE subscriber object");
         // Instanciate new OKSE Subscriber object
         Subscriber subscriber = new Subscriber(requestAddress, port, rawTopicContent, WSNotificationServer.getInstance().getProtocolServerType());
         // Set the wsn-subscriber hash key in attributes
@@ -344,6 +359,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         subscriber.setAttribute(WSNSubscriptionManager.WSN_DIALECT_TOKEN, requestDialect);
 
         // Register the OKSE subscriber to the SubscriptionService, via the WSNSubscriptionManager
+        log.info("Attempting to register the subscriber to the SubscriptionService...");
         subscriptionManager.addSubscriber(subscriber, subscriptionHandle);
 
         return response;
@@ -351,21 +367,23 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
 
     @Override
     public RegisterPublisherResponse registerPublisher(RegisterPublisher registerPublisher) throws InvalidTopicExpressionFault, PublisherRegistrationFailedFault, ResourceUnknownFault, PublisherRegistrationRejectedFault, UnacceptableInitialTerminationTimeFault, TopicNotSupportedFault {
+        log.info("registerPublisher called");
         return null;
     }
 
     @Override
     public GetCurrentMessageResponse getCurrentMessage(GetCurrentMessage getCurrentMessage) throws InvalidTopicExpressionFault, TopicExpressionDialectUnknownFault, MultipleTopicsSpecifiedFault, ResourceUnknownFault, NoCurrentMessageOnTopicFault, TopicNotSupportedFault {
+        log.info("getCurrentMessage called");
         return null;
     }
 
     @Override
     public void publisherChanged(PublisherRegistrationEvent publisherRegistrationEvent) {
-
+        log.info("PublisherChanged event triggered");
     }
 
     @Override
     public void subscriptionChanged(SubscriptionEvent subscriptionEvent) {
-
+        log.info("SubscriptionChanged event triggered");
     }
 }

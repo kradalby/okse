@@ -14,13 +14,11 @@ import org.oasis_open.docs.wsn.b_2.Renew;
 import org.oasis_open.docs.wsn.b_2.RenewResponse;
 import org.oasis_open.docs.wsn.b_2.Unsubscribe;
 import org.oasis_open.docs.wsn.b_2.UnsubscribeResponse;
-import org.oasis_open.docs.wsn.bw_2.SubscriptionManager;
 import org.oasis_open.docs.wsn.bw_2.UnableToDestroySubscriptionFault;
 import org.oasis_open.docs.wsn.bw_2.UnacceptableTerminationTimeFault;
 import org.oasis_open.docs.wsrf.rw_2.ResourceUnknownFault;
 
 import javax.jws.WebService;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 
@@ -36,7 +34,7 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
     public static final String WSN_DIALECT_TOKEN = "wsn-dialect";
 
     private static Logger log;
-    private SubscriptionService _subscriptionService;
+    private SubscriptionService _subscriptionService = null;
     private HashMap<String, Subscriber> localSubscriberMap;
     private HashMap<String, Publisher> localPublisherMap;
     private HashMap<String, AbstractNotificationProducer.SubscriptionHandle> localSubscriberHandle;
@@ -44,11 +42,14 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
 
     public WSNSubscriptionManager() {
         log = Logger.getLogger(WSNSubscriptionManager.class.getName());
-        _subscriptionService = Application.cs.getSubscriptionService();
         localSubscriberMap = new HashMap<>();
         localPublisherMap = new HashMap<>();
         localSubscriberHandle = new HashMap<>();
         localPublisherHandle = new HashMap<>();
+    }
+
+    public void initCoreSubscriptionService(SubscriptionService subService) {
+        this._subscriptionService = subService;
     }
 
     @Override
@@ -108,11 +109,13 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
 
     @Override
     public UnsubscribeResponse unsubscribe(Unsubscribe unsubscribe) throws ResourceUnknownFault, UnableToDestroySubscriptionFault {
+        log.info("UNSUB CALLED");
         return null;
     }
 
     @Override
     public RenewResponse renew(Renew renew) throws ResourceUnknownFault, UnacceptableTerminationTimeFault {
+        log.info("RENEW CALLED");
         return null;
     }
 
@@ -126,6 +129,7 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
             // If we are dealing with an Unsubscribe
             if (e.getType().equals(SubscriptionChangeEvent.Type.UNSUBSCRIBE)) {
                 log.info("Recieved an UNSUBSCRIBE event");
+                log.info("Ubsubscribing " + localSubscriberHandle.get(e.getData().getAttribute(WSN_SUBSCRIBER_TOKEN)));
                 // Remove the local mappings from WS-Nu subscriptionKey to OKSE Subscriber object and WS-Nu subscriptionHandle
                 localSubscriberMap.remove(e.getData().getAttribute(WSN_SUBSCRIBER_TOKEN));
                 localSubscriberHandle.remove(e.getData().getAttribute(WSN_SUBSCRIBER_TOKEN));

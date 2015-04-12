@@ -226,7 +226,7 @@ public class WSNRequestParser implements Hub {
             /* THere is an exception that should be handled */
             if ((returnMessage.statusCode & InternalMessage.STATUS_EXCEPTION_SHOULD_BE_HANDLED) > 0) {
 
-                log.debug("Exception thrown up the stack");
+                log.info("Exception thrown up the stack");
 
                 try {
 

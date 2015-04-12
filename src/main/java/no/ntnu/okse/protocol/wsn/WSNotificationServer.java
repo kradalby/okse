@@ -219,7 +219,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
 
                 broker.quickBuild("broker", this._requestParser);
                 subscriptionManager.quickBuild("subscriptionManager", this._requestParser);
-
+                subscriptionManager.initCoreSubscriptionService(Application.cs.getSubscriptionService());
                 broker.setSubscriptionManager(subscriptionManager);
 
                 // Pure WS-Nu quickbuilds and service registry
