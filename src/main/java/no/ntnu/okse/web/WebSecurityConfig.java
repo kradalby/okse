@@ -47,8 +47,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     /**
      * Connects to the dataSource and validates a user log in
-     * @param auth
-     * @throws Exception
+     * @param auth An AuthenticationManagerBuilder instance
+     * @throws Exception general exception
      */
     @Autowired
     public void configAuthentication(AuthenticationManagerBuilder auth) throws Exception {
@@ -61,8 +61,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     /**
      * Defines rules and access for http-requests
-     * @param http
-     * @throws Exception
+     * @param http A HttpSecurity instance
+     * @throws Exception general exception
      */
     @Override
     protected void configure(HttpSecurity http) throws Exception {
