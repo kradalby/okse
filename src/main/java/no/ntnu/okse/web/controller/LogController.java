@@ -26,13 +26,16 @@ package no.ntnu.okse.web.controller;
 
 import no.ntnu.okse.web.model.Log;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -44,14 +47,21 @@ import java.util.List;
 public class LogController {
 
     @RequestMapping(method = RequestMethod.GET)
-    public Log log() throws IOException {
-        String name = "okse";
-        File f = new File("logs/okse.log");
-        List<String> lines = FileUtils.readLines(f);
+    public ArrayList<Log> log() throws IOException {
+        ArrayList<Log> logs = new ArrayList<>();
+        File dir = new File("logs");
+        Collection<File> files = FileUtils.listFiles(dir, TrueFileFilter.INSTANCE, TrueFileFilter.INSTANCE);
 
-        Log log = new Log(name, lines);
+        for (File file : files) {
+            String name = file.getName();
+            List<String> lines = FileUtils.readLines(file);
+            Log log = new Log(name, lines);
 
-        return log;
+            logs.add(log);
+
+        }
+
+        return logs;
     }
 
 }
