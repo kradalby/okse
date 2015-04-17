@@ -114,6 +114,8 @@ public class SubscriptionService {
     }
 
     public HashSet getAllSubscribers() {
+        HashSet<Subscriber> collector = new HashSet<>();
+        _subscribers.forEach((s) -> collector.add(s));
         return _subscribers;
     }
 

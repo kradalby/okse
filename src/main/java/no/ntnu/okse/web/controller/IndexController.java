@@ -57,6 +57,7 @@ public class IndexController {
         model.addAttribute("projectName", appName);
         model.addAttribute("serverPort", port);
         model.addAttribute("environment", createEnvironmentList());
+        model.addAttribute("subscribers", Application.cs.getSubscriptionService().getAllSubscribers().size());
 
         try {
             model.addAttribute("serverAddress", InetAddress.getLocalHost().getHostAddress());
