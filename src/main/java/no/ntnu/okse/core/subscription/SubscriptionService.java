@@ -113,10 +113,13 @@ public class SubscriptionService {
         return null;
     }
 
+    /**
+     * Returning a copy of the _subscribers HashSet
+     * @return collector : The HashSet containing all the subscribers
+     */
     public HashSet getAllSubscribers() {
-        HashSet<Subscriber> collector = new HashSet<>();
-        _subscribers.forEach((s) -> collector.add(s));
-        return _subscribers;
+        HashSet<Subscriber> collector = (HashSet<Subscriber>) _subscribers.clone();
+        return collector;
     }
 
     /**

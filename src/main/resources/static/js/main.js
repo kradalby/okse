@@ -23,14 +23,14 @@
  */
 
 /**
- * Created by Fredrik on 26/02/15.
+ * Created by Fredrik Tørnvall and Håkon Ødegård Løvdal on 26/02/15.
  */
-
-
 var Main = (function($) {
 
+    // Global variable for holding the interval used to update the panes
     var clickInterval;
 
+    // Private method for setting up the AJAX with the correct CSRF-token (must do this to be able to do POST-requests)
     var setupAjax = function() {
         var token = $("input[name='_csrf']").val();
         var header = "X-CSRF-TOKEN";
@@ -41,6 +41,7 @@ var Main = (function($) {
         });
     }
 
+    // Global, generic AJAX-function for all AJAX-requests across the complete page
     var ajax = function(url, error, success, httpMethod, dataType) {
         $.ajax({
             url: "/api/" + url,
@@ -51,12 +52,23 @@ var Main = (function($) {
         })
     };
 
-    var error = function() {
-        console.log("Error in main ajax")
+    // TODO: For now, it only updates when in main-pane. Needs to change in topic pane later on
+    // Updates all the subscriber counters on the page (both the main-pane and the topics-pane
+    var updateSubscribers = function(subscribers) {
+        $('.total-subscribers').each(function() {
+            if ($(this).val() != subscribers) {
+                $(this).text(subscribers)
+            }
+        });
+    }
+    
+    var error = function(xhr, statusText, thrownError) {
+        console.log("[Error] in Ajax for main with status: " + xhr.statusText)
     }
 
-    var refresh = function(data) {
-        console.log(JSON.stringify(data))
+    var refresh = function(response) {
+        updateSubscribers(response.subscribers)
+        console.log(JSON.stringify(response))
     }
 
     return {
