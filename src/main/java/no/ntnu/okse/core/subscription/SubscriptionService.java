@@ -113,6 +113,10 @@ public class SubscriptionService {
         return null;
     }
 
+    public HashSet getAllSubscribers() {
+        return _subscribers;
+    }
+
     /**
      * SubscriptionChange event listener support
      * @param s : An object implementing the SubscriptionChangeListener interface

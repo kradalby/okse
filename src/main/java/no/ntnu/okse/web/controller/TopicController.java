@@ -24,6 +24,7 @@
 
 package no.ntnu.okse.web.controller;
 
+import no.ntnu.okse.Application;
 import no.ntnu.okse.web.model.Subscriber;
 import no.ntnu.okse.web.model.Topic;
 import org.apache.log4j.Logger;
@@ -50,6 +51,7 @@ public class TopicController {
 
     @RequestMapping(method = RequestMethod.GET)
     public Topic topics() {
+        log.info("Subscribers: " + Application.cs.getSubscriptionService().getAllSubscribers());
         if (counter % 5 == 0) {
             counter++;
             return new Topic(new Random().nextLong(), "myTopic", new ArrayList<Subscriber>(Arrays.asList(
