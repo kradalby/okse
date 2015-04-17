@@ -28,6 +28,7 @@ import no.ntnu.okse.Application;
 import no.ntnu.okse.core.event.Event;
 
 import no.ntnu.okse.core.subscription.SubscriptionService;
+import no.ntnu.okse.core.topic.TopicService;
 import no.ntnu.okse.protocol.AbstractProtocolServer;
 import no.ntnu.okse.protocol.Protocol;
 import no.ntnu.okse.protocol.ProtocolServer;
@@ -52,6 +53,7 @@ public class CoreService extends Thread {
     private ExecutorService executor;
     private ArrayList<ProtocolServer> protocolServers;
     private SubscriptionService subscriptionService;
+    private TopicService topicService;
 
     /**
      * Constructs the CoreService thread, initiates the logger and eventQueue.
@@ -64,6 +66,7 @@ public class CoreService extends Thread {
         executor = Executors.newFixedThreadPool(10);
         protocolServers = new ArrayList<>();
         subscriptionService = new SubscriptionService();
+        topicService = TopicService.getInstance();
     }
 
     /**
@@ -87,6 +90,12 @@ public class CoreService extends Thread {
      * @return The SubscriptionService instance.
      */
     public SubscriptionService getSubscriptionService() { return subscriptionService; }
+
+    /**
+     * Fetches the TopicService handling all topic related operations.
+     * @return The TopicService instance
+     */
+    public TopicService getTopicService() { return topicService; }
 
     /**
      * Adds a protocolserver to the protocolservers list.
@@ -193,6 +202,9 @@ public class CoreService extends Thread {
         log.info("CoreService started.");
         log.info("Attempting to boot ProtocolServers.");
 
+        // Boot up the topic service
+        this.topicService.boot();
+
         // Call the boot() method on all registered ProtocolServers
         this.bootProtocolServers();
 
@@ -215,6 +227,11 @@ public class CoreService extends Thread {
      */
     public void stopThread() {
         this.protocolServers.forEach(p -> p.stopServer());
+        try {
+            this.topicService.stop();
+        } catch (InterruptedException e) {
+            log.warn("Caught interrupt from TopicService while trying to shut it down gracefully");
+        }
         running = false;
     }
 
