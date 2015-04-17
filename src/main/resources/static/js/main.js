@@ -61,7 +61,7 @@ var Main = (function($) {
             }
         });
     }
-    
+
     var error = function(xhr, statusText, thrownError) {
         console.log("[Error] in Ajax for main with status: " + xhr.statusText)
     }
