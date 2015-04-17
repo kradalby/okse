@@ -53,25 +53,40 @@
                     <!-- <div class="panel-body"></div> -->
                     <!-- List group -->
                     <ul class="list-group">
-                        <li class="list-group-item"><strong>CPU load: </strong>20%</li>
-                        <li class="list-group-item"><strong>RAM use: </strong>512 MB</li>
+                        <li class="list-group-item" id="cpucores"><strong>CPU cores: </strong>0</li>
+                        <li class="list-group-item" id="totalram"><strong>Total RAM: </strong>0 MB</li>
+                        <li class="list-group-item" id="freeram"><strong>Free RAM: </strong>0 MB</li>
+                        <li class="list-group-item" id="ramuse"><strong>Used RAM: </strong>0 MB</li>
                     </ul>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="panel panel-info">
                     <!-- Default panel contents -->
-                    <div class="panel-heading">Usage</div>
+                    <div class="panel-heading" id="usage-column">Usage</div>
                     <!-- <div class="panel-body"></div> -->
                     <!-- List group -->
                     <ul class="list-group">
                         <li class="list-group-item" id="stats-total-requests"><strong>Requests handled: </strong>0</li>
                         <li class="list-group-item" id="stats-total-messages"><strong>Messages sent: </strong>0</li>
+                        <li class="list-group-item" id="stats-total-badrequests"><strong>Bad requests: </strong>0</li>
+                        <li class="list-group-item" id="stats-total-error"><strong>Total errors: </strong>0</li>
                         <li class="list-group-item" id="stats-total-megabytes-recieved"><strong>MB recieved: </strong>0</li>
                         <li class="list-group-item" id="stats-total-megabytes-sent"><strong>MB sent: </strong>0</li>
                     </ul>
                 </div>
+                <div class="panel panel-info">
+                    <!-- Default panel contents -->
+                    <div class="panel-heading">Protocols</div>
+                    <!-- <div class="panel-body"></div> -->
+                    <!-- List group -->
+
+                    <ul class="list-group" id="test">
+                    </ul>
+                </div>
             </div>
+
+
         </div>
     </div>
 </th:block>

@@ -28,8 +28,8 @@ import no.ntnu.okse.core.CoreService;
 import no.ntnu.okse.db.DB;
 import no.ntnu.okse.protocol.wsn.WSNotificationServer;
 import no.ntnu.okse.web.Server;
-import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
 
 import java.io.File;
 
@@ -54,6 +54,7 @@ public class Application {
      * @param args Command line arguments
      */
     public static void main(String[] args) {
+        PropertyConfigurator.configure("config/log4j.properties");
         log = Logger.getLogger(Application.class.getName());
 
         File dbFile = new File("okse.db");
@@ -71,6 +72,7 @@ public class Application {
 
         // Add ProtocolServers to CoreService
         cs.addProtocolServer(WSNotificationServer.getInstance());
+
 
 
         // Start the admin console

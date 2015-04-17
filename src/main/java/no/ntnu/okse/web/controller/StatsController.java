@@ -25,6 +25,9 @@
 package no.ntnu.okse.web.controller;
 
 import no.ntnu.okse.Application;
+import no.ntnu.okse.protocol.Protocol;
+import no.ntnu.okse.protocol.ProtocolServer;
+import no.ntnu.okse.web.model.ProtocolStats;
 import no.ntnu.okse.web.model.Stats;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -32,6 +35,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.management.MBeanServer;
 import java.lang.management.ManagementFactory;
+import java.util.ArrayList;
 
 /**
  * Created by Fredrik on 13/03/15.
@@ -40,28 +44,36 @@ import java.lang.management.ManagementFactory;
 @RestController
 @RequestMapping(value = "/api/stats")
 public class StatsController {
+
     @RequestMapping(method = RequestMethod.GET)
     public Stats stats() {
-
-        // Baseformat
-        int mb = 1024*1024;
 
         // ProtocolServer statistics
         int totalMessages = Application.cs.getTotalMessagesFromProtocolServers();
         int totalRequests = Application.cs.getTotalRequestsFromProtocolServers();
+
         int totalBadRequests = Application.cs.getTotalBadRequestsFromProtocolServers();
         int totalErrors = Application.cs.getTotalErrorsFromProtocolServers();
 
-        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
-
         double cpuAvailable = Runtime.getRuntime().availableProcessors();
+        long totalRam = Runtime.getRuntime().totalMemory();
+        long freeRam = Runtime.getRuntime().freeMemory();
+        ArrayList<ProtocolServer> protocols = Application.cs.getAllProtocolServers();
+        ArrayList<ProtocolStats> protocolstats = new ArrayList<>();
 
-        long totalRam = Runtime.getRuntime().totalMemory()/mb;
-        long freeRam = Runtime.getRuntime().freeMemory()/mb;
-        long useRam = (totalRam - freeRam)/mb;
+        for (ProtocolServer each : protocols) {
+            protocolstats.add(new ProtocolStats(each.getProtocolServerType(), each.getTotalRequests(), each.getTotalMessages()));
+        }
 
-        Stats stat = new Stats(freeRam, useRam, totalRam, cpuAvailable, totalRequests, totalMessages, totalBadRequests, totalErrors);
+        Stats stat = new Stats(freeRam, totalRam, cpuAvailable, totalRequests, totalMessages, totalBadRequests, totalErrors, protocolstats);
+
+
         return stat;
+
+
+
+
+
 
     }
 }
