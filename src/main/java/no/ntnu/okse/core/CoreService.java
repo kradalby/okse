@@ -70,6 +70,14 @@ public class CoreService extends Thread {
     }
 
     /**
+     * This command executes an object implementing the Runnable interface through the executor service
+     * @param r The Runnable job to be executed
+     */
+    public void execute(Runnable r) {
+        this.executor.execute(r);
+    }
+
+    /**
      * Fetches the eventQueue.
      * <p>
      * @return The eventQueue list

@@ -24,9 +24,9 @@
 
 package no.ntnu.okse.core.subscription;
 
-import no.ntnu.okse.core.event.RegistrationChangeEvent;
+import no.ntnu.okse.core.event.PublisherChangeEvent;
 import no.ntnu.okse.core.event.SubscriptionChangeEvent;
-import no.ntnu.okse.core.event.listeners.RegistrationChangeListener;
+import no.ntnu.okse.core.event.listeners.PublisherChangeListener;
 import no.ntnu.okse.core.event.listeners.SubscriptionChangeListener;
 import no.ntnu.okse.core.topic.Topic;
 import org.apache.log4j.Logger;
@@ -43,7 +43,7 @@ public class SubscriptionService {
     private Logger log;
 
     private HashSet<SubscriptionChangeListener> _subscriptionListeners;
-    private HashSet<RegistrationChangeListener> _registrationListeners;
+    private HashSet<PublisherChangeListener> _registrationListeners;
     private HashSet<Subscriber> _subscribers;
     private HashSet<Publisher> _publishers;
 
@@ -85,13 +85,13 @@ public class SubscriptionService {
     public synchronized void addPublisher(Publisher p) {
         _publishers.add(p);
         log.info("Publisher registered: " + p);
-        fireRegistrationChangeEvent(p, RegistrationChangeEvent.Type.REGISTER);
+        firePublisherChangeEvent(p, PublisherChangeEvent.Type.REGISTER);
     }
 
     public synchronized void removePublisher(Publisher p) {
         _publishers.remove(p);
         log.info("Publisher removed: " + p);
-        fireRegistrationChangeEvent(p, RegistrationChangeEvent.Type.REGISTER);
+        firePublisherChangeEvent(p, PublisherChangeEvent.Type.REGISTER);
     }
     /* End publisher public API */
 
@@ -140,29 +140,29 @@ public class SubscriptionService {
     }
 
     /**
-     * RegistrationChange event listener support
-     * @param r : An object implementing the RegistrationChangeListener interface
+     * PublisherChange event listener support
+     * @param r : An object implementing the PublisherChangeListener interface
      */
-    public synchronized void addRegistrationChangeListener(RegistrationChangeListener r) {
+    public synchronized void addPublisherChangeListener(PublisherChangeListener r) {
         _registrationListeners.add(r);
     }
 
     /**
-     * RegistrationChange event listener support
-     * @param r : An object implementing the RegistrationChangeListener interface
+     * PublisherChange event listener support
+     * @param r : An object implementing the PublisherChangeListener interface
      */
-    public synchronized void removeRegistrationChangeListener(RegistrationChangeListener r) {
+    public synchronized void removePublisherChangeListener(PublisherChangeListener r) {
         if (_registrationListeners.contains(r)) _registrationListeners.remove(r);
     }
 
     /**
-     * Private helper method fo fire the registrationChange method on all listners.
+     * Private helper method fo fire the publisherChange method on all listners.
      * @param reg   : The particular publisher object that has changed.
      * @param type  : What type of action is associated with the publisher object.
      */
-    private void fireRegistrationChangeEvent(Publisher reg, RegistrationChangeEvent.Type type) {
-        RegistrationChangeEvent rce = new RegistrationChangeEvent(type, reg);
-        _registrationListeners.stream().forEach(l -> l.registrationChanged(rce));
+    private void firePublisherChangeEvent(Publisher reg, PublisherChangeEvent.Type type) {
+        PublisherChangeEvent rce = new PublisherChangeEvent(type, reg);
+        _registrationListeners.stream().forEach(l -> l.publisherChanged(rce));
     }
 
 }

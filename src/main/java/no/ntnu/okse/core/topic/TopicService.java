@@ -102,7 +102,8 @@ public class TopicService implements Runnable {
      */
     public void stop() throws InterruptedException {
         _running = false;
-        _singleton.getQueue().put(() -> log.info("Stopping TopicService..."));
+        Runnable job = () -> log.info("Stopping TopicService...");
+        _singleton.getQueue().put(new TopicTask(TopicTask.Type.SHUTDOWN, job));
         _serverThread = null;
     }
 
@@ -114,8 +115,8 @@ public class TopicService implements Runnable {
         while (_running) {
             try {
                 TopicTask task = queue.take();
-                log.debug("Task recieved, executing task...");
-                task.performJob();
+                log.debug(task.getType() + " job recieved, executing task...");
+                task.run();
             } catch (InterruptedException e) {
                 log.warn("Interrupt caught, consider sending a No-Op TopicTask to the queue to awaken the thread.");
             }
@@ -231,6 +232,17 @@ public class TopicService implements Runnable {
         return this.allTopics.containsKey(topic);
     }
 
+    /**
+     * Generate Topic instances and connect the nodes properly, from a raw topic string.
+     * This method will quasi-recursively analyze the suffix part of the topic string,
+     * in an attempt to locate a Topic node already existing in the system. If none are found, all
+     * nodes needed to represent the topic tree are returned in the hashSet. If a higher level Topic node
+     * is found, only the non-existing nodes needed are created, linked together, and connected to the existing
+     * Topic node through the parent field.
+     * @param topic The full raw topic string you want to generate needed Topic nodes from
+     * @return An empty set if we do not need create new nodes. A set of newly instanciated nodes that can be added
+     *         to the containers from the invoking method.
+     */
     public HashSet<Topic> generateTopicNodesFromRawTopicString(String topic) {
 
         HashSet<Topic> collector = new HashSet<>();
@@ -283,24 +295,27 @@ public class TopicService implements Runnable {
      * Add a topic to the TopicService
      * @param topic The raw topic string that should be added. E.g "no/okse/current"
      */
-    public synchronized void addTopic(String topic) {
+    public void addTopic(String topic) {
         // Check that the topic does not already exist
         if (!allTopics.containsKey(topic)) {
-            // Create a new topic task
-            TopicTask task = new TopicTask() {
-                @Override
-                public void performJob() {
-                    // Generate topic nodes based on the raw topic string, and add them all
-                    HashSet<Topic> topicNodes = generateTopicNodesFromRawTopicString(topic);
-                    topicNodes.forEach(t -> addTopicLocal(t));
-                }
+            // Create a new job
+            Runnable job = () -> {
+                // Generate topic nodes based on the raw topic string, and add them all
+                HashSet<Topic> topicNodes = generateTopicNodesFromRawTopicString(topic);
+                topicNodes.forEach(t -> addTopicLocal(t));
             };
+
+            // Initialize the TopicTask object with proper type and the job itself
+            TopicTask task = new TopicTask(TopicTask.Type.NEW_TOPIC, job);
+
             try {
                 // Put the task into the task queue
                 getQueue().put(task);
             } catch (InterruptedException e) {
                 log.error("Interrupted while attempting to add Topic.");
             }
+        } else {
+            log.warn("Attempt to add a topic from raw topic string that already exists (" + topic + ")");
         }
     }
 
