@@ -58,9 +58,7 @@ public class LogController {
             Log log = new Log(name, lines);
 
             logs.add(log);
-
         }
-
         return logs;
     }
 
