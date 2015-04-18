@@ -40,12 +40,14 @@
                         <li role="presentation" class="active"><a href="#main" data-toggle="tab">Main</a></li>
                         <li role="presentation"><a href="#topics" data-toggle="tab">Topics</a></li>
                         <li role="presentation"><a href="#stats" data-toggle="tab">Stats</a></li>
+                        <li role="presentation"><a href="#log" data-toggle="tab">Logs</a></li>
                         <li role="presentation"><a href="#config" data-toggle="tab">Config</a></li>
                     </ul>
                     <div class="tab-content">
                         <div layout:replace="fragments/mainpane :: mainpane"></div>
                         <div layout:replace="fragments/topicspane :: topicspane"></div>
                         <div layout:replace="fragments/statspane :: statspane"></div>
+                        <div layout:replace="fragments/logpane :: logpane"></div>
                         <div layout:replace="fragments/configpane :: configpane"></div>
 
                     </div>
@@ -56,6 +58,7 @@
             <script th:src="@{/js/config.js}" src="/static/js/config.js"></script>
             <script th:src="@{/js/stats.js}" src="/static/js/stats.js"></script>
             <script th:src="@{/js/topics.js}" src="/static/js/topics.js"></script>
+            <script th:src="@{/js/logs.js}" src="/static/js/logs.js"></script>
             <script th:src="@{/js/main.js}" src="/static/js/main.js"></script>
         </div>
     </body>
