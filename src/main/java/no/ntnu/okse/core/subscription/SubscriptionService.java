@@ -108,6 +108,8 @@ public class SubscriptionService extends AbstractCoreService {
             try {
                 SubscriptionTask task = queue.take();
                 log.info(task.getType() + " job recieved, executing task...");
+                // Perform the task
+                task.run();
             } catch (InterruptedException e) {
                 log.warn("Interrupt caught, consider sending a No-Op Task to the queue to awaken the thread.");
             }
@@ -323,20 +325,34 @@ public class SubscriptionService extends AbstractCoreService {
      * Public method to register a publisher
      * @param p The publisher object that is to be registered
      */
-    public synchronized void addPublisher(Publisher p) {
-        _publishers.add(p);
-        log.info("Publisher registered: " + p);
-        firePublisherChangeEvent(p, PublisherChangeEvent.Type.REGISTER);
+    public void addPublisher(Publisher p) {
+        if (!_publishers.contains(p)) {
+            // Create the job
+            Runnable job = () -> addPublisherLocal(p);
+            // Initialize the SubscriptionTask wrapper
+            SubscriptionTask task = new SubscriptionTask(SubscriptionTask.Type.NEW_PUBLISHER, job);
+            // Inject the task
+            insertTask(task);
+        } else {
+            log.warn("Attempt to add a publisher that already exists!");
+        }
     }
 
     /**
      * Public method to unregister a publisher
      * @param p A publisher object that exists in the publishers set
      */
-    public synchronized void removePublisher(Publisher p) {
-        _publishers.remove(p);
-        log.info("Publisher removed: " + p);
-        firePublisherChangeEvent(p, PublisherChangeEvent.Type.REGISTER);
+    public void removePublisher(Publisher p) {
+        if (_publishers.contains(p)) {
+            // Create the job
+            Runnable job = () -> removePublisherLocal(p);
+            // Initialize the SubscriptionTask wrapper
+            SubscriptionTask task = new SubscriptionTask(SubscriptionTask.Type.DELETE_PUBLISHER, job);
+            // Inject the task
+            insertTask(task);
+        } else {
+            log.warn("Attempt to add a publisher that did not exist in the service!");
+        }
     }
     /* End publisher public API */
 
