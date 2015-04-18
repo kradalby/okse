@@ -24,6 +24,7 @@
 
 package no.ntnu.okse.core.topic;
 
+import no.ntnu.okse.core.AbstractCoreService;
 import no.ntnu.okse.core.event.TopicChangeEvent;
 import no.ntnu.okse.core.event.listeners.TopicChangeListener;
 import org.apache.log4j.Logger;
@@ -39,10 +40,8 @@ import java.util.concurrent.LinkedBlockingQueue;
  * <p>
  * okse is licenced under the MIT licence.
  */
-public class TopicService {
+public class TopicService extends AbstractCoreService {
 
-    private static Logger log;
-    private static boolean _running = false;
     private static boolean _invoked = false;
     private static TopicService _singleton = null;
     private static Thread _serverThread;
@@ -50,7 +49,11 @@ public class TopicService {
     private HashMap<String, Topic> allTopics;
     private HashSet<TopicChangeListener> _listeners;
 
+    /**
+     * Private constructor that passes this classname to superclass log instance. Uses getInstance to instanciate.
+     */
     private TopicService() {
+        super(TopicService.class.getName());
         init();
     }
 
@@ -66,7 +69,7 @@ public class TopicService {
     /**
      * Private initialization method. All set-up operations are to be performed here.
      */
-    private void init() {
+    protected void init() {
         log = Logger.getLogger(TopicService.class.getName());
         log.info("Initializing TopicService...");
         queue = new LinkedBlockingQueue<>();
@@ -81,9 +84,6 @@ public class TopicService {
      * This method boots the TopicService and spawns a separate thread for it.
      */
     public void boot() {
-
-        if (!_invoked) getInstance();
-
         if (!_running) {
             log.info("Booting TopicService...");
             _serverThread = new Thread(() -> {
@@ -100,11 +100,14 @@ public class TopicService {
      * @throws InterruptedException An exception that might occur if thread is interrupted while waiting for put
      * command thread lock to open up.
      */
-    public void stop() throws InterruptedException {
+    public void stop() {
         _running = false;
         Runnable job = () -> log.info("Stopping TopicService...");
-        _singleton.getQueue().put(new TopicTask(TopicTask.Type.SHUTDOWN, job));
-        _serverThread = null;
+        try {
+            _singleton.getQueue().put(new TopicTask(TopicTask.Type.SHUTDOWN, job));
+        } catch (InterruptedException e) {
+            log.error("Interrupted while trying to inject shutdown event to queue");
+        }
     }
 
     /**
@@ -115,7 +118,7 @@ public class TopicService {
         while (_running) {
             try {
                 TopicTask task = queue.take();
-                log.debug(task.getType() + " job recieved, executing task...");
+                log.info(task.getType() + " job recieved, executing task...");
                 task.run();
             } catch (InterruptedException e) {
                 log.warn("Interrupt caught, consider sending a No-Op TopicTask to the queue to awaken the thread.");

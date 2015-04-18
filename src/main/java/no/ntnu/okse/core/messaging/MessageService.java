@@ -24,6 +24,8 @@
 
 package no.ntnu.okse.core.messaging;
 
+import no.ntnu.okse.core.AbstractCoreService;
+import no.ntnu.okse.core.CoreService;
 import org.apache.log4j.Logger;
 
 import java.util.concurrent.LinkedBlockingQueue;
@@ -33,12 +35,10 @@ import java.util.concurrent.LinkedBlockingQueue;
  * <p>
  * okse is licenced under the MIT licence.
  */
-public class MessageService {
+public class MessageService extends AbstractCoreService {
 
-    private static Logger log;
-    private static boolean _running = false;
     private static boolean _invoked = false;
-    private static MessageService _singleton = null;
+    private static MessageService _singleton;
     private static Thread _serverThread;
     private LinkedBlockingQueue<Message> queue;
 
@@ -46,14 +46,14 @@ public class MessageService {
      * Private Constructor that recieves invocation from getInstance, enabling the singleton pattern for this class
      */
     private MessageService() {
+        super(MessageService.class.getName());
         init();
     }
 
     /**
-     * Private initializer method that sets up logging, flags invocation state as true, and sets up message queue
+     * Private initializer method that flags invocation state as true, and sets up message queue
      */
-    private void init() {
-        log = Logger.getLogger(MessageService.class.getName());
+    protected void init() {
         log.info("Initializing MessageService...");
         queue = new LinkedBlockingQueue<>();
         _invoked = true;
@@ -73,7 +73,6 @@ public class MessageService {
      *
      */
     public void boot() {
-        if (!_invoked) getInstance();
         if (!_running) {
             log.info("Booting MessageService...");
             _serverThread = new Thread(() -> {
@@ -91,7 +90,8 @@ public class MessageService {
             while (_running) {
                 try {
                     Message m = queue.take();
-
+                    log.info("Recieved a message for distrubution: " + m);
+                    CoreService.getInstance().getAllProtocolServers().forEach(p -> p.sendMessage(m.getMessage()));
                 } catch (InterruptedException e) {
                     log.error("Interrupted while attempting to fetch next Message from queue");
                 }
@@ -100,6 +100,14 @@ public class MessageService {
         } else {
             log.error("Run method called before invocation of the MessageService getInstance method");
         }
+    }
+
+    /**
+     * Graceful shutdown method
+     */
+    @Override
+    public void stop() {
+
     }
 
 }

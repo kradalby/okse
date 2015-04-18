@@ -140,4 +140,9 @@ public class Message {
         return this.systemMessage;
     }
 
+    @Override
+    public String toString() {
+        return "Message: " + message + " [systemMessage: " + systemMessage + ", created: " + created + ", " +
+               "topic: " + topic + ", publisher: " + publisher + "]";
+    }
 }

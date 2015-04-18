@@ -57,11 +57,9 @@ public class CoreService extends AbstractCoreService {
     private ExecutorService executor;
     private HashSet<AbstractCoreService> services;
     private ArrayList<ProtocolServer> protocolServers;
-    private SubscriptionService subscriptionService;
-    private TopicService topicService;
 
     /**
-     * Constructs the CoreService thread, initiates the logger and eventQueue.
+     * Constructs the CoreService instance
      */
     private CoreService() {
         // Pass the className to superclass for logger initialization
@@ -87,8 +85,8 @@ public class CoreService extends AbstractCoreService {
         services = new HashSet<>();
         executor = Executors.newFixedThreadPool(10);
         protocolServers = new ArrayList<>();
-        subscriptionService = new SubscriptionService();
-        topicService = TopicService.getInstance();
+        // Set the invoked flag
+        _invoked = true;
     }
 
     /**
@@ -96,7 +94,16 @@ public class CoreService extends AbstractCoreService {
      */
     @Override
     public void boot() {
+        if (!_running) {
+            log.info("Booting CoreService...");
 
+            _serverThread = new Thread(() -> {
+                _running = true;
+                _singleton.run();
+            });
+            _serverThread.setName("CoreService");
+            _serverThread.start();
+        }
     }
 
     /**
@@ -258,12 +265,12 @@ public class CoreService extends AbstractCoreService {
         log.info("CoreService started.");
         log.info("Attempting to boot ProtocolServers.");
 
-        // Boot up the topic service
-        this.topicService.boot();
+        // Call the boot() method on all registered Core Services
+        this.bootCoreServices();
+        log.info("Completed booting CoreServices");
 
         // Call the boot() method on all registered ProtocolServers
         this.bootProtocolServers();
-
         log.info("Completed booting ProtocolServers.");
 
         // Initiate main run loop, which awaits Events to be committed to the eventQueue
@@ -275,6 +282,7 @@ public class CoreService extends AbstractCoreService {
                 log.error("Interrupted while attempting to fetch next event from eventQueue");
             }
         }
+        // We have passed the main run loop, which means we are shutting down.
         log.info("CoreService stopped.");
     }
 
@@ -283,14 +291,14 @@ public class CoreService extends AbstractCoreService {
      */
     @Override
     public void stop() {
-        try {
-            this.protocolServers.forEach(p -> p.stopServer());
-            this.topicService.stop();
-        } catch (InterruptedException e) {
-            log.warn("Caught interrupt while trying to shut down gracefully");
-        }
+        // Shut down all the Protocol Servers
+        this.protocolServers.forEach(p -> p.stopServer());
+        // Shut down all the Core Services
+        this.services.forEach(s -> s.stop());
+
         // Turn of run flag
         _running = false;
+
         try {
             // Inject a SHUTDOWN event into eventQueue
             eventQueue.put(new SystemEvent(SystemEvent.Type.SHUTDOWN, null));
@@ -298,5 +306,4 @@ public class CoreService extends AbstractCoreService {
             log.error("Interrupted while trying to inject the SHUTDOWN event to eventQueue");
         }
     }
-
 }

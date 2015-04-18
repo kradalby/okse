@@ -25,6 +25,7 @@
 package no.ntnu.okse;
 
 import no.ntnu.okse.core.CoreService;
+import no.ntnu.okse.core.topic.TopicService;
 import no.ntnu.okse.db.DB;
 import no.ntnu.okse.protocol.wsn.WSNotificationServer;
 import no.ntnu.okse.web.Server;
@@ -68,23 +69,18 @@ public class Application {
 
         // Initialize system threads
         webserver = new Server();
-        cs = new CoreService();
+        cs = CoreService.getInstance();
 
-        // Add ProtocolServers to CoreService
+        /* REGISTER CORE SERVICES HERE */
+        cs.registerCoreService(TopicService.getInstance());
+
+        /* REGISTER PROTOCOL SERVERS HERE */
         cs.addProtocolServer(WSNotificationServer.getInstance());
-
-
 
         // Start the admin console
         webserver.run();
 
         // Start the CoreService
-        cs.start();
-
-        try {
-            cs.join();
-        } catch (InterruptedException e) {
-            log.trace(e.getStackTrace());
-        }
+        cs.boot();
     }
 }
