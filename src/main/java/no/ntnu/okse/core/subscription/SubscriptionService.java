@@ -73,7 +73,8 @@ public class SubscriptionService extends AbstractCoreService {
      */
     @Override
     protected void init() {
-        log.info("Initializing SubscriptionSerice...");
+        _invoked = true;
+        log.info("Initializing SubscriptionService...");
         queue = new LinkedBlockingQueue<>();
         _subscribers = new HashSet<>();
         _publishers = new HashSet<>();
