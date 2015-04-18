@@ -50,7 +50,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class CoreService extends AbstractCoreService {
 
     private static CoreService _singleton;
-    private static Thread _serverThread;
+    private static Thread _serviceThread;
     private static boolean _invoked = false;
 
     private LinkedBlockingQueue<Event> eventQueue;
@@ -96,13 +96,12 @@ public class CoreService extends AbstractCoreService {
     public void boot() {
         if (!_running) {
             log.info("Booting CoreService...");
-
-            _serverThread = new Thread(() -> {
+            _serviceThread = new Thread(() -> {
                 _running = true;
                 _singleton.run();
             });
-            _serverThread.setName("CoreService");
-            _serverThread.start();
+            _serviceThread.setName("CoreService");
+            _serviceThread.start();
         }
     }
 

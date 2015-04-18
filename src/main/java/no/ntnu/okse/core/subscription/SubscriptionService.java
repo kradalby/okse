@@ -42,7 +42,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class SubscriptionService extends AbstractCoreService {
 
     private static SubscriptionService _singleton;
-    private static Thread _serverThread;
+    private static Thread _serviceThread;
     private static boolean _invoked = false;
 
     private LinkedBlockingQueue<SubscriptionTask> queue;
@@ -89,12 +89,12 @@ public class SubscriptionService extends AbstractCoreService {
     public void boot() {
         if (!_running) {
             log.info("Booting SubscriptionService...");
-            _serverThread = new Thread(() -> {
+            _serviceThread = new Thread(() -> {
                 _running = true;
                 _singleton.run();
             });
-            _serverThread.setName("SubscriptionService");
-            _serverThread.start();
+            _serviceThread.setName("SubscriptionService");
+            _serviceThread.start();
         }
     }
 
