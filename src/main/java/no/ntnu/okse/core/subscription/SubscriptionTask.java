@@ -22,41 +22,43 @@
  * THE SOFTWARE.
  */
 
-package no.ntnu.okse.core.event;
-
-import no.ntnu.okse.core.subscription.Publisher;
+package no.ntnu.okse.core.subscription;
 
 /**
- * Created by Aleksander Skraastad (myth) on 4/6/15.
+ * Created by Aleksander Skraastad (myth) on 4/18/15.
  * <p>
  * okse is licenced under the MIT licence.
  */
-public class RegistrationChangeEvent extends Event {
+public class SubscriptionTask {
 
-    public enum Type {
-        REGISTER
+    // The different Task types
+    public static enum Type {
+        NEW_SUBSCRIBER,
+        NEW_PUBLISHER,
+        UPDATE_SUBSCRIBER,
+        UPDATE_PUBLISHER,
+        DELETE_SUBSCRIBER,
+        DELETE_PUBLISHER,
+        SHUTDOWN
     }
 
-    Type type;
+    // Needed fields
+    private Type type;
+    private Runnable job;
 
-    /**
-     * Constructs an Event containing an operation, some data and a dataType.
-     * <p>
-     *
-     * @param type : A Type enum value from RegistrationChangeEvent class.
-     * @param data : An object containing the data payload.
-     */
-    public RegistrationChangeEvent(RegistrationChangeEvent.Type type, Publisher data) {
-        super(data);
+    // Public constructor
+    public SubscriptionTask(Type type, Runnable job) {
+        this.type = type;
+        this.job = job;
     }
 
-    @Override
-    public Publisher getData() {
-        return (Publisher) this.data;
-    }
-
-    @Override
-    public Object getType() {
+    // Public getter for Type
+    public Type getType() {
         return this.type;
+    }
+
+    // Public run-delegation method
+    public void run() {
+        this.job.run();
     }
 }

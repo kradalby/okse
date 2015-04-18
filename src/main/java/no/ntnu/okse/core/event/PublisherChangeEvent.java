@@ -22,15 +22,41 @@
  * THE SOFTWARE.
  */
 
-package no.ntnu.okse.core.event.listeners;
+package no.ntnu.okse.core.event;
 
-import no.ntnu.okse.core.event.RegistrationChangeEvent;
+import no.ntnu.okse.core.subscription.Publisher;
 
 /**
  * Created by Aleksander Skraastad (myth) on 4/6/15.
  * <p>
  * okse is licenced under the MIT licence.
  */
-public interface RegistrationChangeListener {
-    public void registrationChanged(RegistrationChangeEvent e);
+public class PublisherChangeEvent extends Event {
+
+    public enum Type {
+        REGISTER
+    }
+
+    Type type;
+
+    /**
+     * Constructs an Event containing an operation, some data and a dataType.
+     * <p>
+     *
+     * @param type : A Type enum value from RegistrationChangeEvent class.
+     * @param data : An object containing the data payload.
+     */
+    public PublisherChangeEvent(PublisherChangeEvent.Type type, Publisher data) {
+        super(data);
+    }
+
+    @Override
+    public Publisher getData() {
+        return (Publisher) this.data;
+    }
+
+    @Override
+    public Object getType() {
+        return this.type;
+    }
 }

@@ -24,6 +24,8 @@
 
 package no.ntnu.okse.protocol;
 
+import no.ntnu.okse.core.messaging.Message;
+
 /**
  * Created by Aleksander Skraastad (myth) on 3/13/15.
  * <p>
@@ -73,4 +75,14 @@ public interface ProtocolServer {
      * @return A string representing the name of the protocol in question.
      */
     public String getProtocolServerType();
+
+    /**
+     * This interface method must take in an instance of Message, which contains the appropriate references
+     * and flags needed to distribute the message to consumers. Implementation specific details can vary from
+     * protocol to protocol, but the end result of a method call to sendMessage is that the message is delivered,
+     * or an error is logged.
+     *
+     * @param message An instance of Message containing the required data to distribute a message.
+     */
+    public void sendMessage(Message message);
 }

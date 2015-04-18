@@ -24,7 +24,6 @@
 
 package no.ntnu.okse.connection;
 
-import no.ntnu.okse.core.InternalMessage;
 import no.ntnu.okse.protocol.Protocol;
 
 /**
@@ -36,7 +35,6 @@ import no.ntnu.okse.protocol.Protocol;
 public interface Client {
     public String getClientAddress();
     public Integer getClientPort();
-    public boolean sendMessage(InternalMessage m);
     public void messageRecieved();
     public boolean heartbeat();
     public void disconnect();

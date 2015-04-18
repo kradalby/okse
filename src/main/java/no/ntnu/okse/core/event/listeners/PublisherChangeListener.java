@@ -22,40 +22,15 @@
  * THE SOFTWARE.
  */
 
-package no.ntnu.okse.core.topic;
+package no.ntnu.okse.core.event.listeners;
+
+import no.ntnu.okse.core.event.PublisherChangeEvent;
 
 /**
- * Created by Aleksander Skraastad (myth) on 4/11/15.
+ * Created by Aleksander Skraastad (myth) on 4/6/15.
  * <p>
  * okse is licenced under the MIT licence.
  */
-public class TopicTask {
-
-    // The different Task types
-    public static enum Type {
-        NEW_TOPIC,
-        UPDATE_TOPIC,
-        DELETE_TOPIC,
-        SHUTDOWN
-    }
-
-    // Needed fields
-    private Type type;
-    private Runnable job;
-
-    // Public constructor
-    public TopicTask(Type type, Runnable job) {
-        this.type = type;
-        this.job = job;
-    }
-
-    // Public getter for Type
-    public Type getType() {
-        return this.type;
-    }
-
-    // Public run-delegation method
-    public void run() {
-        this.job.run();
-    }
+public interface PublisherChangeListener {
+    public void publisherChanged(PublisherChangeEvent e);
 }
