@@ -25,6 +25,8 @@
 package no.ntnu.okse;
 
 import no.ntnu.okse.core.CoreService;
+import no.ntnu.okse.core.messaging.MessageService;
+import no.ntnu.okse.core.subscription.SubscriptionService;
 import no.ntnu.okse.core.topic.TopicService;
 import no.ntnu.okse.db.DB;
 import no.ntnu.okse.protocol.wsn.WSNotificationServer;
@@ -73,6 +75,8 @@ public class Application {
 
         /* REGISTER CORE SERVICES HERE */
         cs.registerCoreService(TopicService.getInstance());
+        cs.registerCoreService(MessageService.getInstance());
+        cs.registerCoreService(SubscriptionService.getInstance());
 
         /* REGISTER PROTOCOL SERVERS HERE */
         cs.addProtocolServer(WSNotificationServer.getInstance());

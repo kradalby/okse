@@ -70,7 +70,6 @@ public class TopicService extends AbstractCoreService {
      * Private initialization method. All set-up operations are to be performed here.
      */
     protected void init() {
-        log = Logger.getLogger(TopicService.class.getName());
         log.info("Initializing TopicService...");
         queue = new LinkedBlockingQueue<>();
         allTopics = new HashMap<>();

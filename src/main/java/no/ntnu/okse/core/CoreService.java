@@ -51,7 +51,7 @@ public class CoreService extends AbstractCoreService {
 
     private static CoreService _singleton;
     private static Thread _serverThread;
-    private static boolean _invoked;
+    private static boolean _invoked = false;
 
     private LinkedBlockingQueue<Event> eventQueue;
     private ExecutorService executor;

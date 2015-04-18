@@ -28,6 +28,7 @@ import no.ntnu.okse.core.AbstractCoreService;
 import no.ntnu.okse.core.CoreService;
 import org.apache.log4j.Logger;
 
+import java.time.LocalDateTime;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
@@ -70,7 +71,7 @@ public class MessageService extends AbstractCoreService {
     }
 
     /**
-     *
+     * This method boots ans starts the thread running the MessageService
      */
     public void boot() {
         if (!_running) {
@@ -84,14 +85,40 @@ public class MessageService extends AbstractCoreService {
         }
     }
 
+    /**
+     * This method should be called from within the run-scope of the serverThread thread instance
+     */
     public void run() {
         if (_invoked) {
             log.info("MessageService booted successfully");
             while (_running) {
                 try {
+                    // Fetch the next job, will wait until a new message arrives
                     Message m = queue.take();
                     log.info("Recieved a message for distrubution: " + m);
-                    CoreService.getInstance().getAllProtocolServers().forEach(p -> p.sendMessage(m.getMessage()));
+
+                    // Do we have a system message?
+                    if (m.isSystemMessage() && m.getTopic() == null) {
+                        // TODO: If web admin config flag for system message broadcast is true, distribute to all topics
+                        // TODO: but for now, just execute as a NO-OP.
+
+                        log.info("Recieved message was a SystemeMessage: " + m.getMessage());
+                        // Set it to processed
+                        m.setProcessed();
+
+                        // Continue the run loop
+                        continue;
+                    }
+
+                    // Tell the ExecutorService to execute the following job
+                    CoreService.getInstance().execute(() -> {
+                        // Fetch all registered protocol servers, and call the sendMessage() method on them
+                        CoreService.getInstance().getAllProtocolServers().forEach(p -> p.sendMessage(m));
+                        // Set the message as processed, and store the completion time
+                        LocalDateTime completedAt = m.setProcessed();
+                        log.info("Message successfully distributed: " + m);
+                    });
+
                 } catch (InterruptedException e) {
                     log.error("Interrupted while attempting to fetch next Message from queue");
                 }
@@ -107,7 +134,18 @@ public class MessageService extends AbstractCoreService {
      */
     @Override
     public void stop() {
+        _running = false;
+        // Create a new message with topic = null, hence it will reside upon the config flag for system messages
+        // in the web admin if the message is distributed to all topics or just performed as a no-op.
+        Message m = new Message("The broker is shutting down.", null, null);
+        // Set it to system message
+        m.setSystemMessage(true);
 
+        try {
+            queue.put(m);
+        } catch (InterruptedException e) {
+            log.error("Interrupted while trying to inject shutdown message to queue");
+        }
     }
 
 }

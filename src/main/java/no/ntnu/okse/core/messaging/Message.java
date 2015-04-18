@@ -26,7 +26,11 @@ package no.ntnu.okse.core.messaging;
 
 import no.ntnu.okse.core.subscription.Publisher;
 import no.ntnu.okse.core.topic.Topic;
+import org.apache.log4j.Logger;
+import org.springframework.security.crypto.codec.Hex;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 
 /**
@@ -41,18 +45,50 @@ public class Message {
     private final LocalDateTime created;
     private final Topic topic;
     private final String message;
+    private final String messageID;
+    private static Logger log;
 
     // Mutable fields
     private LocalDateTime processed;
     private boolean systemMessage;
 
     public Message(String message, Topic topic, Publisher publisher) {
+        log = Logger.getLogger(Message.class.getName());
         this.publisher = publisher;
         this.topic = topic;
         this.created = LocalDateTime.now();
         this.processed = null;
         this.message = message;
         this.systemMessage = false;
+        this.messageID = generateMessageID();
+    }
+
+    /**
+     * Private method that generates an MD5 message ID
+     *
+     * @return A string containing the generated messageID
+     */
+    private String generateMessageID() {
+        try {
+            MessageDigest m = MessageDigest.getInstance("MD5");
+            m.update(Long.toString(System.nanoTime()).getBytes());
+            byte[] hash = m.digest();
+            String messageID = new String(Hex.encode(hash));
+
+            return messageID;
+        } catch (NoSuchAlgorithmException e) {
+            log.error("Could not generate a message ID (MD5 algorithm not found)");
+        }
+
+        return null;
+    }
+
+    /**
+     * Fetches the Message ID of this Message object.
+     * @return A string containing the MessageID of this object.
+     */
+    public String getMessageID() {
+        return this.messageID;
     }
 
     /**
@@ -142,7 +178,7 @@ public class Message {
 
     @Override
     public String toString() {
-        return "Message: " + message + " [systemMessage: " + systemMessage + ", created: " + created + ", " +
-               "topic: " + topic + ", publisher: " + publisher + "]";
+        return "Message (" + messageID + ") [systemMessage: " + systemMessage + ", created: " + created + ", " +
+               "topic: " + topic.getFullTopicStringIgnoreCase() + "]";
     }
 }

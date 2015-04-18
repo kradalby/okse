@@ -297,7 +297,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
      */
     @Override
     public void sendMessage(Message message) {
-
+        log.info("Recieved message for distribution");
     }
 
     /**
@@ -541,7 +541,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
         }
     }
 
-    public synchronized InternalMessage sendMessage(InternalMessage message) {
+    public InternalMessage sendMessage(InternalMessage message) {
 
         // Fetch the requestInformation from the message, and extract the endpoint
         RequestInformation requestInformation = message.getRequestInformation();

@@ -24,35 +24,107 @@
 
 package no.ntnu.okse.core.subscription;
 
+import no.ntnu.okse.core.AbstractCoreService;
 import no.ntnu.okse.core.event.PublisherChangeEvent;
 import no.ntnu.okse.core.event.SubscriptionChangeEvent;
 import no.ntnu.okse.core.event.listeners.PublisherChangeListener;
 import no.ntnu.okse.core.event.listeners.SubscriptionChangeListener;
 import no.ntnu.okse.core.topic.Topic;
-import org.apache.log4j.Logger;
 
 import java.util.HashSet;
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * Created by Aleksander Skraastad (myth) on 4/5/15.
  * <p>
  * okse is licenced under the MIT licence.
  */
-public class SubscriptionService {
+public class SubscriptionService extends AbstractCoreService {
 
-    private Logger log;
+    private static SubscriptionService _singleton;
+    private static Thread _serverThread;
+    private static boolean _invoked = false;
 
+    private LinkedBlockingQueue<SubscriptionTask> queue;
     private HashSet<SubscriptionChangeListener> _subscriptionListeners;
     private HashSet<PublisherChangeListener> _registrationListeners;
     private HashSet<Subscriber> _subscribers;
     private HashSet<Publisher> _publishers;
 
-    public SubscriptionService() {
-        log = Logger.getLogger(SubscriptionService.class.getName());
+    /**
+     * Private constructor that passes classname to superclass log field and calls initialization method
+     */
+    private SubscriptionService() {
+        super(SubscriptionService.class.getName());
+        init();
+    }
+
+    /**
+     * The main instanciation method of SubscriptionService adhering to the singleton pattern
+     * @return
+     */
+    public static SubscriptionService getInstance() {
+        if (!_invoked) _singleton = new SubscriptionService();
+        return _singleton;
+    }
+
+    /**
+     * Initializing method
+     */
+    @Override
+    protected void init() {
+        log.info("Initializing SubscriptionSerice...");
+        queue = new LinkedBlockingQueue<>();
         _subscribers = new HashSet<>();
         _publishers = new HashSet<>();
         _registrationListeners = new HashSet<>();
         _subscriptionListeners = new HashSet<>();
+    }
+
+    /**
+     * Startup method that sets up the service
+     */
+    @Override
+    public void boot() {
+        if (!_running) {
+            log.info("Booting SubscriptionService...");
+            _serverThread = new Thread(() -> {
+                _running = true;
+                _singleton.run();
+            });
+            _serverThread.setName("SubscriptionService");
+            _serverThread.start();
+        }
+    }
+
+    /**
+     * Main run method that will be called when the subclass' serverThread is started
+     */
+    @Override
+    public void run() {
+        log.info("SubscriptionService booted successfully");
+        while (_running) {
+            try {
+                SubscriptionTask task = queue.take();
+                log.info(task.getType() + " job recieved, executing task...");
+            } catch (InterruptedException e) {
+                log.warn("Interrupt caught, consider sending a No-Op Task to the queue to awaken the thread.");
+            }
+        }
+    }
+
+    /**
+     * Graceful shutdown method
+     */
+    @Override
+    public void stop() {
+        _running = false;
+        Runnable job = () -> log.info("Stopping SubscriptionService...");
+        try {
+            queue.put(new SubscriptionTask(SubscriptionTask.Type.SHUTDOWN, job));
+        } catch (InterruptedException e) {
+            log.error("Interrupted while trying to inject shutdown event to queue");
+        }
     }
 
     /* Begin subscriber public API */
@@ -105,8 +177,8 @@ public class SubscriptionService {
     public Subscriber getSubscriber(String address, Integer port, Topic topic) {
         for (Subscriber s: _subscribers) {
             if (s.getAddress().equals(address) &&
-                s.getPort().equals(port) &&
-                s.getTopic().equals(topic)) {
+                    s.getPort().equals(port) &&
+                    s.getTopic().equals(topic)) {
                 return s;
             }
         }
@@ -164,5 +236,4 @@ public class SubscriptionService {
         PublisherChangeEvent rce = new PublisherChangeEvent(type, reg);
         _registrationListeners.stream().forEach(l -> l.publisherChanged(rce));
     }
-
 }
