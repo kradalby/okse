@@ -42,7 +42,7 @@ var Main = (function($) {
                 xhr.setRequestHeader(header, token);
             }
         });
-        console.log("[Debug] Successfully set up AJAX")
+        console.log("[Debug][Main] Successfully set up AJAX")
     }
 
     /*
@@ -69,13 +69,13 @@ var Main = (function($) {
         });
     }
 
-    var error = function(xhr, statusText, thrownError) {
-        console.error("[Error] in Ajax for main with status: " + xhr.statusText)
+    var error = function(xhr, status, error) {
+        console.error("[Error][Main] in Ajax with the following callback [status: " + xhr.status +  " readyState: " + xhr.readyState + " responseText: " + xhr.responseText + "]")
     }
 
     var refresh = function(response) {
         updateSubscribers(response.subscribers)
-        console.log(JSON.stringify(response))
+        console.log("[Debug][Main]" + JSON.stringify(response))
     }
 
     return {
@@ -108,7 +108,7 @@ var Main = (function($) {
                         ajax(clickedElement.substring(1), Config.error, Config.refresh, "GET")
                     }, updateInterval);
                 } else {
-                    console.error("[Error] Unknown nav-tab clicked, this should not happen!")
+                    console.error("[Error][Main] Unknown nav-tab clicked, this should not happen!")
                 }
             });
 

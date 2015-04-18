@@ -103,10 +103,10 @@ var Topics = (function($) {
             e.preventDefault();
 
             Main.ajax(("topics/delete/" + this.id), function() {
-                console.log("[Debug] Unable to remove topic")
+                console.log("[Debug][Topics] Unable to remove topic")
             }, function() {
                 $(e.target).closest('.panel').remove();
-                console.log("[Debug] Removing complete topic")
+                console.log("[Debug][Topics] Removing complete topic")
             }, "POST")
 
 
@@ -115,10 +115,10 @@ var Topics = (function($) {
             e.preventDefault();
 
             Main.ajax(("topics/delete/subscriber/" + this.id), function() {
-                console.log("[Debug] Unable to remove subscriber");
+                console.log("[Debug][Topics] Unable to remove subscriber");
             }, function() {
                 $(e.target).parent().parent().remove();
-                console.log("[Debug] Removing single subscriber");
+                console.log("[Debug][Topics] Removing single subscriber");
             }, "POST")
         });
     }
@@ -129,16 +129,16 @@ var Topics = (function($) {
                 e.preventDefault()
 
                 Main.ajax("topics/delete/all", function() {
-                    console.log("[Debug] Unable to remove all topics");
+                    console.log("[Debug][Topics] Unable to remove all topics");
                 }, function() {
                     $('#topics-column').html('');
-                    console.log("[Debug] Removing all topics");
+                    console.log("[Debug][Topics] Removing all topics");
                 }, "POST")
 
             });
         },
-        error: function(xhr) {
-          console.error("[Error] in Ajax for Topics with status: " + xhr.statusText)
+        error: function(xhr, status, error) {
+          console.error("[Error][Topics] in Ajax with the following callback [status: " + xhr.status +  " readyState: " + xhr.readyState + " responseText: " + xhr.responseText + "]")
         },
         refresh: function(response) {
             unBindButtons();

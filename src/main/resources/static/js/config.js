@@ -31,16 +31,16 @@ var Config = (function($) {
 
     var bindButtons = function() {
         $("#add-predefined-mapping").on('click', function(e) {
-            console.log('[Debug] Add predefined mapping between ' + $('#from-topic').val() + ' --> ' + $('#to-topic').val())
+            console.log('[Debug][Config] Add predefined mapping between ' + $('#from-topic').val() + ' --> ' + $('#to-topic').val())
         });
     }
 
     return {
-        error: function(xhr, statusText, thrownError) {
-            console.error("[Error] in Ajax for config with status: " + xhr.statusText)
+        error: function(xhr, status, error) {
+            console.error("[Error][Config] in Ajax with the following callback [status: " + xhr.status +  " readyState: " + xhr.readyState + " responseText: " + xhr.responseText + "]")
         },
         refresh: function(response) {
-            console.log("[Debug]" + JSON.stringify(response))
+            console.log("[Debug][Config]" + JSON.stringify(response))
         },
         init: function() {
             bindButtons()
