@@ -106,6 +106,58 @@ public class CoreService extends AbstractCoreService {
     }
 
     /**
+     * Starts the main loop of the CoreService thread.
+     */
+    @Override
+    public void run() {
+        _running = true;
+        log.info("CoreService booted successfully.");
+        log.info("CoreService started.");
+        log.info("Attempting to boot ProtocolServers.");
+
+        // Call the boot() method on all registered Core Services
+        this.bootCoreServices();
+        log.info("Completed booting CoreServices");
+
+        // Call the boot() method on all registered ProtocolServers
+        this.bootProtocolServers();
+        log.info("Completed booting ProtocolServers.");
+
+        // Initiate main run loop, which awaits Events to be committed to the eventQueue
+        while (_running) {
+            try {
+                Event e = eventQueue.take();
+                log.debug("Consumed an event: " + e);
+            } catch (InterruptedException e) {
+                log.error("Interrupted while attempting to fetch next event from eventQueue");
+            }
+        }
+        // We have passed the main run loop, which means we are shutting down.
+        log.info("CoreService stopped.");
+    }
+
+    /**
+     * Stops execution of the CoreService thread.
+     */
+    @Override
+    public void stop() {
+        // Shut down all the Protocol Servers
+        this.protocolServers.forEach(p -> p.stopServer());
+        // Shut down all the Core Services
+        this.services.forEach(s -> s.stop());
+
+        // Turn of run flag
+        _running = false;
+
+        try {
+            // Inject a SHUTDOWN event into eventQueue
+            eventQueue.put(new SystemEvent(SystemEvent.Type.SHUTDOWN, null));
+        } catch (InterruptedException e) {
+            log.error("Interrupted while trying to inject the SHUTDOWN event to eventQueue");
+        }
+    }
+
+    /**
      * This command executes an object implementing the Runnable interface through the executor service
      * @param r The Runnable job to be executed
      */
@@ -252,57 +304,5 @@ public class CoreService extends AbstractCoreService {
      */
     private void bootProtocolServers() {
         protocolServers.forEach(ps -> ps.boot());
-    }
-
-    /**
-     * Starts the main loop of the CoreService thread.
-     */
-    @Override
-    public void run() {
-        _running = true;
-        log.info("CoreService booted successfully.");
-        log.info("CoreService started.");
-        log.info("Attempting to boot ProtocolServers.");
-
-        // Call the boot() method on all registered Core Services
-        this.bootCoreServices();
-        log.info("Completed booting CoreServices");
-
-        // Call the boot() method on all registered ProtocolServers
-        this.bootProtocolServers();
-        log.info("Completed booting ProtocolServers.");
-
-        // Initiate main run loop, which awaits Events to be committed to the eventQueue
-        while (_running) {
-            try {
-                Event e = eventQueue.take();
-                log.debug("Consumed an event: " + e);
-            } catch (InterruptedException e) {
-                log.error("Interrupted while attempting to fetch next event from eventQueue");
-            }
-        }
-        // We have passed the main run loop, which means we are shutting down.
-        log.info("CoreService stopped.");
-    }
-
-    /**
-     * Stops execution of the CoreService thread.
-     */
-    @Override
-    public void stop() {
-        // Shut down all the Protocol Servers
-        this.protocolServers.forEach(p -> p.stopServer());
-        // Shut down all the Core Services
-        this.services.forEach(s -> s.stop());
-
-        // Turn of run flag
-        _running = false;
-
-        try {
-            // Inject a SHUTDOWN event into eventQueue
-            eventQueue.put(new SystemEvent(SystemEvent.Type.SHUTDOWN, null));
-        } catch (InterruptedException e) {
-            log.error("Interrupted while trying to inject the SHUTDOWN event to eventQueue");
-        }
     }
 }
