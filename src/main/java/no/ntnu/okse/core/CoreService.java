@@ -27,6 +27,7 @@ package no.ntnu.okse.core;
 import no.ntnu.okse.Application;
 import no.ntnu.okse.core.event.Event;
 
+import no.ntnu.okse.core.event.SystemEvent;
 import no.ntnu.okse.core.subscription.SubscriptionService;
 import no.ntnu.okse.core.topic.TopicService;
 import no.ntnu.okse.protocol.AbstractProtocolServer;
@@ -36,6 +37,7 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -45,10 +47,15 @@ import java.util.concurrent.LinkedBlockingQueue;
  * <p>
  * okse is licenced under the MIT licence.
  */
-public class CoreService {
+public class CoreService extends AbstractCoreService {
+
+    private static CoreService _singleton;
+    private static Thread _serverThread;
+    private static boolean _invoked;
 
     private LinkedBlockingQueue<Event> eventQueue;
     private ExecutorService executor;
+    private HashSet<AbstractCoreService> services;
     private ArrayList<ProtocolServer> protocolServers;
     private SubscriptionService subscriptionService;
     private TopicService topicService;
@@ -56,14 +63,40 @@ public class CoreService {
     /**
      * Constructs the CoreService thread, initiates the logger and eventQueue.
      */
-    public CoreService() {
-        running = false;
-        log = Logger.getLogger(CoreService.class.getName());
+    private CoreService() {
+        // Pass the className to superclass for logger initialization
+        super(CoreService.class.getName());
+        init();
+    }
+
+    /**
+     * Main instanciation method adhering to the singleton pattern
+     * @return The CoreService instance
+     */
+    public static CoreService getInstance() {
+        if (!_invoked) _singleton = new CoreService();
+        return _singleton;
+    }
+
+    /**
+     * Initializing method
+     */
+    @Override
+    protected void init() {
         eventQueue = new LinkedBlockingQueue();
+        services = new HashSet<>();
         executor = Executors.newFixedThreadPool(10);
         protocolServers = new ArrayList<>();
         subscriptionService = new SubscriptionService();
         topicService = TopicService.getInstance();
+    }
+
+    /**
+     * Startup method that sets up the service
+     */
+    @Override
+    public void boot() {
+
     }
 
     /**
@@ -91,16 +124,28 @@ public class CoreService {
     public ExecutorService getExecutor() { return executor; }
 
     /**
-     * Fetches the SubscriptionService handling all subs.
-     * @return The SubscriptionService instance.
+     * This method takes in an instance extending the AbstractCoreService class, the foundation for all OKSE
+     * core extensions and registers it to the Core Service for startup and execution
+     * @param service
      */
-    public SubscriptionService getSubscriptionService() { return subscriptionService; }
+    public void registerCoreService(AbstractCoreService service) {
+        if (!services.contains(service)) services.add(service);
+    }
 
     /**
-     * Fetches the TopicService handling all topic related operations.
-     * @return The TopicService instance
+     * This methid takes in an instance extending the AbstractCoreService class, the foundation for all OKSE
+     * core extensions, and removes it from the set of registered services. Thir process will first invoke
+     * the stop() method on the service.
+     * @param service
      */
-    public TopicService getTopicService() { return topicService; }
+    public void removeCoreService(AbstractCoreService service) {
+        if (services.contains(service)) {
+            // Stop the service
+            service.stop();
+            // Remove it from the set
+            services.remove(service);
+        }
+    }
 
     /**
      * Adds a protocolserver to the protocolservers list.
@@ -192,6 +237,11 @@ public class CoreService {
     }
 
     /**
+     * Helper method that boots all registered core services
+     */
+    private void bootCoreServices() { services.forEach(s -> s.boot()); }
+
+    /**
      * Helper method that boots all added protocolservers.
      */
     private void bootProtocolServers() {
@@ -201,8 +251,10 @@ public class CoreService {
     /**
      * Starts the main loop of the CoreService thread.
      */
+    @Override
     public void run() {
-        running = true;
+        _running = true;
+        log.info("CoreService booted successfully.");
         log.info("CoreService started.");
         log.info("Attempting to boot ProtocolServers.");
 
@@ -215,12 +267,12 @@ public class CoreService {
         log.info("Completed booting ProtocolServers.");
 
         // Initiate main run loop, which awaits Events to be committed to the eventQueue
-        while (running) {
+        while (_running) {
             try {
                 Event e = eventQueue.take();
                 log.debug("Consumed an event: " + e);
             } catch (InterruptedException e) {
-                log.trace(e.getStackTrace());
+                log.error("Interrupted while attempting to fetch next event from eventQueue");
             }
         }
         log.info("CoreService stopped.");
@@ -229,6 +281,7 @@ public class CoreService {
     /**
      * Stops execution of the CoreService thread.
      */
+    @Override
     public void stop() {
         try {
             this.protocolServers.forEach(p -> p.stopServer());
@@ -236,7 +289,14 @@ public class CoreService {
         } catch (InterruptedException e) {
             log.warn("Caught interrupt while trying to shut down gracefully");
         }
-        running = false;
+        // Turn of run flag
+        _running = false;
+        try {
+            // Inject a SHUTDOWN event into eventQueue
+            eventQueue.put(new SystemEvent(SystemEvent.Type.SHUTDOWN, null));
+        } catch (InterruptedException e) {
+            log.error("Interrupted while trying to inject the SHUTDOWN event to eventQueue");
+        }
     }
 
 }
