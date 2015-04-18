@@ -366,14 +366,38 @@ public class SubscriptionService extends AbstractCoreService {
      * @return The Subscriber, if found, null otherwise.
      */
     public Subscriber getSubscriber(String address, Integer port, Topic topic) {
+        // TODO: FIX THIS AS EVERY SUBSCRIBER MUST HAVE A UNIQUE ID
+        // TODO: Also maek into stream and use filter lambdas
+        // TODO: Will this trigger concurrent modification exception if new subs are added during iteration?
         for (Subscriber s: _subscribers) {
             if (s.getAddress().equals(address) &&
                     s.getPort().equals(port) &&
-                    s.getTopic().equals(topic)) {
+                    s.getTopic().equals(topic.getFullTopicString())) {
                 return s;
             }
         }
         return null;
+    }
+
+    /**
+     * Retrieve a HashSet of all subscribers that have subscribed to a specific topic
+     * @param topic A raw topic string of the topic to select subscribers from
+     * @return A HashSet of Subscriber objects that have subscribed to the specified topic
+     */
+    public HashSet<Subscriber> getAllSubscribersForTopic(String topic) {
+        // Initialize a collector
+        HashSet<Subscriber> results = new HashSet<>();
+
+        // TODO: Will this trigger concurrent modification exception if new subs are added during iteration?
+
+        // Iterate over all subscribers
+        _subscribers.stream()
+                    // Only pass on those who match topic argument
+                    .filter(s -> s.getTopic().equals(topic))
+                    // Collect in the results set
+                    .forEach(s -> results.add(s));
+
+        return results;
     }
 
     /* ------------------------------------------------------------------------------------------ */
