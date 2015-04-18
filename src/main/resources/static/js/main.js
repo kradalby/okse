@@ -107,6 +107,11 @@ var Main = (function($) {
                     clickInterval = setInterval( function() {
                         ajax(clickedElement.substring(1), Config.error, Config.refresh, "GET")
                     }, updateInterval);
+                } else if (clickedElement === "#log") {
+                    ajax(clickedElement.substring(1), Logs.error, Logs.refresh, "GET")
+                    clickInterval = setInterval( function() {
+                        ajax(clickedElement.substring(1), Logs.error, Logs.refresh, "GET")
+                    }, updateInterval);
                 } else {
                     console.error("[Error][Main] Unknown nav-tab clicked, this should not happen!")
                 }
