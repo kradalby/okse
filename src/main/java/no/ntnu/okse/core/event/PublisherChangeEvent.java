@@ -34,7 +34,8 @@ import no.ntnu.okse.core.subscription.Publisher;
 public class PublisherChangeEvent extends Event {
 
     public enum Type {
-        REGISTER
+        REGISTER,
+        UNREGISTER
     }
 
     Type type;
