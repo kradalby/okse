@@ -103,10 +103,10 @@ var Topics = (function($) {
             e.preventDefault();
 
             Main.ajax(("topics/delete/" + this.id), function() {
-                console.log("Unable to remove topic")
+                console.log("[Debug] Unable to remove topic")
             }, function() {
                 $(e.target).closest('.panel').remove();
-                console.log("Removing complete topic")
+                console.log("[Debug] Removing complete topic")
             }, "POST")
 
 
@@ -115,10 +115,10 @@ var Topics = (function($) {
             e.preventDefault();
 
             Main.ajax(("topics/delete/subscriber/" + this.id), function() {
-                console.log("Unable to remove subscriber");
+                console.log("[Debug] Unable to remove subscriber");
             }, function() {
                 $(e.target).parent().parent().remove();
-                console.log("Removing single subscriber");
+                console.log("[Debug] Removing single subscriber");
             }, "POST")
         });
     }
@@ -129,16 +129,16 @@ var Topics = (function($) {
                 e.preventDefault()
 
                 Main.ajax("topics/delete/all", function() {
-                    console.log("Unable to remove all topics");
+                    console.log("[Debug] Unable to remove all topics");
                 }, function() {
                     $('#topics-column').html('');
-                    console.log("Removing all topics");
+                    console.log("[Debug] Removing all topics");
                 }, "POST")
 
             });
         },
         error: function(xhr) {
-          console.log("[Error] in Ajax for Topics with status: " + xhr.statusText)
+          console.error("[Error] in Ajax for Topics with status: " + xhr.statusText)
         },
         refresh: function(response) {
             unBindButtons();

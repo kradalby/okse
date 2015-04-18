@@ -32,10 +32,4 @@ public class ConfigController {
     public void addPredefinedMapping(@PathVariable String topic, @PathVariable String newTopic) {
         log.info("Trying to add predefined mapping between " + topic + " --> " + newTopic);
     }
-
-    @RequestMapping(method = RequestMethod.POST, value = "/encoding")
-    public void setEncoding() {
-        log.info("Changing chuncked transfer encoding");
-    }
-
 }

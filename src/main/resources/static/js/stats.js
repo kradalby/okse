@@ -46,11 +46,9 @@ var Stats = (function($) {
         return HTML
     }
 
-
-
     return {
         error: function(xhr, statusText, thrownError) {
-            console.log("[Error] in ajax for Stats with error: " + xhr.statusText)
+            console.error("[Error] in ajax for Stats with error: " + xhr.statusText)
         },
         refresh: function(data) {
             $('#stats-total-messages').html('<strong>Messages sent: </strong>' + data.totalMessages)

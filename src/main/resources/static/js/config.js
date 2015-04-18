@@ -29,29 +29,18 @@
 
 var Config = (function($) {
 
-    var createPanel = function() {
-
-    }
-
     var bindButtons = function() {
-        $('#chunked-encoding').on('click', function(e) {
-           Main.ajax('config/encoding/', null, function() {
-               console.log("[Debug] Chunked encoding set to: " + $('#chunked-encoding').is(":checked"))
-           }, "POST");
-        });
-
         $("#add-predefined-mapping").on('click', function(e) {
             console.log('[Debug] Add predefined mapping between ' + $('#from-topic').val() + ' --> ' + $('#to-topic').val())
-
-        })
+        });
     }
 
     return {
         error: function(xhr, statusText, thrownError) {
-            console.log("[Error] in Ajax for config with status: " + xhr.statusText)
+            console.error("[Error] in Ajax for config with status: " + xhr.statusText)
         },
         refresh: function(response) {
-            console.log(JSON.stringify(response))
+            console.log("[Debug]" + JSON.stringify(response))
         },
         init: function() {
             bindButtons()

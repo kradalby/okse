@@ -30,7 +30,10 @@ var Main = (function($) {
     // Global variable for holding the interval used to update the panes
     var clickInterval;
 
-    // Private method for setting up the AJAX with the correct CSRF-token (must do this to be able to do POST-requests)
+    /*
+        Private method for setting up the AJAX with the correct CSRF-token
+        (must do this to be able to do POST-requests)
+    */
     var setupAjax = function() {
         var token = $("input[name='_csrf']").val();
         var header = "X-CSRF-TOKEN";
@@ -39,9 +42,13 @@ var Main = (function($) {
                 xhr.setRequestHeader(header, token);
             }
         });
+        console.log("[Debug] Successfully set up AJAX")
     }
 
-    // Global, generic AJAX-function for all AJAX-requests across the complete page
+    /*
+        Global, generic AJAX-function for all AJAX-requests across the complete page.
+        Takes in five arguments, defining the request. All urls are appended to '/api/'
+     */
     var ajax = function(url, error, success, httpMethod, dataType) {
         $.ajax({
             url: "/api/" + url,
@@ -63,7 +70,7 @@ var Main = (function($) {
     }
 
     var error = function(xhr, statusText, thrownError) {
-        console.log("[Error] in Ajax for main with status: " + xhr.statusText)
+        console.error("[Error] in Ajax for main with status: " + xhr.statusText)
     }
 
     var refresh = function(response) {
@@ -80,33 +87,28 @@ var Main = (function($) {
                 var clickedElement = $(this).attr("href")
                 var updateInterval = $('#settings-update-interval').val() * 1000
 
-                if (clickedElement === "#main")
-                {
+                if (clickedElement === "#main") {
                     ajax(clickedElement.substring(1), error, refresh, "GET", "json")
                     clickInterval = setInterval( function() {
                         ajax(clickedElement.substring(1), error, refresh, "GET", "json")
                     }, updateInterval);
-                } else if(clickedElement === "#topics")
-                {
+                } else if(clickedElement === "#topics") {
                     ajax(clickedElement.substring(1), Topics.error, Topics.refresh, "GET", "json")
                     clickInterval = setInterval( function() {
                         ajax(clickedElement.substring(1), Topics.error, Topics.refresh, "GET", "json")
                     }, updateInterval);
-                } else if (clickedElement === "#stats")
-                {
+                } else if (clickedElement === "#stats") {
                     ajax(clickedElement.substring(1), Stats.error, Stats.refresh, "GET", "json")
                     clickInterval = setInterval( function() {
                         ajax(clickedElement.substring(1), Stats.error, Stats.refresh, "GET", "json")
                     }, updateInterval);
-                } else if (clickedElement === "#config")
-                {
+                } else if (clickedElement === "#config") {
                     ajax(clickedElement.substring(1), Config.error, Config.refresh, "GET")
                     clickInterval = setInterval( function() {
                         ajax(clickedElement.substring(1), Config.error, Config.refresh, "GET")
                     }, updateInterval);
-                } else
-                {
-                    console.log("Unknown tab, should not happen!")
+                } else {
+                    console.error("[Error] Unknown nav-tab clicked, this should not happen!")
                 }
             });
 
