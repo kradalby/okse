@@ -33,6 +33,7 @@ import java.util.HashSet;
 
 import com.google.common.io.ByteStreams;
 import no.ntnu.okse.Application;
+import no.ntnu.okse.core.messaging.Message;
 import no.ntnu.okse.protocol.AbstractProtocolServer;
 import org.apache.log4j.Logger;
 import org.eclipse.jetty.client.HttpClient;
@@ -260,8 +261,10 @@ public class WSNotificationServer extends AbstractProtocolServer {
         return _services;
     }
 
+    /**
+     * This method stops the execution of the WSNotificationServer instance.
+     */
     @Override
-
     public void stopServer() {
         try {
             log.info("Stopping WSNServer...");
@@ -281,6 +284,19 @@ public class WSNotificationServer extends AbstractProtocolServer {
     @Override
     public String getProtocolServerType() {
         return protocolServerType;
+    }
+
+    /**
+     * This interface method must take in an instance of Message, which contains the appropriate references
+     * and flags needed to distribute the message to consumers. Implementation specific details can vary from
+     * protocol to protocol, but the end result of a method call to sendMessage is that the message is delivered,
+     * or an error is logged.
+     *
+     * @param message An instance of Message containing the required data to distribute a message.
+     */
+    @Override
+    public void sendMessage(Message message) {
+
     }
 
     /**

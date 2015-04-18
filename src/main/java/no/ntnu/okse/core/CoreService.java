@@ -45,10 +45,8 @@ import java.util.concurrent.LinkedBlockingQueue;
  * <p>
  * okse is licenced under the MIT licence.
  */
-public class CoreService extends Thread {
+public class CoreService {
 
-    private volatile boolean running;
-    private static Logger log;
     private LinkedBlockingQueue<Event> eventQueue;
     private ExecutorService executor;
     private ArrayList<ProtocolServer> protocolServers;
@@ -59,7 +57,6 @@ public class CoreService extends Thread {
      * Constructs the CoreService thread, initiates the logger and eventQueue.
      */
     public CoreService() {
-        super("CoreService");
         running = false;
         log = Logger.getLogger(CoreService.class.getName());
         eventQueue = new LinkedBlockingQueue();
@@ -204,7 +201,6 @@ public class CoreService extends Thread {
     /**
      * Starts the main loop of the CoreService thread.
      */
-    @Override
     public void run() {
         running = true;
         log.info("CoreService started.");
@@ -233,12 +229,12 @@ public class CoreService extends Thread {
     /**
      * Stops execution of the CoreService thread.
      */
-    public void stopThread() {
-        this.protocolServers.forEach(p -> p.stopServer());
+    public void stop() {
         try {
+            this.protocolServers.forEach(p -> p.stopServer());
             this.topicService.stop();
         } catch (InterruptedException e) {
-            log.warn("Caught interrupt from TopicService while trying to shut it down gracefully");
+            log.warn("Caught interrupt while trying to shut down gracefully");
         }
         running = false;
     }

@@ -39,7 +39,7 @@ import java.util.concurrent.LinkedBlockingQueue;
  * <p>
  * okse is licenced under the MIT licence.
  */
-public class TopicService implements Runnable {
+public class TopicService {
 
     private static Logger log;
     private static boolean _running = false;
@@ -68,7 +68,7 @@ public class TopicService implements Runnable {
      */
     private void init() {
         log = Logger.getLogger(TopicService.class.getName());
-        log.info("Initializing TopicService");
+        log.info("Initializing TopicService...");
         queue = new LinkedBlockingQueue<>();
         allTopics = new HashMap<>();
         _listeners = new HashSet<>();
@@ -215,6 +215,19 @@ public class TopicService implements Runnable {
     }
 
     /**
+     * Local removal of a topic from the allTopics hashmap. Do not call outside a TopicTask job instance,
+     * using the deleteTopic public method, as that method will also identify and remove connected children nodes.
+     * @param t The topic to be removed.
+     */
+    private void deleteTopicLocal(Topic t) {
+        if (allTopics.containsValue(t)) {
+            allTopics.remove(t.getFullTopicString());
+            log.info("Deleted Topic: " + t);
+            fireTopicChangeEvent(t, TopicChangeEvent.Type.DELETE);
+        }
+    }
+
+    /**
      * Checks to see if a topic node exists in the TopicService.
      * @param topic The topic node instance to check.
      * @return true if it exists, false otherwise.
@@ -292,6 +305,40 @@ public class TopicService implements Runnable {
     }
 
     /**
+     * Removes a Topic given by a full raw topic string. Also locates all potential children from this topic
+     * and removes them aswell.
+     * @param topic The full raw topic string representing the topic to be deleted
+     */
+    public void deleteTopic(String topic) {
+        // If the topic actually exists
+        if (allTopics.containsKey(topic)) {
+            // Create a delete job
+            Runnable job = () -> {
+                // Fetch the Topic object
+                Topic t = getTopic(topic);
+                // Retrieve a set of all its children
+                HashSet<Topic> children = TopicTools.getAllChildrenFromNode(t);
+                // Remove all the children
+                children.forEach(c -> deleteTopicLocal(c));
+                // Delete the topic itself
+                deleteTopicLocal(t);
+            };
+
+            // Create the TopicTask job wrapper
+            TopicTask task = new TopicTask(TopicTask.Type.DELETE_TOPIC, job);
+
+            // Put the task into the queue
+            try {
+                getQueue().put(task);
+            } catch (InterruptedException e) {
+                log.error("Interrupted while attempting to put DeleteTopic task to task queue.");
+            }
+        } else {
+            log.warn("Attempt to remove a topic that did in fact not exist.");
+        }
+    }
+
+    /**
      * Add a topic to the TopicService
      * @param topic The raw topic string that should be added. E.g "no/okse/current"
      */
@@ -312,10 +359,10 @@ public class TopicService implements Runnable {
                 // Put the task into the task queue
                 getQueue().put(task);
             } catch (InterruptedException e) {
-                log.error("Interrupted while attempting to add Topic.");
+                log.error("Interrupted while attempting to put AddTopic task to task queue.");
             }
         } else {
-            log.warn("Attempt to add a topic from raw topic string that already exists (" + topic + ")");
+            log.debug("Attempt to add a topic from raw topic string that already exists (" + topic + ")");
         }
     }
 
