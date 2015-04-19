@@ -180,18 +180,18 @@ public class CoreService extends AbstractCoreService {
      * core extensions and registers it to the Core Service for startup and execution
      * @param service
      */
-    public void registerCoreService(AbstractCoreService service) {
+    public void registerService(AbstractCoreService service) {
         if (!services.contains(service)) services.add(service);
         else log.error("Attempt to register a core service that has already been registered!");
     }
 
     /**
-     * This methid takes in an instance extending the AbstractCoreService class, the foundation for all OKSE
+     * This method takes in an instance extending the AbstractCoreService class, the foundation for all OKSE
      * core extensions, and removes it from the set of registered services. Thir process will first invoke
      * the stop() method on the service.
      * @param service
      */
-    public void removeCoreService(AbstractCoreService service) {
+    public void removeService(AbstractCoreService service) {
         if (services.contains(service)) {
             // Stop the service
             service.stop();
