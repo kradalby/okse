@@ -50,7 +50,7 @@ import java.util.stream.Stream;
 @RequestMapping(value = "/api/log")
 public class LogController {
 
-    private static HashMap<String, ArrayList<String>> logLevels = new HashMap<String, ArrayList<String>>(){{
+    private static final HashMap<String, ArrayList<String>> logLevels = new HashMap<String, ArrayList<String>>(){{
         put("DEBUG", new ArrayList<String>(){{
             add("DEBUG");
             add("INFO");
@@ -65,6 +65,16 @@ public class LogController {
         }});
     }};
 
+    private static HashMap<Integer, String> fileNames;
+
+    private static Integer fileID = 0;
+
+    public LogController() {
+        fileNames = new HashMap<>();
+        updateAvailableLogFiles();
+    }
+
+
     public static boolean isWithinLogLevel(String logLevel, String line) {
         for (String level : logLevels.get(logLevel)) {
             if (line.contains(level)) return true;
@@ -73,27 +83,37 @@ public class LogController {
 
     }
 
+    private static void updateAvailableLogFiles(){
+        File dir = new File("logs");
+        Collection<File> files = FileUtils.listFiles(dir, TrueFileFilter.INSTANCE, TrueFileFilter.INSTANCE);
+
+        for (File file: files) {
+            if (!fileNames.containsValue(file.getName())) {
+                fileNames.put(fileID++, file.getName());
+            }
+        }
+    }
+
+
 
     @RequestMapping(method = RequestMethod.GET)
-    public Log log(@RequestParam(value="logName", defaultValue="okse.log") String logName, @RequestParam(value="logLevel", defaultValue="DEBUG") String logLevel) {
-        //ArrayList<Log> logs = new ArrayList<>();
-        //File dir = new File("logs");
-        //Collection<File> files = FileUtils.listFiles(dir, TrueFileFilter.INSTANCE, TrueFileFilter.INSTANCE);
-
-//        for (File file : files) {
-//            String name = file.getName();
-//            List<String> lines = FileUtils.readLines(file);
-//            Log log = new Log(name, lines);
-//
-//            logs.add(log);
-//        }
+    public Log log(@RequestParam(value="logID", defaultValue="0") Integer logID,
+                   @RequestParam(value="logLevel", defaultValue="DEBUG") String logLevel,
+                   @RequestParam(value = "length", defaultValue = "250") int length) {
 
         try {
-            Stream<String> l = Files.lines(Paths.get("logs/", logName));
+            Stream<String> l = Files.lines(Paths.get("logs/", fileNames.get(logID)));
 
             List<String> lines = l.filter(x -> isWithinLogLevel(logLevel, x)).collect(Collectors.toList());
             Collections.reverse(lines);
-            Log log = new Log(logName, lines);
+
+            Log log;
+
+            if (lines.size() > length) {
+                log = new Log(fileNames.get(logID), lines.subList(0,length));
+            } else {
+                log = new Log(fileNames.get(logID), lines);
+            }
 
             return log;
 
@@ -105,4 +125,16 @@ public class LogController {
         }
     }
 
+    @RequestMapping(value = "/files", method = RequestMethod.GET)
+    public HashMap<Integer,String> logFilesAvailable() {
+        updateAvailableLogFiles();
+        return fileNames;
+    }
+
+    @RequestMapping(value = "/levels", method = RequestMethod.GET)
+    public Set<String> logLevelsAvailable() {
+        return logLevels.keySet();
+    }
+
 }
+
