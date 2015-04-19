@@ -28,24 +28,96 @@
 
 var Logs = (function($) {
 
-    /*
-     Creates, fills and returns a tr element
-     */
-    var fillTable = function(data) {
-        var HTML = '';
+    var url = "log?logLevel=DEBUG&logID=0"
+    var logLevel = "DEBUG"
+    var logID = 0
+    var logLength = 250
+
+    var updateUrl = function() {
+        url = "log?logLevel=" + logLevel + "&logID=" + logID + "&length=" + logLength
+    }
+
+    var updateLogView = function(data) {
+        var HTML = '<pre>';
         $.each(data.lines, function (i, line) {
-           HTML += '<p>' + line + '</p>'
+           HTML += line + '\n'
         });
+        HTML += '</pre>'
         return HTML
     }
 
     return {
+        init: function() {
+            /*
+            * Get log levels from the backend.
+            * Create buttons
+            * Initialize buttons with filters
+            * */
+            Main.ajax("log/levels", function(){
+                console.log("[Debug][Topics] Failed to load log levels")
+            }, function(data) {
+                console.log("[Debug][Topics] Adding log level buttons")
+                var buttons = ""
+                $.each(data, function(i, level) {
+                    buttons += '<a class="btn btn-default" role="button" id="button-' + level +'">' + level + '</a>'
+                })
+                $("#log-level").html(buttons)
+                $.each(data, function(i, level) {
+                    $("#button-" + level).on("click", function(){
+                        logLevel = level
+                        updateUrl()
+                        Main.ajax(Logs.url(), Logs.error, Logs.refresh, "GET")
+                    })
+                })
+            }, "GET", "json")
+
+            /*
+             * Get log files from the backend.
+             * Create buttons
+             * Initialize buttons with filters
+             * */
+            Main.ajax("log/files", function(){
+                console.log("[Debug][Topics] Failed to load log files")
+            }, function(data) {
+                console.log("[Debug][Topics] Adding log files buttons")
+                var files = ""
+                $.each(data, function(i) {
+                    files += '<a class="btn btn-default" role="button" id="button-logID-' + i +'">' + data[i] + '</a>'
+                })
+                $("#log-file").html(files)
+                $.each(data, function(i) {
+                    $("#button-logID-" + i).on("click", function(){
+                        logID = i
+                        updateUrl()
+                        Main.ajax(Logs.url(), Logs.error, Logs.refresh, "GET")
+                    })
+                })
+            }, "GET", "json")
+            $("#log-length").keyup(function(){
+                logLength = $(this).val()
+                updateUrl()
+                Main.ajax(Logs.url(), Logs.error, Logs.refresh, "GET")
+            })
+
+            /*
+             * Add a listener to clear interval
+             * */
+            $("#button-refresh").on("click", function() {
+                if (!$(this).hasClass("disabled")) {
+                    $(this).addClass("disabled")
+                    Main.clearIntervalForTab()
+                }
+            })
+        },
         error: function(xhr, status, error) {
             console.error("[Error][Stats] in Ajax with the following callback [status: " + xhr.status +  " readyState: " + xhr.readyState + " responseText: " + xhr.responseText + "]")
         },
         refresh: function(data) {
             $('#log-name').html(data.name)
-            $('#log-data').html(fillTable(data))
+            $('#log-data').html(updateLogView(data))
+        },
+        url: function() {
+            return url
         }
     }
 
