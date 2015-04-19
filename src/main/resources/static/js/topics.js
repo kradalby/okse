@@ -29,7 +29,9 @@
 var Topics = (function($) {
 
     /*
-        Creates, fills and returns a tr element
+        Creates, fills and returns a <tr>-element. The <tr>-element is generated based on the subscribers
+        list from the OKSE-RestAPI. It also adds all the buttons needed for deleting subscribers. It uses the id for
+        this purpose. This function does not manipulate the DOM by checking if an element exists. It overwrites everything.
      */
     var fillTable = function(data) {
         var trHTML = '';
@@ -47,7 +49,7 @@ var Topics = (function($) {
         return trHTML
     }
     /*
-        Iterates all the subscribers of this topic and overwrites the table with the new information
+        Iterates all the subscribers of this topic and overwrites the table with the new information.
      */
     var updatePanel = function(data, panel) {
         $(panel).html(fillTable(data));
@@ -57,15 +59,20 @@ var Topics = (function($) {
         Sets up an basic template for a panel
      */
     var createPanelAndTableTemplate = function(topicName) {
-        var panel = '<div class="panel panel-primary">' +
-        '<div class="panel-heading">' +
-            '<h3 class="panel-title collapsed" data-toggle="collapse" data-target="#' + topicName.toLowerCase() + '">' +
-                '<a href="#' + topicName.toLowerCase() + '">' + topicName +
-        '</a></h3></div>' +
-        '<div id="' + topicName.toLowerCase() +'" class="panel-collapse collapse">' +
-            '<div class="table-reponsive"><table class="table table-striped">' +
-                '<thead><tr><th>Protocol</th><th>IP</th><th>Port</th><th>Actions</th></tr></thead><tbody></tbody>' +
-        '</table></div></div></div>'
+        var panel = $(
+            '<div class="panel panel-primary">' +
+                '<div class="panel-heading">' +
+                    '<h3 class="panel-title collapsed" data-toggle="collapse" data-target="#' + topicName.toLowerCase() + '">' +
+                    '<a href="#' + topicName.toLowerCase() + '">' + topicName + '</a></h3>' +
+                '</div>' +
+                '<div id="' + topicName.toLowerCase() +'" class="panel-collapse collapse">' +
+                    '<div class="table-reponsive">' +
+                        '<table class="table table-striped">' +
+                            '<thead><tr><th>Protocol</th><th>IP</th><th>Port</th><th>Actions</th></tr></thead><tbody></tbody>' +
+                        '</table>' +
+                    '</div>' +
+                '</div>' +
+            '</div>')
         return panel
     }
 
@@ -78,21 +85,28 @@ var Topics = (function($) {
         $('#topics-column').append(panel);
     }
 
+    /*
+        Unbinds the buttons that change on every AJAX-response.
+        Removes the 'click'-listener
+     */
     var unBindButtons = function() {
         $('.delete-topic').off('click');
         $('.delete-subscriber').off('click');
     }
 
+    /*
+        Binds the buttons after
+     */
     var bindButtons = function() {
         // need to unbind all buttons between binding and add an id to topic a elements
         $('.delete-topic').on('click', function(e) {
             e.preventDefault();
 
             Main.ajax(("topics/delete/" + this.id), function() {
-                console.log("Unable to remove topic")
+                console.log("[Debug][Topics] Unable to remove topic")
             }, function() {
                 $(e.target).closest('.panel').remove();
-                console.log("Removing complete topic")
+                console.log("[Debug][Topics] Removing complete topic")
             }, "POST")
 
 
@@ -101,10 +115,10 @@ var Topics = (function($) {
             e.preventDefault();
 
             Main.ajax(("topics/delete/subscriber/" + this.id), function() {
-                console.log("Unable to remove subscriber");
+                console.log("[Debug][Topics] Unable to remove subscriber");
             }, function() {
                 $(e.target).parent().parent().remove();
-                console.log("Removing single subscriber");
+                console.log("[Debug][Topics] Removing single subscriber");
             }, "POST")
         });
     }
@@ -115,19 +129,17 @@ var Topics = (function($) {
                 e.preventDefault()
 
                 Main.ajax("topics/delete/all", function() {
-                    console.log("Unable to remove all topics");
+                    console.log("[Debug][Topics] Unable to remove all topics");
                 }, function() {
                     $('#topics-column').html('');
-                    console.log("Removing all topics");
+                    console.log("[Debug][Topics] Removing all topics");
                 }, "POST")
 
             });
         },
-        // Ajax error function, should preferably update the site with information about this.
-        error: function() {
-          console.log("Error in Ajax for Topics")
+        error: function(xhr, status, error) {
+          console.error("[Error][Topics] in Ajax with the following callback [status: " + xhr.status +  " readyState: " + xhr.readyState + " responseText: " + xhr.responseText + "]")
         },
-        // Ajax success function (updates all the information)
         refresh: function(response) {
             unBindButtons();
 
@@ -140,7 +152,6 @@ var Topics = (function($) {
 
             bindButtons();
         }
-
     }
 
 })(jQuery);

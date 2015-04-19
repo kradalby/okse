@@ -258,7 +258,6 @@ public class WSNRequestParser implements Hub {
 
                         log.error("Something went horribly wrong while creating soap fault.");
                         log.trace(e.getStackTrace());
-
                     }
                     // If all else fails, generate a generic soap fault message using the Server fault-type
                 } else {

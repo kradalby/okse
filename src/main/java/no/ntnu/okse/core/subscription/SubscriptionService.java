@@ -400,6 +400,14 @@ public class SubscriptionService extends AbstractCoreService {
         return results;
     }
 
+    /**
+     * Retrive a HashSet of all subscribers on the broker
+     * @return A HashSet of Subscriber objects that have subscribed on the broker
+     */
+    public HashSet<Subscriber> getAllSubscribers() {
+        return (HashSet<Subscriber>) _subscribers.clone();
+    }
+
     /* ------------------------------------------------------------------------------------------ */
 
     /* Begin listener support */
