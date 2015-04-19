@@ -25,6 +25,7 @@
 package no.ntnu.okse.web.controller;
 
 import no.ntnu.okse.Application;
+import no.ntnu.okse.core.subscription.SubscriptionService;
 import no.ntnu.okse.web.model.Subscriber;
 import no.ntnu.okse.web.model.Topic;
 import org.apache.log4j.Logger;
@@ -50,7 +51,7 @@ public class ApiController {
     @RequestMapping(value = "/api/main", method = RequestMethod.GET)
     public HashMap<String, String> main() {
         HashMap<String, String> mainApi = new HashMap<>();
-        mainApi.put("subscribers", String.valueOf(Application.cs.getSubscriptionService().getAllSubscribers().size()));
+        mainApi.put("subscribers", String.valueOf(SubscriptionService.getInstance().getAllSubscribers().size()));
         log.info("Reaching for /api/main");
         return mainApi;
     }

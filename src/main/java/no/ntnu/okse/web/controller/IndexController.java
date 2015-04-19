@@ -24,6 +24,7 @@
 
 package no.ntnu.okse.web.controller;
 
+import no.ntnu.okse.core.subscription.SubscriptionService;
 import org.springframework.beans.factory.annotation.Value;
 import no.ntnu.okse.Application;
 import org.springframework.stereotype.Controller;
@@ -61,7 +62,7 @@ public class IndexController {
         model.addAttribute("projectName", appName);
         model.addAttribute("serverPort", port);
         model.addAttribute("environment", createEnvironmentList());
-        model.addAttribute("subscribers", Application.cs.getSubscriptionService().getAllSubscribers().size());
+        model.addAttribute("subscribers", SubscriptionService.getInstance().getAllSubscribers().size());
 
         try {
             model.addAttribute("serverAddress", InetAddress.getLocalHost().getHostAddress());
