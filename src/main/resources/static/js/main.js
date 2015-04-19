@@ -107,6 +107,11 @@ var Main = (function($) {
                     clickInterval = setInterval( function() {
                         ajax(clickedElement.substring(1), Config.error, Config.refresh, "GET")
                     }, updateInterval);
+                } else if (clickedElement === "#log") {
+                    ajax(Logs.url(), Logs.error, Logs.refresh, "GET")
+                    clickInterval = setInterval( function() {
+                        ajax(Logs.url(), Logs.error, Logs.refresh, "GET")
+                    }, updateInterval);
                 } else {
                     console.error("[Error][Main] Unknown nav-tab clicked, this should not happen!")
                 }
@@ -117,6 +122,9 @@ var Main = (function($) {
                     ajax("main", error, refresh, "GET", "json")
                 }, 2000);
             }
+        },
+        clearIntervalForTab: function() {
+            clearInterval(clickInterval)
         }
     }
 
@@ -126,5 +134,6 @@ $(document).ready(function(){
     Main.init()
     Topics.init()
     Config.init()
+    Logs.init()
 });
 
