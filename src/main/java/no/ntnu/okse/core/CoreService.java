@@ -28,6 +28,7 @@ import no.ntnu.okse.Application;
 import no.ntnu.okse.core.event.Event;
 
 import no.ntnu.okse.core.event.SystemEvent;
+import no.ntnu.okse.core.messaging.Message;
 import no.ntnu.okse.core.subscription.SubscriptionService;
 import no.ntnu.okse.core.topic.TopicService;
 import no.ntnu.okse.protocol.AbstractProtocolServer;
@@ -50,7 +51,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class CoreService extends AbstractCoreService {
 
     private static CoreService _singleton;
-    private static Thread _serverThread;
+    private static Thread _serviceThread;
     private static boolean _invoked = false;
 
     private LinkedBlockingQueue<Event> eventQueue;
@@ -59,7 +60,8 @@ public class CoreService extends AbstractCoreService {
     private ArrayList<ProtocolServer> protocolServers;
 
     /**
-     * Constructs the CoreService instance
+     * Constructs the CoreService instance. Constructor is private due to the singleton pattern used for
+     * core services.
      */
     private CoreService() {
         // Pass the className to superclass for logger initialization
@@ -96,18 +98,69 @@ public class CoreService extends AbstractCoreService {
     public void boot() {
         if (!_running) {
             log.info("Booting CoreService...");
-
-            _serverThread = new Thread(() -> {
+            _serviceThread = new Thread(() -> {
                 _running = true;
                 _singleton.run();
             });
-            _serverThread.setName("CoreService");
-            _serverThread.start();
+            _serviceThread.setName("CoreService");
+            _serviceThread.start();
         }
     }
 
     /**
-     * This command executes an object implementing the Runnable interface through the executor service
+     * Starts the main loop of the CoreService thread.
+     */
+    @Override
+    public void run() {
+        _running = true;
+        log.info("CoreService booted successfully.");
+        log.info("CoreService started.");
+        log.info("Attempting to boot ProtocolServers.");
+
+        // Call the boot() method on all registered Core Services
+        this.bootCoreServices();
+        log.info("Completed booting CoreServices");
+
+        // Call the boot() method on all registered ProtocolServers
+        this.bootProtocolServers();
+        log.info("Completed booting ProtocolServers.");
+
+        // Initiate main run loop, which awaits Events to be committed to the eventQueue
+        while (_running) {
+            try {
+                Event e = eventQueue.take();
+                log.debug("Consumed an event: " + e);
+            } catch (InterruptedException e) {
+                log.error("Interrupted while attempting to fetch next event from eventQueue");
+            }
+        }
+        // We have passed the main run loop, which means we are shutting down.
+        log.info("CoreService stopped.");
+    }
+
+    /**
+     * Stops execution of the CoreService thread.
+     */
+    @Override
+    public void stop() {
+        // Shut down all the Protocol Servers
+        this.protocolServers.forEach(p -> p.stopServer());
+        // Shut down all the Core Services
+        this.services.forEach(s -> s.stop());
+
+        // Turn of run flag
+        _running = false;
+
+        try {
+            // Inject a SHUTDOWN event into eventQueue
+            eventQueue.put(new SystemEvent(SystemEvent.Type.SHUTDOWN, null));
+        } catch (InterruptedException e) {
+            log.error("Interrupted while trying to inject the SHUTDOWN event to eventQueue");
+        }
+    }
+
+    /**
+     * This command executes a job implementing the Runnable interface
      * @param r The Runnable job to be executed
      */
     public void execute(Runnable r) {
@@ -137,6 +190,7 @@ public class CoreService extends AbstractCoreService {
      */
     public void registerCoreService(AbstractCoreService service) {
         if (!services.contains(service)) services.add(service);
+        else log.error("Attempt to register a core service that has already been registered!");
     }
 
     /**
@@ -151,6 +205,8 @@ public class CoreService extends AbstractCoreService {
             service.stop();
             // Remove it from the set
             services.remove(service);
+        } else {
+            log.error("Attempt to remove a core service that does not exist in the registry!");
         }
     }
 
@@ -222,11 +278,29 @@ public class CoreService extends AbstractCoreService {
     }
 
     /**
-     * Shuts down and removes all protocol servers.
+     * This method stops all protocol servers after delivering a system message through the message service.
+     * Based on the settings for BROADCAST_SYSTEM_MESSAGES_TO_SUBSCRIBERS, it might distribute the system
+     * message to all topics first, causing this method to have to sleep cycle until the system message has been processed.
      */
-    public void removeAllProtocolServers() {
-        protocolServers.forEach(p -> p.stopServer());
-        protocolServers.clear();
+    public void stopAllProtocolServers() {
+
+        log.info("Stopping all ProtocolServers...");
+
+        // Create a system message
+        Message m = new Message("The broker is shutting down", null, null);
+        // Wait until message is processed
+        while (!m.isProcessed()) {
+            try {
+                // Make the thread sleep a bit, before re-checking message status
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                log.error("Interrupted during protocol server shutdown message confirmation sleep cycle");
+            }
+        }
+
+        // Iterate over all protocol servers and initiate shutdown process
+        getAllProtocolServers().forEach(ps -> ps.stopServer());
+        log.info("ProtocolServers have been stopped.");
     }
 
     /**
@@ -253,57 +327,5 @@ public class CoreService extends AbstractCoreService {
      */
     private void bootProtocolServers() {
         protocolServers.forEach(ps -> ps.boot());
-    }
-
-    /**
-     * Starts the main loop of the CoreService thread.
-     */
-    @Override
-    public void run() {
-        _running = true;
-        log.info("CoreService booted successfully.");
-        log.info("CoreService started.");
-        log.info("Attempting to boot ProtocolServers.");
-
-        // Call the boot() method on all registered Core Services
-        this.bootCoreServices();
-        log.info("Completed booting CoreServices");
-
-        // Call the boot() method on all registered ProtocolServers
-        this.bootProtocolServers();
-        log.info("Completed booting ProtocolServers.");
-
-        // Initiate main run loop, which awaits Events to be committed to the eventQueue
-        while (_running) {
-            try {
-                Event e = eventQueue.take();
-                log.debug("Consumed an event: " + e);
-            } catch (InterruptedException e) {
-                log.error("Interrupted while attempting to fetch next event from eventQueue");
-            }
-        }
-        // We have passed the main run loop, which means we are shutting down.
-        log.info("CoreService stopped.");
-    }
-
-    /**
-     * Stops execution of the CoreService thread.
-     */
-    @Override
-    public void stop() {
-        // Shut down all the Protocol Servers
-        this.protocolServers.forEach(p -> p.stopServer());
-        // Shut down all the Core Services
-        this.services.forEach(s -> s.stop());
-
-        // Turn of run flag
-        _running = false;
-
-        try {
-            // Inject a SHUTDOWN event into eventQueue
-            eventQueue.put(new SystemEvent(SystemEvent.Type.SHUTDOWN, null));
-        } catch (InterruptedException e) {
-            log.error("Interrupted while trying to inject the SHUTDOWN event to eventQueue");
-        }
     }
 }

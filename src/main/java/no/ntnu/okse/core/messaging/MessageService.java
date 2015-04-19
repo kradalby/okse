@@ -24,11 +24,16 @@
 
 package no.ntnu.okse.core.messaging;
 
+import no.ntnu.okse.Application;
 import no.ntnu.okse.core.AbstractCoreService;
 import no.ntnu.okse.core.CoreService;
+import no.ntnu.okse.core.topic.Topic;
+import no.ntnu.okse.core.topic.TopicService;
 import org.apache.log4j.Logger;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
@@ -40,7 +45,7 @@ public class MessageService extends AbstractCoreService {
 
     private static boolean _invoked = false;
     private static MessageService _singleton;
-    private static Thread _serverThread;
+    private static Thread _serviceThread;
     private LinkedBlockingQueue<Message> queue;
 
     /**
@@ -76,12 +81,12 @@ public class MessageService extends AbstractCoreService {
     public void boot() {
         if (!_running) {
             log.info("Booting MessageService...");
-            _serverThread = new Thread(() -> {
+            _serviceThread = new Thread(() -> {
                 _running = true;
                 _singleton.run();
             });
-            _serverThread.setName("MessageService");
-            _serverThread.start();
+            _serviceThread.setName("MessageService");
+            _serviceThread.start();
         }
     }
 
@@ -99,11 +104,26 @@ public class MessageService extends AbstractCoreService {
 
                     // Do we have a system message?
                     if (m.isSystemMessage() && m.getTopic() == null) {
-                        // TODO: If web admin config flag for system message broadcast is true, distribute to all topics
-                        // TODO: but for now, just execute as a NO-OP.
 
-                        log.info("Recieved message was a SystemeMessage: " + m.getMessage());
-                        // Set it to processed
+                        log.info("Recieved message was a SystemMessage: " + m.getMessage());
+
+                        // Check if we are to broadcast this system message
+                        if (Application.BROADCAST_SYSTEM_MESSAGES_TO_SUBSCRIBERS) {
+
+                            log.info("System Message Broadcast set to TRUE, distributing system message...");
+
+                            // Generate duplicate messages to all topics and iterate over them
+                            generateMessageToAllTopics(m).stream().forEach(message -> {
+                                // Fetch all protocol servers, and call sendMessage on each
+                                CoreService.getInstance().getAllProtocolServers().forEach(s -> s.sendMessage(message));
+                                // Flag the message as processed
+                                message.setProcessed();
+                            });
+
+                            log.info("System message distribution completed");
+                        }
+
+                        // Set original message as processed.
                         m.setProcessed();
 
                         // Continue the run loop
@@ -116,7 +136,7 @@ public class MessageService extends AbstractCoreService {
                         CoreService.getInstance().getAllProtocolServers().forEach(p -> p.sendMessage(m));
                         // Set the message as processed, and store the completion time
                         LocalDateTime completedAt = m.setProcessed();
-                        log.info("Message successfully distributed: " + m);
+                        log.info("Message successfully distributed: " + m + " (" + completedAt + ")");
                     });
 
                 } catch (InterruptedException e) {
@@ -146,6 +166,31 @@ public class MessageService extends AbstractCoreService {
         } catch (InterruptedException e) {
             log.error("Interrupted while trying to inject shutdown message to queue");
         }
+    }
+
+    /* ----------------------------------------------------------------------------------------------- */
+
+    /* Private helper methods */
+
+    /**
+     * Private helper method to duplicate an incoming message to be
+     * @param m The message to be duplicated to all topics
+     * @return A HashSet of the generated messages
+     */
+    private HashSet<Message> generateMessageToAllTopics(Message m) {
+        // Initialize the collector
+        HashSet<Message> generated = new HashSet<>();
+        // Iterate over all topics and generate individual messages per topic
+        TopicService.getInstance().getAllTopics().stream().forEach(t -> {
+            // Create the message wrapper
+            Message msg = new Message(m.getMessage(), t, m.getPublisher());
+            // Flag the generated message the same as the originating message
+            msg.setSystemMessage(m.isSystemMessage());
+            // Add the message to the collector
+            generated.add(msg);
+        });
+
+        return generated;
     }
 
 }

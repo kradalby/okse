@@ -44,7 +44,7 @@ public class TopicService extends AbstractCoreService {
 
     private static boolean _invoked = false;
     private static TopicService _singleton = null;
-    private static Thread _serverThread;
+    private static Thread _serviceThread;
     private LinkedBlockingQueue<TopicTask> queue;
     private HashMap<String, Topic> allTopics;
     private HashSet<TopicChangeListener> _listeners;
@@ -85,12 +85,12 @@ public class TopicService extends AbstractCoreService {
     public void boot() {
         if (!_running) {
             log.info("Booting TopicService...");
-            _serverThread = new Thread(() -> {
+            _serviceThread = new Thread(() -> {
                 _running = true;
                 _singleton.run();
             });
-            _serverThread.setName("TopicService");
-            _serverThread.start();
+            _serviceThread.setName("TopicService");
+            _serviceThread.start();
         }
     }
 
