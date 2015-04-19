@@ -10,30 +10,44 @@
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
 
-package no.ntnu.okse.protocol;
+package no.ntnu.okse.web.model;
 
-import no.ntnu.okse.connection.Connector;
-import no.ntnu.okse.protocol.dto.AbstractDTO;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * Created by Aleksander Skraastad (myth) on 2/27/15.
- * <p>
- * okse is licenced under the MIT licence.
+ * Created by kradalby on 17/04/15.
  */
-public interface Protocol {
-    public String getProtocolName();
-    public Connector getConnector();
-    public AbstractDTO getDTO();
+
+public class Log {
+    private String name;
+    private List<String> lines;
+
+    public Log(String name, List<String> lines) {
+        this.name = name;
+        this.lines = lines;
+
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public List<String> getLines() {
+        return lines;
+    }
+
+
 }

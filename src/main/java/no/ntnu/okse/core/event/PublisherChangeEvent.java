@@ -22,20 +22,42 @@
  * THE SOFTWARE.
  */
 
-package no.ntnu.okse.connection;
+package no.ntnu.okse.core.event;
 
-import no.ntnu.okse.protocol.Protocol;
-
-import java.util.ArrayList;
+import no.ntnu.okse.core.subscription.Publisher;
 
 /**
- * Created by Aleksander Skraastad (myth) on 3/2/15.
+ * Created by Aleksander Skraastad (myth) on 4/6/15.
  * <p>
  * okse is licenced under the MIT licence.
  */
-public interface Connector {
-    public String getBoundAddress();
-    public Integer getPort();
-    public Protocol getProtocolType();
-    public ArrayList<Client> getClients();
+public class PublisherChangeEvent extends Event {
+
+    public enum Type {
+        REGISTER,
+        UNREGISTER
+    }
+
+    Type type;
+
+    /**
+     * Constructs an Event containing an operation, some data and a dataType.
+     * <p>
+     *
+     * @param type : A Type enum value from RegistrationChangeEvent class.
+     * @param data : An object containing the data payload.
+     */
+    public PublisherChangeEvent(PublisherChangeEvent.Type type, Publisher data) {
+        super(data);
+    }
+
+    @Override
+    public Publisher getData() {
+        return (Publisher) this.data;
+    }
+
+    @Override
+    public Object getType() {
+        return this.type;
+    }
 }

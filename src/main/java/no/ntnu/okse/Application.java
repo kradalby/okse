@@ -25,10 +25,15 @@
 package no.ntnu.okse;
 
 import no.ntnu.okse.core.CoreService;
+import no.ntnu.okse.core.messaging.MessageService;
+import no.ntnu.okse.core.subscription.SubscriptionService;
+import no.ntnu.okse.core.topic.TopicService;
 import no.ntnu.okse.db.DB;
+import no.ntnu.okse.examples.DummyProtocolServer;
 import no.ntnu.okse.protocol.wsn.WSNotificationServer;
 import no.ntnu.okse.web.Server;
 import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
 
 import java.io.File;
 
@@ -42,6 +47,7 @@ public class Application {
 
     /* Default global variables */
     public static long DEFAULT_SUBSCRIPTION_TERMINATION_TIME = 15552000000L; // Half a year
+    public static boolean BROADCAST_SYSTEM_MESSAGES_TO_SUBSCRIBERS = false;
 
     private static Logger log;
     public static CoreService cs;
@@ -53,6 +59,7 @@ public class Application {
      * @param args Command line arguments
      */
     public static void main(String[] args) {
+        PropertyConfigurator.configure("config/log4j.properties");
         log = Logger.getLogger(Application.class.getName());
 
         File dbFile = new File("okse.db");
@@ -64,25 +71,23 @@ public class Application {
             log.info("okse.db exists");
         }
 
-        // Initialize system threads
+        // Initialize main system components
         webserver = new Server();
-        cs = new CoreService();
+        cs = CoreService.getInstance();
 
-        // Add ProtocolServers to CoreService
+        /* REGISTER CORE SERVICES HERE */
+        cs.registerService(TopicService.getInstance());
+        cs.registerService(MessageService.getInstance());
+        cs.registerService(SubscriptionService.getInstance());
+
+        /* REGISTER PROTOCOL SERVERS HERE */
         cs.addProtocolServer(WSNotificationServer.getInstance());
-
-
+        cs.addProtocolServer(DummyProtocolServer.getInstance());    // Example ProtocolServer
 
         // Start the admin console
         webserver.run();
 
         // Start the CoreService
-        cs.start();
-
-        try {
-            cs.join();
-        } catch (InterruptedException e) {
-            log.trace(e.getStackTrace());
-        }
+        cs.boot();
     }
 }

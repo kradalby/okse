@@ -24,11 +24,14 @@
 
 package no.ntnu.okse.web.controller;
 
+import no.ntnu.okse.core.subscription.SubscriptionService;
 import org.springframework.beans.factory.annotation.Value;
 import no.ntnu.okse.Application;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -44,6 +47,8 @@ import java.util.logging.Logger;
 @Controller
 public class IndexController {
 
+    private static org.apache.log4j.Logger log = org.apache.log4j.Logger.getLogger(IndexController.class.getName());
+
     @Value("${spring.application.name}")
     private String appName;
 
@@ -57,6 +62,7 @@ public class IndexController {
         model.addAttribute("projectName", appName);
         model.addAttribute("serverPort", port);
         model.addAttribute("environment", createEnvironmentList());
+        model.addAttribute("subscribers", SubscriptionService.getInstance().getAllSubscribers().size());
 
         try {
             model.addAttribute("serverAddress", InetAddress.getLocalHost().getHostAddress());

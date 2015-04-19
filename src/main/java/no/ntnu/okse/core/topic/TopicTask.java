@@ -29,7 +29,33 @@ package no.ntnu.okse.core.topic;
  * <p>
  * okse is licenced under the MIT licence.
  */
-public interface TopicTask {
-    // Task method to be called from the TopicService
-    public void performJob();
+public class TopicTask {
+
+    // The different Task types
+    public static enum Type {
+        NEW_TOPIC,
+        UPDATE_TOPIC,
+        DELETE_TOPIC,
+        SHUTDOWN
+    }
+
+    // Needed fields
+    private Type type;
+    private Runnable job;
+
+    // Public constructor
+    public TopicTask(Type type, Runnable job) {
+        this.type = type;
+        this.job = job;
+    }
+
+    // Public getter for Type
+    public Type getType() {
+        return this.type;
+    }
+
+    // Public run-delegation method
+    public void run() {
+        this.job.run();
+    }
 }

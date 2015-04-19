@@ -33,6 +33,8 @@ import java.util.HashSet;
 
 import com.google.common.io.ByteStreams;
 import no.ntnu.okse.Application;
+import no.ntnu.okse.core.messaging.Message;
+import no.ntnu.okse.core.subscription.SubscriptionService;
 import no.ntnu.okse.protocol.AbstractProtocolServer;
 import org.apache.log4j.Logger;
 import org.eclipse.jetty.client.HttpClient;
@@ -207,38 +209,19 @@ public class WSNotificationServer extends AbstractProtocolServer {
                 // For all registered connectors in WSNotificationServer, add these to the Jetty Server
                 this._connectors.stream().forEach(c -> this._server.addConnector(c));
 
-                // Register the needed web service proxies
-                //NotificationBrokerImpl producer = new NotificationBrokerImpl();
-                //SimpleSubscriptionManager subscriptionManager = new SimpleSubscriptionManager();
-                //SimplePublisherRegistrationManager publisherRegistrationManager = new SimplePublisherRegistrationManager();
-
-                /* OKSE CUSTOM WEB SERVICES HERE BE DRAGONS */
+                /* OKSE custom WS-Nu web services */
                 WSNCommandProxy broker = new WSNCommandProxy();
                 WSNSubscriptionManager subscriptionManager = new WSNSubscriptionManager();
-                Application.cs.getSubscriptionService().addSubscriptionChangeListener(subscriptionManager);
+                SubscriptionService.getInstance().addSubscriptionChangeListener(subscriptionManager);
 
                 broker.quickBuild("broker", this._requestParser);
                 subscriptionManager.quickBuild("subscriptionManager", this._requestParser);
-                subscriptionManager.initCoreSubscriptionService(Application.cs.getSubscriptionService());
+                subscriptionManager.initCoreSubscriptionService(SubscriptionService.getInstance());
                 broker.setSubscriptionManager(subscriptionManager);
-
-                // Pure WS-Nu quickbuilds and service registry
-                /*producer.quickBuild("broker", this._requestParser);
-                subscriptionManager.quickBuild("subscriptionManager", this._requestParser);
-                publisherRegistrationManager.quickBuild("publisherRegistrationManager", this._requestParser);
-                producer.setSubscriptionManager(subscriptionManager);
-                producer.setRegistrationManager(publisherRegistrationManager);*/
 
                 // Create a new thread for the Jetty Server to run in
                 this._serverThread = new Thread(() -> {
-                    try {
-                        WSNotificationServer.this._server.start();
-                        WSNotificationServer.this._server.join();
-
-                    } catch (Exception serverError) {
-                        totalErrors++;
-                        log.trace(serverError.getStackTrace());
-                    }
+                    this.run();
                 });
                 this._serverThread.setName("WSNServer");
                 // Start the Jetty Server
@@ -253,6 +236,21 @@ public class WSNotificationServer extends AbstractProtocolServer {
     }
 
     /**
+     * This interface method should contain the main run loop initialization
+     */
+    @Override
+    public void run() {
+        try {
+            WSNotificationServer.this._server.start();
+            WSNotificationServer.this._server.join();
+
+        } catch (Exception serverError) {
+            totalErrors++;
+            log.trace(serverError.getStackTrace());
+        }
+    }
+
+    /**
      * Fetch the HashSet containing all WebServices registered to the protocol server
      * @return A HashSet of ServiceConnections for all the registered web services.
      */
@@ -260,8 +258,10 @@ public class WSNotificationServer extends AbstractProtocolServer {
         return _services;
     }
 
+    /**
+     * This method stops the execution of the WSNotificationServer instance.
+     */
     @Override
-
     public void stopServer() {
         try {
             log.info("Stopping WSNServer...");
@@ -281,6 +281,19 @@ public class WSNotificationServer extends AbstractProtocolServer {
     @Override
     public String getProtocolServerType() {
         return protocolServerType;
+    }
+
+    /**
+     * This interface method must take in an instance of Message, which contains the appropriate references
+     * and flags needed to distribute the message to consumers. Implementation specific details can vary from
+     * protocol to protocol, but the end result of a method call to sendMessage is that the message is delivered,
+     * or an error is logged.
+     *
+     * @param message An instance of Message containing the required data to distribute a message.
+     */
+    @Override
+    public void sendMessage(Message message) {
+        log.info("Recieved message for distribution");
     }
 
     /**
@@ -524,7 +537,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
         }
     }
 
-    public synchronized InternalMessage sendMessage(InternalMessage message) {
+    public InternalMessage sendMessage(InternalMessage message) {
 
         // Fetch the requestInformation from the message, and extract the endpoint
         RequestInformation requestInformation = message.getRequestInformation();

@@ -22,23 +22,15 @@
  * THE SOFTWARE.
  */
 
-package no.ntnu.okse.connection;
+package no.ntnu.okse.core.event.listeners;
 
-import no.ntnu.okse.core.InternalMessage;
-import no.ntnu.okse.protocol.Protocol;
+import no.ntnu.okse.core.event.PublisherChangeEvent;
 
 /**
- * Created by Aleksander Skraastad (myth) on 3/2/15.
+ * Created by Aleksander Skraastad (myth) on 4/6/15.
  * <p>
  * okse is licenced under the MIT licence.
- * </p>
  */
-public interface Client {
-    public String getClientAddress();
-    public Integer getClientPort();
-    public boolean sendMessage(InternalMessage m);
-    public void messageRecieved();
-    public boolean heartbeat();
-    public void disconnect();
-    public Protocol getProtocol();
+public interface PublisherChangeListener {
+    public void publisherChanged(PublisherChangeEvent e);
 }

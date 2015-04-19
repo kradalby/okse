@@ -22,15 +22,43 @@
  * THE SOFTWARE.
  */
 
-package no.ntnu.okse.core.event.listeners;
-
-import no.ntnu.okse.core.event.RegistrationChangeEvent;
+package no.ntnu.okse.core.subscription;
 
 /**
- * Created by Aleksander Skraastad (myth) on 4/6/15.
+ * Created by Aleksander Skraastad (myth) on 4/18/15.
  * <p>
  * okse is licenced under the MIT licence.
  */
-public interface RegistrationChangeListener {
-    public void registrationChanged(RegistrationChangeEvent e);
+public class SubscriptionTask {
+
+    // The different Task types
+    public static enum Type {
+        NEW_SUBSCRIBER,
+        NEW_PUBLISHER,
+        UPDATE_SUBSCRIBER,
+        UPDATE_PUBLISHER,
+        DELETE_SUBSCRIBER,
+        DELETE_PUBLISHER,
+        SHUTDOWN
+    }
+
+    // Needed fields
+    private Type type;
+    private Runnable job;
+
+    // Public constructor
+    public SubscriptionTask(Type type, Runnable job) {
+        this.type = type;
+        this.job = job;
+    }
+
+    // Public getter for Type
+    public Type getType() {
+        return this.type;
+    }
+
+    // Public run-delegation method
+    public void run() {
+        this.job.run();
+    }
 }

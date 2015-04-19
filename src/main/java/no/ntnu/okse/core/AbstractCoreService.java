@@ -22,30 +22,48 @@
  * THE SOFTWARE.
  */
 
+package no.ntnu.okse.core;
+
+import org.apache.log4j.Logger;
+
 /**
- * Created by Fredrik Tørnvall (freboto) and Håkon Ødegård Løvdal (hakloev) on 02/03/15.
+ * Created by Aleksander Skraastad (myth) on 4/18/15.
+ * <p>
+ * okse is licenced under the MIT licence.
  */
+public abstract class AbstractCoreService {
 
+    // Instance-specific fields
+    protected boolean _running;
+    protected Logger log;
 
-var Config = (function($) {
-
-    var bindButtons = function() {
-        $("#add-predefined-mapping").on('click', function(e) {
-            console.log('[Debug][Config] Add predefined mapping between ' + $('#from-topic').val() + ' --> ' + $('#to-topic').val())
-        });
+    /**
+     * Protected constructor that takes in the className string from the subclass (for logger initializing)
+     * @param className
+     */
+    protected AbstractCoreService(String className) {
+        _running = false;
+        log = Logger.getLogger(className);
     }
 
-    return {
-        error: function(xhr, status, error) {
-            console.error("[Error][Config] in Ajax with the following callback [status: " + xhr.status +  " readyState: " + xhr.readyState + " responseText: " + xhr.responseText + "]")
-        },
-        refresh: function(response) {
-            console.log("[Debug][Config]" + JSON.stringify(response))
-        },
-        init: function() {
-            bindButtons()
-        }
-    }
+    /**
+     * Initializing method
+     */
+    protected abstract void init();
 
+    /**
+     * Startup method that sets up the service
+     */
+    public abstract void boot();
 
-})(jQuery)
+    /**
+     * Main run method that will be called when the subclass' serverThread is started
+     */
+    public abstract void run();
+
+    /**
+     * Graceful shutdown method
+     */
+    public abstract void stop();
+
+}

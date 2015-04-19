@@ -24,17 +24,15 @@
 
 package no.ntnu.okse.core.event;
 
-import no.ntnu.okse.core.subscription.Publisher;
-
 /**
- * Created by Aleksander Skraastad (myth) on 4/6/15.
+ * Created by Aleksander Skraastad (myth) on 4/18/15.
  * <p>
  * okse is licenced under the MIT licence.
  */
-public class RegistrationChangeEvent extends Event {
+public class SystemEvent extends Event {
 
-    public enum Type {
-        REGISTER
+    public static enum Type {
+        SHUTDOWN
     }
 
     Type type;
@@ -43,20 +41,31 @@ public class RegistrationChangeEvent extends Event {
      * Constructs an Event containing an operation, some data and a dataType.
      * <p>
      *
-     * @param type : A Type enum value from RegistrationChangeEvent class.
      * @param data : An object containing the data payload.
      */
-    public RegistrationChangeEvent(RegistrationChangeEvent.Type type, Publisher data) {
+    public SystemEvent(Type type, Object data) {
         super(data);
+        this.type = type;
     }
 
+    /**
+     * An abstract method to retrieve the data payload.
+     * <p>
+     *
+     * @return: An object containing the data payload casted to proper type in subclass.
+     */
     @Override
-    public Publisher getData() {
-        return (Publisher) this.data;
+    public Object getData() {
+        return data;
     }
 
+    /**
+     * An abstract method that should return a subclass enum type
+     *
+     * @return Type enum implemented in subclass
+     */
     @Override
     public Object getType() {
-        return this.type;
+        return type;
     }
 }

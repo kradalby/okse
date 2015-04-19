@@ -24,76 +24,339 @@
 
 package no.ntnu.okse.core.subscription;
 
-import no.ntnu.okse.core.event.RegistrationChangeEvent;
+import no.ntnu.okse.core.AbstractCoreService;
+import no.ntnu.okse.core.event.PublisherChangeEvent;
 import no.ntnu.okse.core.event.SubscriptionChangeEvent;
-import no.ntnu.okse.core.event.listeners.RegistrationChangeListener;
+import no.ntnu.okse.core.event.listeners.PublisherChangeListener;
 import no.ntnu.okse.core.event.listeners.SubscriptionChangeListener;
 import no.ntnu.okse.core.topic.Topic;
-import org.apache.log4j.Logger;
 
 import java.util.HashSet;
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * Created by Aleksander Skraastad (myth) on 4/5/15.
  * <p>
  * okse is licenced under the MIT licence.
  */
-public class SubscriptionService {
+public class SubscriptionService extends AbstractCoreService {
 
-    private Logger log;
+    private static SubscriptionService _singleton;
+    private static Thread _serviceThread;
+    private static boolean _invoked = false;
 
+    private LinkedBlockingQueue<SubscriptionTask> queue;
     private HashSet<SubscriptionChangeListener> _subscriptionListeners;
-    private HashSet<RegistrationChangeListener> _registrationListeners;
+    private HashSet<PublisherChangeListener> _registrationListeners;
     private HashSet<Subscriber> _subscribers;
     private HashSet<Publisher> _publishers;
 
-    public SubscriptionService() {
-        log = Logger.getLogger(SubscriptionService.class.getName());
+    /**
+     * Private constructor that passes classname to superclass log field and calls initialization method
+     */
+    private SubscriptionService() {
+        super(SubscriptionService.class.getName());
+        init();
+    }
+
+    /**
+     * The main instanciation method of SubscriptionService adhering to the singleton pattern
+     * @return
+     */
+    public static SubscriptionService getInstance() {
+        if (!_invoked) _singleton = new SubscriptionService();
+        return _singleton;
+    }
+
+    /**
+     * Initializing method
+     */
+    @Override
+    protected void init() {
+        _invoked = true;
+        log.info("Initializing SubscriptionService...");
+        queue = new LinkedBlockingQueue<>();
         _subscribers = new HashSet<>();
         _publishers = new HashSet<>();
         _registrationListeners = new HashSet<>();
         _subscriptionListeners = new HashSet<>();
     }
 
+    /**
+     * Startup method that sets up the service
+     */
+    @Override
+    public void boot() {
+        if (!_running) {
+            log.info("Booting SubscriptionService...");
+            _serviceThread = new Thread(() -> {
+                _running = true;
+                _singleton.run();
+            });
+            _serviceThread.setName("SubscriptionService");
+            _serviceThread.start();
+        }
+    }
+
+    /**
+     * Main run method that will be called when the subclass' serverThread is started
+     */
+    @Override
+    public void run() {
+        log.info("SubscriptionService booted successfully");
+        while (_running) {
+            try {
+                SubscriptionTask task = queue.take();
+                log.info(task.getType() + " job recieved, executing task...");
+                // Perform the task
+                task.run();
+            } catch (InterruptedException e) {
+                log.warn("Interrupt caught, consider sending a No-Op Task to the queue to awaken the thread.");
+            }
+        }
+    }
+
+    /**
+     * Graceful shutdown method
+     */
+    @Override
+    public void stop() {
+        _running = false;
+        Runnable job = () -> log.info("Stopping SubscriptionService...");
+        try {
+            queue.put(new SubscriptionTask(SubscriptionTask.Type.SHUTDOWN, job));
+        } catch (InterruptedException e) {
+            log.error("Interrupted while trying to inject shutdown event to queue");
+        }
+    }
+
+    /* ------------------------------------------------------------------------------------------ */
+
+    /* Begin Service-Local methods */
+
+    /**
+     * This helper method injects a task into the task queue and handles interrupt exceptions
+     * @param task The SubscriptionTask to be executed
+     */
+    private void insertTask(SubscriptionTask task) {
+        try {
+            // Inject the task into the task queue
+            this.queue.put(task);
+        } catch (InterruptedException e) {
+            log.error("Interrupted while injecting task into queue");
+        }
+    }
+
+    /**
+     * Service-local private method to add a Subscriber to the list of subscribers
+     * @param s : A Subscriber instance with the proper fields set
+     */
+    private void addSubscriberLocal(Subscriber s) {
+        if (!_subscribers.contains(s)) {
+            // Add the subscriber
+            _subscribers.add(s);
+            log.info("Added new subscriber: " + s);
+            // Fire the subscribe event
+            fireSubcriptionChangeEvent(s, SubscriptionChangeEvent.Type.SUBSCRIBE);
+        } else {
+            log.warn("Attempt to add a subscriber that already exists!");
+        }
+    }
+
+    /**
+     * Service-local private method to remove a subscriber from the list of subscribers
+     * @param s : A Subscriber instance that exists in the subscribers set
+     */
+    private void removeSubscriberLocal(Subscriber s) {
+        if (_subscribers.contains(s)) {
+            // Remove the subscriber
+            _subscribers.remove(s);
+            log.info("Removed subscriber: " + s);
+            // Fire the unsubscribe event
+            fireSubcriptionChangeEvent(s, SubscriptionChangeEvent.Type.UNSUBSCRIBE);
+        } else {
+            log.warn("Attempt to remove a subscriber that did not exist!");
+        }
+    }
+
+    /**
+     * Service-local private method to renew the subscription for a particular subscriber
+     * @param s : The subscriber that is to be changed
+     * @param timeout : The new timeout time represented as seconds since unix epoch
+     */
+    private void renewSubscriberLocal(Subscriber s, long timeout) {
+        if (_subscribers.contains(s)) {
+            // Update the timeout field
+            s.setTimeout(timeout);
+            log.info("Renewed subscriber: " + s);
+            // Fire the renew event
+            fireSubcriptionChangeEvent(s, SubscriptionChangeEvent.Type.RENEW);
+        } else {
+            log.warn("Attempt to modify a subscriber that does not exist in the service!");
+        }
+    }
+
+    /**
+     * Service-local private method to pause the subscription for a particular subscriber
+     * @param s : The subscriber that is to be paused
+     */
+    private void pauseSubscriberLocal(Subscriber s) {
+        if (_subscribers.contains(s)) {
+            // Set the Paused attribute to true
+            s.setAttribute("paused", "true");
+            log.info("Paused subscriber: " + s);
+            // Fire the pause event
+            fireSubcriptionChangeEvent(s, SubscriptionChangeEvent.Type.PAUSE);
+        } else {
+            log.warn("Attempt to modify a subscriber that does not exist in the service!");
+        }
+    }
+
+    /**
+     * Service-local private method to register a publisher to the publisher set
+     * @param p : The publisher object that is to be registered
+     */
+    private void addPublisherLocal(Publisher p) {
+        if (!_publishers.contains(p)) {
+            // Add the publisher
+            _publishers.add(p);
+            log.info("Added publisher: " + p);
+            // Fire the register event
+            firePublisherChangeEvent(p, PublisherChangeEvent.Type.REGISTER);
+        } else {
+            log.warn("Attempt to add a publisher that already exists!");
+        }
+    }
+
+    /**
+     * Service-local private method to unregister a publisher from the publisher set
+     * @param p : A publisher object that exists in the publishers set
+     */
+    private void removePublisherLocal(Publisher p) {
+        if (_publishers.contains(p)) {
+            // Remove the publisher
+            _publishers.remove(p);
+            log.info("Removed publisher: " + p);
+            // Fire the remove event
+            firePublisherChangeEvent(p, PublisherChangeEvent.Type.UNREGISTER);
+        }
+    }
+    /* End Service-Local methods */
+
+    /* ------------------------------------------------------------------------------------------ */
+
     /* Begin subscriber public API */
-    public synchronized void addSubscriber(Subscriber s) {
-        _subscribers.add(s);
-        log.info("Added new subscriber: " + s);
-        fireSubcriptionChangeEvent(s, SubscriptionChangeEvent.Type.SUBSCRIBE);
+
+    /**
+     * Public method to add a Subscriber
+     * @param s The subscriber to be added
+     */
+    public void addSubscriber(Subscriber s) {
+        if (!_subscribers.contains(s)) {
+            // Create the job
+            Runnable job = () -> addSubscriberLocal(s);
+            // Initialize the SubscriptionTask wrapper
+            SubscriptionTask task = new SubscriptionTask(SubscriptionTask.Type.NEW_SUBSCRIBER, job);
+            // Inject the task
+            insertTask(task);
+        } else {
+            log.warn("Attempt to add a subscriber that already exists!");
+        }
     }
 
-    public synchronized void removeSubscriber(Subscriber s) {
-        _subscribers.remove(s);
-        log.info("Removed subscriber: " + s);
-        fireSubcriptionChangeEvent(s, SubscriptionChangeEvent.Type.UNSUBSCRIBE);
+    /**
+     * Public method to remove a Subscriber
+     * @param s A subscriber that exists in the subscribers set
+     */
+    public void removeSubscriber(Subscriber s) {
+        if (_subscribers.contains(s)) {
+            // Create the job
+            Runnable job = () -> removeSubscriberLocal(s);
+            // Initialize the SubscriptionTask wrapper
+            SubscriptionTask task = new SubscriptionTask(SubscriptionTask.Type.DELETE_SUBSCRIBER, job);
+            // Inject the task
+            insertTask(task);
+        } else {
+            log.warn("Attempt to remove a subscriber that did not exist!");
+        }
     }
 
-    public synchronized void pauseSubscriber(Subscriber s) {
-        s.setAttribute("paused", "true");
-        log.info("Subscriber paused: " + s);
-        fireSubcriptionChangeEvent(s, SubscriptionChangeEvent.Type.PAUSE);
+    /**
+     * Public method to renew a subscription
+     * @param s The subscriber object that is to be renewed
+     * @param timeout The new timeout of the subscription represented as seconds since unix epoch
+     */
+    public void renewSubscriber(Subscriber s, Long timeout) {
+        if (!_subscribers.contains(s)) {
+            // Create the job
+            Runnable job = () -> renewSubscriberLocal(s, timeout);
+            // Initialize the SubscriptionTask wrapper
+            SubscriptionTask task = new SubscriptionTask(SubscriptionTask.Type.UPDATE_SUBSCRIBER, job);
+            // Inject the task
+            insertTask(task);
+        } else {
+            log.warn("Attempt to modify a subscriber that did not exist in the service!");
+        }
     }
 
-    public synchronized void renewSubscriber(Subscriber s, Long timeout) {
-        s.setTimeout(timeout);
-        log.info("Subscriber renewed: " + s);
-        fireSubcriptionChangeEvent(s, SubscriptionChangeEvent.Type.RENEW);
+    /**
+     * Public method to pause a subscroption
+     * @param s The subciber object that is to be paused
+     */
+    public void pauseSubscriber(Subscriber s) {
+        if (_subscribers.contains(s)) {
+            // Create the job
+            Runnable job = () -> pauseSubscriberLocal(s);
+            // Initialize the SubscriptionTask wrapper
+            SubscriptionTask task = new SubscriptionTask(SubscriptionTask.Type.UPDATE_SUBSCRIBER, job);
+            // Inject the task
+            insertTask(task);
+        } else {
+            log.warn("Attempt to modify a subscriber that did not exist in the service!");
+        }
     }
     /* End subscriber public API */
 
+    /* ------------------------------------------------------------------------------------------ */
+
     /* Begin publisher public API */
-    public synchronized void addPublisher(Publisher p) {
-        _publishers.add(p);
-        log.info("Publisher registered: " + p);
-        fireRegistrationChangeEvent(p, RegistrationChangeEvent.Type.REGISTER);
+
+    /**
+     * Public method to register a publisher
+     * @param p The publisher object that is to be registered
+     */
+    public void addPublisher(Publisher p) {
+        if (!_publishers.contains(p)) {
+            // Create the job
+            Runnable job = () -> addPublisherLocal(p);
+            // Initialize the SubscriptionTask wrapper
+            SubscriptionTask task = new SubscriptionTask(SubscriptionTask.Type.NEW_PUBLISHER, job);
+            // Inject the task
+            insertTask(task);
+        } else {
+            log.warn("Attempt to add a publisher that already exists!");
+        }
     }
 
-    public synchronized void removePublisher(Publisher p) {
-        _publishers.remove(p);
-        log.info("Publisher removed: " + p);
-        fireRegistrationChangeEvent(p, RegistrationChangeEvent.Type.REGISTER);
+    /**
+     * Public method to unregister a publisher
+     * @param p A publisher object that exists in the publishers set
+     */
+    public void removePublisher(Publisher p) {
+        if (_publishers.contains(p)) {
+            // Create the job
+            Runnable job = () -> removePublisherLocal(p);
+            // Initialize the SubscriptionTask wrapper
+            SubscriptionTask task = new SubscriptionTask(SubscriptionTask.Type.DELETE_PUBLISHER, job);
+            // Inject the task
+            insertTask(task);
+        } else {
+            log.warn("Attempt to add a publisher that did not exist in the service!");
+        }
     }
     /* End publisher public API */
+
+    /* ------------------------------------------------------------------------------------------ */
 
     /**
      * Attempt to locate a subscriber by remote address, port and topic object.
@@ -103,15 +366,51 @@ public class SubscriptionService {
      * @return The Subscriber, if found, null otherwise.
      */
     public Subscriber getSubscriber(String address, Integer port, Topic topic) {
+        // TODO: FIX THIS AS EVERY SUBSCRIBER MUST HAVE A UNIQUE ID
+        // TODO: Also maek into stream and use filter lambdas
+        // TODO: Will this trigger concurrent modification exception if new subs are added during iteration?
         for (Subscriber s: _subscribers) {
             if (s.getAddress().equals(address) &&
-                s.getPort().equals(port) &&
-                s.getTopic().equals(topic)) {
+                    s.getPort().equals(port) &&
+                    s.getTopic().equals(topic.getFullTopicString())) {
                 return s;
             }
         }
         return null;
     }
+
+    /**
+     * Retrieve a HashSet of all subscribers that have subscribed to a specific topic
+     * @param topic A raw topic string of the topic to select subscribers from
+     * @return A HashSet of Subscriber objects that have subscribed to the specified topic
+     */
+    public HashSet<Subscriber> getAllSubscribersForTopic(String topic) {
+        // Initialize a collector
+        HashSet<Subscriber> results = new HashSet<>();
+
+        // TODO: Will this trigger concurrent modification exception if new subs are added during iteration?
+
+        // Iterate over all subscribers
+        _subscribers.stream()
+                    // Only pass on those who match topic argument
+                    .filter(s -> s.getTopic().equals(topic))
+                    // Collect in the results set
+                    .forEach(s -> results.add(s));
+
+        return results;
+    }
+
+    /**
+     * Retrive a HashSet of all subscribers on the broker
+     * @return A HashSet of Subscriber objects that have subscribed on the broker
+     */
+    public HashSet<Subscriber> getAllSubscribers() {
+        return (HashSet<Subscriber>) _subscribers.clone();
+    }
+
+    /* ------------------------------------------------------------------------------------------ */
+
+    /* Begin listener support */
 
     /**
      * SubscriptionChange event listener support
@@ -140,29 +439,30 @@ public class SubscriptionService {
     }
 
     /**
-     * RegistrationChange event listener support
-     * @param r : An object implementing the RegistrationChangeListener interface
+     * PublisherChange event listener support
+     * @param r : An object implementing the PublisherChangeListener interface
      */
-    public synchronized void addRegistrationChangeListener(RegistrationChangeListener r) {
+    public synchronized void addPublisherChangeListener(PublisherChangeListener r) {
         _registrationListeners.add(r);
     }
 
     /**
-     * RegistrationChange event listener support
-     * @param r : An object implementing the RegistrationChangeListener interface
+     * PublisherChange event listener support
+     * @param r : An object implementing the PublisherChangeListener interface
      */
-    public synchronized void removeRegistrationChangeListener(RegistrationChangeListener r) {
+    public synchronized void removePublisherChangeListener(PublisherChangeListener r) {
         if (_registrationListeners.contains(r)) _registrationListeners.remove(r);
     }
 
     /**
-     * Private helper method fo fire the registrationChange method on all listners.
+     * Private helper method fo fire the publisherChange method on all listners.
      * @param reg   : The particular publisher object that has changed.
      * @param type  : What type of action is associated with the publisher object.
      */
-    private void fireRegistrationChangeEvent(Publisher reg, RegistrationChangeEvent.Type type) {
-        RegistrationChangeEvent rce = new RegistrationChangeEvent(type, reg);
-        _registrationListeners.stream().forEach(l -> l.registrationChanged(rce));
+    private void firePublisherChangeEvent(Publisher reg, PublisherChangeEvent.Type type) {
+        PublisherChangeEvent rce = new PublisherChangeEvent(type, reg);
+        _registrationListeners.stream().forEach(l -> l.publisherChanged(rce));
     }
 
+    /* End listener support */
 }
