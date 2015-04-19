@@ -29,6 +29,7 @@ import no.ntnu.okse.core.messaging.MessageService;
 import no.ntnu.okse.core.subscription.SubscriptionService;
 import no.ntnu.okse.core.topic.TopicService;
 import no.ntnu.okse.db.DB;
+import no.ntnu.okse.examples.DummyProtocolServer;
 import no.ntnu.okse.protocol.wsn.WSNotificationServer;
 import no.ntnu.okse.web.Server;
 import org.apache.log4j.Logger;
@@ -75,12 +76,13 @@ public class Application {
         cs = CoreService.getInstance();
 
         /* REGISTER CORE SERVICES HERE */
-        cs.registerCoreService(TopicService.getInstance());
-        cs.registerCoreService(MessageService.getInstance());
-        cs.registerCoreService(SubscriptionService.getInstance());
+        cs.registerService(TopicService.getInstance());
+        cs.registerService(MessageService.getInstance());
+        cs.registerService(SubscriptionService.getInstance());
 
         /* REGISTER PROTOCOL SERVERS HERE */
         cs.addProtocolServer(WSNotificationServer.getInstance());
+        cs.addProtocolServer(DummyProtocolServer.getInstance());    // Example ProtocolServer
 
         // Start the admin console
         webserver.run();
