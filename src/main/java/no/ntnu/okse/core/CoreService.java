@@ -24,18 +24,11 @@
 
 package no.ntnu.okse.core;
 
-import no.ntnu.okse.Application;
 import no.ntnu.okse.core.event.Event;
 
 import no.ntnu.okse.core.event.SystemEvent;
 import no.ntnu.okse.core.messaging.Message;
-import no.ntnu.okse.core.subscription.SubscriptionService;
-import no.ntnu.okse.core.topic.TopicService;
-import no.ntnu.okse.protocol.AbstractProtocolServer;
-import no.ntnu.okse.protocol.Protocol;
 import no.ntnu.okse.protocol.ProtocolServer;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -113,9 +106,8 @@ public class CoreService extends AbstractCoreService {
     @Override
     public void run() {
         _running = true;
-        log.info("CoreService booted successfully.");
-        log.info("CoreService started.");
-        log.info("Attempting to boot ProtocolServers.");
+        log.info("CoreService booted successfully");
+        log.info("Attempting to boot ProtocolServers");
 
         // Call the boot() method on all registered Core Services
         this.bootCoreServices();
@@ -123,7 +115,7 @@ public class CoreService extends AbstractCoreService {
 
         // Call the boot() method on all registered ProtocolServers
         this.bootProtocolServers();
-        log.info("Completed booting ProtocolServers.");
+        log.info("Completed booting ProtocolServers");
 
         // Initiate main run loop, which awaits Events to be committed to the eventQueue
         while (_running) {
@@ -135,7 +127,7 @@ public class CoreService extends AbstractCoreService {
             }
         }
         // We have passed the main run loop, which means we are shutting down.
-        log.info("CoreService stopped.");
+        log.info("CoreService stopped");
     }
 
     /**
@@ -300,7 +292,7 @@ public class CoreService extends AbstractCoreService {
 
         // Iterate over all protocol servers and initiate shutdown process
         getAllProtocolServers().forEach(ps -> ps.stopServer());
-        log.info("ProtocolServers have been stopped.");
+        log.info("ProtocolServers have been stopped");
     }
 
     /**
