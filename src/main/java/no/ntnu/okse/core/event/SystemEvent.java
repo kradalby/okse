@@ -22,40 +22,50 @@
  * THE SOFTWARE.
  */
 
-package no.ntnu.okse.core.topic;
+package no.ntnu.okse.core.event;
 
 /**
- * Created by Aleksander Skraastad (myth) on 4/11/15.
+ * Created by Aleksander Skraastad (myth) on 4/18/15.
  * <p>
  * okse is licenced under the MIT licence.
  */
-public class TopicTask {
+public class SystemEvent extends Event {
 
-    // The different Task types
     public static enum Type {
-        NEW_TOPIC,
-        UPDATE_TOPIC,
-        DELETE_TOPIC,
         SHUTDOWN
     }
 
-    // Needed fields
-    private Type type;
-    private Runnable job;
+    Type type;
 
-    // Public constructor
-    public TopicTask(Type type, Runnable job) {
+    /**
+     * Constructs an Event containing an operation, some data and a dataType.
+     * <p>
+     *
+     * @param data : An object containing the data payload.
+     */
+    public SystemEvent(Type type, Object data) {
+        super(data);
         this.type = type;
-        this.job = job;
     }
 
-    // Public getter for Type
-    public Type getType() {
-        return this.type;
+    /**
+     * An abstract method to retrieve the data payload.
+     * <p>
+     *
+     * @return: An object containing the data payload casted to proper type in subclass.
+     */
+    @Override
+    public Object getData() {
+        return data;
     }
 
-    // Public run-delegation method
-    public void run() {
-        this.job.run();
+    /**
+     * An abstract method that should return a subclass enum type
+     *
+     * @return Type enum implemented in subclass
+     */
+    @Override
+    public Object getType() {
+        return type;
     }
 }

@@ -22,40 +22,42 @@
  * THE SOFTWARE.
  */
 
-package no.ntnu.okse.core.topic;
+package no.ntnu.okse.core.event;
+
+import no.ntnu.okse.core.subscription.Publisher;
 
 /**
- * Created by Aleksander Skraastad (myth) on 4/11/15.
+ * Created by Aleksander Skraastad (myth) on 4/6/15.
  * <p>
  * okse is licenced under the MIT licence.
  */
-public class TopicTask {
+public class PublisherChangeEvent extends Event {
 
-    // The different Task types
-    public static enum Type {
-        NEW_TOPIC,
-        UPDATE_TOPIC,
-        DELETE_TOPIC,
-        SHUTDOWN
+    public enum Type {
+        REGISTER,
+        UNREGISTER
     }
 
-    // Needed fields
-    private Type type;
-    private Runnable job;
+    Type type;
 
-    // Public constructor
-    public TopicTask(Type type, Runnable job) {
-        this.type = type;
-        this.job = job;
+    /**
+     * Constructs an Event containing an operation, some data and a dataType.
+     * <p>
+     *
+     * @param type : A Type enum value from RegistrationChangeEvent class.
+     * @param data : An object containing the data payload.
+     */
+    public PublisherChangeEvent(PublisherChangeEvent.Type type, Publisher data) {
+        super(data);
     }
 
-    // Public getter for Type
-    public Type getType() {
+    @Override
+    public Publisher getData() {
+        return (Publisher) this.data;
+    }
+
+    @Override
+    public Object getType() {
         return this.type;
-    }
-
-    // Public run-delegation method
-    public void run() {
-        this.job.run();
     }
 }

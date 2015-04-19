@@ -26,14 +26,13 @@ package no.ntnu.okse.protocol.wsn;
 
 import no.ntnu.okse.Application;
 import no.ntnu.okse.core.subscription.Subscriber;
-import no.ntnu.okse.core.subscription.SubscriptionService;
-import no.ntnu.okse.core.topic.Topic;
+import no.ntnu.okse.core.topic.TopicService;
+
 import org.apache.log4j.Logger;
 import org.ntnunotif.wsnu.base.internal.Hub;
 import org.ntnunotif.wsnu.base.net.NuNamespaceContextResolver;
 import org.ntnunotif.wsnu.base.topics.TopicUtils;
 import org.ntnunotif.wsnu.base.topics.TopicValidator;
-import org.ntnunotif.wsnu.base.util.Utilities;
 import org.ntnunotif.wsnu.services.eventhandling.PublisherRegistrationEvent;
 import org.ntnunotif.wsnu.services.eventhandling.SubscriptionEvent;
 import org.ntnunotif.wsnu.services.filterhandling.FilterSupport;
@@ -42,7 +41,7 @@ import org.ntnunotif.wsnu.services.general.HelperClasses;
 import org.ntnunotif.wsnu.services.general.ServiceUtilities;
 import org.ntnunotif.wsnu.services.general.WsnUtilities;
 import org.ntnunotif.wsnu.services.implementations.notificationbroker.AbstractNotificationBroker;
-import org.ntnunotif.wsnu.services.implementations.subscriptionmanager.AbstractSubscriptionManager;
+
 import org.oasis_open.docs.wsn.b_2.*;
 import org.oasis_open.docs.wsn.br_2.RegisterPublisher;
 import org.oasis_open.docs.wsn.br_2.RegisterPublisherResponse;
@@ -349,7 +348,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         }
 
         log.info("Sending addTopic request to TopicService");
-        Application.cs.getTopicService().addTopic(rawTopicContent);
+        TopicService.getInstance().addTopic(rawTopicContent);
 
         log.info("Initializing OKSE subscriber object");
         // Instanciate new OKSE Subscriber object

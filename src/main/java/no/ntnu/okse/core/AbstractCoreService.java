@@ -22,40 +22,48 @@
  * THE SOFTWARE.
  */
 
-package no.ntnu.okse.core.topic;
+package no.ntnu.okse.core;
+
+import org.apache.log4j.Logger;
 
 /**
- * Created by Aleksander Skraastad (myth) on 4/11/15.
+ * Created by Aleksander Skraastad (myth) on 4/18/15.
  * <p>
  * okse is licenced under the MIT licence.
  */
-public class TopicTask {
+public abstract class AbstractCoreService {
 
-    // The different Task types
-    public static enum Type {
-        NEW_TOPIC,
-        UPDATE_TOPIC,
-        DELETE_TOPIC,
-        SHUTDOWN
+    // Instance-specific fields
+    protected boolean _running;
+    protected Logger log;
+
+    /**
+     * Protected constructor that takes in the className string from the subclass (for logger initializing)
+     * @param className
+     */
+    protected AbstractCoreService(String className) {
+        _running = false;
+        log = Logger.getLogger(className);
     }
 
-    // Needed fields
-    private Type type;
-    private Runnable job;
+    /**
+     * Initializing method
+     */
+    protected abstract void init();
 
-    // Public constructor
-    public TopicTask(Type type, Runnable job) {
-        this.type = type;
-        this.job = job;
-    }
+    /**
+     * Startup method that sets up the service
+     */
+    public abstract void boot();
 
-    // Public getter for Type
-    public Type getType() {
-        return this.type;
-    }
+    /**
+     * Main run method that will be called when the subclass' serverThread is started
+     */
+    public abstract void run();
 
-    // Public run-delegation method
-    public void run() {
-        this.job.run();
-    }
+    /**
+     * Graceful shutdown method
+     */
+    public abstract void stop();
+
 }

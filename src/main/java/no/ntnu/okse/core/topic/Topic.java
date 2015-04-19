@@ -212,6 +212,36 @@ public class Topic {
         }
     }
 
+    /**
+     * Checks if this topic is the ancestor of another topic
+     * @param other The topic node we wish to explore if is a decendant of this topic node
+     * @return True if this topic is an ancestor of the argument, false otherwise
+     */
+    public boolean isAncestorOf(Topic other) {
+
+        // TODO: Write tests for this method (written on the fly)
+
+        // If the other is a root node, it is impossible that this object is an ancestor of it
+        if (other.isRoot()) return false;
+
+        // If the other's parent is this object, we hace a match
+        else if (other.getParent() == this) return true;
+
+        // Recursively ascend up the family tree
+        else return this.isAncestorOf(other.getParent());
+    }
+
+    /**
+     * Checks if this topic is a decendant of the argument topic. This method reuses the isAncestorOf method,
+     * by swapping the arguments.
+     *
+     * @param other The topic we wish to check if we have decended from
+     * @return True if we have decended from the argument topic, false otherwise
+     */
+    public boolean isDecendantOf(Topic other) {
+        return other.isAncestorOf(this);
+    }
+
     @Override
     public String toString() {
         return "Topic{" + this.getFullTopicString() + "}";
