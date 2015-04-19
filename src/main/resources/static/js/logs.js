@@ -54,9 +54,9 @@ var Logs = (function($) {
             * Initialize buttons with filters
             * */
             Main.ajax("log/levels", function(){
-                console.log("[Debug][Topics] Failed to load log levels")
+                console.log("[Debug][Logs] Failed to load log levels")
             }, function(data) {
-                console.log("[Debug][Topics] Adding log level buttons")
+                console.log("[Debug][Logs] Adding log level buttons")
                 var buttons = ""
                 $.each(data, function(i, level) {
                     buttons += '<a class="btn btn-default" role="button" id="button-' + level +'">' + level + '</a>'
@@ -77,9 +77,9 @@ var Logs = (function($) {
              * Initialize buttons with filters
              * */
             Main.ajax("log/files", function(){
-                console.log("[Debug][Topics] Failed to load log files")
+                console.log("[Debug][Logs] Failed to load log files")
             }, function(data) {
-                console.log("[Debug][Topics] Adding log files buttons")
+                console.log("[Debug][Logs] Adding log files buttons")
                 var files = ""
                 $.each(data, function(i) {
                     files += '<a class="btn btn-default" role="button" id="button-logID-' + i +'">' + data[i] + '</a>'
@@ -110,7 +110,7 @@ var Logs = (function($) {
             })
         },
         error: function(xhr, status, error) {
-            console.error("[Error][Stats] in Ajax with the following callback [status: " + xhr.status +  " readyState: " + xhr.readyState + " responseText: " + xhr.responseText + "]")
+            console.error("[Error][Logs] in Ajax with the following callback [status: " + xhr.status +  " readyState: " + xhr.readyState + " responseText: " + xhr.responseText + "]")
         },
         refresh: function(data) {
             $('#log-name').html(data.name)
