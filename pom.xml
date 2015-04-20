@@ -83,6 +83,11 @@
             <artifactId>spring-jdbc</artifactId>
             <version>4.1.4.RELEASE</version>
         </dependency>
+        <dependency>
+            <groupId>org.dna.mqtt</groupId>
+            <artifactId>moquette-broker</artifactId>
+            <version>0.6</version>
+        </dependency>
 
     </dependencies>
 
@@ -100,6 +105,16 @@
             <id>wsnu</id>
             <name>wsnu</name>
             <url>http://ws-nu.net/repo</url>
+        </repository>
+        <repository>
+            <id>bintray</id>
+            <url>http://dl.bintray.com/andsel/maven/</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
         </repository>
     </repositories>
 
