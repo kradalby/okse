@@ -103,12 +103,12 @@ var Logs = (function($) {
              * Add a listener to clear interval
              * */
             $("#button-refresh").on("click", function() {
-                if (!$(this).hasClass("stopped-refresh")) {
-                    $(this).addClass("stopped-refresh")
+                if (!$(this).hasClass("active")) {
+                    $(this).addClass("active")
                     $(this).text("Start refresh")
                     Main.clearIntervalForTab()
                 } else {
-                    $(this).removeClass("stopped-refresh");
+                    $(this).removeClass("active");
                     $(this).text("Stop refresh")
                     clickInterval = setInterval( function() {
                         Main.ajax(Logs.url(), Logs.error, Logs.refresh, "GET")
