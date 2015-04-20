@@ -43,8 +43,10 @@
                     <!-- List group -->
                     <ul class="list-group">
                         <li class="list-group-item"><strong>Subscribers: </strong><span class="total-subscribers" th:text="${subscribers}">Unknown</span></li>
-                        <li class="list-group-item"><strong>Bound to IP: </strong><span th:text="${serverAddress}">Unknown</span></li>
-                        <li class="list-group-item"><strong>Bound to port: </strong><span th:text="${serverPort}">Unknown</span></li>
+                        <li class="list-group-item" th:each="ip : ${serverIpAddresses}">
+                            <strong>Bound to IP: </strong><span th:text="${ip}">Unknown</span>
+                        </li>
+                        <li class="list-group-item"><strong>Bound to port: </strong>Different for all protocols</li>
                     </ul>
                 </div>
                 <a id="delete-all-topics" class="btn btn-block btn-danger">Delete all topics</a>

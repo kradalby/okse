@@ -33,12 +33,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
-import java.net.UnknownHostException;
+import java.net.*;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Properties;
 import java.util.logging.Logger;
 
@@ -55,38 +53,41 @@ public class IndexController {
     @Value("${spring.application.name}")
     private String appName;
 
-    @Value("${server.port}")
-    private String port;
-
     private Properties environment = System.getProperties();
 
     @RequestMapping("/")
     public String index(Model model) {
         model.addAttribute("projectName", appName);
-        model.addAttribute("serverPort", port);
         model.addAttribute("environment", createEnvironmentList());
         model.addAttribute("subscribers", SubscriptionService.getInstance().getAllSubscribers().size());
 
+        HashSet<String> ipAddresses = new HashSet<>();
 
         String ip;
         try {
             Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
             while (interfaces.hasMoreElements()) {
-                NetworkInterface iface = interfaces.nextElement();
-                // filters out 127.0.0.1 and inactive interfaces
-                if (iface.isLoopback() || !iface.isUp())
+                NetworkInterface iFace = interfaces.nextElement();
+                // Filters out 127.0.0.1 and inactive interfaces
+                if (iFace.isLoopback() || !iFace.isUp())
                     continue;
 
-                Enumeration<InetAddress> addresses = iface.getInetAddresses();
+                Enumeration<InetAddress> addresses = iFace.getInetAddresses();
+                iFace.getInterfaceAddresses();
                 while(addresses.hasMoreElements()) {
                     InetAddress addr = addresses.nextElement();
+                    // We are only interested in Inet4Addresses
+                    if (addr instanceof Inet6Address)
+                        continue;
                     ip = addr.getHostAddress();
-                    System.out.println(iface.getDisplayName() + " " + ip);
+                    ipAddresses.add(ip);
                 }
             }
         } catch (SocketException e) {
             throw new RuntimeException(e);
         }
+
+        model.addAttribute("serverIpAddresses", ipAddresses);
 
         return "fragments/index";
 
