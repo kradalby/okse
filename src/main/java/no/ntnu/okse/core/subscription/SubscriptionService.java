@@ -395,9 +395,7 @@ public class SubscriptionService extends AbstractCoreService {
                     // Only pass on those who match topic argument
                     .filter(s -> s.getTopic().equals(topic))
                     // Collect in the results set
-                    .forEach(s -> {
-                        results.add(s);
-                    });
+                    .forEach(s -> results.add(s));
 
         return results;
     }

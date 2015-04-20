@@ -34,9 +34,12 @@ import org.ntnunotif.wsnu.services.implementations.notificationproducer.Abstract
 import org.ntnunotif.wsnu.services.implementations.publisherregistrationmanager.AbstractPublisherRegistrationManager;
 import org.oasis_open.docs.wsn.br_2.DestroyRegistration;
 import org.oasis_open.docs.wsn.br_2.DestroyRegistrationResponse;
+import org.oasis_open.docs.wsn.brw_2.PublisherRegistrationManager;
 import org.oasis_open.docs.wsn.brw_2.ResourceNotDestroyedFault;
 import org.oasis_open.docs.wsrf.rw_2.ResourceUnknownFault;
 
+import javax.jws.WebMethod;
+import javax.jws.WebService;
 import java.util.HashMap;
 
 /**
@@ -44,6 +47,7 @@ import java.util.HashMap;
  * <p>
  * okse is licenced under the MIT licence.
  */
+@WebService
 public class WSNRegistrationManager extends AbstractPublisherRegistrationManager implements PublisherChangeListener {
 
     public static final String WSN_PUBLISHER_TOKEN = "wsn-publisherkey";
@@ -64,19 +68,37 @@ public class WSNRegistrationManager extends AbstractPublisherRegistrationManager
         _subscriptionService = service;
     }
 
-    @Override
-    public void addPublisher(String s, long l) {
-
+    public void addPublisher(Publisher p, AbstractNotificationBroker.PublisherHandle pubHandle) {
+        _subscriptionService.addPublisher(p);
+        localPublisherMap.put(p.getAttribute(WSN_PUBLISHER_TOKEN), p);
+        localPublisherHandle.put(p.getAttribute(WSN_PUBLISHER_TOKEN), pubHandle);
     }
 
     @Override
-    public void removePublisher(String s) {
+    public void addPublisher(String s, long l) {
+        log.warn("WS-Nu default addPublisher with hashKey and terminationTime called. " +
+                "Locate offending method and change to addSubscriber(Publisher p, PublisherHandle pubHandle)");
+    }
 
+    /**
+     * This method uses the OKSE core subscription service to remove the subscriber,
+     * and the awaits the callback from the publisherchangeevent to verify, and then remove from local maps
+     * @param p
+     */
+    @Override
+    public void removePublisher(String p) {
+        if (hasPublisher(p)) {
+            _subscriptionService.removePublisher(localPublisherMap.get(p));
+        }
+    }
+
+    public boolean hasPublisher(String p) {
+        return localPublisherMap.containsKey(p);
     }
 
     @Override
     public void update() {
-
+        // This should maybe proxy the periodic update event removing expired subs
     }
 
     @Override
@@ -85,7 +107,9 @@ public class WSNRegistrationManager extends AbstractPublisherRegistrationManager
         if (e.getData().getOriginProtocol().equals(WSNotificationServer.getInstance().getProtocolServerType())) {
             // Do we have an unregister?
             if (e.getType().equals(PublisherChangeEvent.Type.UNREGISTER)) {
-
+                // Remove the publisher from maps using its WSN_PUBLISHER_TOKEN hash
+                localPublisherMap.remove(e.getData().getAttribute(WSN_PUBLISHER_TOKEN));
+                localPublisherHandle.remove(e.getData().getAttribute(WSN_PUBLISHER_TOKEN));
             }
         }
     }
