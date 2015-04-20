@@ -517,9 +517,9 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         }
 
 
-        publishers.put(newSubscriptionKey,
-                new PublisherHandle(new HelperClasses.EndpointTerminationTuple(newSubscriptionKey, terminationTime),
-                        topics, registerPublisherRequest.isDemand()));
+        //publishers.put(newSubscriptionKey,
+        //        new PublisherHandle(new HelperClasses.EndpointTerminationTuple(newSubscriptionKey, terminationTime),
+        //                topics, registerPublisherRequest.isDemand()));
 
         // Initialize the response payload
         RegisterPublisherResponse response = new RegisterPublisherResponse();

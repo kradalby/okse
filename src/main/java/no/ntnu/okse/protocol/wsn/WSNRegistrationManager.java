@@ -59,7 +59,7 @@ public class WSNRegistrationManager extends AbstractPublisherRegistrationManager
         localPublisherMap = new HashMap<>();
         localPublisherHandle = new HashMap<>();
     }
-    
+
     public void initCoreSubscriptionService(SubscriptionService service) {
         _subscriptionService = service;
     }

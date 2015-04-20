@@ -25,6 +25,7 @@
 package no.ntnu.okse.examples;
 
 import no.ntnu.okse.core.messaging.Message;
+import no.ntnu.okse.core.subscription.SubscriptionService;
 import no.ntnu.okse.protocol.AbstractProtocolServer;
 import org.apache.log4j.Logger;
 
@@ -129,6 +130,10 @@ public class DummyProtocolServer extends AbstractProtocolServer {
                 while ((command = reader.readLine()) != null) {
                     // Log the recieved command
                     log.info("Command recieved: " + command);
+
+                    SubscriptionService.getInstance().getAllSubscribersForTopic("no/ffi")
+                            .stream()
+                            .forEach(s -> log.info("Subscriber for no/ffi : " + s));
 
                     // Update stats
                     totalMessages++;
