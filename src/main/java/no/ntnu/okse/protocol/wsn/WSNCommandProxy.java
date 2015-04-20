@@ -511,6 +511,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         List<TopicExpressionType> topics = registerPublisherRequest.getTopic();
 
         String rawTopicString = "";
+        String rawDialect = "";
 
         for (TopicExpressionType topic : topics) {
             try {
@@ -521,6 +522,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
                     for (Object t : topic.getContent()) {
                         rawTopicString = (String) t;
                     }
+                    rawDialect = topic.getDialect();
                 }
             } catch (TopicExpressionDialectUnknownFault topicExpressionDialectUnknownFault) {
                 log.error("Recieved an unknown topic expression dialect");
@@ -552,6 +554,8 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
 
         // Set up OKSE publisher object
         Publisher publisher = new Publisher(rawTopicString, requestAddress, port, WSNotificationServer.getInstance().getProtocolServerType());
+        publisher.setAttribute(WSNRegistrationManager.WSN_PUBLISHER_TOKEN, newSubscriptionKey);
+        ;
         _registrationManager.addPublisher(publisher, pubHandle);
 
         // Initialize the response payload
