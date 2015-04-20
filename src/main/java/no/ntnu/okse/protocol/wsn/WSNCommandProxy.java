@@ -477,7 +477,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
 
         // Extract the publisher endpoint
         W3CEndpointReference publisherEndpoint = registerPublisherRequest.getPublisherReference();
-        log.debug("Publisher endpint is: " + publisherEndpoint);
+        log.debug("Publisher endpoint is: " + publisherEndpoint);
 
         // If we do not have an endpoint, produce a soapfault
         if (publisherEndpoint == null) {

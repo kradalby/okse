@@ -154,7 +154,7 @@ public class Publisher {
 
     @Override
     public String toString() {
-        return "[" + originProtocol + "] " + host + ":" + port + " on topic: " + topic;
+        return "Publisher [" + originProtocol + "] " + host + ":" + port + " on topic: " + topic;
     }
 
 }
