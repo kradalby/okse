@@ -38,7 +38,7 @@ var Logs = (function($) {
     }
 
     var updateLogView = function(data) {
-        var HTML = '<pre>';
+        var HTML = '<pre class="log-view">';
         $.each(data.lines, function (i, line) {
            HTML += line + '\n'
         });
@@ -59,8 +59,8 @@ var Logs = (function($) {
                 console.log("[Debug][Logs] Adding log level buttons")
                 var buttons = ""
                 $.each(data, function(i, level) {
-                    buttons += '<a class="btn btn-default" role="button" id="button-' + level +'">' + level + '</a>'
-                })
+                    buttons += '<div class="btn-group" role="group"><button type="button" class="btn btn-info" id="button-' + level + '">' + level + '</button></div>'
+                });
                 $("#log-level").html(buttons)
                 $.each(data, function(i, level) {
                     $("#button-" + level).on("click", function(){
@@ -82,7 +82,7 @@ var Logs = (function($) {
                 console.log("[Debug][Logs] Adding log files buttons")
                 var files = ""
                 $.each(data, function(i) {
-                    files += '<a class="btn btn-default" role="button" id="button-logID-' + i +'">' + data[i] + '</a>'
+                    files += '<div class="btn-group" role="group"><button type="button" class="btn btn-success" id="button-logID-' + i + '">' + data[i] + '</button></div>'
                 })
                 $("#log-file").html(files)
                 $.each(data, function(i) {
@@ -103,9 +103,14 @@ var Logs = (function($) {
              * Add a listener to clear interval
              * */
             $("#button-refresh").on("click", function() {
-                if (!$(this).hasClass("disabled")) {
-                    $(this).addClass("disabled")
+                if (!$(this).hasClass("active")) {
+                    $(this).addClass("active")
+                    $(this).text("Start refresh")
                     Main.clearIntervalForTab()
+                } else {
+                    $(this).removeClass("active");
+                    $(this).text("Stop refresh")
+                    Main.setIntervalForLogTab()
                 }
             })
         },

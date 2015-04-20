@@ -52,7 +52,6 @@ public class ApiController {
     public HashMap<String, String> main() {
         HashMap<String, String> mainApi = new HashMap<>();
         mainApi.put("subscribers", String.valueOf(SubscriptionService.getInstance().getAllSubscribers().size()));
-        log.info("Reaching for /api/main");
         return mainApi;
     }
 

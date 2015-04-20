@@ -50,9 +50,6 @@ public class TopicController {
 
     @RequestMapping(method = RequestMethod.GET)
     public Topic topics() {
-        log.info("Subscribers: " + SubscriptionService.getInstance().getAllSubscribers().size());
-
-
         return new Topic(new Random().nextLong(), "testTopic", new ArrayList<Subscriber>(Arrays.asList(
                 new Subscriber("128.0.0.1", "8080", "WSN", new HashMap<String, String>()),
                 new Subscriber("78.91.14.24", "234", "DDS", new HashMap<String, String>()),
@@ -62,17 +59,17 @@ public class TopicController {
 
     @RequestMapping(method = RequestMethod.POST, value = "/delete/all")
     public void deleteAll() {
-        log.info("Deleting all topics");
+        log.debug("Deleting all topics");
     }
 
     @RequestMapping(method = RequestMethod.POST, value = "/delete/{id}")
     public void deleteOneTopic(@PathVariable String id) {
-        log.info("Deleting topic with ID: " + id);
+        log.debug("Deleting topic with ID: " + id);
     }
 
     @RequestMapping(method = RequestMethod.POST, value="/delete/subscriber/{id}")
     public void deleteOneSubscriber(@PathVariable String id) {
-        log.info("Deleting subscriber with ID: " + id);
+        log.debug("Deleting subscriber with ID: " + id);
     }
 
 
