@@ -33,6 +33,7 @@ import org.ntnunotif.wsnu.base.internal.Hub;
 import org.ntnunotif.wsnu.base.net.NuNamespaceContextResolver;
 import org.ntnunotif.wsnu.base.topics.TopicUtils;
 import org.ntnunotif.wsnu.base.topics.TopicValidator;
+import org.ntnunotif.wsnu.base.util.InternalMessage;
 import org.ntnunotif.wsnu.services.eventhandling.PublisherRegistrationEvent;
 import org.ntnunotif.wsnu.services.eventhandling.SubscriptionEvent;
 import org.ntnunotif.wsnu.services.filterhandling.FilterSupport;
@@ -50,11 +51,9 @@ import org.oasis_open.docs.wsn.brw_2.PublisherRegistrationRejectedFault;
 import org.oasis_open.docs.wsn.bw_2.*;
 import org.oasis_open.docs.wsrf.rw_2.ResourceUnknownFault;
 
-import javax.jws.Oneway;
-import javax.jws.WebMethod;
-import javax.jws.WebParam;
-import javax.jws.WebService;
+import javax.jws.*;
 import javax.jws.soap.SOAPBinding;
+import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.annotation.XmlSeeAlso;
 import javax.xml.datatype.DatatypeConfigurationException;
@@ -140,8 +139,46 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         return filterSupport.evaluateNotifyToSubscription(notify, subscriptionHandle.subscriptionInfo, nuNamespaceContextResolver);
     }
 
+    /**
+     * Will try to send the {@link org.oasis_open.docs.wsn.b_2.Notify} to the
+     * {@link javax.xml.ws.wsaddressing.W3CEndpointReference} indicated.
+     *
+     * @param notify               the {@link org.oasis_open.docs.wsn.b_2.Notify} to send
+     * @param w3CEndpointReference the reference of the receiving endpoint
+     * @throws IllegalAccessException
+     */
+    @WebMethod(exclude = true)
+    public void sendSingleNotify(Notify notify, W3CEndpointReference w3CEndpointReference) {
+        // Not really needed, since we are not using the WS-Nu quickbuild, but just in case
+        // we need to terminate the request if we don't have anywhere to forward
+        if (hub == null) {
+            log.error("Tried to send message with hub null. If a quickBuild is available," +
+                    " consider running this before sending messages");
+            return;
+        }
+
+        log.debug("Was told to send single notify to a target");
+        // Initialize a new WS-Nu internalmessage
+        InternalMessage outMessage = new InternalMessage(InternalMessage.STATUS_OK |
+                InternalMessage.STATUS_HAS_MESSAGE |
+                InternalMessage.STATUS_ENDPOINTREF_IS_SET,
+                notify);
+        // Update the requestinformation
+        outMessage.getRequestInformation().setEndpointReference(ServiceUtilities.getAddress(w3CEndpointReference));
+        log.debug("Forwarding Notify");
+        // Pass it along to the requestparser
+        hub.acceptLocalMessage(outMessage);
+    }
+
     @Override
     public void sendNotification(Notify notify, NuNamespaceContextResolver namespaceContextResolver) {
+        // If this somehow is called without WSNRequestParser set as hub, terminate
+        if (hub == null) {
+            log.error("Tried to send message with hub null. If a quickBuild is available," +
+                    " consider running this before sending messages");
+            return;
+        }
+
         // Check if we should cache message
         if (cacheMessages) {
             // Take out the latest messages
@@ -170,10 +207,58 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
                 }
             }
         }
-        // TODO: Investigate what we must override in the supertype to properly pass the notify to OKSE core services
-        // TODO: if the notify passes WS-Nu validation and is accepted.
-        // Super type can do the rest
-        super.sendNotification(notify, namespaceContextResolver);
+
+        /* Start Message Parsing */
+
+        // bind namespaces to topics
+        for (NotificationMessageHolderType holderType : notify.getNotificationMessage()) {
+
+            TopicExpressionType topic = holderType.getTopic();
+
+            if (holderType.getTopic() != null) {
+                NuNamespaceContextResolver.NuResolvedNamespaceContext context = namespaceContextResolver.resolveNamespaceContext(topic);
+
+                if (context == null) {
+                    continue;
+                }
+
+                context.getAllPrefixes().forEach(prefix -> {
+                    // check if this is the default xmlns attribute
+                    if (!prefix.equals(XMLConstants.XMLNS_ATTRIBUTE)) {
+                        // add namespace context to the expression node
+                        topic.getOtherAttributes().put(new QName("xmlns:" + prefix), context.getNamespaceURI(prefix));
+                    }
+                });
+            }
+        }
+
+        // Remember current message with context
+        currentMessage = notify;
+        currentMessageNamespaceContextResolver = namespaceContextResolver;
+
+        // Derp derp
+        log.info(notify.getNotificationMessage().stream().map(n -> n.getTopic().getContent()).reduce((a, b) -> b).toString());
+
+        // For all valid recipients
+        for (String recipient : this.getAllRecipients()) {
+
+            // Filter do filter handling, if any
+            Notify toSend = getRecipientFilteredNotify(recipient, notify, namespaceContextResolver);
+
+            // If any message was left to send, send it
+            if (toSend != null) {
+                InternalMessage outMessage = new InternalMessage(
+                        InternalMessage.STATUS_OK |
+                        InternalMessage.STATUS_HAS_MESSAGE |
+                        InternalMessage.STATUS_ENDPOINTREF_IS_SET,
+                        toSend
+                );
+                // Update the requestinformation
+                outMessage.getRequestInformation().setEndpointReference(getEndpointReferenceOfRecipient(recipient));
+                // Pass it along to the requestparser
+                hub.acceptLocalMessage(outMessage);
+            }
+        }
     }
 
     /**
@@ -226,6 +311,21 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
             ExceptionUtilities.throwSubscribeCreationFailedFault("en", "EndpointReference malformatted or missing.");
         }
 
+        log.debug("Endpointreference is: " + endpointReference);
+
+        String requestAddress = "";
+        Integer port = 80;
+        if (endpointReference.contains(":")) {
+            String[] components = endpointReference.split(":");
+            try {
+                port = Integer.parseInt(components[components.length - 1]);
+                requestAddress = components[components.length - 2];
+                requestAddress = requestAddress.replace("//", "");
+            } catch (Exception e) {
+                log.error("Failed to parse endpointReference");
+            }
+        }
+
         FilterType filters = subscribeRequest.getFilter();
         Map<QName, Object> filtersPresent = null;
 
@@ -248,11 +348,11 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
 
                         QName fName = filter.getName();
 
-                        log.info("Subscription request contained filter: " + fName + " Value: " + filter.getValue());
+                        log.debug("Subscription request contained filter: " + fName + " Value: " + filter.getValue());
                         TopicExpressionType type = (TopicExpressionType) filter.getValue();
                         type.getContent().stream().forEach(p -> log.info("Content: " + p.toString()));
-                        log.info("Attributes: " + type.getOtherAttributes());
-                        log.info("Dialect: " + type.getDialect());
+                        log.debug("Attributes: " + type.getOtherAttributes());
+                        log.debug("Dialect: " + type.getDialect());
 
                         filtersPresent.put(fName, filter.getValue());
                     } else {
@@ -280,7 +380,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
             }
         } else {
             /* Set it to terminate in half a year */
-            log.info("Subscribe request had no termination time set, using default");
+            log.debug("Subscribe request had no termination time set, using default");
             terminationTime = System.currentTimeMillis() + Application.DEFAULT_SUBSCRIPTION_TERMINATION_TIME;
         }
 
@@ -300,45 +400,36 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
                     "please post an issue at http://github.com/tOgg1/WS-Nu");
         }
 
-        log.info("Generating WS-Nu subscription hash");
+        log.debug("Generating WS-Nu subscription hash");
         /* Generate WS-Nu subscription hash */
         String newSubscriptionKey = generateSubscriptionKey();
-        log.info("Generating WS-Nu endpoint reference url to subscriptionManager using key: " + newSubscriptionKey + " and prefix: " + WsnUtilities.subscriptionString);
+        log.debug("Generating WS-Nu endpoint reference url to subscriptionManager using key: " + newSubscriptionKey + " and prefix: " + WsnUtilities.subscriptionString);
 
         String subscriptionEndpoint = this.generateHashedURLFromKey(WsnUtilities.subscriptionString, newSubscriptionKey);
 
-        log.info("Setting up W3C endpoint reference builder");
+        log.debug("Setting up W3C endpoint reference builder");
         /* Build endpoint reference */
         W3CEndpointReferenceBuilder builder = new W3CEndpointReferenceBuilder();
         builder.address(subscriptionEndpoint);
 
-        log.info("Building endpoint reference to response");
+        log.debug("Building endpoint reference to response");
         // Set the subscription reference on the SubscribeResponse object
         response.setSubscriptionReference(builder.build());
 
-        log.info("Preparing WS-Nu components needed for subscription");
+        log.debug("Preparing WS-Nu components needed for subscription");
         /* Prepare WS-Nu components needed for a subscription */
         FilterSupport.SubscriptionInfo subscriptionInfo = new FilterSupport.SubscriptionInfo(filtersPresent, connection.getRequestInformation().getNamespaceContextResolver());
         HelperClasses.EndpointTerminationTuple endpointTerminationTuple;
         endpointTerminationTuple = new HelperClasses.EndpointTerminationTuple(endpointReference, terminationTime);
         SubscriptionHandle subscriptionHandle = new SubscriptionHandle(endpointTerminationTuple, subscriptionInfo);
 
-        log.info("Preparing OKSE subscriber objects");
+        log.debug("Preparing OKSE subscriber objects");
         /* Prepare needed information for OKSE Subscriber object */
-        String requestAddress = connection.getRequestInformation().getEndpointReference();
-        Integer port = 80;
-        if (requestAddress.contains(":")) {
-            String[] components = requestAddress.split(":");
-            if (components.length == 2) {
-                requestAddress = components[0];
-                port = Integer.parseInt(components[1]);
-            }
-        }
 
         String rawTopicContent = "";
         String requestDialect = "";
 
-        log.info("Extracting topic information");
+        log.debug("Extracting topic information");
         // Extract topic information
         for (QName q : subscriptionInfo.getFilterSet()) {
             for (Object o : ((TopicExpressionType) filtersPresent.get(q)).getContent()) {
@@ -347,10 +438,10 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
             requestDialect = ((TopicExpressionType) filtersPresent.get(q)).getDialect();
         }
 
-        log.info("Sending addTopic request to TopicService");
+        log.debug("Sending addTopic request to TopicService");
         TopicService.getInstance().addTopic(rawTopicContent);
 
-        log.info("Initializing OKSE subscriber object");
+        log.debug("Initializing OKSE subscriber object");
         // Instanciate new OKSE Subscriber object
         Subscriber subscriber = new Subscriber(requestAddress, port, rawTopicContent, WSNotificationServer.getInstance().getProtocolServerType());
         // Set the wsn-subscriber hash key in attributes
@@ -358,31 +449,105 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         subscriber.setAttribute(WSNSubscriptionManager.WSN_DIALECT_TOKEN, requestDialect);
 
         // Register the OKSE subscriber to the SubscriptionService, via the WSNSubscriptionManager
-        log.info("Attempting to register the subscriber to the SubscriptionService...");
+        log.debug("Attempting to register the subscriber to the SubscriptionService...");
         subscriptionManager.addSubscriber(subscriber, subscriptionHandle);
 
         return response;
     }
 
     @Override
-    public RegisterPublisherResponse registerPublisher(RegisterPublisher registerPublisher) throws InvalidTopicExpressionFault, PublisherRegistrationFailedFault, ResourceUnknownFault, PublisherRegistrationRejectedFault, UnacceptableInitialTerminationTimeFault, TopicNotSupportedFault {
-        log.info("registerPublisher called");
-        return null;
+    @WebResult(name = "RegisterPublisherResponse", targetNamespace = "http://docs.oasis-open.org/wsn/br-2", partName = "RegisterPublisherResponse")
+    @WebMethod(operationName = "RegisterPublisher")
+    public RegisterPublisherResponse registerPublisher(RegisterPublisher registerPublisherRequest) throws InvalidTopicExpressionFault, PublisherRegistrationFailedFault, ResourceUnknownFault, PublisherRegistrationRejectedFault, UnacceptableInitialTerminationTimeFault, TopicNotSupportedFault {
+        log.debug("registerPublisher called");
+
+        // Fetch the namespace context resolver
+        NuNamespaceContextResolver namespaceContextResolver = connection.getRequestInformation().getNamespaceContextResolver();
+
+        // Extract the publisher endpoint
+        W3CEndpointReference publisherEndpoint = registerPublisherRequest.getPublisherReference();
+
+        // If we do not have an endpoint, produce a soapfault
+        if (publisherEndpoint == null) {
+            log.error("Missing endpoint reference in publisher registration request");
+            ExceptionUtilities.throwPublisherRegistrationFailedFault("en", "Missing endpointreference");
+        }
+
+        // Endpointreference extracted from the W3CEndpointReference
+        String endpointReference = ServiceUtilities.getAddress(registerPublisherRequest.getPublisherReference());
+
+        // EndpointReference is returned as "" from getAddress if something went wrong.
+        if(endpointReference.equals("")){
+            log.error("Failed to understand the endpoint reference");
+            ExceptionUtilities.throwPublisherRegistrationFailedFault("en", "Could not register publisher, failed to " +
+                    "understand the endpoint reference");
+        }
+
+        List<TopicExpressionType> topics = registerPublisherRequest.getTopic();
+
+        for (TopicExpressionType topic : topics) {
+            try {
+                if (!TopicValidator.isLegalExpression(topic, namespaceContextResolver.resolveNamespaceContext(topic))) {
+                    log.error("Recieved an invalid topic expression");
+                    ExceptionUtilities.throwTopicNotSupportedFault("en", "Expression given is not a legal topicexpression");
+                }
+            } catch (TopicExpressionDialectUnknownFault topicExpressionDialectUnknownFault) {
+                log.error("Recieved an unknown topic expression dialect");
+                ExceptionUtilities.throwInvalidTopicExpressionFault("en", "TopicExpressionDialect unknown");
+            }
+        }
+
+        // Fetch the termination time
+        long terminationTime = registerPublisherRequest.getInitialTerminationTime().toGregorianCalendar().getTimeInMillis();
+
+        if (terminationTime < System.currentTimeMillis()) {
+            log.error("Caught an invalid termination time, must be in the future");
+            ExceptionUtilities.throwUnacceptableInitialTerminationTimeFault("en", "Invalid termination time. Can't be before current time");
+        }
+
+        // Generate a new subkey
+        String newSubscriptionKey = generateSubscriptionKey();
+        // Generate the publisherRegistrationEndpoint
+        String subscriptionEndpoint = generateHashedURLFromKey(WsnUtilities.publisherRegistrationString, newSubscriptionKey);
+
+        // Send subscriptionRequest back if isDemand isRequested
+        if (registerPublisherRequest.isDemand()) {
+            log.info("Demand registration is TRUE, sending subrequest back");
+            WsnUtilities.sendSubscriptionRequest(endpointReference, getEndpointReference(), getHub());
+        }
+
+
+        //publishers.put(newSubscriptionKey,
+        //        new PublisherHandle(new HelperClasses.EndpointTerminationTuple(newSubscriptionKey, terminationTime),
+        //                topics, registerPublisherRequest.isDemand()));
+
+        // Initialize the response payload
+        RegisterPublisherResponse response = new RegisterPublisherResponse();
+
+        // Build the endpoint reference
+        W3CEndpointReferenceBuilder builder = new W3CEndpointReferenceBuilder();
+        builder.address(subscriptionEndpoint);
+
+        // Update the response with endpointreference
+        response.setConsumerReference(builder.build());
+        response.setPublisherRegistrationReference(publisherEndpoint);
+
+        return response;
     }
 
     @Override
     public GetCurrentMessageResponse getCurrentMessage(GetCurrentMessage getCurrentMessage) throws InvalidTopicExpressionFault, TopicExpressionDialectUnknownFault, MultipleTopicsSpecifiedFault, ResourceUnknownFault, NoCurrentMessageOnTopicFault, TopicNotSupportedFault {
-        log.info("getCurrentMessage called");
+        log.debug("getCurrentMessage called");
         return null;
     }
 
     @Override
     public void publisherChanged(PublisherRegistrationEvent publisherRegistrationEvent) {
-        log.info("PublisherChanged event triggered");
+        log.debug("PublisherChanged event triggered");
     }
 
     @Override
     public void subscriptionChanged(SubscriptionEvent subscriptionEvent) {
-        log.info("SubscriptionChanged event triggered");
+        log.debug("SubscriptionChanged event triggered");
     }
 }
