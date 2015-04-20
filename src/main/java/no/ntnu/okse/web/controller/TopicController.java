@@ -50,9 +50,6 @@ public class TopicController {
 
     @RequestMapping(method = RequestMethod.GET)
     public Topic topics() {
-        log.debug("Subscribers: " + SubscriptionService.getInstance().getAllSubscribers().size());
-
-
         return new Topic(new Random().nextLong(), "testTopic", new ArrayList<Subscriber>(Arrays.asList(
                 new Subscriber("128.0.0.1", "8080", "WSN", new HashMap<String, String>()),
                 new Subscriber("78.91.14.24", "234", "DDS", new HashMap<String, String>()),

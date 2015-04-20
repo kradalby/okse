@@ -20,7 +20,6 @@ public class ConfigController {
     @RequestMapping(method = RequestMethod.GET)
     public void config() {
         // should return
-        log.debug("Config controller called");
     }
 
     @RequestMapping(method = RequestMethod.POST, value="/mapping/exsisting/add/{topic}/{newTopic}")
