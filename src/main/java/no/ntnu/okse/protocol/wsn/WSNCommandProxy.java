@@ -432,7 +432,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         String rawTopicContent = "";
         String requestDialect = "";
 
-        log.info("Extracting topic information");
+        log.debug("Extracting topic information");
         // Extract topic information
         for (QName q : subscriptionInfo.getFilterSet()) {
             for (Object o : ((TopicExpressionType) filtersPresent.get(q)).getContent()) {
@@ -441,10 +441,10 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
             requestDialect = ((TopicExpressionType) filtersPresent.get(q)).getDialect();
         }
 
-        log.info("Sending addTopic request to TopicService");
+        log.debug("Sending addTopic request to TopicService");
         TopicService.getInstance().addTopic(rawTopicContent);
 
-        log.info("Initializing OKSE subscriber object");
+        log.debug("Initializing OKSE subscriber object");
         // Instanciate new OKSE Subscriber object
         Subscriber subscriber = new Subscriber(requestAddress, port, rawTopicContent, WSNotificationServer.getInstance().getProtocolServerType());
         // Set the wsn-subscriber hash key in attributes
@@ -452,7 +452,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         subscriber.setAttribute(WSNSubscriptionManager.WSN_DIALECT_TOKEN, requestDialect);
 
         // Register the OKSE subscriber to the SubscriptionService, via the WSNSubscriptionManager
-        log.info("Attempting to register the subscriber to the SubscriptionService...");
+        log.debug("Attempting to register the subscriber to the SubscriptionService...");
         subscriptionManager.addSubscriber(subscriber, subscriptionHandle);
 
         return response;
@@ -460,23 +460,23 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
 
     @Override
     public RegisterPublisherResponse registerPublisher(RegisterPublisher registerPublisher) throws InvalidTopicExpressionFault, PublisherRegistrationFailedFault, ResourceUnknownFault, PublisherRegistrationRejectedFault, UnacceptableInitialTerminationTimeFault, TopicNotSupportedFault {
-        log.info("registerPublisher called");
+        log.debug("registerPublisher called");
         return null;
     }
 
     @Override
     public GetCurrentMessageResponse getCurrentMessage(GetCurrentMessage getCurrentMessage) throws InvalidTopicExpressionFault, TopicExpressionDialectUnknownFault, MultipleTopicsSpecifiedFault, ResourceUnknownFault, NoCurrentMessageOnTopicFault, TopicNotSupportedFault {
-        log.info("getCurrentMessage called");
+        log.debug("getCurrentMessage called");
         return null;
     }
 
     @Override
     public void publisherChanged(PublisherRegistrationEvent publisherRegistrationEvent) {
-        log.info("PublisherChanged event triggered");
+        log.debug("PublisherChanged event triggered");
     }
 
     @Override
     public void subscriptionChanged(SubscriptionEvent subscriptionEvent) {
-        log.info("SubscriptionChanged event triggered");
+        log.debug("SubscriptionChanged event triggered");
     }
 }

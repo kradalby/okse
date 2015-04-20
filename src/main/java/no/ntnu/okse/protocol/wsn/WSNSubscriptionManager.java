@@ -128,14 +128,14 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
         if (e.getData().getOriginProtocol().equals(WSNotificationServer.getInstance().getProtocolServerType())) {
             // If we are dealing with an Unsubscribe
             if (e.getType().equals(SubscriptionChangeEvent.Type.UNSUBSCRIBE)) {
-                log.info("Recieved an UNSUBSCRIBE event");
-                log.info("Ubsubscribing " + localSubscriberHandle.get(e.getData().getAttribute(WSN_SUBSCRIBER_TOKEN)));
+                log.debug("Recieved an UNSUBSCRIBE event");
+                log.debug("Ubsubscribing " + localSubscriberHandle.get(e.getData().getAttribute(WSN_SUBSCRIBER_TOKEN)));
                 // Remove the local mappings from WS-Nu subscriptionKey to OKSE Subscriber object and WS-Nu subscriptionHandle
                 localSubscriberMap.remove(e.getData().getAttribute(WSN_SUBSCRIBER_TOKEN));
                 localSubscriberHandle.remove(e.getData().getAttribute(WSN_SUBSCRIBER_TOKEN));
 
             } else if (e.getType().equals(SubscriptionChangeEvent.Type.SUBSCRIBE)) {
-                log.info("Recieved a SUBSCRIBE event");
+                log.debug("Recieved a SUBSCRIBE event");
                 // TODO: Investigate if we really need to do anything here...
             }
         }
