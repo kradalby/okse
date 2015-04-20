@@ -33,26 +33,26 @@ var Topics = (function($) {
         list from the OKSE-RestAPI. It also adds all the buttons needed for deleting subscribers. It uses the id for
         this purpose. This function does not manipulate the DOM by checking if an element exists. It overwrites everything.
      */
-    var fillTable = function(data) {
+    var fillTable = function(subscribers, topicID) {
         var trHTML = '';
-        $.each(data.subscribers, function (i, subscriber) {
-            if ($('#' + subscriber.ip).length === 0) {
+        $.each(subscribers, function (i, subscriber) { // TODO: Change the id to something clever
+            //if ($('#' + subscriber.subscriberID).length === 0) { // TODO: Should check if it exists
                 trHTML += '<tr>' +
-                '<td>' + subscriber.protocol + '</td>' +
-                '<td>' + subscriber.ip + '</td>' +
+                '<td>' + subscriber.originProtocol + '</td>' +
+                '<td>' + subscriber.host + '</td>' +
                 '<td>' + subscriber.port + '</td>' +
-                '<td><a id="' + subscriber.ip + '" class="btn btn-xs btn-block btn-warning delete-subscriber">Delete</a></td>' +
+                '<td><a id="' + subscriber.subscriberID + '" class="btn btn-xs btn-block btn-warning delete-subscriber">Delete</a></td>' +
                 '</tr>';
-            }
+            //}
         });
-        trHTML += '<tr><td colspan="4"><a id="' + data.id + '" class="btn btn-block btn-danger delete-topic">Delete all</a></td></tr>';
+        trHTML += '<tr><td colspan="4"><a id="' + topicID + '" class="btn btn-block btn-danger delete-topic">Delete all</a></td></tr>';
         return trHTML
     }
     /*
         Iterates all the subscribers of this topic and overwrites the table with the new information.
      */
-    var updatePanel = function(data, panel) {
-        //$(panel).html(fillTable(data));
+    var updatePanel = function(topic, panel) {
+        $(panel).html(fillTable(topic.subscribers, topic.topic.topicID));
     }
 
     /*
@@ -68,7 +68,7 @@ var Topics = (function($) {
                 '<div id="' + topicID +'" class="panel-collapse collapse">' +
                     '<div class="table-reponsive">' +
                         '<table class="table table-striped">' +
-                            '<thead><tr><th>Protocol</th><th>IP</th><th>Port</th><th>Actions</th></tr></thead><tbody></tbody>' +
+                            '<thead><tr><th>Protocol</th><th>Host</th><th>Port</th><th>Actions</th></tr></thead><tbody></tbody>' +
                         '</table>' +
                     '</div>' +
                 '</div>' +
@@ -80,8 +80,8 @@ var Topics = (function($) {
         Creates a panel and table and updates it with the new information
      */
     var createPanel = function(topic) {
-        var panel = createPanelAndTableTemplate(topic.topicID, topic.fullTopicString)
-        //$(panel).find('tbody').html(fillTable(topic))
+        var panel = createPanelAndTableTemplate(topic.topic.topicID, topic.topic.fullTopicString)
+        $(panel).find('tbody').html(fillTable(topic.subscribers, topic.topic.topicID))
         $('#topics-column').append(panel);
     }
 
@@ -144,7 +144,7 @@ var Topics = (function($) {
             unBindButtons();
 
             $.each(response, function(i, topic) {
-                var topicID = topic.topicID
+                var topicID = topic.topic.topicID
                 if ($('#' + topicID).length === 0)  // If the topic doesn't already exist
                     createPanel(topic)
                 else  // If the topic exist

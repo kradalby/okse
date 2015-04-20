@@ -25,7 +25,11 @@
 package no.ntnu.okse.core.subscription;
 
 import no.ntnu.okse.core.topic.Topic;
+import org.apache.log4j.Logger;
+import org.springframework.security.crypto.codec.Hex;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 
 /**
@@ -41,6 +45,9 @@ public class Subscriber {
     private final String topic;
     private Long timeout;
     private final String originProtocol;
+    private final String subscriberID;
+    private static Logger log;
+
 
     /**
      * Constructs a Subscriber object from the required fields
@@ -58,6 +65,31 @@ public class Subscriber {
         if (checkPort(port)) {
             this.port = port;
         } else throw new IllegalArgumentException("Port must be in range 1-65535");
+
+        this.subscriberID = generateSubscriberID();
+
+        log = Logger.getLogger(Subscriber.class.getName());
+
+    }
+
+    /**
+     * Private method that generates an MD5 subscriber ID
+     *
+     * @return A string containing the generated subscriber ID
+     */
+    private String generateSubscriberID() {
+        try {
+            MessageDigest m = MessageDigest.getInstance("MD5");
+            m.update(Long.toString(System.nanoTime()).getBytes());
+            byte[] hash = m.digest();
+            String topicID = new String(Hex.encode(hash));
+
+            return topicID;
+        } catch (NoSuchAlgorithmException e) {
+            log.error("Could not generate a subscriber ID (MD5 algorithm not found)");
+        }
+
+        return null;
     }
 
     /**
@@ -123,6 +155,14 @@ public class Subscriber {
      */
     public Long getTimeout() {
         return timeout;
+    }
+
+    /**
+     * Retrive the subscriber ID for this subscriber
+     * @return The subscriber ID
+     */
+    public String getSubscriberID() {
+        return subscriberID;
     }
 
     /**

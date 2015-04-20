@@ -24,8 +24,11 @@
 
 package no.ntnu.okse.web.controller;
 
+import no.ntnu.okse.core.subscription.Subscriber;
+import no.ntnu.okse.core.subscription.SubscriptionService;
 import no.ntnu.okse.core.topic.Topic;
 import no.ntnu.okse.core.topic.TopicService;
+import no.ntnu.okse.web.model.Topics;
 import org.apache.log4j.Logger;
 import org.springframework.web.bind.annotation.*;
 
@@ -45,9 +48,20 @@ public class TopicController {
     private static long id = 0;
 
     @RequestMapping(method = RequestMethod.GET)
-    public HashSet<Topic> topics() {
-        HashSet<Topic> allTopics = TopicService.getInstance().getAllTopics();
-        return allTopics;
+    public ArrayList<Topics> topics() {
+        SubscriptionService ss = SubscriptionService.getInstance();
+        TopicService ts = TopicService.getInstance();
+
+        ArrayList<Topics> results = new ArrayList<>();
+
+        HashSet<Topic> allTopics = ts.getAllTopics();
+
+        allTopics.stream()
+                .forEach(t -> {
+                    results.add(new Topics(t, ss.getAllSubscribersForTopic(t.getFullTopicString())));
+                });
+
+        return results;
 
         /*
         return new Topic(new Random().nextLong(), "testTopic", new ArrayList<Subscriber>(Arrays.asList(
