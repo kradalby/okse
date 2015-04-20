@@ -51,10 +51,7 @@ import org.oasis_open.docs.wsn.brw_2.PublisherRegistrationRejectedFault;
 import org.oasis_open.docs.wsn.bw_2.*;
 import org.oasis_open.docs.wsrf.rw_2.ResourceUnknownFault;
 
-import javax.jws.Oneway;
-import javax.jws.WebMethod;
-import javax.jws.WebParam;
-import javax.jws.WebService;
+import javax.jws.*;
 import javax.jws.soap.SOAPBinding;
 import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBElement;
@@ -459,9 +456,83 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
     }
 
     @Override
-    public RegisterPublisherResponse registerPublisher(RegisterPublisher registerPublisher) throws InvalidTopicExpressionFault, PublisherRegistrationFailedFault, ResourceUnknownFault, PublisherRegistrationRejectedFault, UnacceptableInitialTerminationTimeFault, TopicNotSupportedFault {
+    @WebResult(name = "RegisterPublisherResponse", targetNamespace = "http://docs.oasis-open.org/wsn/br-2", partName = "RegisterPublisherResponse")
+    @WebMethod(operationName = "RegisterPublisher")
+    public RegisterPublisherResponse registerPublisher(RegisterPublisher registerPublisherRequest) throws InvalidTopicExpressionFault, PublisherRegistrationFailedFault, ResourceUnknownFault, PublisherRegistrationRejectedFault, UnacceptableInitialTerminationTimeFault, TopicNotSupportedFault {
         log.debug("registerPublisher called");
-        return null;
+
+        // Fetch the namespace context resolver
+        NuNamespaceContextResolver namespaceContextResolver = connection.getRequestInformation().getNamespaceContextResolver();
+
+        // Extract the publisher endpoint
+        W3CEndpointReference publisherEndpoint = registerPublisherRequest.getPublisherReference();
+
+        // If we do not have an endpoint, produce a soapfault
+        if (publisherEndpoint == null) {
+            log.error("Missing endpoint reference in publisher registration request");
+            ExceptionUtilities.throwPublisherRegistrationFailedFault("en", "Missing endpointreference");
+        }
+
+        // Endpointreference extracted from the W3CEndpointReference
+        String endpointReference = ServiceUtilities.getAddress(registerPublisherRequest.getPublisherReference());
+
+        // EndpointReference is returned as "" from getAddress if something went wrong.
+        if(endpointReference.equals("")){
+            log.error("Failed to understand the endpoint reference");
+            ExceptionUtilities.throwPublisherRegistrationFailedFault("en", "Could not register publisher, failed to " +
+                    "understand the endpoint reference");
+        }
+
+        List<TopicExpressionType> topics = registerPublisherRequest.getTopic();
+
+        for (TopicExpressionType topic : topics) {
+            try {
+                if (!TopicValidator.isLegalExpression(topic, namespaceContextResolver.resolveNamespaceContext(topic))) {
+                    log.error("Recieved an invalid topic expression");
+                    ExceptionUtilities.throwTopicNotSupportedFault("en", "Expression given is not a legal topicexpression");
+                }
+            } catch (TopicExpressionDialectUnknownFault topicExpressionDialectUnknownFault) {
+                log.error("Recieved an unknown topic expression dialect");
+                ExceptionUtilities.throwInvalidTopicExpressionFault("en", "TopicExpressionDialect unknown");
+            }
+        }
+
+        // Fetch the termination time
+        long terminationTime = registerPublisherRequest.getInitialTerminationTime().toGregorianCalendar().getTimeInMillis();
+
+        if (terminationTime < System.currentTimeMillis()) {
+            log.error("Caught an invalid termination time, must be in the future");
+            ExceptionUtilities.throwUnacceptableInitialTerminationTimeFault("en", "Invalid termination time. Can't be before current time");
+        }
+
+        // Generate a new subkey
+        String newSubscriptionKey = generateSubscriptionKey();
+        // Generate the publisherRegistrationEndpoint
+        String subscriptionEndpoint = generateHashedURLFromKey(WsnUtilities.publisherRegistrationString, newSubscriptionKey);
+
+        // Send subscriptionRequest back if isDemand isRequested
+        if (registerPublisherRequest.isDemand()) {
+            log.info("Demand registration is TRUE, sending subrequest back");
+            WsnUtilities.sendSubscriptionRequest(endpointReference, getEndpointReference(), getHub());
+        }
+
+
+        publishers.put(newSubscriptionKey,
+                new PublisherHandle(new HelperClasses.EndpointTerminationTuple(newSubscriptionKey, terminationTime),
+                        topics, registerPublisherRequest.isDemand()));
+
+        // Initialize the response payload
+        RegisterPublisherResponse response = new RegisterPublisherResponse();
+
+        // Build the endpoint reference
+        W3CEndpointReferenceBuilder builder = new W3CEndpointReferenceBuilder();
+        builder.address(subscriptionEndpoint);
+
+        // Update the response with endpointreference
+        response.setConsumerReference(builder.build());
+        response.setPublisherRegistrationReference(publisherEndpoint);
+
+        return response;
     }
 
     @Override

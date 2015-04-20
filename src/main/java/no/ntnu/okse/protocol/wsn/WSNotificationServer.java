@@ -562,7 +562,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
                 request.method(HttpMethod.GET);
                 log.info("Sending message without content to " + requestInformation.getEndpointReference());
                 ContentResponse response = request.send();
-                totalMessages++;
+                totalRequests++;
 
                 return new InternalMessage(InternalMessage.STATUS_OK | InternalMessage.STATUS_HAS_MESSAGE, response.getContentAsString());
             /* Request with message */

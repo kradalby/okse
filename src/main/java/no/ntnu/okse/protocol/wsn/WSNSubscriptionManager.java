@@ -1,6 +1,5 @@
 package no.ntnu.okse.protocol.wsn;
 
-import no.ntnu.okse.Application;
 import no.ntnu.okse.core.event.SubscriptionChangeEvent;
 import no.ntnu.okse.core.event.listeners.SubscriptionChangeListener;
 import no.ntnu.okse.core.subscription.Publisher;
@@ -30,22 +29,17 @@ import java.util.HashMap;
 public class WSNSubscriptionManager extends AbstractSubscriptionManager implements SubscriptionChangeListener {
 
     public static final String WSN_SUBSCRIBER_TOKEN = "wsn-subscriberkey";
-    public static final String WSN_PUBLISHER_TOKEN = "wsn-publisherkey";
     public static final String WSN_DIALECT_TOKEN = "wsn-dialect";
 
     private static Logger log;
     private SubscriptionService _subscriptionService = null;
     private HashMap<String, Subscriber> localSubscriberMap;
-    private HashMap<String, Publisher> localPublisherMap;
     private HashMap<String, AbstractNotificationProducer.SubscriptionHandle> localSubscriberHandle;
-    private HashMap<String, AbstractNotificationBroker.PublisherHandle> localPublisherHandle;
 
     public WSNSubscriptionManager() {
         log = Logger.getLogger(WSNSubscriptionManager.class.getName());
         localSubscriberMap = new HashMap<>();
-        localPublisherMap = new HashMap<>();
         localSubscriberHandle = new HashMap<>();
-        localPublisherHandle = new HashMap<>();
     }
 
     public void initCoreSubscriptionService(SubscriptionService subService) {
@@ -54,7 +48,7 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
 
     @Override
     public boolean keyExists(String s) {
-        return localPublisherMap.containsKey(s) || localSubscriberMap.containsKey(s);
+        return localSubscriberMap.containsKey(s);
     }
 
     @Override
@@ -98,10 +92,6 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
         return localSubscriberHandle.get(s);
     }
 
-    public AbstractNotificationBroker.PublisherHandle getPublisherHandle(String s) {
-        return localPublisherHandle.get(s);
-    }
-
     @Override
     public void update() {
 
@@ -109,13 +99,13 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
 
     @Override
     public UnsubscribeResponse unsubscribe(Unsubscribe unsubscribe) throws ResourceUnknownFault, UnableToDestroySubscriptionFault {
-        log.info("UNSUB CALLED");
+        log.debug("UNSUB CALLED");
         return null;
     }
 
     @Override
     public RenewResponse renew(Renew renew) throws ResourceUnknownFault, UnacceptableTerminationTimeFault {
-        log.info("RENEW CALLED");
+        log.debug("RENEW CALLED");
         return null;
     }
 
@@ -128,7 +118,6 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
         if (e.getData().getOriginProtocol().equals(WSNotificationServer.getInstance().getProtocolServerType())) {
             // If we are dealing with an Unsubscribe
             if (e.getType().equals(SubscriptionChangeEvent.Type.UNSUBSCRIBE)) {
-                log.debug("Recieved an UNSUBSCRIBE event");
                 log.debug("Ubsubscribing " + localSubscriberHandle.get(e.getData().getAttribute(WSN_SUBSCRIBER_TOKEN)));
                 // Remove the local mappings from WS-Nu subscriptionKey to OKSE Subscriber object and WS-Nu subscriptionHandle
                 localSubscriberMap.remove(e.getData().getAttribute(WSN_SUBSCRIBER_TOKEN));
@@ -136,7 +125,8 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
 
             } else if (e.getType().equals(SubscriptionChangeEvent.Type.SUBSCRIBE)) {
                 log.debug("Recieved a SUBSCRIBE event");
-                // TODO: Investigate if we really need to do anything here...
+                // TODO: Investigate if we really need to do anything here since it will function as a callback
+                // TODO: after addSubscriber
             }
         }
     }

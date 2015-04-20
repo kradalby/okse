@@ -47,6 +47,7 @@ public class Application {
 
     /* Default global variables */
     public static long DEFAULT_SUBSCRIPTION_TERMINATION_TIME = 15552000000L; // Half a year
+    public static long DEFAULT_PUBLISHER_TERMINATION_TIME = 15552000000L; // Half a year
     public static boolean BROADCAST_SYSTEM_MESSAGES_TO_SUBSCRIBERS = false;
 
     private static Logger log;
