@@ -130,12 +130,17 @@ public class DummyProtocolServer extends AbstractProtocolServer {
                     // Log the recieved command
                     log.info("Command recieved: " + command);
 
+                    // Update stats
+                    totalMessages++;
+                    totalRequests++;
+
                     // Return a response
                     writer.write("OK\n".getBytes("UTF-8"));
                     writer.flush();
                 }
 
             } catch (IOException e) {
+                totalErrors++;
                 log.error("I/O exception during accept(): " + e.getMessage());
             }
         }
