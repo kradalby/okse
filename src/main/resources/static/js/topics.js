@@ -103,10 +103,9 @@ var Topics = (function($) {
             e.preventDefault();
 
             Main.ajax(("topics/delete/" + this.id), function() {
-                console.log("[Debug][Topics] Unable to remove topic")
+                console.log("[Debug][Topics] Unable to remove topic with id: " + e.target.id)
             }, function() {
-                $(e.target).closest('.panel').remove();
-                console.log("[Debug][Topics] Removing complete topic")
+                console.log("[Debug][Topics] Removing complete topic with id: " + e.target.id)
             }, "POST")
 
 
@@ -117,7 +116,8 @@ var Topics = (function($) {
             Main.ajax(("topics/delete/subscriber/" + this.id), function() {
                 console.log("[Debug][Topics] Unable to remove subscriber");
             }, function() {
-                $(e.target).parent().parent().remove();
+                $(e.target).parent().parent().addClass("deleted")
+                $(e.target).addClass("disabled")
                 console.log("[Debug][Topics] Removing single subscriber");
             }, "POST")
         });

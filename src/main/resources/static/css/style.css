@@ -67,3 +67,7 @@ body {
     border: 0;
     font-family: monospace;
 }
+
+.deleted {
+    opacity: 0.3;
+}

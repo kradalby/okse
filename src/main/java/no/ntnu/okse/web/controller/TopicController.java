@@ -74,17 +74,24 @@ public class TopicController {
 
     @RequestMapping(method = RequestMethod.POST, value = "/delete/all")
     public void deleteAll() {
-        log.debug("Deleting all topics");
+        log.info("Deleting all topics");
+        TopicService ts = TopicService.getInstance();
+        // Delete all topics
     }
 
     @RequestMapping(method = RequestMethod.POST, value = "/delete/{id}")
     public void deleteOneTopic(@PathVariable String id) {
-        log.debug("Deleting topic with ID: " + id);
+        log.info("Deleting Topic with ID: " + id);
+        TopicService ts = TopicService.getInstance();
+        // Delete single topic
     }
 
     @RequestMapping(method = RequestMethod.POST, value="/delete/subscriber/{id}")
     public void deleteOneSubscriber(@PathVariable String id) {
-        log.debug("Deleting subscriber with ID: " + id);
+        log.info("Deleting subscriber with ID: " + id);
+        SubscriptionService ss = SubscriptionService.getInstance();
+        // Delete single subscriber
+
     }
 
 
