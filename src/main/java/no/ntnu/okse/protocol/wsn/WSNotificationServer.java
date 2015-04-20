@@ -213,12 +213,17 @@ public class WSNotificationServer extends AbstractProtocolServer {
                 /* OKSE custom WS-Nu web services */
                 WSNCommandProxy broker = new WSNCommandProxy();
                 WSNSubscriptionManager subscriptionManager = new WSNSubscriptionManager();
+                WSNRegistrationManager registrationManager = new WSNRegistrationManager();
                 SubscriptionService.getInstance().addSubscriptionChangeListener(subscriptionManager);
+                SubscriptionService.getInstance().addPublisherChangeListener(registrationManager);
 
                 broker.quickBuild("broker", this._requestParser);
                 subscriptionManager.quickBuild("subscriptionManager", this._requestParser);
                 subscriptionManager.initCoreSubscriptionService(SubscriptionService.getInstance());
+                registrationManager.quickBuild("registrationManager", this._requestParser);
+                registrationManager.initCoreSubscriptionService(SubscriptionService.getInstance());
                 broker.setSubscriptionManager(subscriptionManager);
+                broker.setRegistrationManager(registrationManager);
 
                 // Create a new thread for the Jetty Server to run in
                 this._serverThread = new Thread(() -> {
