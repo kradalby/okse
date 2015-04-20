@@ -32,24 +32,23 @@ var Stats = (function($) {
      Creates, fills and returns a tr element
      */
     var fillTable = function(data) {
-        var ulHTML = '';
+        var HTML = '';
         $.each(data.protocols, function (i, protocolstats) {
             if ($('#' + protocolstats.protocolServerType).length === 0) {
-                ulHTML +=
-                    '<ul class="list-group">' +
-                        '<li class="list-group-item" id="" + protocolstats.protocolServerType> <strong>' + protocolstats.protocolServerType + '</strong></li>' +
+                HTML +=
+                    '<div class="panel-heading" id="" + protocolstats.protocolServerType><strong>' + protocolstats.protocolServerType + '</strong></div>' +
+                        '<ul class="list-group">' +
                         '<li class="list-group-item"> <strong>Requests handled:</strong> ' + protocolstats.totalRequests + '</li>' +
                         '<li class="list-group-item"> <strong>Messages sent:</strong> ' + protocolstats.totalMessages + '</li>' +
-                    '</ul>'
+                        '</ul>'
             }
         });
-        return ulHTML
+        return HTML
     }
 
-
     return {
-        error: function(xhr, statusText, thrownError) {
-            console.log("[Error] in ajax for Stats with error: " + xhr.statusText)
+        error: function(xhr, status, error) {
+            console.error("[Error][Stats] in Ajax with the following callback [status: " + xhr.status +  " readyState: " + xhr.readyState + " responseText: " + xhr.responseText + "]")
         },
         refresh: function(data) {
             $('#stats-total-messages').html('<strong>Messages sent: </strong>' + data.totalMessages)
@@ -62,8 +61,7 @@ var Stats = (function($) {
             $('#freeram').html('<strong>Free RAM: </strong>' + data.ramFree + ' MB')
             $('#ramuse').html('<strong>Used RAM: </strong>' + data.ramUse + ' MB')
             $('#cpucores').html('<strong>CPU cores: </strong>' + data.cpuUse)
-            $('#test').html(fillTable(data))
-
+            $('#protocolList').html(fillTable(data))
         }
     }
 

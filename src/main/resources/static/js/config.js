@@ -29,16 +29,21 @@
 
 var Config = (function($) {
 
-    var createPanel = function() {
-
+    var bindButtons = function() {
+        $("#add-predefined-mapping").on('click', function(e) {
+            console.log('[Debug][Config] Add predefined mapping between ' + $('#from-topic').val() + ' --> ' + $('#to-topic').val())
+        });
     }
 
     return {
-        error: function() {
-            console.log("error in ajax for config")
+        error: function(xhr, status, error) {
+            console.error("[Error][Config] in Ajax with the following callback [status: " + xhr.status +  " readyState: " + xhr.readyState + " responseText: " + xhr.responseText + "]")
         },
-        refresh: function(data) {
-            console.log(JSON.stringify(data))
+        refresh: function(response) {
+            console.log("[Debug][Config]" + JSON.stringify(response))
+        },
+        init: function() {
+            bindButtons()
         }
     }
 
