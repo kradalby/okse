@@ -24,17 +24,12 @@
 
 package no.ntnu.okse.web.controller;
 
-import no.ntnu.okse.Application;
-import no.ntnu.okse.core.subscription.SubscriptionService;
-import no.ntnu.okse.web.model.Subscriber;
-import no.ntnu.okse.web.model.Topic;
+import no.ntnu.okse.core.topic.Topic;
+import no.ntnu.okse.core.topic.TopicService;
 import org.apache.log4j.Logger;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Random;
+import java.util.*;
 
 
 /**
@@ -47,14 +42,20 @@ import java.util.Random;
 public class TopicController {
 
     private static Logger log = Logger.getLogger(TopicController.class.getName());
+    private static long id = 0;
 
     @RequestMapping(method = RequestMethod.GET)
-    public Topic topics() {
+    public HashSet<Topic> topics() {
+        HashSet<Topic> allTopics = TopicService.getInstance().getAllTopics();
+        return allTopics;
+
+        /*
         return new Topic(new Random().nextLong(), "testTopic", new ArrayList<Subscriber>(Arrays.asList(
                 new Subscriber("128.0.0.1", "8080", "WSN", new HashMap<String, String>()),
                 new Subscriber("78.91.14.24", "234", "DDS", new HashMap<String, String>()),
                 new Subscriber("192.168.1.1", "58080", "ZeroMQ", new HashMap<String, String>())
         )));
+        */
     }
 
     @RequestMapping(method = RequestMethod.POST, value = "/delete/all")

@@ -52,20 +52,20 @@ var Topics = (function($) {
         Iterates all the subscribers of this topic and overwrites the table with the new information.
      */
     var updatePanel = function(data, panel) {
-        $(panel).html(fillTable(data));
+        //$(panel).html(fillTable(data));
     }
 
     /*
         Sets up an basic template for a panel
      */
-    var createPanelAndTableTemplate = function(topicName) {
+    var createPanelAndTableTemplate = function(topicID, topicName) {
         var panel = $(
             '<div class="panel panel-primary">' +
                 '<div class="panel-heading">' +
-                    '<h3 class="panel-title collapsed" data-toggle="collapse" data-target="#' + topicName.toLowerCase() + '">' +
-                    '<a href="#' + topicName.toLowerCase() + '">' + topicName + '</a></h3>' +
+                    '<h3 class="panel-title collapsed" data-toggle="collapse" data-target="#' + topicID + '">' +
+                    '<a href="#' + topicID + '">' + topicName + '</a></h3>' +
                 '</div>' +
-                '<div id="' + topicName.toLowerCase() +'" class="panel-collapse collapse">' +
+                '<div id="' + topicID +'" class="panel-collapse collapse">' +
                     '<div class="table-reponsive">' +
                         '<table class="table table-striped">' +
                             '<thead><tr><th>Protocol</th><th>IP</th><th>Port</th><th>Actions</th></tr></thead><tbody></tbody>' +
@@ -79,9 +79,9 @@ var Topics = (function($) {
     /*
         Creates a panel and table and updates it with the new information
      */
-    var createPanel = function(data) {
-        var panel = createPanelAndTableTemplate(data.topicName)
-        $(panel).find('tbody').html(fillTable(data))
+    var createPanel = function(topic) {
+        var panel = createPanelAndTableTemplate(topic.topicID, topic.fullTopicString)
+        //$(panel).find('tbody').html(fillTable(topic))
         $('#topics-column').append(panel);
     }
 
@@ -143,12 +143,16 @@ var Topics = (function($) {
         refresh: function(response) {
             unBindButtons();
 
-            var topicName = response.topicName.toLowerCase()
+            $.each(response, function(i, topic) {
+                var topicID = topic.topicID
+                if ($('#' + topicID).length === 0)  // If the topic doesn't already exist
+                    createPanel(topic)
+                else  // If the topic exist
+                    updatePanel(topic, $('#' + topicID).find('tbody'))
 
-            if ($('#' + topicName).length === 0)  // If the topic doesn't already exist
-                createPanel(response)
-            else  // If the topic exist
-                updatePanel(response, $('#' + topicName).find('tbody'))
+            })
+
+
 
             bindButtons();
         }
