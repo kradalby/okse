@@ -105,12 +105,12 @@ public class MessageService extends AbstractCoreService {
                     // Do we have a system message?
                     if (m.isSystemMessage() && m.getTopic() == null) {
 
-                        log.info("Recieved message was a SystemMessage: " + m.getMessage());
+                        log.debug("Recieved message was a SystemMessage: " + m.getMessage());
 
                         // Check if we are to broadcast this system message
                         if (Application.BROADCAST_SYSTEM_MESSAGES_TO_SUBSCRIBERS) {
 
-                            log.info("System Message Broadcast set to TRUE, distributing system message...");
+                            log.debug("System Message Broadcast set to TRUE, distributing system message...");
 
                             // Generate duplicate messages to all topics and iterate over them
                             generateMessageToAllTopics(m).stream().forEach(message -> {

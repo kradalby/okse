@@ -314,6 +314,21 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
             ExceptionUtilities.throwSubscribeCreationFailedFault("en", "EndpointReference malformatted or missing.");
         }
 
+        log.debug("Endpointreference is: " + endpointReference);
+
+        String requestAddress = "";
+        Integer port = 80;
+        if (endpointReference.contains(":")) {
+            String[] components = endpointReference.split(":");
+            try {
+                port = Integer.parseInt(components[components.length - 1]);
+                requestAddress = components[components.length - 2];
+                requestAddress = requestAddress.replace("//", "");
+            } catch (Exception e) {
+                log.error("Failed to parse endpointReference");
+            }
+        }
+
         FilterType filters = subscribeRequest.getFilter();
         Map<QName, Object> filtersPresent = null;
 
@@ -336,11 +351,11 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
 
                         QName fName = filter.getName();
 
-                        log.info("Subscription request contained filter: " + fName + " Value: " + filter.getValue());
+                        log.debug("Subscription request contained filter: " + fName + " Value: " + filter.getValue());
                         TopicExpressionType type = (TopicExpressionType) filter.getValue();
                         type.getContent().stream().forEach(p -> log.info("Content: " + p.toString()));
-                        log.info("Attributes: " + type.getOtherAttributes());
-                        log.info("Dialect: " + type.getDialect());
+                        log.debug("Attributes: " + type.getOtherAttributes());
+                        log.debug("Dialect: " + type.getDialect());
 
                         filtersPresent.put(fName, filter.getValue());
                     } else {
@@ -368,7 +383,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
             }
         } else {
             /* Set it to terminate in half a year */
-            log.info("Subscribe request had no termination time set, using default");
+            log.debug("Subscribe request had no termination time set, using default");
             terminationTime = System.currentTimeMillis() + Application.DEFAULT_SUBSCRIPTION_TERMINATION_TIME;
         }
 
@@ -388,41 +403,31 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
                     "please post an issue at http://github.com/tOgg1/WS-Nu");
         }
 
-        log.info("Generating WS-Nu subscription hash");
+        log.debug("Generating WS-Nu subscription hash");
         /* Generate WS-Nu subscription hash */
         String newSubscriptionKey = generateSubscriptionKey();
-        log.info("Generating WS-Nu endpoint reference url to subscriptionManager using key: " + newSubscriptionKey + " and prefix: " + WsnUtilities.subscriptionString);
+        log.debug("Generating WS-Nu endpoint reference url to subscriptionManager using key: " + newSubscriptionKey + " and prefix: " + WsnUtilities.subscriptionString);
 
         String subscriptionEndpoint = this.generateHashedURLFromKey(WsnUtilities.subscriptionString, newSubscriptionKey);
 
-        log.info("Setting up W3C endpoint reference builder");
+        log.debug("Setting up W3C endpoint reference builder");
         /* Build endpoint reference */
         W3CEndpointReferenceBuilder builder = new W3CEndpointReferenceBuilder();
         builder.address(subscriptionEndpoint);
 
-        log.info("Building endpoint reference to response");
+        log.debug("Building endpoint reference to response");
         // Set the subscription reference on the SubscribeResponse object
         response.setSubscriptionReference(builder.build());
 
-        log.info("Preparing WS-Nu components needed for subscription");
+        log.debug("Preparing WS-Nu components needed for subscription");
         /* Prepare WS-Nu components needed for a subscription */
         FilterSupport.SubscriptionInfo subscriptionInfo = new FilterSupport.SubscriptionInfo(filtersPresent, connection.getRequestInformation().getNamespaceContextResolver());
         HelperClasses.EndpointTerminationTuple endpointTerminationTuple;
         endpointTerminationTuple = new HelperClasses.EndpointTerminationTuple(endpointReference, terminationTime);
         SubscriptionHandle subscriptionHandle = new SubscriptionHandle(endpointTerminationTuple, subscriptionInfo);
 
-        log.info("Preparing OKSE subscriber objects");
+        log.debug("Preparing OKSE subscriber objects");
         /* Prepare needed information for OKSE Subscriber object */
-        String requestAddress = connection.getRequestInformation().getEndpointReference();
-
-        Integer port = 80;
-        if (requestAddress.contains(":")) {
-            String[] components = requestAddress.split(":");
-            if (components.length == 2) {
-                requestAddress = components[0];
-                port = Integer.parseInt(components[1]);
-            }
-        }
 
         String rawTopicContent = "";
         String requestDialect = "";

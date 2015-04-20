@@ -24,6 +24,7 @@
 
 package no.ntnu.okse.protocol.wsn;
 
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;

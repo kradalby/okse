@@ -107,7 +107,7 @@ public class SubscriptionService extends AbstractCoreService {
         while (_running) {
             try {
                 SubscriptionTask task = queue.take();
-                log.info(task.getType() + " job recieved, executing task...");
+                log.debug(task.getType() + " job recieved, executing task...");
                 // Perform the task
                 task.run();
             } catch (InterruptedException e) {
