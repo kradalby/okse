@@ -25,6 +25,8 @@
 package no.ntnu.okse.protocol.wsn;
 
 import no.ntnu.okse.Application;
+import no.ntnu.okse.core.messaging.Message;
+import no.ntnu.okse.core.messaging.MessageService;
 import no.ntnu.okse.core.subscription.Publisher;
 import no.ntnu.okse.core.subscription.Subscriber;
 import no.ntnu.okse.core.topic.TopicService;
@@ -549,13 +551,15 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
             WsnUtilities.sendSubscriptionRequest(endpointReference, getEndpointReference(), getHub());
         }
 
+        // Create the necessary WS-Nu components needed for the RegisterPublisherResponse
         HelperClasses.EndpointTerminationTuple endpointTerminationTuple = new HelperClasses.EndpointTerminationTuple(newSubscriptionKey, terminationTime);
         PublisherHandle pubHandle = new PublisherHandle(endpointTerminationTuple, topics, registerPublisherRequest.isDemand());
 
         // Set up OKSE publisher object
         Publisher publisher = new Publisher(rawTopicString, requestAddress, port, WSNotificationServer.getInstance().getProtocolServerType());
         publisher.setAttribute(WSNRegistrationManager.WSN_PUBLISHER_TOKEN, newSubscriptionKey);
-        ;
+        publisher.setAttribute(WSNSubscriptionManager.WSN_DIALECT_TOKEN, rawDialect);
+
         _registrationManager.addPublisher(publisher, pubHandle);
 
         // Initialize the response payload
@@ -573,9 +577,71 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
     }
 
     @Override
-    public GetCurrentMessageResponse getCurrentMessage(GetCurrentMessage getCurrentMessage) throws InvalidTopicExpressionFault, TopicExpressionDialectUnknownFault, MultipleTopicsSpecifiedFault, ResourceUnknownFault, NoCurrentMessageOnTopicFault, TopicNotSupportedFault {
+    /**
+     * Implementation of {@link org.oasis_open.docs.wsn.b_2.GetCurrentMessage}.
+     *
+     * This message will always fault unless {@link #cacheMessages} is true.
+     *
+     * @param getCurrentMessageRequest The request object
+     * @return A {@link org.oasis_open.docs.wsn.b_2.GetCurrentMessageResponse} object with the latest message on the request topic.
+     * @throws InvalidTopicExpressionFault Thrown either if the topic is invalid, or if no topic is given.
+     * @throws TopicExpressionDialectUnknownFault Thrown if the topic expression uses a dialect not known
+     * @throws MultipleTopicsSpecifiedFault Never thrown due to the nature of the {@link org.oasis_open.docs.wsn.b_2.GetCurrentMessage} object.
+     * @throws ResourceUnknownFault Never thrown as of version 0.4, as WS-Resources is not implemented.
+     * @throws NoCurrentMessageOnTopicFault If no message is listed on the current topic.
+     * @throws TopicNotSupportedFault Never thrown as of version 0.3.
+     */
+    @WebResult(name = "GetCurrentMessageResponse", targetNamespace = "http://docs.oasis-open.org/wsn/b-2",
+            partName = "GetCurrentMessageResponse")
+    @WebMethod(operationName = "GetCurrentMessage")
+    public GetCurrentMessageResponse getCurrentMessage(GetCurrentMessage getCurrentMessageRequest) throws InvalidTopicExpressionFault, TopicExpressionDialectUnknownFault, MultipleTopicsSpecifiedFault, ResourceUnknownFault, NoCurrentMessageOnTopicFault, TopicNotSupportedFault {
         log.debug("getCurrentMessage called");
-        return null;
+
+        if (!cacheMessages) {
+            log.warn("Someone tried to get current message when caching is disabled");
+            ExceptionUtilities.throwNoCurrentMessageOnTopicFault("en", "No messages are stored on Topic " +
+                    getCurrentMessageRequest.getTopic().getContent());
+        }
+
+        log.debug("Accepted getCurrentMessage");
+        // Find out which topic there was asked for (Exceptions automatically thrown)
+        TopicExpressionType askedFor = getCurrentMessageRequest.getTopic();
+
+        if (askedFor == null) {
+            log.warn("Topic missing from getCurrentMessage request");
+            ExceptionUtilities.throwInvalidTopicExpressionFault("en", "Topic missing from request.");
+        }
+
+        List<QName> topicQNames = TopicValidator.evaluateTopicExpressionToQName(askedFor, connection.getRequestInformation().getNamespaceContext(askedFor));
+
+        String topicName = TopicUtils.topicToString(topicQNames);
+
+        // Fetch the latest message from the MessageService
+        Message currentMessage = MessageService.getInstance().getLatestMessage(topicName);
+
+        if (currentMessage == null) {
+            log.warn("Was asked for current message on a topic that was not sent");
+            ExceptionUtilities.throwNoCurrentMessageOnTopicFault("en", "There was no messages on the topic requested");
+
+            return null;
+        } else {
+            GetCurrentMessageResponse response = new GetCurrentMessageResponse();
+
+            // Create the needed WS-Nu wrappers needed for the response
+            NotificationMessageHolderType holderType = new NotificationMessageHolderType();
+            NotificationMessageHolderType.Message wsnMessage = new NotificationMessageHolderType.Message();
+            wsnMessage.setAny(currentMessage.getMessage());
+            holderType.setMessage(wsnMessage);
+            W3CEndpointReferenceBuilder builder = new W3CEndpointReferenceBuilder();
+            builder.address(currentMessage.getPublisher().getHostAndPort());
+
+            if (currentMessage.getPublisher().getAttribute())
+
+
+            response.getAny().add(holderType.getMessage());
+
+            return response;
+        }
     }
 
     @Override

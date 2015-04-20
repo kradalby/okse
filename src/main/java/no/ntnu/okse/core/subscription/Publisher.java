@@ -152,6 +152,10 @@ public class Publisher {
         return false;
     }
 
+    public String getHostAndPort() {
+        return host + ":" + port;
+    }
+
     @Override
     public String toString() {
         return "Publisher [" + originProtocol + "] " + host + ":" + port + " on topic: " + topic;
