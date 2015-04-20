@@ -59,11 +59,17 @@ var Logs = (function($) {
                 console.log("[Debug][Logs] Adding log level buttons")
                 var buttons = ""
                 $.each(data, function(i, level) {
-                    buttons += '<div class="btn-group" role="group"><button type="button" class="btn btn-info" id="button-' + level + '">' + level + '</button></div>'
+                    if (i == 0) {
+                        buttons += '<button type="button" class="btn btn-info active" id="button-' + level + '">' + level + '</button>'
+                    } else {
+                        buttons += '<button type="button" class="btn btn-info" id="button-' + level + '">' + level + '</button>'
+                    }
                 });
                 $("#log-level").html(buttons)
                 $.each(data, function(i, level) {
-                    $("#button-" + level).on("click", function(){
+                    $("#button-" + level).on("click", function(e){
+                        e.preventDefault()
+                        $('#button-' + level).addClass('active').siblings().removeClass('active');
                         logLevel = level
                         updateUrl()
                         Main.ajax(Logs.url(), Logs.error, Logs.refresh, "GET")
@@ -82,11 +88,17 @@ var Logs = (function($) {
                 console.log("[Debug][Logs] Adding log files buttons")
                 var files = ""
                 $.each(data, function(i) {
-                    files += '<div class="btn-group" role="group"><button type="button" class="btn btn-success" id="button-logID-' + i + '">' + data[i] + '</button></div>'
+                    if (i == 0) {
+                        files += '<button type="button" class="btn btn-success active" id="button-logID-' + i + '">' + data[i] + '</button>'
+                    } else {
+                        files += '<button type="button" class="btn btn-success" id="button-logID-' + i + '">' + data[i] + '</button>'
+                    }
                 })
                 $("#log-file").html(files)
                 $.each(data, function(i) {
-                    $("#button-logID-" + i).on("click", function(){
+                    $("#button-logID-" + i).on("click", function(e){
+                        e.preventDefault()
+                        $('#button-logID-' + i).addClass('active').siblings().removeClass('active');
                         logID = i
                         updateUrl()
                         Main.ajax(Logs.url(), Logs.error, Logs.refresh, "GET")
@@ -102,7 +114,8 @@ var Logs = (function($) {
             /*
              * Add a listener to clear interval
              * */
-            $("#button-refresh").on("click", function() {
+            $("#button-refresh").on("click", function(e) {
+                e.preventDefault()
                 if (!$(this).hasClass("active")) {
                     $(this).addClass("active")
                     $(this).text("Start refresh")
