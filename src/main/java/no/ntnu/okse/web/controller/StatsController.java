@@ -25,7 +25,6 @@
 package no.ntnu.okse.web.controller;
 
 import no.ntnu.okse.Application;
-import no.ntnu.okse.protocol.Protocol;
 import no.ntnu.okse.protocol.ProtocolServer;
 import no.ntnu.okse.web.model.ProtocolStats;
 import no.ntnu.okse.web.model.Stats;
@@ -33,8 +32,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.management.MBeanServer;
-import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 
 /**
