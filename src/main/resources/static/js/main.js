@@ -59,6 +59,12 @@ var Main = (function($) {
         })
     };
 
+    var setIntervalForLogTab = function() {
+        clickInterval = setInterval(function () {
+            Main.ajax(Logs.url(), Logs.error, Logs.refresh, "GET")
+        }, $('#settings-update-interval').val() * 1000);
+    }
+
     // TODO: For now, it only updates when in main-pane. Needs to change in topic pane later on
     // Updates all the subscriber counters on the page (both the main-pane and the topics-pane
     var updateSubscribers = function(subscribers) {
@@ -104,14 +110,10 @@ var Main = (function($) {
                     }, updateInterval);
                 } else if (clickedElement === "#config") {
                     ajax(clickedElement.substring(1), Config.error, Config.refresh, "GET")
-                    clickInterval = setInterval( function() {
-                        ajax(clickedElement.substring(1), Config.error, Config.refresh, "GET")
-                    }, updateInterval);
+                    setIntervalForTab(clickedElement.substring(1));
                 } else if (clickedElement === "#log") {
                     ajax(Logs.url(), Logs.error, Logs.refresh, "GET")
-                    clickInterval = setInterval( function() {
-                        ajax(Logs.url(), Logs.error, Logs.refresh, "GET")
-                    }, updateInterval);
+                    setIntervalForLogTab()
                 } else {
                     console.error("[Error][Main] Unknown nav-tab clicked, this should not happen!")
                 }
@@ -125,7 +127,8 @@ var Main = (function($) {
         },
         clearIntervalForTab: function() {
             clearInterval(clickInterval)
-        }
+        },
+        setIntervalForLogTab: setIntervalForLogTab
     }
 
 })(jQuery)

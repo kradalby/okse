@@ -34,7 +34,10 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Properties;
 import java.util.logging.Logger;
@@ -64,10 +67,25 @@ public class IndexController {
         model.addAttribute("environment", createEnvironmentList());
         model.addAttribute("subscribers", SubscriptionService.getInstance().getAllSubscribers().size());
 
+
+        String ip;
         try {
-            model.addAttribute("serverAddress", InetAddress.getLocalHost().getHostAddress());
-        } catch (UnknownHostException e) {
-            model.addAttribute("serverAddress", "Unknown");
+            Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+            while (interfaces.hasMoreElements()) {
+                NetworkInterface iface = interfaces.nextElement();
+                // filters out 127.0.0.1 and inactive interfaces
+                if (iface.isLoopback() || !iface.isUp())
+                    continue;
+
+                Enumeration<InetAddress> addresses = iface.getInetAddresses();
+                while(addresses.hasMoreElements()) {
+                    InetAddress addr = addresses.nextElement();
+                    ip = addr.getHostAddress();
+                    System.out.println(iface.getDisplayName() + " " + ip);
+                }
+            }
+        } catch (SocketException e) {
+            throw new RuntimeException(e);
         }
 
         return "fragments/index";

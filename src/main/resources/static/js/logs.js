@@ -110,9 +110,7 @@ var Logs = (function($) {
                 } else {
                     $(this).removeClass("active");
                     $(this).text("Stop refresh")
-                    clickInterval = setInterval( function() {
-                        Main.ajax(Logs.url(), Logs.error, Logs.refresh, "GET")
-                    }, $('#settings-update-interval').val() * 1000);
+                    Main.setIntervalForLogTab()
                 }
             })
         },
