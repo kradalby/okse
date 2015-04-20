@@ -33,6 +33,7 @@ import org.ntnunotif.wsnu.base.internal.Hub;
 import org.ntnunotif.wsnu.base.net.NuNamespaceContextResolver;
 import org.ntnunotif.wsnu.base.topics.TopicUtils;
 import org.ntnunotif.wsnu.base.topics.TopicValidator;
+import org.ntnunotif.wsnu.base.util.InternalMessage;
 import org.ntnunotif.wsnu.services.eventhandling.PublisherRegistrationEvent;
 import org.ntnunotif.wsnu.services.eventhandling.SubscriptionEvent;
 import org.ntnunotif.wsnu.services.filterhandling.FilterSupport;
@@ -55,6 +56,7 @@ import javax.jws.WebMethod;
 import javax.jws.WebParam;
 import javax.jws.WebService;
 import javax.jws.soap.SOAPBinding;
+import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.annotation.XmlSeeAlso;
 import javax.xml.datatype.DatatypeConfigurationException;
@@ -140,8 +142,46 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         return filterSupport.evaluateNotifyToSubscription(notify, subscriptionHandle.subscriptionInfo, nuNamespaceContextResolver);
     }
 
+    /**
+     * Will try to send the {@link org.oasis_open.docs.wsn.b_2.Notify} to the
+     * {@link javax.xml.ws.wsaddressing.W3CEndpointReference} indicated.
+     *
+     * @param notify               the {@link org.oasis_open.docs.wsn.b_2.Notify} to send
+     * @param w3CEndpointReference the reference of the receiving endpoint
+     * @throws IllegalAccessException
+     */
+    @WebMethod(exclude = true)
+    public void sendSingleNotify(Notify notify, W3CEndpointReference w3CEndpointReference) {
+        // Not really needed, since we are not using the WS-Nu quickbuild, but just in case
+        // we need to terminate the request if we don't have anywhere to forward
+        if (hub == null) {
+            log.error("Tried to send message with hub null. If a quickBuild is available," +
+                    " consider running this before sending messages");
+            return;
+        }
+
+        log.debug("Was told to send single notify to a target");
+        // Initialize a new WS-Nu internalmessage
+        InternalMessage outMessage = new InternalMessage(InternalMessage.STATUS_OK |
+                InternalMessage.STATUS_HAS_MESSAGE |
+                InternalMessage.STATUS_ENDPOINTREF_IS_SET,
+                notify);
+        // Update the requestinformation
+        outMessage.getRequestInformation().setEndpointReference(ServiceUtilities.getAddress(w3CEndpointReference));
+        log.debug("Forwarding Notify");
+        // Pass it along to the requestparser
+        hub.acceptLocalMessage(outMessage);
+    }
+
     @Override
     public void sendNotification(Notify notify, NuNamespaceContextResolver namespaceContextResolver) {
+        // If this somehow is called without WSNRequestParser set as hub, terminate
+        if (hub == null) {
+            log.error("Tried to send message with hub null. If a quickBuild is available," +
+                    " consider running this before sending messages");
+            return;
+        }
+
         // Check if we should cache message
         if (cacheMessages) {
             // Take out the latest messages
@@ -170,10 +210,58 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
                 }
             }
         }
-        // TODO: Investigate what we must override in the supertype to properly pass the notify to OKSE core services
-        // TODO: if the notify passes WS-Nu validation and is accepted.
-        // Super type can do the rest
-        super.sendNotification(notify, namespaceContextResolver);
+
+        /* Start Message Parsing */
+
+        // bind namespaces to topics
+        for (NotificationMessageHolderType holderType : notify.getNotificationMessage()) {
+
+            TopicExpressionType topic = holderType.getTopic();
+
+            if (holderType.getTopic() != null) {
+                NuNamespaceContextResolver.NuResolvedNamespaceContext context = namespaceContextResolver.resolveNamespaceContext(topic);
+
+                if (context == null) {
+                    continue;
+                }
+
+                context.getAllPrefixes().forEach(prefix -> {
+                    // check if this is the default xmlns attribute
+                    if (!prefix.equals(XMLConstants.XMLNS_ATTRIBUTE)) {
+                        // add namespace context to the expression node
+                        topic.getOtherAttributes().put(new QName("xmlns:" + prefix), context.getNamespaceURI(prefix));
+                    }
+                });
+            }
+        }
+
+        // Remember current message with context
+        currentMessage = notify;
+        currentMessageNamespaceContextResolver = namespaceContextResolver;
+
+        // Derp derp
+        log.info(notify.getNotificationMessage().stream().map(n -> n.getTopic().getContent()).reduce((a, b) -> b).toString());
+
+        // For all valid recipients
+        for (String recipient : this.getAllRecipients()) {
+
+            // Filter do filter handling, if any
+            Notify toSend = getRecipientFilteredNotify(recipient, notify, namespaceContextResolver);
+
+            // If any message was left to send, send it
+            if (toSend != null) {
+                InternalMessage outMessage = new InternalMessage(
+                        InternalMessage.STATUS_OK |
+                        InternalMessage.STATUS_HAS_MESSAGE |
+                        InternalMessage.STATUS_ENDPOINTREF_IS_SET,
+                        toSend
+                );
+                // Update the requestinformation
+                outMessage.getRequestInformation().setEndpointReference(getEndpointReferenceOfRecipient(recipient));
+                // Pass it along to the requestparser
+                hub.acceptLocalMessage(outMessage);
+            }
+        }
     }
 
     /**
@@ -326,6 +414,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         log.info("Preparing OKSE subscriber objects");
         /* Prepare needed information for OKSE Subscriber object */
         String requestAddress = connection.getRequestInformation().getEndpointReference();
+
         Integer port = 80;
         if (requestAddress.contains(":")) {
             String[] components = requestAddress.split(":");
