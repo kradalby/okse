@@ -31,6 +31,7 @@ import no.ntnu.okse.core.event.listeners.PublisherChangeListener;
 import no.ntnu.okse.core.event.listeners.SubscriptionChangeListener;
 import no.ntnu.okse.core.topic.Topic;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -406,6 +407,10 @@ public class SubscriptionService extends AbstractCoreService {
      */
     public HashSet<Subscriber> getAllSubscribers() {
         return (HashSet<Subscriber>) _subscribers.clone();
+    }
+
+    public HashSet<Publisher> getAllPublishers() {
+        return (HashSet<Publisher>) _publishers.clone();
     }
 
     /* ------------------------------------------------------------------------------------------ */

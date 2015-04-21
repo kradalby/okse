@@ -24,7 +24,11 @@
 
 package no.ntnu.okse.protocol.wsn;
 
+import no.ntnu.okse.core.messaging.Message;
 import org.oasis_open.docs.wsn.b_2.NotificationMessageHolderType;
+
+import javax.xml.namespace.QName;
+import javax.xml.ws.wsaddressing.W3CEndpointReferenceBuilder;
 
 /**
  * Created by Aleksander Skraastad (myth) on 4/21/15.
@@ -33,9 +37,25 @@ import org.oasis_open.docs.wsn.b_2.NotificationMessageHolderType;
  */
 public class WSNTools {
     public static NotificationMessageHolderType generateNotificationMessageHolderType(
-        Object message, String topic, String publisherReference, String subscriptionReference
+        Message message, String topic, String publisherReference, String subscriptionReference
     ) {
         NotificationMessageHolderType holderType = new NotificationMessageHolderType();
-        return null;
+        NotificationMessageHolderType.Message innerMessage = new NotificationMessageHolderType.Message();
+
+        innerMessage.setAny(message.getMessage());
+        holderType.setMessage(innerMessage);
+
+        W3CEndpointReferenceBuilder endRefBuilder = new W3CEndpointReferenceBuilder();
+        if (!message.getPublisher().getAttribute("wsn-endpoint").equals(null)) {
+            endRefBuilder.address(message.getPublisher().getHostAndPort() + message.getPublisher().getAttribute(WSNSubscriptionManager.WSN_ENDPOINT_TOKEN));
+        } else {
+            endRefBuilder.address(message.getPublisher().getHostAndPort());
+        }
+
+        QName
+
+        holderType.setProducerReference(endRefBuilder.build());
+
+        return holderType;
     }
 }
