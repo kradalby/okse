@@ -86,14 +86,41 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
         }
     }
 
+    /**
+     * Retrieve a collection of all the WS-Nu subscriptionKeys registered to this manager
+     * @return A Collection of WS-Nu subscriptionKeys
+     */
     public Collection<String> getAllRecipients() {
         return localSubscriberMap.keySet();
     }
 
+    /**
+     * Retrieve the SubscriptionHandle of the subscriber identified by the argument subscriptionKey.
+     *
+     * @param s The subscriptionKey of the Subscriber to fetch the SubscriptionHandle of
+     * @return A SubscriptionHandle connected to the Subscriber if it exists, null otherwise
+     */
     public AbstractNotificationProducer.SubscriptionHandle getSubscriptionHandle(String s) {
-        return localSubscriberHandle.get(s);
+        if (localSubscriberHandle.containsKey(s)) return localSubscriberHandle.get(s);
+        return null;
     }
 
+    /**
+     * Retrieve the SubscriptionHandle of the subscriber provided as the argument
+     *
+     * This method attempts to extract the WS-Nu subscriptionKey from the Subscriber object's
+     * attribute set, and delegates the rest to the String based method with the same name.
+     *
+     * @param subscriber The Subscriber object to fetch the SubscriptionHandle of
+     * @return A SubscriptionHandle connected to the Subscriber if it exists, null otherwise
+     */
+    public AbstractNotificationProducer.SubscriptionHandle getSubscriptionHandle(Subscriber subscriber) {
+        return getSubscriptionHandle(subscriber.getAttribute(WSN_SUBSCRIBER_TOKEN));
+    }
+
+    /**
+     * This generic update method is intended to purge Subscribers that have a terminationTime set and it has expired
+     */
     @Override
     public void update() {
 

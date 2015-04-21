@@ -26,6 +26,7 @@ package no.ntnu.okse.protocol.wsn;
 
 import no.ntnu.okse.core.messaging.Message;
 import no.ntnu.okse.core.subscription.Publisher;
+import no.ntnu.okse.core.subscription.SubscriptionService;
 import org.ntnunotif.wsnu.services.implementations.notificationbroker.AbstractNotificationBroker;
 import org.oasis_open.docs.wsn.b_2.*;
 import org.oasis_open.docs.wsn.t_1.*;
@@ -57,10 +58,10 @@ public class WSNTools {
      * @return A completely built NotificationMessageHolderType used in WS-Nu for storing notifications
      */
     public static NotificationMessageHolderType generateNotificationMessageHolderType(
-        Message message,
-        String subscriptionReference,
-        String publisherReference,
-        String dialect
+            Message message,
+            String subscriptionReference,
+            String publisherReference,
+            String dialect
     ) {
         // Create the HolderType
         NotificationMessageHolderType holderType = b2_factory.createNotificationMessageHolderType();
@@ -77,12 +78,16 @@ public class WSNTools {
 
         // Build the endpointReferences
         W3CEndpointReferenceBuilder builder = new W3CEndpointReferenceBuilder();
-        // Build SubscriptionReference
-        builder.address(subscriptionReference);
-        holderType.setSubscriptionReference(builder.build());
-        // Build ProducerReference
-        builder.address(publisherReference);
-        holderType.setProducerReference(builder.build());
+        // Build SubscriptionReference if provided
+        if (subscriptionReference != null) {
+            builder.address(subscriptionReference);
+            holderType.setSubscriptionReference(builder.build());
+        }
+        // Build ProducerReference if provided
+        if (publisherReference != null) {
+            builder.address(publisherReference);
+            holderType.setProducerReference(builder.build());
+        }
 
         // Set the actual message content
         innerMessage.setAny(message.getMessage());
@@ -92,10 +97,5 @@ public class WSNTools {
 
         // Return the complete HolderType
         return holderType;
-    }
-
-    public static AbstractNotificationBroker.PublisherHandle getPublisherHandleIfExists(Publisher p) {
-        // TODO Maek dis
-        return null;
     }
 }
