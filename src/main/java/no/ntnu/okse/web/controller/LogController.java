@@ -67,7 +67,7 @@ public class LogController {
 
     private static HashMap<Integer, String> fileNames;
 
-    private static Integer fileID = 0;
+    private static Integer fileID = 1;
 
     public LogController() {
         fileNames = new HashMap<>();
@@ -87,11 +87,16 @@ public class LogController {
         File dir = new File("logs");
         Collection<File> files = FileUtils.listFiles(dir, TrueFileFilter.INSTANCE, TrueFileFilter.INSTANCE);
 
-        for (File file: files) {
-            if (!fileNames.containsValue(file.getName())) {
-                fileNames.put(fileID++, file.getName());
+        files.forEach(f -> {
+            if (!fileNames.containsValue(f.getName())) {
+                if (f.getName().equalsIgnoreCase("okse.log")) {
+                    fileNames.put(0, f.getName());
+                } else {
+                    fileNames.put(fileID++, f.getName());
+                }
             }
-        }
+        });
+
     }
 
 
