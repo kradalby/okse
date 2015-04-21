@@ -25,9 +25,9 @@
 package no.ntnu.okse.protocol.wsn;
 
 import no.ntnu.okse.core.messaging.Message;
-import org.oasis_open.docs.wsn.b_2.NotificationMessageHolderType;
+import org.oasis_open.docs.wsn.b_2.*;
+import org.oasis_open.docs.wsn.t_1.*;
 
-import javax.xml.namespace.QName;
 import javax.xml.ws.wsaddressing.W3CEndpointReferenceBuilder;
 
 /**
@@ -36,14 +36,47 @@ import javax.xml.ws.wsaddressing.W3CEndpointReferenceBuilder;
  * okse is licenced under the MIT licence.
  */
 public class WSNTools {
-    public static NotificationMessageHolderType generateNotificationMessageHolderType(
-        Message message, String topic, String publisherReference
-    ) {
-        NotificationMessageHolderType holderType = new NotificationMessageHolderType();
-        NotificationMessageHolderType.Message innerMessage = new NotificationMessageHolderType.Message();
 
-        innerMessage.setAny(message.getMessage());
-        holderType.setMessage(innerMessage);
+    // Initialize the WSN XML Object factories
+    public static org.oasis_open.docs.wsn.b_2.ObjectFactory b2_factory = new org.oasis_open.docs.wsn.b_2.ObjectFactory();
+    public static org.oasis_open.docs.wsn.t_1.ObjectFactory t1_factory = new org.oasis_open.docs.wsn.t_1.ObjectFactory();
+
+    // Namespace references
+    public static final String _ConcreteTopicExpression = "http://docs.oasis-open.org/wsn/t-1/TopicExpression/Concrete";
+    public static final String _SimpleTopicExpression = "http://docs.oasis-open.org/wsn/t-1/TopicExpression/Simple";
+
+    /**
+     * Generates a WS-Notification Notification Message from the provided arguments
+     *
+     * @param message An OKSE message object containing all the required fields
+     * @param topic The raw topic string this message is destined for
+     * @param subscriptionReference The subscription reference endpoint
+     * @param publisherReference The publisher reference endpoint
+     * @param dialect The dialect used for this message
+     * @return A completely built NotificationMessageHolderType used in WS-Nu for storing notifications
+     */
+    public static NotificationMessageHolderType generateNotificationMessageHolderType(
+        Message message,
+        String topic,
+        String subscriptionReference,
+        String publisherReference,
+        String dialect
+    ) {
+        // Create the HolderType
+        NotificationMessageHolderType holderType = b2_factory.createNotificationMessageHolderType();
+        // Create the Message object
+        NotificationMessageHolderType.Message innerMessage = b2_factory.createNotificationMessageHolderTypeMessage();
+        // Create the TopicExpressionType
+        TopicExpressionType topicType = b2_factory.createTopicExpressionType();
+        // Set the Dialect on the TopicExpressionType
+        topicType.setDialect(dialect);
+        // Add the actual topic to the TopicExpressionType
+        topicType.getContent().add(topic);
+        // Set the Topic on the HolderType
+        holderType.setTopic(topicType);
+
+        // Set the actual contents of the message to the Message element
+        innerMessage.setAny("Test");
 
         W3CEndpointReferenceBuilder endRefBuilder = new W3CEndpointReferenceBuilder();
         if (!message.getPublisher().getAttribute("wsn-endpoint").equals(null)) {

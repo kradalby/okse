@@ -635,7 +635,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
             }
 
             NotificationMessageHolderType holderType = WSNTools.generateNotificationMessageHolderType(
-                    currentMessage, currentMessage.getTopic().getFullTopicString(), pubRef
+                currentMessage, currentMessage.getTopic().getFullTopicString(), subRef, pubRef, askedFor.getDialect()
             );
 
             response.getAny().add(holderType.getMessage());
