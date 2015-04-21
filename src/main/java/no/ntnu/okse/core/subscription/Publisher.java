@@ -25,7 +25,6 @@
 package no.ntnu.okse.core.subscription;
 
 import no.ntnu.okse.Application;
-import no.ntnu.okse.core.event.SystemEvent;
 
 import java.util.HashMap;
 
@@ -73,6 +72,14 @@ public class Publisher {
      */
     public String getHost() {
         return host;
+    }
+
+    /**
+     * Retrieves the raw topic string this publisher has registered to
+     * @return The raw topic string this publisher is registered to
+     */
+    public String getTopic() {
+        return this.topic;
     }
 
     /**
@@ -150,6 +157,19 @@ public class Publisher {
             return timeout < System.currentTimeMillis();
         }
         return false;
+    }
+
+    /**
+     * Fetches a concatenation of host and port as a string
+     * @return The host and port of the subscriber as a string
+     */
+    public String getHostAndPort() {
+        return host + ":" + port;
+    }
+
+    @Override
+    public String toString() {
+        return "Publisher [" + originProtocol + "] " + host + ":" + port + " on topic: " + topic;
     }
 
 }

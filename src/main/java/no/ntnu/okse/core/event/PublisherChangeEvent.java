@@ -49,6 +49,7 @@ public class PublisherChangeEvent extends Event {
      */
     public PublisherChangeEvent(PublisherChangeEvent.Type type, Publisher data) {
         super(data);
+        this.type = type;
     }
 
     @Override

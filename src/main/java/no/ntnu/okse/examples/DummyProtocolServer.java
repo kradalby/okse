@@ -131,10 +131,6 @@ public class DummyProtocolServer extends AbstractProtocolServer {
                     // Log the recieved command
                     log.info("Command recieved: " + command);
 
-                    SubscriptionService.getInstance().getAllSubscribersForTopic("no/ffi")
-                            .stream()
-                            .forEach(s -> log.info("Subscriber for no/ffi : " + s));
-
                     // Update stats
                     totalMessages++;
                     totalRequests++;

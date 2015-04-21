@@ -17,6 +17,7 @@ import org.oasis_open.docs.wsn.bw_2.UnableToDestroySubscriptionFault;
 import org.oasis_open.docs.wsn.bw_2.UnacceptableTerminationTimeFault;
 import org.oasis_open.docs.wsrf.rw_2.ResourceUnknownFault;
 
+import javax.jws.WebMethod;
 import javax.jws.WebService;
 import java.util.Collection;
 import java.util.HashMap;
@@ -30,6 +31,7 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
 
     public static final String WSN_SUBSCRIBER_TOKEN = "wsn-subscriberkey";
     public static final String WSN_DIALECT_TOKEN = "wsn-dialect";
+    public static final String WSN_ENDPOINT_TOKEN = "wsn-endpoint";
 
     private static Logger log;
     private SubscriptionService _subscriptionService = null;
@@ -56,14 +58,6 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
         return localSubscriberMap.containsKey(s);
     }
 
-    // This should not be called in any of the OKSE Custom/Proxy web service implementations.
-    // Use addSubscriber(Subscriber s, SubscriptionHandle subHandle) instead.
-    @Override
-    public void addSubscriber(String s, long l) {
-        log.warn("WS-Nu default addSubscriber with hashKey and terminationTime called. " +
-                "Locate offending method and change to addSubscriber(Subscriber s).");
-    }
-
     /**
      * This is the main OKSE implementation of the subscription manager addSubscriber method that should be used.
      * It will delegate core subscriber registry to the core SubscriptionService, as well as update the local
@@ -75,6 +69,14 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
         _subscriptionService.addSubscriber(s);
         localSubscriberMap.put(s.getAttribute(WSN_SUBSCRIBER_TOKEN), s);
         localSubscriberHandle.put(s.getAttribute(WSN_SUBSCRIBER_TOKEN), subHandle);
+    }
+
+    // This should not be called in any of the OKSE Custom/Proxy web service implementations.
+    // Use addSubscriber(Subscriber s, SubscriptionHandle subHandle) instead.
+    @Override
+    public void addSubscriber(String s, long l) {
+        log.warn("WS-Nu default addSubscriber with hashKey and terminationTime called. " +
+                "Locate offending method and change to addSubscriber(Subscriber s).");
     }
 
     @Override
@@ -113,6 +115,7 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
     // But not on subscribe, since we are the initiating source we can update the local maps first,
     // and only delegate the subscriber object to the core SubscriptionService.
     @Override
+    @WebMethod(exclude = true)
     public void subscriptionChanged(SubscriptionChangeEvent e) {
         // If it is WSNotification subscriber
         if (e.getData().getOriginProtocol().equals(WSNotificationServer.getInstance().getProtocolServerType())) {

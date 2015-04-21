@@ -205,6 +205,6 @@ public class Subscriber {
      */
     @Override
     public String toString() {
-        return "[" + originProtocol + "] " + host + ":" + port + " on topic: " + topic;
+        return "Subscriber [" + originProtocol + "] " + host + ":" + port + " on topic: " + topic;
     }
 }

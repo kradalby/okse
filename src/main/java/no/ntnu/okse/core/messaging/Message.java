@@ -32,6 +32,7 @@ import org.springframework.security.crypto.codec.Hex;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 
 /**
  * Created by Aleksander Skraastad (myth) on 4/17/15.
@@ -47,6 +48,7 @@ public class Message {
     private final String message;
     private final String messageID;
     private static Logger log;
+    private HashMap<String, String> attributes;
 
     // Mutable fields
     private LocalDateTime processed;
@@ -61,6 +63,7 @@ public class Message {
         this.message = message;
         this.systemMessage = false;
         this.messageID = generateMessageID();
+        this.attributes = new HashMap<>();
     }
 
     /**
@@ -148,6 +151,26 @@ public class Message {
     public LocalDateTime setProcessed() {
         if (!isProcessed()) this.processed = LocalDateTime.now();
         return this.processed;
+    }
+
+    /**
+     * Set an attribute on this Message object
+     * @param key They key of the attribute
+     * @param value The value of the attribute
+     */
+    public void setAttribute(String key, String value) {
+        if (attributes.containsKey(key)) attributes.replace(key, value);
+        else attributes.put(key, value);
+    }
+
+    /**
+     * Retrieve an attribute from this message object
+     * @param key The key to fetch the value of
+     * @return The value if the attribute exists, null otherwise
+     */
+    public String getAttribute(String key) {
+        if (attributes.containsKey(key)) return attributes.get(key);
+        return null;
     }
 
     /**
