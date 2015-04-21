@@ -44,8 +44,12 @@ import java.util.*;
 @RequestMapping("/api/topics")
 public class TopicController {
 
+    private static final String DELETE_ALL_TOPICS = "/delete/all";
+    private static final String DELETE_SINGLE_TOPIC = "/delete/{id}";
+    private static final String DELETE_SINGLE_SUBSCRIBER = "/delete/subscriber/{id}";
+
     private static Logger log = Logger.getLogger(TopicController.class.getName());
-    private static long id = 0;
+
 
     @RequestMapping(method = RequestMethod.GET)
     public ArrayList<Topics> topics() {
@@ -62,35 +66,30 @@ public class TopicController {
                 });
 
         return results;
-
-        /*
-        return new Topic(new Random().nextLong(), "testTopic", new ArrayList<Subscriber>(Arrays.asList(
-                new Subscriber("128.0.0.1", "8080", "WSN", new HashMap<String, String>()),
-                new Subscriber("78.91.14.24", "234", "DDS", new HashMap<String, String>()),
-                new Subscriber("192.168.1.1", "58080", "ZeroMQ", new HashMap<String, String>())
-        )));
-        */
     }
 
-    @RequestMapping(method = RequestMethod.POST, value = "/delete/all")
-    public void deleteAll() {
+    @RequestMapping(method = RequestMethod.DELETE, value = DELETE_ALL_TOPICS)
+    public void deleteAllTopics() {
         log.info("Deleting all topics");
         TopicService ts = TopicService.getInstance();
         // Delete all topics
     }
 
-    @RequestMapping(method = RequestMethod.POST, value = "/delete/{id}")
-    public void deleteOneTopic(@PathVariable String id) {
+    @RequestMapping(method = RequestMethod.DELETE, value = DELETE_SINGLE_TOPIC)
+    public @ResponseBody Topic deleteSingleTopic(@PathVariable("id") String id) {
         log.info("Deleting Topic with ID: " + id);
         TopicService ts = TopicService.getInstance();
         // Delete single topic
+        return null;
     }
 
-    @RequestMapping(method = RequestMethod.POST, value="/delete/subscriber/{id}")
-    public void deleteOneSubscriber(@PathVariable String id) {
+    @RequestMapping(method = RequestMethod.DELETE, value=DELETE_SINGLE_SUBSCRIBER)
+    public @ResponseBody Subscriber deleteSingleSubscriber(@PathVariable("id") String id) {
         log.info("Deleting subscriber with ID: " + id);
         SubscriptionService ss = SubscriptionService.getInstance();
         // Delete single subscriber
+        return new Subscriber("localhost", 8080, "no/ffi", "AMQP");
+
 
     }
 

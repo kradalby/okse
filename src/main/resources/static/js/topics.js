@@ -106,20 +106,21 @@ var Topics = (function($) {
                 console.log("[Debug][Topics] Unable to remove topic with id: " + e.target.id)
             }, function() {
                 console.log("[Debug][Topics] Removing complete topic with id: " + e.target.id)
-            }, "POST")
+            }, "DELETE")
 
 
         });
         $('.delete-subscriber').on('click', function(e) {
             e.preventDefault();
-
-            Main.ajax(("topics/delete/subscriber/" + this.id), function() {
-                console.log("[Debug][Topics] Unable to remove subscriber");
-            }, function() {
-                $(e.target).parent().parent().addClass("deleted")
-                $(e.target).addClass("disabled")
-                console.log("[Debug][Topics] Removing single subscriber");
-            }, "POST")
+            if (confirm("Are you sure you want to delete this subscriber?")) {
+                Main.ajax(("topics/delete/subscriber/" + this.id), function() {
+                    console.log("[Debug][Topics] Unable to remove subscriber");
+                }, function(response) {
+                    $(e.target).parent().parent().addClass("deleted")
+                    $(e.target).addClass("disabled")
+                    console.log("[Debug][Topics] Removing single subscriber");
+                }, "DELETE")
+            }
         });
     }
 
@@ -133,7 +134,7 @@ var Topics = (function($) {
                 }, function() {
                     $('#topics-column').html('');
                     console.log("[Debug][Topics] Removing all topics");
-                }, "POST")
+                }, "DELETE")
 
             });
         },
