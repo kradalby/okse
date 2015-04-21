@@ -39,7 +39,7 @@ import java.util.Iterator;
  * <p>
  * okse is licenced under the MIT licence.
  */
-@JsonIgnoreProperties({"parent" })
+@JsonIgnoreProperties({"parent", "children" })
 public class Topic {
 
     private String name;

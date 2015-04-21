@@ -159,8 +159,6 @@ var Topics = (function($) {
 
             })
 
-
-
             bindButtons();
         }
     }
