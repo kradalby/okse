@@ -118,12 +118,12 @@ var Logs = (function($) {
                 e.preventDefault()
                 if (!$(this).hasClass("active")) {
                     $(this).addClass("active")
-                    $(this).text("Start refresh")
-                    Main.clearIntervalForTab()
-                } else {
-                    $(this).removeClass("active");
                     $(this).text("Stop refresh")
                     Main.setIntervalForLogTab()
+                } else {
+                    $(this).removeClass("active");
+                    $(this).text("Start refresh")
+                    Main.clearIntervalForTab()
                 }
             })
         },
