@@ -50,6 +50,9 @@ import java.util.stream.Stream;
 @RequestMapping(value = "/api/log")
 public class LogController {
 
+    private static final String LOG_LEVELS = "/levels";
+    private static final String LOG_FILES = "/files";
+
     private static final HashMap<String, ArrayList<String>> logLevels = new HashMap<String, ArrayList<String>>(){{
         put("DEBUG", new ArrayList<String>(){{
             add("DEBUG");
@@ -125,13 +128,13 @@ public class LogController {
         }
     }
 
-    @RequestMapping(value = "/files", method = RequestMethod.GET)
+    @RequestMapping(value = LOG_FILES, method = RequestMethod.GET)
     public HashMap<Integer,String> logFilesAvailable() {
         updateAvailableLogFiles();
         return fileNames;
     }
 
-    @RequestMapping(value = "/levels", method = RequestMethod.GET)
+    @RequestMapping(value = LOG_LEVELS, method = RequestMethod.GET)
     public Set<String> logLevelsAvailable() {
         return logLevels.keySet();
     }
