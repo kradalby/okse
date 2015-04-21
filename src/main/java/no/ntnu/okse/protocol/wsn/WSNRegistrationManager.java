@@ -81,9 +81,32 @@ public class WSNRegistrationManager extends AbstractPublisherRegistrationManager
     }
 
     /**
+     * Get the PublisherHandle of a publisher if it exists in the local publisherhandle map.
+     *
+     * @param publisher The WSN publisher key associated with this publisher
+     * @return The PublisherHandle of the requested publisher if it exists, null otherwise
+     */
+    public AbstractNotificationBroker.PublisherHandle getPublisherHandle(String publisher) {
+        if (localPublisherHandle.containsKey(publisher)) return localPublisherHandle.get(publisher);
+        return null;
+    }
+
+    /**
+     * Get the PublisherHandle of a publisher if it exists in the local publisherhandle map.
+     * This method attempts to extract the publisherkey from the Publisher's attribute set
+     * and delegates the rest of the work to the String based method with the same name
+     *
+     * @param publisher The Publisher object we want the PublisherHandle of
+     * @return The PublisherHandle of the requested publisher if it exists, null otherwise
+     */
+    public AbstractNotificationBroker.PublisherHandle getPublisherHandle(Publisher publisher) {
+        return getPublisherHandle(publisher.getAttribute(WSN_PUBLISHER_TOKEN));
+    }
+
+    /**
      * This method uses the OKSE core subscription service to remove the subscriber,
      * and the awaits the callback from the publisherchangeevent to verify, and then remove from local maps
-     * @param p
+     * @param p The WS-Nu publisherRegistrationKey representing the publisher to be removed from the manager
      */
     @Override
     public void removePublisher(String p) {
@@ -92,15 +115,27 @@ public class WSNRegistrationManager extends AbstractPublisherRegistrationManager
         }
     }
 
+    /**
+     * Check wether or not we have a registered publisher with the provided registrationKey
+     * @param p The registrationKey to check existance of
+     * @return True if the manager knows the provided registrationKey, false otherwise
+     */
     public boolean hasPublisher(String p) {
         return localPublisherMap.containsKey(p);
     }
 
+    /**
+     * Generic update method intended to purge expired publishers if they have a terminationTime set
+     */
     @Override
     public void update() {
         // This should maybe proxy the periodic update event removing expired subs
     }
 
+    /**
+     * Event listener support for publisher change events from the OKSE SubscriptionService
+     * @param e A PublisherChangeEvent containing the type of event and an associated Publisher object
+     */
     @Override
     public void publisherChanged(PublisherChangeEvent e) {
         // Is this event on WSN publisher?
