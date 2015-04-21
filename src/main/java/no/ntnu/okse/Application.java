@@ -30,6 +30,7 @@ import no.ntnu.okse.core.subscription.SubscriptionService;
 import no.ntnu.okse.core.topic.TopicService;
 import no.ntnu.okse.db.DB;
 import no.ntnu.okse.examples.DummyProtocolServer;
+import no.ntnu.okse.protocol.amqp.AMQPServer;
 import no.ntnu.okse.protocol.wsn.WSNotificationServer;
 import no.ntnu.okse.web.Server;
 import org.apache.log4j.Logger;
@@ -83,6 +84,7 @@ public class Application {
 
         /* REGISTER PROTOCOL SERVERS HERE */
         cs.addProtocolServer(WSNotificationServer.getInstance());
+        cs.addProtocolServer(AMQPServer.getInstance());
         cs.addProtocolServer(DummyProtocolServer.getInstance());    // Example ProtocolServer
 
         // Start the admin console
