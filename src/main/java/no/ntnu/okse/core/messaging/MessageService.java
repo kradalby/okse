@@ -27,14 +27,13 @@ package no.ntnu.okse.core.messaging;
 import no.ntnu.okse.Application;
 import no.ntnu.okse.core.AbstractCoreService;
 import no.ntnu.okse.core.CoreService;
-import no.ntnu.okse.core.topic.Topic;
+import no.ntnu.okse.core.event.TopicChangeEvent;
+import no.ntnu.okse.core.event.listeners.TopicChangeListener;
 import no.ntnu.okse.core.topic.TopicService;
-import org.apache.log4j.Logger;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
@@ -42,13 +41,13 @@ import java.util.concurrent.LinkedBlockingQueue;
  * <p>
  * okse is licenced under the MIT licence.
  */
-public class MessageService extends AbstractCoreService {
+public class MessageService extends AbstractCoreService implements TopicChangeListener {
 
     private static boolean _invoked = false;
     private static MessageService _singleton;
     private static Thread _serviceThread;
     private LinkedBlockingQueue<Message> queue;
-    private HashMap<String, Message> latestMessages;
+    private ConcurrentHashMap<String, Message> latestMessages;
 
     /**
      * Private Constructor that recieves invocation from getInstance, enabling the singleton pattern for this class
@@ -64,7 +63,7 @@ public class MessageService extends AbstractCoreService {
     protected void init() {
         log.info("Initializing MessageService...");
         queue = new LinkedBlockingQueue<>();
-        latestMessages = new HashMap<>();
+        latestMessages = new ConcurrentHashMap<>();
         _invoked = true;
     }
 
@@ -94,13 +93,14 @@ public class MessageService extends AbstractCoreService {
     }
 
     /**
-     * This method must contain the operations needed for the subclass to register itself as a listener
+     * This method must contain the operations needed for ths class to register itself as a listener
      * to the different objects it wants to listen to. This method will be called after all Core Services have
      * been booted.
      */
     @Override
     public void registerListenerSupport() {
-        // TODO: Register self as listener to stuff
+        // Register self as a listener for topic events
+        TopicService.getInstance().addTopicChangeListener(this);
     }
 
     /**
@@ -234,4 +234,22 @@ public class MessageService extends AbstractCoreService {
         return generated;
     }
 
+    /* Begin observation methods */
+
+    @Override
+    public void topicChanged(TopicChangeEvent event) {
+        if (event.getType().equals(TopicChangeEvent.Type.DELETE)) {
+            // Fetch the raw topic string from the deleted topic
+            String rawTopicString = event.getData().getFullTopicString();
+
+            // If we have messages in cache for the topic in question, remove it to remove any remaining
+            // reference to the Topic node, so the garbage collector can do its job.
+            if (latestMessages.containsKey(rawTopicString)) {
+                latestMessages.remove(rawTopicString);
+                log.debug("Removed a message from cache due to its topic being deleted");
+            }
+        }
+    }
+
+    /* End observation methods */
 }
