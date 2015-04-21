@@ -437,13 +437,21 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
     }
 
     /**
-     * Retrive a HashSet of all subscribers on the broker
+     * Retrive a HashSet of all subscribers on the broker. This HashSet is a shallow clone of the internal
+     * data structure, preventing unintended modification.
+     * 
      * @return A HashSet of Subscriber objects that have subscribed on the broker
      */
     public HashSet<Subscriber> getAllSubscribers() {
         return (HashSet<Subscriber>) _subscribers.clone();
     }
 
+    /**
+     * Retrieve a HashSet of all publishers on the broker. This HashSet is a shallow clone of the internal
+     * data structure, preventing unintended modification.
+     *
+     * @return A HashSet of Publisher objects that have registered on the broker
+     */
     public HashSet<Publisher> getAllPublishers() {
         return (HashSet<Publisher>) _publishers.clone();
     }
