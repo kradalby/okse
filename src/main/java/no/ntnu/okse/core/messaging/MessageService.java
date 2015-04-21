@@ -94,6 +94,16 @@ public class MessageService extends AbstractCoreService {
     }
 
     /**
+     * This method must contain the operations needed for the subclass to register itself as a listener
+     * to the different objects it wants to listen to. This method will be called after all Core Services have
+     * been booted.
+     */
+    @Override
+    public void registerListenerSupport() {
+        // TODO: Register self as listener to stuff
+    }
+
+    /**
      * This method should be called from within the run-scope of the serverThread thread instance
      */
     public void run() {

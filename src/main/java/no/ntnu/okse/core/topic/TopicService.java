@@ -95,6 +95,16 @@ public class TopicService extends AbstractCoreService {
     }
 
     /**
+     * This method must contain the operations needed for the subclass to register itself as a listener
+     * to the different objects it wants to listen to. This method will be called after all Core Services have
+     * been booted.
+     */
+    @Override
+    public void registerListenerSupport() {
+        // TODO: Register self as listener to stuff
+    }
+
+    /**
      * This method Stops the TopicService
      * @throws InterruptedException An exception that might occur if thread is interrupted while waiting for put
      * command thread lock to open up.

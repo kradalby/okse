@@ -607,13 +607,16 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         // Find out which topic there was asked for (Exceptions automatically thrown)
         TopicExpressionType askedFor = getCurrentMessageRequest.getTopic();
 
+        // Check if there was a specified topic element
         if (askedFor == null) {
             log.warn("Topic missing from getCurrentMessage request");
             ExceptionUtilities.throwInvalidTopicExpressionFault("en", "Topic missing from request.");
         }
 
+        // Fetch the topic QNames
         List<QName> topicQNames = TopicValidator.evaluateTopicExpressionToQName(askedFor, connection.getRequestInformation().getNamespaceContext(askedFor));
 
+        // Fetch the topic as a String
         String topicName = TopicUtils.topicToString(topicQNames);
 
         // Fetch the latest message from the MessageService
@@ -625,17 +628,17 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
 
             return null;
         } else {
+            // Initialize the response object
             GetCurrentMessageResponse response = new GetCurrentMessageResponse();
 
+            // Initialize our subscriptionReference and publisherReference
             String pubRef = null;
             String subRef = null;
 
-            if (!(currentMessage.getPublisher() == null)) {
-                pubRef = currentMessage.getPublisher().getAttribute(WSNSubscriptionManager.WSN_ENDPOINT_TOKEN);
-            }
+
 
             NotificationMessageHolderType holderType = WSNTools.generateNotificationMessageHolderType(
-                currentMessage, currentMessage.getTopic().getFullTopicString(), subRef, pubRef, askedFor.getDialect()
+                currentMessage, subRef, pubRef, askedFor.getDialect()
             );
 
             response.getAny().add(holderType.getMessage());

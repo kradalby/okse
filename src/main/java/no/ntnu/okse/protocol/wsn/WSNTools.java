@@ -25,6 +25,8 @@
 package no.ntnu.okse.protocol.wsn;
 
 import no.ntnu.okse.core.messaging.Message;
+import no.ntnu.okse.core.subscription.Publisher;
+import org.ntnunotif.wsnu.services.implementations.notificationbroker.AbstractNotificationBroker;
 import org.oasis_open.docs.wsn.b_2.*;
 import org.oasis_open.docs.wsn.t_1.*;
 
@@ -49,7 +51,6 @@ public class WSNTools {
      * Generates a WS-Notification Notification Message from the provided arguments
      *
      * @param message An OKSE message object containing all the required fields
-     * @param topic The raw topic string this message is destined for
      * @param subscriptionReference The subscription reference endpoint
      * @param publisherReference The publisher reference endpoint
      * @param dialect The dialect used for this message
@@ -57,7 +58,6 @@ public class WSNTools {
      */
     public static NotificationMessageHolderType generateNotificationMessageHolderType(
         Message message,
-        String topic,
         String subscriptionReference,
         String publisherReference,
         String dialect
@@ -71,22 +71,31 @@ public class WSNTools {
         // Set the Dialect on the TopicExpressionType
         topicType.setDialect(dialect);
         // Add the actual topic to the TopicExpressionType
-        topicType.getContent().add(topic);
+        topicType.getContent().add(message.getTopic().getFullTopicString());
         // Set the Topic on the HolderType
         holderType.setTopic(topicType);
 
-        // Set the actual contents of the message to the Message element
-        innerMessage.setAny("Test");
+        // Build the endpointReferences
+        W3CEndpointReferenceBuilder builder = new W3CEndpointReferenceBuilder();
+        // Build SubscriptionReference
+        builder.address(subscriptionReference);
+        holderType.setSubscriptionReference(builder.build());
+        // Build ProducerReference
+        builder.address(publisherReference);
+        holderType.setProducerReference(builder.build());
 
-        W3CEndpointReferenceBuilder endRefBuilder = new W3CEndpointReferenceBuilder();
-        if (!message.getPublisher().getAttribute("wsn-endpoint").equals(null)) {
-            endRefBuilder.address(message.getPublisher().getHostAndPort() + message.getPublisher().getAttribute(WSNSubscriptionManager.WSN_ENDPOINT_TOKEN));
-        } else {
-            endRefBuilder.address(message.getPublisher().getHostAndPort());
-        }
+        // Set the actual message content
+        innerMessage.setAny(message.getMessage());
 
-        holderType.setProducerReference(endRefBuilder.build());
+        // Connect the inner Message to the HolderType
+        holderType.setMessage(innerMessage);
 
+        // Return the complete HolderType
         return holderType;
+    }
+
+    public static AbstractNotificationBroker.PublisherHandle getPublisherHandleIfExists(Publisher p) {
+        // TODO Maek dis
+        return null;
     }
 }
