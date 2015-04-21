@@ -124,20 +124,14 @@ public class CoreService extends AbstractCoreService {
         this.bootCoreServices();
         log.info("Completed booting CoreServices");
 
-        // Call the registerListenerSupport() method on all registered Core Services
-        log.info("Setting up listener support for registered core services");
-        this.registerListenerSupportForAllCoreServices();
-        log.info("Completed setting up listener support for registered core services");
-
-
         // Call the boot() method on all registered ProtocolServers
         this.bootProtocolServers();
         log.info("Completed booting ProtocolServers");
 
-        // Register listenersupport for self to other objects now that the boot sequences have completed
-        log.info("Registering self as listener to other entities");
-        this.registerListenerSupport();
-        log.info("Completed self-registration of listener support");
+        // Call the registerListenerSupport() method on all registered Core , including self
+        log.info("Setting up listener support for all core services");
+        this.registerListenerSupportForAllCoreServices();
+        log.info("Completed setting up listener support for all core services");
 
         // Initiate main run loop, which awaits Events to be committed to the eventQueue
         while (_running) {
@@ -348,6 +342,10 @@ public class CoreService extends AbstractCoreService {
      * Private helper method that sets up listener support for all registered core services
      */
     private void registerListenerSupportForAllCoreServices() {
+        // Register listener registration on self
+        this.registerListenerSupport();
+        // Register listener support on other registered core services
         services.forEach(s -> s.registerListenerSupport());
+
     }
 }
