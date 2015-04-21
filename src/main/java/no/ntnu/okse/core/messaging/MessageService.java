@@ -187,6 +187,18 @@ public class MessageService extends AbstractCoreService {
         }
     }
 
+    /**
+     * Adds a Message object into the message queue for distribution
+     * @param m The message object to be distributed
+     */
+    public void distributeMessage(Message m) {
+        try {
+            this.queue.put(m);
+        } catch (InterruptedException e) {
+            log.error("Interrupted while trying to inject message into queue");
+        }
+    }
+
     /* ----------------------------------------------------------------------------------------------- */
 
     /* Private helper methods */
