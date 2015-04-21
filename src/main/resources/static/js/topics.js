@@ -101,30 +101,36 @@ var Topics = (function($) {
         // need to unbind all buttons between binding and add an id to topic a elements
         $('.delete-topic').on('click', function(e) {
             e.preventDefault();
-
-            Main.ajax(("topics/delete/" + this.id), function() {
-                console.log("[Debug][Topics] Unable to remove topic with id: " + e.target.id)
-            }, function(response) {
-                console.log("[Debug][Topics] Removing complete topic with id: " + e.target.id)
-                if (response.topicID == e.target.id) {
-                    var panelID = response.name + response.topicID
-                    var panel = $('#' + panelID)
-                    $(panel).parent().remove()
-                }
-            }, "DELETE")
-
-
+            if (confirm("Are you sure you want to delete this topic? This will remove all subscribers and child topics.")) {
+                $(e.target).closest('.panel-primary').addClass('deleted')
+                $(e.target).addClass("disabled")
+                Main.ajax(("topics/delete/" + this.id), function() {
+                    console.log("[Debug][Topics] Unable to remove topic with id: " + e.target.id)
+                    $(e.target).closest('.panel-primary').removeClass('deleted')
+                    $(e.target).removeClass("disabled")
+                }, function(response) {
+                    if (response.topicID == e.target.id) {
+                        console.log("[Debug][Topics] Callback from server; topic and subscribers deleted")
+                        $(e.target).closest('.panel-primary').remove()
+                    }
+                }, "DELETE")
+            }
         });
         $('.delete-subscriber').on('click', function(e) {
             e.preventDefault();
+
             if (confirm("Are you sure you want to delete this subscriber?")) {
+                $(e.target).closest("tr").addClass("deleted")
+                $(e.target).addClass("disabled")
                 Main.ajax(("topics/delete/subscriber/" + this.id), function() {
-                    console.log("[Debug][Topics] Unable to remove subscriber");
+                    console.log("[Debug][Topics] Unable to remove subscriber with id: " + e.target.id);
+                    $(e.target).closest("tr").removeClass("deleted")
+                    $(e.target).removeClass("disabled")
                 }, function(response) {
-                    console.log(response)
-                    $(e.target).parent().parent().addClass("deleted")
-                    $(e.target).addClass("disabled")
-                    console.log("[Debug][Topics] Removing single subscriber");
+                    if (response.subscriberID == e.target.id) {
+                        console.log("[Debug][Topics] Callback from server; subscriber deleted")
+                        $(e.target).closest("tr").remove()
+                    }
                 }, "DELETE")
             }
         });

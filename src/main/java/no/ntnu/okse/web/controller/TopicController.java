@@ -79,13 +79,14 @@ public class TopicController {
     public @ResponseBody Topic deleteSingleTopic(@PathVariable("id") String id) {
         log.info("Deleting Topic with ID: " + id);
         TopicService ts = TopicService.getInstance();
-        SubscriptionService ss = SubscriptionService.getInstance();
+        //SubscriptionService ss = SubscriptionService.getInstance();
         // Delete single topic
         Topic t = ts.getTopicByID(id);
 
-        ss.getAllSubscribersForTopic(t.getFullTopicString()).stream().forEach(s -> ss.removeSubscriber(s));
-
         ts.deleteTopic(t.getFullTopicString());
+
+        //ss.getAllSubscribersForTopic(t.getFullTopicString()).stream().forEach(s -> ss.removeSubscriber(s));
+
         return t;
     }
 
