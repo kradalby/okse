@@ -27,10 +27,7 @@ package no.ntnu.okse.web.controller;
 import no.ntnu.okse.web.model.Log;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.TrueFileFilter;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -129,13 +126,13 @@ public class LogController {
     }
 
     @RequestMapping(value = LOG_FILES, method = RequestMethod.GET)
-    public HashMap<Integer,String> logFilesAvailable() {
+    public @ResponseBody HashMap<Integer,String> logFilesAvailable() {
         updateAvailableLogFiles();
         return fileNames;
     }
 
     @RequestMapping(value = LOG_LEVELS, method = RequestMethod.GET)
-    public Set<String> logLevelsAvailable() {
+    public @ResponseBody Set<String> logLevelsAvailable() {
         return logLevels.keySet();
     }
 

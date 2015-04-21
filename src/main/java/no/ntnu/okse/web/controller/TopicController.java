@@ -89,7 +89,7 @@ public class TopicController {
         return t;
     }
 
-    @RequestMapping(method = RequestMethod.DELETE, value=DELETE_SINGLE_SUBSCRIBER)
+    @RequestMapping(method = RequestMethod.DELETE, value= DELETE_SINGLE_SUBSCRIBER)
     public @ResponseBody Subscriber deleteSingleSubscriber(@PathVariable("id") String id) {
         log.info("Deleting subscriber with ID: " + id);
         SubscriptionService ss = SubscriptionService.getInstance();
