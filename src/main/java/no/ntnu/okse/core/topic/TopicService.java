@@ -117,7 +117,7 @@ public class TopicService extends AbstractCoreService {
         while (_running) {
             try {
                 TopicTask task = queue.take();
-                log.info(task.getType() + " job recieved, executing task...");
+                log.debug(task.getType() + " job recieved, executing task...");
                 task.run();
             } catch (InterruptedException e) {
                 log.warn("Interrupt caught, consider sending a No-Op TopicTask to the queue to awaken the thread.");

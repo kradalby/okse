@@ -65,6 +65,11 @@ public interface ProtocolServer {
     public void boot();
 
     /**
+     * This interface method should contain the main run loop initialization
+     */
+    public void run();
+
+    /**
      * This interface method must implement a complete shutdown procedure of the protocol server.
      */
     public void stopServer();

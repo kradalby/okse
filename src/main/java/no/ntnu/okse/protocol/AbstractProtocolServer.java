@@ -33,9 +33,10 @@ import org.apache.log4j.Logger;
  */
 public abstract class AbstractProtocolServer implements ProtocolServer {
 
+    protected int port;
+
     // Runstate variables
-    protected static boolean _invoked = false;
-    protected static boolean _running = false;
+    protected boolean _running;
 
     protected String protocolServerType;
     protected int totalRequests, totalMessages, totalBadRequests, totalErrors;
@@ -44,6 +45,8 @@ public abstract class AbstractProtocolServer implements ProtocolServer {
      * Constructor that just initializes the fields to default values
      */
     protected AbstractProtocolServer() {
+        port = 0;
+        _running = false;
         protocolServerType = "";
         totalMessages = 0;
         totalRequests = 0;
@@ -84,6 +87,8 @@ public abstract class AbstractProtocolServer implements ProtocolServer {
      * @return An integer representing the total amount of errors in the protocol server.
      */
     public int getTotalErrors() { return totalErrors; };
+
+    public int getPort() { return this.port; }
 
     // Initializer
     protected abstract void init(Integer port);

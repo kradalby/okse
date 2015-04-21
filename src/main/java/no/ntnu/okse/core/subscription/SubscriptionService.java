@@ -31,6 +31,7 @@ import no.ntnu.okse.core.event.listeners.PublisherChangeListener;
 import no.ntnu.okse.core.event.listeners.SubscriptionChangeListener;
 import no.ntnu.okse.core.topic.Topic;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -107,7 +108,7 @@ public class SubscriptionService extends AbstractCoreService {
         while (_running) {
             try {
                 SubscriptionTask task = queue.take();
-                log.info(task.getType() + " job recieved, executing task...");
+                log.debug(task.getType() + " job recieved, executing task...");
                 // Perform the task
                 task.run();
             } catch (InterruptedException e) {
@@ -370,7 +371,7 @@ public class SubscriptionService extends AbstractCoreService {
         // TODO: Also maek into stream and use filter lambdas
         // TODO: Will this trigger concurrent modification exception if new subs are added during iteration?
         for (Subscriber s: _subscribers) {
-            if (s.getAddress().equals(address) &&
+            if (s.getHost().equals(address) &&
                     s.getPort().equals(port) &&
                     s.getTopic().equals(topic.getFullTopicString())) {
                 return s;
@@ -391,7 +392,7 @@ public class SubscriptionService extends AbstractCoreService {
         // TODO: Will this trigger concurrent modification exception if new subs are added during iteration?
 
         // Iterate over all subscribers
-        _subscribers.stream()
+        getAllSubscribers().stream()
                     // Only pass on those who match topic argument
                     .filter(s -> s.getTopic().equals(topic))
                     // Collect in the results set
@@ -406,6 +407,10 @@ public class SubscriptionService extends AbstractCoreService {
      */
     public HashSet<Subscriber> getAllSubscribers() {
         return (HashSet<Subscriber>) _subscribers.clone();
+    }
+
+    public HashSet<Publisher> getAllPublishers() {
+        return (HashSet<Publisher>) _publishers.clone();
     }
 
     /* ------------------------------------------------------------------------------------------ */

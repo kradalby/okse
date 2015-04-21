@@ -24,6 +24,7 @@
 
 package no.ntnu.okse.protocol.wsn;
 
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -209,38 +210,24 @@ public class WSNotificationServer extends AbstractProtocolServer {
                 // For all registered connectors in WSNotificationServer, add these to the Jetty Server
                 this._connectors.stream().forEach(c -> this._server.addConnector(c));
 
-                // Register the needed web service proxies
-                //NotificationBrokerImpl producer = new NotificationBrokerImpl();
-                //SimpleSubscriptionManager subscriptionManager = new SimpleSubscriptionManager();
-                //SimplePublisherRegistrationManager publisherRegistrationManager = new SimplePublisherRegistrationManager();
-
-                /* OKSE CUSTOM WEB SERVICES HERE BE DRAGONS */
+                /* OKSE custom WS-Nu web services */
                 WSNCommandProxy broker = new WSNCommandProxy();
                 WSNSubscriptionManager subscriptionManager = new WSNSubscriptionManager();
+                WSNRegistrationManager registrationManager = new WSNRegistrationManager();
                 SubscriptionService.getInstance().addSubscriptionChangeListener(subscriptionManager);
+                SubscriptionService.getInstance().addPublisherChangeListener(registrationManager);
 
                 broker.quickBuild("broker", this._requestParser);
                 subscriptionManager.quickBuild("subscriptionManager", this._requestParser);
                 subscriptionManager.initCoreSubscriptionService(SubscriptionService.getInstance());
+                registrationManager.quickBuild("registrationManager", this._requestParser);
+                registrationManager.initCoreSubscriptionService(SubscriptionService.getInstance());
                 broker.setSubscriptionManager(subscriptionManager);
-
-                // Pure WS-Nu quickbuilds and service registry
-                /*producer.quickBuild("broker", this._requestParser);
-                subscriptionManager.quickBuild("subscriptionManager", this._requestParser);
-                publisherRegistrationManager.quickBuild("publisherRegistrationManager", this._requestParser);
-                producer.setSubscriptionManager(subscriptionManager);
-                producer.setRegistrationManager(publisherRegistrationManager);*/
+                broker.setRegistrationManager(registrationManager);
 
                 // Create a new thread for the Jetty Server to run in
                 this._serverThread = new Thread(() -> {
-                    try {
-                        WSNotificationServer.this._server.start();
-                        WSNotificationServer.this._server.join();
-
-                    } catch (Exception serverError) {
-                        totalErrors++;
-                        log.trace(serverError.getStackTrace());
-                    }
+                    this.run();
                 });
                 this._serverThread.setName("WSNServer");
                 // Start the Jetty Server
@@ -251,6 +238,21 @@ public class WSNotificationServer extends AbstractProtocolServer {
                 totalErrors++;
                 log.trace(e.getStackTrace());
             }
+        }
+    }
+
+    /**
+     * This interface method should contain the main run loop initialization
+     */
+    @Override
+    public void run() {
+        try {
+            WSNotificationServer.this._server.start();
+            WSNotificationServer.this._server.join();
+
+        } catch (Exception serverError) {
+            totalErrors++;
+            log.trace(serverError.getStackTrace());
         }
     }
 
@@ -565,7 +567,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
                 request.method(HttpMethod.GET);
                 log.info("Sending message without content to " + requestInformation.getEndpointReference());
                 ContentResponse response = request.send();
-                totalMessages++;
+                totalRequests++;
 
                 return new InternalMessage(InternalMessage.STATUS_OK | InternalMessage.STATUS_HAS_MESSAGE, response.getContentAsString());
             /* Request with message */

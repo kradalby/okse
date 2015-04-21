@@ -24,10 +24,6 @@
 
 package no.ntnu.okse.web.model;
 
-import no.ntnu.okse.protocol.Protocol;
-import no.ntnu.okse.protocol.ProtocolServer;
-
-import java.lang.management.*;
 import java.util.ArrayList;
 
 
