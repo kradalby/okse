@@ -420,9 +420,9 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
      * @param topic A raw topic string of the topic to select subscribers from
      * @return A HashSet of Subscriber objects that have subscribed to the specified topic
      */
-    public HashSet<Subscriber> getAllPublishersForTopic(String topic) {
+    public HashSet<Publisher> getAllPublishersForTopic(String topic) {
         // Initialize a collector
-        HashSet<Subscriber> results = new HashSet<>();
+        HashSet<Publisher> results = new HashSet<>();
 
         // TODO: Will this trigger concurrent modification exception if new subs are added during iteration?
 
