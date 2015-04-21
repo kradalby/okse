@@ -101,6 +101,17 @@ public class CoreService extends AbstractCoreService {
     }
 
     /**
+     * This method can contain registration calls to objects that CoreService should listen to.
+     * Please note that in order for the CoreService itself to listen to other registered core services
+     * this method must be called AFTER the bootAllCoreServices() method has completed in the boot() sequence of
+     * this class
+     */
+    @Override
+    public void registerListenerSupport() {
+        // Add listener registration here
+    }
+
+    /**
      * Starts the main loop of the CoreService thread.
      */
     @Override
@@ -116,6 +127,11 @@ public class CoreService extends AbstractCoreService {
         // Call the boot() method on all registered ProtocolServers
         this.bootProtocolServers();
         log.info("Completed booting ProtocolServers");
+
+        // Call the registerListenerSupport() method on all registered Core , including self
+        log.info("Setting up listener support for all core services");
+        this.registerListenerSupportForAllCoreServices();
+        log.info("Completed setting up listener support for all core services");
 
         // Initiate main run loop, which awaits Events to be committed to the eventQueue
         while (_running) {
@@ -319,5 +335,17 @@ public class CoreService extends AbstractCoreService {
      */
     private void bootProtocolServers() {
         protocolServers.forEach(ps -> ps.boot());
+    }
+
+
+    /**
+     * Private helper method that sets up listener support for all registered core services
+     */
+    private void registerListenerSupportForAllCoreServices() {
+        // Register listener registration on self
+        this.registerListenerSupport();
+        // Register listener support on other registered core services
+        services.forEach(s -> s.registerListenerSupport());
+
     }
 }

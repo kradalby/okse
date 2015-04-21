@@ -33,6 +33,7 @@ import org.apache.log4j.Logger;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -47,6 +48,7 @@ public class MessageService extends AbstractCoreService {
     private static MessageService _singleton;
     private static Thread _serviceThread;
     private LinkedBlockingQueue<Message> queue;
+    private HashMap<String, Message> latestMessages;
 
     /**
      * Private Constructor that recieves invocation from getInstance, enabling the singleton pattern for this class
@@ -62,6 +64,7 @@ public class MessageService extends AbstractCoreService {
     protected void init() {
         log.info("Initializing MessageService...");
         queue = new LinkedBlockingQueue<>();
+        latestMessages = new HashMap<>();
         _invoked = true;
     }
 
@@ -88,6 +91,16 @@ public class MessageService extends AbstractCoreService {
             _serviceThread.setName("MessageService");
             _serviceThread.start();
         }
+    }
+
+    /**
+     * This method must contain the operations needed for the subclass to register itself as a listener
+     * to the different objects it wants to listen to. This method will be called after all Core Services have
+     * been booted.
+     */
+    @Override
+    public void registerListenerSupport() {
+        // TODO: Register self as listener to stuff
     }
 
     /**
@@ -133,7 +146,12 @@ public class MessageService extends AbstractCoreService {
                     // Tell the ExecutorService to execute the following job
                     CoreService.getInstance().execute(() -> {
                         // Fetch all registered protocol servers, and call the sendMessage() method on them
-                        CoreService.getInstance().getAllProtocolServers().forEach(p -> p.sendMessage(m));
+                        CoreService.getInstance().getAllProtocolServers().forEach(p -> {
+                            // Add message to latestMessages cache
+                            latestMessages.put(m.getTopic().getFullTopicString(), m);
+                            // Fire the sendMessage on all servers
+                            p.sendMessage(m);
+                        });
                         // Set the message as processed, and store the completion time
                         LocalDateTime completedAt = m.setProcessed();
                         log.info("Message successfully distributed: " + m + " (" + completedAt + ")");
@@ -147,6 +165,17 @@ public class MessageService extends AbstractCoreService {
         } else {
             log.error("Run method called before invocation of the MessageService getInstance method");
         }
+    }
+
+    /**
+     * Retrieves the latest message sent on a specific topic
+     * @param topic The topic to retrieve the latest message for
+     * @return The message object for the specified topic, null if there has not been any messages yet
+     */
+    public Message getLatestMessage(String topic) {
+        if (latestMessages.containsKey(topic)) return latestMessages.get(topic);
+
+        return null;
     }
 
     /**
@@ -165,6 +194,18 @@ public class MessageService extends AbstractCoreService {
             queue.put(m);
         } catch (InterruptedException e) {
             log.error("Interrupted while trying to inject shutdown message to queue");
+        }
+    }
+
+    /**
+     * Adds a Message object into the message queue for distribution
+     * @param m The message object to be distributed
+     */
+    public void distributeMessage(Message m) {
+        try {
+            this.queue.put(m);
+        } catch (InterruptedException e) {
+            log.error("Interrupted while trying to inject message into queue");
         }
     }
 
