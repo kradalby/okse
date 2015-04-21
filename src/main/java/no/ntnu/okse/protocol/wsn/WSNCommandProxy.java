@@ -627,11 +627,16 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         } else {
             GetCurrentMessageResponse response = new GetCurrentMessageResponse();
 
-            if (!(currentMessage.getPublisher() == null)) {
+            String pubRef = null;
+            String subRef = null;
 
+            if (!(currentMessage.getPublisher() == null)) {
+                pubRef = currentMessage.getPublisher().getAttribute(WSNSubscriptionManager.WSN_ENDPOINT_TOKEN);
             }
 
-            NotificationMessageHolderType holderType = WSNTools.generateNotificationMessageHolderType(currentMessage());
+            NotificationMessageHolderType holderType = WSNTools.generateNotificationMessageHolderType(
+                    currentMessage, currentMessage.getTopic().getFullTopicString(), pubRef
+            );
 
             response.getAny().add(holderType.getMessage());
 

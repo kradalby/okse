@@ -37,7 +37,7 @@ import javax.xml.ws.wsaddressing.W3CEndpointReferenceBuilder;
  */
 public class WSNTools {
     public static NotificationMessageHolderType generateNotificationMessageHolderType(
-        Message message, String topic, String publisherReference, String subscriptionReference
+        Message message, String topic, String publisherReference
     ) {
         NotificationMessageHolderType holderType = new NotificationMessageHolderType();
         NotificationMessageHolderType.Message innerMessage = new NotificationMessageHolderType.Message();
@@ -51,8 +51,6 @@ public class WSNTools {
         } else {
             endRefBuilder.address(message.getPublisher().getHostAndPort());
         }
-
-        QName
 
         holderType.setProducerReference(endRefBuilder.build());
 
