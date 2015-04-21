@@ -45,7 +45,7 @@ var Topics = (function($) {
                 '</tr>';
             //}
         });
-        trHTML += '<tr><td colspan="4"><a id="' + topicID + '" class="btn btn-block btn-danger delete-topic">Delete all</a></td></tr>';
+        trHTML += '<tr><td colspan="4"><a id="' + topicID + '" class="btn btn-block btn-danger delete-topic">Delete complete topic</a></td></tr>';
         return trHTML
     }
     /*
@@ -58,14 +58,14 @@ var Topics = (function($) {
     /*
         Sets up an basic template for a panel
      */
-    var createPanelAndTableTemplate = function(topicID, topicName) {
+    var createPanelAndTableTemplate = function(generatedTopicID, topicFullName) {
         var panel = $(
             '<div class="panel panel-primary">' +
                 '<div class="panel-heading">' +
-                    '<h3 class="panel-title collapsed" data-toggle="collapse" data-target="#' + topicID + '">' +
-                    '<a href="#' + topicID + '">' + topicName + '</a></h3>' +
+                    '<h3 class="panel-title collapsed" data-toggle="collapse" data-target="#' + generatedTopicID + '">' +
+                    '<a href="#' + generatedTopicID + '">' + topicFullName + '</a></h3>' +
                 '</div>' +
-                '<div id="' + topicID +'" class="panel-collapse collapse">' +
+                '<div id="' + generatedTopicID +'" class="panel-collapse collapse">' +
                     '<div class="table-reponsive">' +
                         '<table class="table table-striped">' +
                             '<thead><tr><th>Protocol</th><th>Host</th><th>Port</th><th>Actions</th></tr></thead><tbody></tbody>' +
@@ -80,7 +80,7 @@ var Topics = (function($) {
         Creates a panel and table and updates it with the new information
      */
     var createPanel = function(topic) {
-        var panel = createPanelAndTableTemplate(topic.topic.topicID, topic.topic.fullTopicString)
+        var panel = createPanelAndTableTemplate((topic.topic.name + topic.topic.topicID), topic.topic.fullTopicString)
         $(panel).find('tbody').html(fillTable(topic.subscribers, topic.topic.topicID))
         $('#topics-column').append(panel);
     }
@@ -104,8 +104,13 @@ var Topics = (function($) {
 
             Main.ajax(("topics/delete/" + this.id), function() {
                 console.log("[Debug][Topics] Unable to remove topic with id: " + e.target.id)
-            }, function() {
+            }, function(response) {
                 console.log("[Debug][Topics] Removing complete topic with id: " + e.target.id)
+                if (response.topicID == e.target.id) {
+                    var panelID = response.name + response.topicID
+                    var panel = $('#' + panelID)
+                    $(panel).parent().remove()
+                }
             }, "DELETE")
 
 
@@ -116,6 +121,7 @@ var Topics = (function($) {
                 Main.ajax(("topics/delete/subscriber/" + this.id), function() {
                     console.log("[Debug][Topics] Unable to remove subscriber");
                 }, function(response) {
+                    console.log(response)
                     $(e.target).parent().parent().addClass("deleted")
                     $(e.target).addClass("disabled")
                     console.log("[Debug][Topics] Removing single subscriber");

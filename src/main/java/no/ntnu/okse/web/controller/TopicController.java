@@ -79,8 +79,14 @@ public class TopicController {
     public @ResponseBody Topic deleteSingleTopic(@PathVariable("id") String id) {
         log.info("Deleting Topic with ID: " + id);
         TopicService ts = TopicService.getInstance();
+        SubscriptionService ss = SubscriptionService.getInstance();
         // Delete single topic
-        return null;
+        Topic t = ts.getTopicByID(id);
+
+        ss.getAllSubscribersForTopic(t.getFullTopicString()).stream().forEach(s -> ss.removeSubscriber(s));
+
+        ts.deleteTopic(t.getFullTopicString());
+        return t;
     }
 
     @RequestMapping(method = RequestMethod.DELETE, value=DELETE_SINGLE_SUBSCRIBER)
@@ -88,7 +94,9 @@ public class TopicController {
         log.info("Deleting subscriber with ID: " + id);
         SubscriptionService ss = SubscriptionService.getInstance();
         // Delete single subscriber
-        return new Subscriber("localhost", 8080, "no/ffi", "AMQP");
+        Subscriber s = ss.getSubscriberByID(id);
+        ss.removeSubscriber(s);
+        return s;
 
 
     }

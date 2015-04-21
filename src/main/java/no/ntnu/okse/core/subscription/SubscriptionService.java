@@ -31,8 +31,12 @@ import no.ntnu.okse.core.event.listeners.PublisherChangeListener;
 import no.ntnu.okse.core.event.listeners.SubscriptionChangeListener;
 import no.ntnu.okse.core.topic.Topic;
 
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 /**
  * Created by Aleksander Skraastad (myth) on 4/5/15.
@@ -377,6 +381,25 @@ public class SubscriptionService extends AbstractCoreService {
             }
         }
         return null;
+    }
+
+    /**
+     * Attemt to locate a subscriber by the ID.
+     * @param id : The ID for the subscriber
+     * @return The subscriber, if found, null otherwise.
+     */
+    public Subscriber getSubscriberByID(String id) {
+        List<Subscriber> result = _subscribers.stream()
+                .filter(s -> s.getSubscriberID().equals(id))
+                .collect(Collectors.toList());
+
+        if (result.size() > 1) {
+            log.warn("Found multiple subscribers with the same hash/ID.");
+            return null;
+        } else if (result.size() != 1) {
+            return null;
+        }
+        return result.get(0);
     }
 
     /**
