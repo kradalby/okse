@@ -38,17 +38,14 @@ var Topics = (function($) {
         $.each(topics, function(i, topic) {
             trHTML +=
                 '<tr id="' + topic.topicID +'">' +
-                    "<td>" + topic.name + "</td>" +
-                    "<td>" + topic.fullTopicString + "</td>" +
-                    "<td>" + topic.root + "</td>" +
-                    "<td>" + topic.leaf + "</td>" +
-                    '<td><div class="btn-group" role="group">' +
-                        '<a class="btn btn-xs btn-danger delete-topic">Delete</a>' +
-                        '<a class="btn btn-xs btn-warning show-subscribers" data-id="' + topic.topicID + '">Subscribers</a>' +
-                    '</div></td>' +
+                    '<td>' + topic.name + '</td>' +
+                    '<td>' + topic.fullTopicString + '</td>' +
+                    '<td>' + topic.root + '</td>' +
+                    '<td>' + topic.leaf + '</td>' +
+                    '<td>' + '<a class="btn btn-xs btn-block btn-warning show-subscribers" data-id="' + topic.topicID + '">Subscribers</a></td>' +
+                    '<td>' + '<a class="btn btn-xs btn-block btn-danger delete-topic">Delete</a></td>' +
                 '</tr>'
         });
-        trHTML += '<tr><td colspan="6"><a class="btn btn-block btn-danger delete-all-topics">Delete all topics</a></td></tr>';
         return trHTML
     }
 
@@ -157,8 +154,10 @@ var Topics = (function($) {
                     if (!(data.length == 0)) {
                         var table = createTableForSubscribers(data)
                         $('#subscribers-table').html(table)
-                        $('#subscribers-modal').modal('show')
+                    } else {
+                        $('#subscribers-table').html('<tr class="danger"><td colspan="4"><h4 class="text-center">No subscribers returned from SubscriptionService</h4></td></tr>')
                     }
+                    $('#subscribers-modal').modal('show')
                 },
                 error: error
             });
@@ -176,8 +175,12 @@ var Topics = (function($) {
         refresh: function(response) {
             unBindButtons();
 
-            var table = createTableForAllTopics(response)
-            $('#topics-table').html(table)
+            if (!(response.length == 0)) {
+                var table = createTableForAllTopics(response)
+                $('#topics-table').html(table)
+            } else {
+                $('#topics-table').html('<tr class="danger"><td colspan="6"><h4 class="text-center">No topics returned from TopicService</h4></td></tr>')
+            }
 
             bindButtons();
         }

@@ -21,8 +21,8 @@ public class ConfigController {
     private static Logger log = Logger.getLogger(ConfigController.class.getName());
 
     @RequestMapping(method = RequestMethod.GET)
-    public void config() {
-        // should return
+    public String config() {
+        return "Temporary place holder";
     }
 
     @RequestMapping(method = RequestMethod.POST, value=ADD_EXISISTING_MAPPING)
