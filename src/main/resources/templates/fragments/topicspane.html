@@ -32,24 +32,32 @@
 <th:block layout:fragment="topicspane">
     <div class="tab-pane" id="topics">
         <div class="row">
-            <div class="col-md-8" id="topics-column">
+            <div class="col-md-12" id="topics-column">
                 <!-- All topics will be inserted here -->
-            </div>
-            <div class="col-md-4">
                 <div class="panel panel-info">
                     <!-- Default panel contents -->
-                    <div class="panel-heading">Status</div>
-                    <!-- <div class="panel-body"></div> -->
-                    <!-- List group -->
-                    <ul class="list-group">
-                        <li class="list-group-item"><strong>Subscribers: </strong><span class="total-subscribers" th:text="${subscribers}">Unknown</span></li>
-                        <li class="list-group-item" th:each="ip : ${serverIpAddresses}">
-                            <strong>Bound to IP: </strong><span th:text="${ip}">Unknown</span>
-                        </li>
-                        <li class="list-group-item"><strong>Bound to port: </strong>Different for all protocols</li>
-                    </ul>
+                    <div class="panel-heading">All topics</div>
+                    <div class="panel-body">
+                        <p>All the topics registered in the broker will be shown below. Any subscriber on the given topic will be shown when you click a topic.</p>
+                    </div>
+                    <!-- Table -->
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Topic</th>
+                                    <th>Full topic</th>
+                                    <th>Root</th>
+                                    <th>Leaf</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="topics-table">
+
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-                <a id="delete-all-topics" class="btn btn-block btn-danger">Delete all topics</a>
             </div>
         </div>
     </div>

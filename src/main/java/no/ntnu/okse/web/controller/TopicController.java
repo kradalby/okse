@@ -44,6 +44,10 @@ import java.util.*;
 @RequestMapping("/api/topics")
 public class TopicController {
 
+    private static final String GET_ALL_TOPICS = "/get/all";
+    private static final String GET_SINGLE_TOPIC = "/get/{id}";
+    private static final String GET_ALL_SUBSCRIBERS = "/get/subscriber/all";
+    private static final String GET_SINGLE_SUBSCRIBER = "/get/subscriber/{id}";
     private static final String DELETE_ALL_TOPICS = "/delete/all";
     private static final String DELETE_SINGLE_TOPIC = "/delete/{id}";
     private static final String DELETE_SINGLE_SUBSCRIBER = "/delete/subscriber/{id}";
@@ -51,21 +55,12 @@ public class TopicController {
     private static Logger log = Logger.getLogger(TopicController.class.getName());
 
 
-    @RequestMapping(method = RequestMethod.GET)
-    public ArrayList<Topics> topics() {
-        SubscriptionService ss = SubscriptionService.getInstance();
+    @RequestMapping(method = RequestMethod.GET, value = GET_ALL_TOPICS)
+    public HashSet<Topic> getAlltopics() {
         TopicService ts = TopicService.getInstance();
-
-        ArrayList<Topics> results = new ArrayList<>();
-
         HashSet<Topic> allTopics = ts.getAllTopics();
 
-        allTopics.stream()
-                .forEach(t -> {
-                    results.add(new Topics(t, ss.getAllSubscribersForTopic(t.getFullTopicString())));
-                });
-
-        return results;
+        return allTopics;
     }
 
     @RequestMapping(method = RequestMethod.DELETE, value = DELETE_ALL_TOPICS)

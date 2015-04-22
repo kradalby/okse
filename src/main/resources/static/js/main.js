@@ -65,8 +65,8 @@ var Main = (function($) {
         }, $('#settings-update-interval').val() * 1000);
     }
 
-    // TODO: For now, it only updates when in main-pane. Needs to change in topic pane later on
-    // Updates all the subscriber counters on the page (both the main-pane and the topics-pane
+    // TODO: For now, it only updates when in main-pane. Needs to change in stats pane later on
+    // Updates all the subscriber counters on the page (both the main-pane and the stats-pane
     var updateSubscribers = function(subscribers) {
         $('.total-subscribers').each(function() {
             if ($(this).val() != subscribers) {
@@ -99,9 +99,9 @@ var Main = (function($) {
                         ajax(clickedElement.substring(1), error, refresh, "GET", "json")
                     }, updateInterval);
                 } else if(clickedElement === "#topics") {
-                    ajax(clickedElement.substring(1), Topics.error, Topics.refresh, "GET", "json")
+                    ajax(clickedElement.substring(1) + "/get/all", Topics.error, Topics.refresh, "GET", "json")
                     clickInterval = setInterval( function() {
-                        ajax(clickedElement.substring(1), Topics.error, Topics.refresh, "GET", "json")
+                        ajax(clickedElement.substring(1) + "/get/all", Topics.error, Topics.refresh, "GET", "json")
                     }, updateInterval);
                 } else if (clickedElement === "#stats") {
                     ajax(clickedElement.substring(1), Stats.error, Stats.refresh, "GET", "json")

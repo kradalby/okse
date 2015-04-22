@@ -23,66 +23,30 @@
  */
 
 /**
- * Created by Fredrik on 27/02/15.
+ * Created by Fredrik Tørnvall and Håkon Ødegård Løvdal on 27/02/15.
  */
 
 var Topics = (function($) {
 
     /*
-        Creates, fills and returns a <tr>-element. The <tr>-element is generated based on the subscribers
-        list from the OKSE-RestAPI. It also adds all the buttons needed for deleting subscribers. It uses the id for
-        this purpose. This function does not manipulate the DOM by checking if an element exists. It overwrites everything.
+     Creates, fills and returns a <tr>-element. The <tr>-element is generated based on the subscribers
+     list from the OKSE-RestAPI. It also adds all the buttons needed for deleting subscribers. It uses the id for
+     this purpose. This function does not manipulate the DOM by checking if an element exists. It overwrites everything.
      */
-    var fillTable = function(subscribers, topicID) {
-        var trHTML = '';
-        $.each(subscribers, function (i, subscriber) { // TODO: Change the id to something clever
-            //if ($('#' + subscriber.subscriberID).length === 0) { // TODO: Should check if it exists
-                trHTML += '<tr>' +
-                '<td>' + subscriber.originProtocol + '</td>' +
-                '<td>' + subscriber.host + '</td>' +
-                '<td>' + subscriber.port + '</td>' +
-                '<td><a id="' + subscriber.subscriberID + '" class="btn btn-xs btn-block btn-warning delete-subscriber">Delete</a></td>' +
-                '</tr>';
-            //}
+    var createTableForAllTopics = function(topics) {
+        var trHTML = ""
+        $.each(topics, function(i, topic) {
+            trHTML +=
+                '<tr id="' + topic.topicID +'">' +
+                    "<td>" + topic.name + "</td>" +
+                    "<td>" + topic.fullTopicString + "</td>" +
+                    "<td>" + topic.root + "</td>" +
+                    "<td>" + topic.leaf + "</td>" +
+                    '<td><div class="btn-group" role="group"><a class="btn btn-xs btn-danger delete-topic">Delete</a><a class="btn btn-xs btn-warning show-subscribers">Subscribers</a></div></td>' +
+                '</tr>'
         });
-        trHTML += '<tr><td colspan="4"><a id="' + topicID + '" class="btn btn-block btn-danger delete-topic">Delete complete topic</a></td></tr>';
+        trHTML += '<tr><td colspan="6"><a class="btn btn-block btn-danger delete-all-topics">Delete all topics</a></td></tr>';
         return trHTML
-    }
-    /*
-        Iterates all the subscribers of this topic and overwrites the table with the new information.
-     */
-    var updatePanel = function(topic, panel) {
-        $(panel).html(fillTable(topic.subscribers, topic.topic.topicID));
-    }
-
-    /*
-        Sets up an basic template for a panel
-     */
-    var createPanelAndTableTemplate = function(generatedTopicID, topicFullName) {
-        var panel = $(
-            '<div class="panel panel-primary">' +
-                '<div class="panel-heading">' +
-                    '<h3 class="panel-title collapsed" data-toggle="collapse" data-target="#' + generatedTopicID + '">' +
-                    '<a href="#' + generatedTopicID + '">' + topicFullName + '</a></h3>' +
-                '</div>' +
-                '<div id="' + generatedTopicID +'" class="panel-collapse collapse">' +
-                    '<div class="table-reponsive">' +
-                        '<table class="table table-striped">' +
-                            '<thead><tr><th>Protocol</th><th>Host</th><th>Port</th><th>Actions</th></tr></thead><tbody></tbody>' +
-                        '</table>' +
-                    '</div>' +
-                '</div>' +
-            '</div>')
-        return panel
-    }
-
-    /*
-        Creates a panel and table and updates it with the new information
-     */
-    var createPanel = function(topic) {
-        var panel = createPanelAndTableTemplate((topic.topic.name + topic.topic.topicID), topic.topic.fullTopicString)
-        $(panel).find('tbody').html(fillTable(topic.subscribers, topic.topic.topicID))
-        $('#topics-column').append(panel);
     }
 
     /*
@@ -102,16 +66,17 @@ var Topics = (function($) {
         $('.delete-topic').on('click', function(e) {
             e.preventDefault();
             if (confirm("Are you sure you want to delete this topic? This will remove all subscribers and child topics.")) {
-                $(e.target).closest('.panel-primary').addClass('deleted')
+                var topicID = $(e.target).closest("tr").attr("id")
+                $(e.target).closest('tr').addClass('deleted')
                 $(e.target).addClass("disabled")
-                Main.ajax(("topics/delete/" + this.id), function() {
+                Main.ajax(("topics/delete/" + topicID), function() {
                     console.log("[Debug][Topics] Unable to remove topic with id: " + e.target.id)
-                    $(e.target).closest('.panel-primary').removeClass('deleted')
+                    $(e.target).closest('tr').removeClass('deleted')
                     $(e.target).removeClass("disabled")
                 }, function(response) {
-                    if (response.topicID == e.target.id) {
+                    if (response.topicID == topicID) {
                         console.log("[Debug][Topics] Callback from server; topic and subscribers deleted")
-                        $(e.target).closest('.panel-primary').remove()
+                        $(e.target).closest('tr').remove()
                     }
                 }, "DELETE")
             }
@@ -156,14 +121,8 @@ var Topics = (function($) {
         refresh: function(response) {
             unBindButtons();
 
-            $.each(response, function(i, topic) {
-                var topicID = topic.topic.topicID
-                if ($('#' + topicID).length === 0)  // If the topic doesn't already exist
-                    createPanel(topic)
-                else  // If the topic exist
-                    updatePanel(topic, $('#' + topicID).find('tbody'))
-
-            })
+            var table = createTableForAllTopics(response)
+            $('#topics-table').html(table)
 
             bindButtons();
         }
