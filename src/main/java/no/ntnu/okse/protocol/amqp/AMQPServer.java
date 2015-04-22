@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.logging.Level;
 
@@ -84,9 +85,8 @@ public class AMQPServer extends AbstractProtocolServer{
             _serverThread.start();
             log.info("AMQPServer booted successfully");
         }
-        //Tester sendmessages
-        //new Message("Test", new Topic("Test","raw"), new Publisher("Test", "127.0.0.1", 1234, "OKSE"));
-        sendMessage(new Message("Test", new Topic("Test","raw"), new Publisher("Test", "127.0.0.1", 1234, "OKSE")));
+        //Tester sendmessage()
+        sendMessage(new Message("Test message", new Topic("Test","raw"), new Publisher("Test", "127.0.0.1", 1234, "OKSE")));
     }
 
     /**
@@ -158,19 +158,16 @@ public class AMQPServer extends AbstractProtocolServer{
     public void sendMessage(Message message) {
         log.info("[AMQP] Sending message: " + message);
         try {
-            MessengerImpl mng = new MessengerImpl();
+            Messenger mng = new MessengerImpl();
             mng.start();
-            org.apache.qpid.proton.message.Message msg = new MessageImpl();
-            //msg.setAddress("amqp:127.0.0.1");
-            msg.setAddress("amqp://127.0.0.1");
-            //if (subject != null) msg.setSubject(subject);
-            msg.setSubject("subject");
-            for (String body : new String[]{"Hello AMQP World!"}) {
+            MessageImpl msg = new MessageImpl();
+            msg.setAddress("127.0.0.1");
+            msg.setSubject(message.getTopic().getFullTopicString());
+            for (String body : new String[]{message.getMessage()}) {
                 msg.setBody(new AmqpValue(body));
                 mng.put(msg);
             }
             mng.send();
-            log.info("HER");
             mng.stop();
         } catch (Exception e) {
             log.info("Qpid proton error", e);

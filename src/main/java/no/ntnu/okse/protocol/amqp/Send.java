@@ -46,6 +46,8 @@ public class Send {
 
     private static Logger tracer = Logger.getLogger("proton.example");
     private String address = "amqp://127.0.0.1";
+    //private String address = "127.0.0.1";
+    //private String address = "78.91.8.191";
     private String subject;
     private String[] bodies = new String[]{"Hello World!"};
 
@@ -55,6 +57,9 @@ public class Send {
     }
 
     private Send(String args[]) {
+        address = "78.91.8.191";
+        subject = "TEST";
+
         int i = 0;
         while (i < args.length) {
             String arg = args[i++];

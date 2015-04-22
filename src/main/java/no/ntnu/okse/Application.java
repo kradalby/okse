@@ -85,7 +85,7 @@ public class Application {
         /* REGISTER PROTOCOL SERVERS HERE */
         cs.addProtocolServer(WSNotificationServer.getInstance());
         cs.addProtocolServer(AMQPServer.getInstance());
-        cs.addProtocolServer(DummyProtocolServer.getInstance());    // Example ProtocolServer
+        //cs.addProtocolServer(DummyProtocolServer.getInstance());    // Example ProtocolServer
 
         // Start the admin console
         webserver.run();
