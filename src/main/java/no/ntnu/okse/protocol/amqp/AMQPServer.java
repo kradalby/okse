@@ -1,7 +1,9 @@
 package no.ntnu.okse.protocol.amqp;
 
 import no.ntnu.okse.core.messaging.Message;
+import no.ntnu.okse.core.subscription.Publisher;
 import no.ntnu.okse.core.subscription.SubscriptionService;
+import no.ntnu.okse.core.topic.Topic;
 import no.ntnu.okse.protocol.AbstractProtocolServer;
 import org.apache.log4j.Logger;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
@@ -82,6 +84,9 @@ public class AMQPServer extends AbstractProtocolServer{
             _serverThread.start();
             log.info("AMQPServer booted successfully");
         }
+        //Tester sendmessages
+        //new Message("Test", new Topic("Test","raw"), new Publisher("Test", "127.0.0.1", 1234, "OKSE"));
+        sendMessage(new Message("Test", new Topic("Test","raw"), new Publisher("Test", "127.0.0.1", 1234, "OKSE")));
     }
 
     /**
@@ -153,10 +158,11 @@ public class AMQPServer extends AbstractProtocolServer{
     public void sendMessage(Message message) {
         log.info("[AMQP] Sending message: " + message);
         try {
-            Messenger mng = new MessengerImpl();
+            MessengerImpl mng = new MessengerImpl();
             mng.start();
             org.apache.qpid.proton.message.Message msg = new MessageImpl();
-            msg.setAddress("amqp:0.0.0.0");
+            //msg.setAddress("amqp:127.0.0.1");
+            msg.setAddress("amqp://127.0.0.1");
             //if (subject != null) msg.setSubject(subject);
             msg.setSubject("subject");
             for (String body : new String[]{"Hello AMQP World!"}) {
@@ -164,6 +170,7 @@ public class AMQPServer extends AbstractProtocolServer{
                 mng.put(msg);
             }
             mng.send();
+            log.info("HER");
             mng.stop();
         } catch (Exception e) {
             log.info("Qpid proton error", e);

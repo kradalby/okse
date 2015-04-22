@@ -45,7 +45,7 @@ import java.util.logging.Logger;
 public class Send {
 
     private static Logger tracer = Logger.getLogger("proton.example");
-    private String address = "amqp://0.0.0.0";
+    private String address = "amqp://127.0.0.1";
     private String subject;
     private String[] bodies = new String[]{"Hello World!"};
 
@@ -91,6 +91,7 @@ public class Send {
                 mng.put(msg);
             }
             mng.send();
+            System.out.println("Send HER");
             mng.stop();
         } catch (Exception e) {
             tracer.log(Level.SEVERE, "proton error", e);
