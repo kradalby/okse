@@ -85,48 +85,68 @@ var Topics = (function($) {
         Binds the buttons after
      */
     var bindButtons = function() {
-        // need to unbind all buttons between binding and add an id to topic a elements
 
         $('.delete-topic').on('click', function(e) {
             e.preventDefault();
+
             if (confirm("Are you sure you want to delete this topic? This will remove all subscribers and child topics.")) {
+
                 var topicID = $(e.target).closest("tr").attr("id")
                 $(e.target).closest('tr').addClass('deleted')
                 $(e.target).addClass("disabled")
-                Main.ajax(("topics/delete/" + topicID), function() {
-                    console.log("[Debug][Topics] Unable to remove topic with id: " + e.target.id)
-                    $(e.target).closest('tr').removeClass('deleted')
-                    $(e.target).removeClass("disabled")
-                }, function(response) {
-                    if (response.topicID == topicID) {
-                        console.log("[Debug][Topics] Callback from server; topic and subscribers deleted")
-                        $(e.target).closest('tr').remove()
+
+                $.ajax({
+                    type: 'DELETE',
+                    url: '/api/topics/delete/' + topicID,
+                    dataType: 'json',
+                    success: function(topic) {
+                        if (topic.topicID == topicID) {
+                            console.log("[Debug][Topics] Callback from server; topic and subscribers deleted")
+                            $(e.target).closest('tr').remove()
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.log("[Debug][Topics] Unable to remove topic with id: " + e.target.id)
+                        $(e.target).closest('tr').removeClass('deleted')
+                        $(e.target).removeClass("disabled")
+                        error(xhr, status, error)
                     }
-                }, "DELETE")
+                });
             }
         });
 
         $('.delete-subscriber').on('click', function(e) {
-            e.preventDefault();
+            e.preventDefault()
 
             if (confirm("Are you sure you want to delete this subscriber?")) {
+
                 var subscriberID = $(e.target).closest('tr').attr('id')
                 $(e.target).closest("tr").addClass("deleted")
                 $(e.target).addClass("disabled")
-                Main.ajax(("topics/delete/subscriber/" + subscriberID), function() {
-                    console.log("[Debug][Topics] Unable to remove subscriber with id: " + e.target.id);
-                    $(e.target).closest("tr").removeClass("deleted")
-                    $(e.target).removeClass("disabled")
-                }, function(response) {
-                    if (response.subscriberID == subscriberID) {
-                        console.log("[Debug][Topics] Callback from server; subscriber deleted")
-                        $(e.target).closest("tr").remove()
+
+                $.ajax({
+                    type: 'DELETE',
+                    url: '/api/topics/delete/subscriber/' + subscriberID,
+                    dataType: 'json',
+                    success: function(subscriber) {
+                        if (subscriber.subscriberID == subscriberID) {
+                            console.log("[Debug][Topics] Callback from server; subscriber deleted")
+                            $(e.target).closest("tr").remove()
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.log("[Debug][Topics] Unable to remove subscriber with id: " + e.target.id)
+                        $(e.target).closest("tr").removeClass("deleted")
+                        $(e.target).removeClass("disabled")
+                        error(xhr, status, error)
                     }
-                }, "DELETE")
+                });
             }
         });
 
-        $('.show-subscribers').on('click', function() {
+        $('.show-subscribers').on('click', function(e) {
+            e.preventDefault()
+
             console.log("[Debug][Topics] Showing subscribers modal for topic with id: " + $(this).data('id'))
             $.ajax({
                 type: 'GET',
@@ -140,23 +160,19 @@ var Topics = (function($) {
                         $('#subscribers-modal').modal('show')
                     }
                 },
-                error: function(xhr) {
-                    console.log(xhr.responseText)
-                    console.log("[Debug][Topics] Couldn't fetch subscriber")
-                }
+                error: error
             });
 
             return false;
         });
     }
 
-    return {
-        init: function() {
+    var error = function(xhr, status, error) {
+        console.error("[Error][Topics] in Ajax with the following callback [status: " + xhr.status +  " readyState: " + xhr.readyState + " responseText: " + xhr.responseText + "]")
+    }
 
-        },
-        error: function(xhr, status, error) {
-          console.error("[Error][Topics] in Ajax with the following callback [status: " + xhr.status +  " readyState: " + xhr.readyState + " responseText: " + xhr.responseText + "]")
-        },
+    return {
+        error: error,
         refresh: function(response) {
             unBindButtons();
 
