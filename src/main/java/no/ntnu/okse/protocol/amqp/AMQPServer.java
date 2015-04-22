@@ -87,7 +87,7 @@ public class AMQPServer extends AbstractProtocolServer{
             log.info("AMQPServer booted successfully");
         }
         //Tester sendmessage()
-        sendMessage(new Message("Test message", new Topic("test","raw"), new Publisher("Test", "127.0.0.1", 1234, "OKSE")));
+        sendMessage(new no.ntnu.okse.core.messaging.Message("Test message", new Topic("test","raw"), new Publisher("Test", "127.0.0.1", 1234, "OKSE")));
     }
 
     /**
@@ -165,9 +165,13 @@ public class AMQPServer extends AbstractProtocolServer{
                     //Do the shait
                     log.info("[AMQP] Sending message to " +s.getHost() + " " + message);
                     try {
-                        Messenger mng = new MessengerImpl();
+                        //Deprecated, useing factory insted
+                        //Messenger mng = new MessengerImpl();
+                        Messenger mng = Messenger.Factory.create();
                         mng.start();
-                        MessageImpl msg = new MessageImpl();
+                        //Deprecate, useing factory insted
+                        //MessageImpl msg = new MessageImpl();
+                        org.apache.qpid.proton.message.Message msg = org.apache.qpid.proton.message.Message.Factory.create();
                         msg.setAddress(s.getHost());
                         msg.setSubject(message.getTopic().getFullTopicString());
                         for (String body : new String[]{message.getMessage()}) {

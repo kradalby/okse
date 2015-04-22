@@ -86,9 +86,12 @@ public class Send {
 
     private void run() {
         try {
-            Messenger mng = new MessengerImpl();
+            //Messenger mng = new MessengerImpl();
+            //Depricated, use factory insted
+            Messenger mng = Messenger.Factory.create();
             mng.start();
-            Message msg = new MessageImpl();
+            //Message msg = new MessageImpl();
+            Message msg = Message.Factory.create();
             msg.setAddress(address);
             if (subject != null) msg.setSubject(subject);
             for (String body : bodies) {
@@ -96,7 +99,6 @@ public class Send {
                 mng.put(msg);
             }
             mng.send();
-            System.out.println("Send HER");
             mng.stop();
         } catch (Exception e) {
             tracer.log(Level.SEVERE, "proton error", e);
