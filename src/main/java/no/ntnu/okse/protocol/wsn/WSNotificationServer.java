@@ -53,9 +53,12 @@ import org.eclipse.jetty.xml.XmlConfiguration;
 import org.ntnunotif.wsnu.base.internal.ServiceConnection;
 import org.ntnunotif.wsnu.base.util.InternalMessage;
 import org.ntnunotif.wsnu.base.util.RequestInformation;
+import org.ntnunotif.wsnu.services.general.WsnUtilities;
 import org.ntnunotif.wsnu.services.implementations.notificationbroker.NotificationBrokerImpl;
 import org.ntnunotif.wsnu.services.implementations.publisherregistrationmanager.SimplePublisherRegistrationManager;
 import org.ntnunotif.wsnu.services.implementations.subscriptionmanager.SimpleSubscriptionManager;
+import org.oasis_open.docs.wsn.b_2.NotificationMessageHolderType;
+import org.oasis_open.docs.wsn.b_2.Notify;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -302,7 +305,29 @@ public class WSNotificationServer extends AbstractProtocolServer {
         log.debug("WSNServer recieved message for distribution");
         if (!message.getOriginProtocol().equals(protocolServerType)) {
             log.debug("The message originated from other protocol than WSNotification");
-            // TODO: Generate a Notify object and call acceptMessage on the hub with the notify
+
+            /* HERE BE FUCKING DRAGONS */
+
+            // Create notify wrapper
+            Notify notify = WSNTools.b2_factory.createNotify();
+            // Create holder type provided the message, subscriptionref, publisherref and dialect
+            NotificationMessageHolderType holderType;
+            holderType = WSNTools.generateNotificationMessageHolderType(
+                    message,
+                    null,
+                    message.getAttribute(WSNSubscriptionManager.WSN_ENDPOINT_TOKEN),
+                    null
+            );
+            // Add the holdertype to the notify
+            notify.getNotificationMessage().add(holderType);
+            // Create an internalmessage of it
+            InternalMessage outMessage = new InternalMessage(
+                    InternalMessage.STATUS_HAS_MESSAGE |
+                    InternalMessage.STATUS_ENDPOINTREF_IS_SET |
+                    InternalMessage.STATUS_OK, notify
+            );
+            // Pass it on to the hub for distribution
+            _requestParser.acceptLocalMessage(outMessage);
         }
     }
 
