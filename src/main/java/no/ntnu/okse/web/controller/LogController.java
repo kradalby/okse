@@ -27,10 +27,7 @@ package no.ntnu.okse.web.controller;
 import no.ntnu.okse.web.model.Log;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.TrueFileFilter;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -50,6 +47,9 @@ import java.util.stream.Stream;
 @RequestMapping(value = "/api/log")
 public class LogController {
 
+    private static final String LOG_LEVELS = "/levels";
+    private static final String LOG_FILES = "/files";
+
     private static final HashMap<String, ArrayList<String>> logLevels = new HashMap<String, ArrayList<String>>(){{
         put("DEBUG", new ArrayList<String>(){{
             add("DEBUG");
@@ -67,7 +67,7 @@ public class LogController {
 
     private static HashMap<Integer, String> fileNames;
 
-    private static Integer fileID = 0;
+    private static Integer fileID = 1;
 
     public LogController() {
         fileNames = new HashMap<>();
@@ -87,11 +87,16 @@ public class LogController {
         File dir = new File("logs");
         Collection<File> files = FileUtils.listFiles(dir, TrueFileFilter.INSTANCE, TrueFileFilter.INSTANCE);
 
-        for (File file: files) {
-            if (!fileNames.containsValue(file.getName())) {
-                fileNames.put(fileID++, file.getName());
+        files.forEach(f -> {
+            if (!fileNames.containsValue(f.getName())) {
+                if (f.getName().equalsIgnoreCase("okse.log")) {
+                    fileNames.put(0, f.getName());
+                } else {
+                    fileNames.put(fileID++, f.getName());
+                }
             }
-        }
+        });
+
     }
 
 
@@ -125,14 +130,14 @@ public class LogController {
         }
     }
 
-    @RequestMapping(value = "/files", method = RequestMethod.GET)
-    public HashMap<Integer,String> logFilesAvailable() {
+    @RequestMapping(value = LOG_FILES, method = RequestMethod.GET)
+    public @ResponseBody HashMap<Integer,String> logFilesAvailable() {
         updateAvailableLogFiles();
         return fileNames;
     }
 
-    @RequestMapping(value = "/levels", method = RequestMethod.GET)
-    public Set<String> logLevelsAvailable() {
+    @RequestMapping(value = LOG_LEVELS, method = RequestMethod.GET)
+    public @ResponseBody Set<String> logLevelsAvailable() {
         return logLevels.keySet();
     }
 
