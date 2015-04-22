@@ -145,16 +145,16 @@ public class MessageService extends AbstractCoreService implements TopicChangeLi
 
                     // Tell the ExecutorService to execute the following job
                     CoreService.getInstance().execute(() -> {
+                        // Add message to latestMessages cache
+                        latestMessages.put(m.getTopic().getFullTopicString(), m);
                         // Fetch all registered protocol servers, and call the sendMessage() method on them
                         CoreService.getInstance().getAllProtocolServers().forEach(p -> {
-                            // Add message to latestMessages cache
-                            latestMessages.put(m.getTopic().getFullTopicString(), m);
                             // Fire the sendMessage on all servers
                             p.sendMessage(m);
                         });
                         // Set the message as processed, and store the completion time
                         LocalDateTime completedAt = m.setProcessed();
-                        log.info("Message successfully distributed: " + m + " (" + completedAt + ")");
+                        log.info("Message successfully distributed: " + m + " (Finished at: " + completedAt);
                     });
 
                 } catch (InterruptedException e) {

@@ -573,6 +573,10 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         publisher.setAttribute(WSNRegistrationManager.WSN_PUBLISHER_TOKEN, newSubscriptionKey);
         publisher.setAttribute(WSNSubscriptionManager.WSN_DIALECT_TOKEN, rawDialect);
 
+        // Create the topic
+        TopicService.getInstance().addTopic(rawTopicString);
+
+        // Register the publisher
         _registrationManager.addPublisher(publisher, pubHandle);
 
         // Initialize the response payload
