@@ -44,7 +44,6 @@ import java.util.*;
 public class TopicController {
 
     private static final String GET_ALL_TOPICS = "/get/all";
-    private static final String GET_SINGLE_TOPIC = "/get/{id}";
     private static final String GET_ALL_SUBSCRIBERS_FOR_TOPIC = "/get/{id}/subscriber/all";
     private static final String DELETE_ALL_TOPICS = "/delete/all";
     private static final String DELETE_SINGLE_TOPIC = "/delete/{id}";
@@ -57,7 +56,6 @@ public class TopicController {
     public HashSet<Topic> getAlltopics() {
         TopicService ts = TopicService.getInstance();
         HashSet<Topic> allTopics = ts.getAllTopics();
-
         return allTopics;
     }
 
@@ -66,11 +64,8 @@ public class TopicController {
         log.info("Fetching all subscribers for topic with ID: " + id);
         TopicService ts = TopicService.getInstance();
         SubscriptionService ss = SubscriptionService.getInstance();
-
         Topic t = ts.getTopicByID(id);
-
         HashSet<Subscriber> result = ss.getAllSubscribersForTopic(t.getFullTopicString());
-
         return result;
     }
 
@@ -78,21 +73,15 @@ public class TopicController {
     public void deleteAllTopics() {
         log.info("Deleting all topics");
         TopicService ts = TopicService.getInstance();
-        // Delete all topics
+        // TODO: Implement this
     }
 
     @RequestMapping(method = RequestMethod.DELETE, value = DELETE_SINGLE_TOPIC)
     public @ResponseBody Topic deleteSingleTopic(@PathVariable("id") String id) {
         log.info("Deleting Topic with ID: " + id);
         TopicService ts = TopicService.getInstance();
-        //SubscriptionService ss = SubscriptionService.getInstance();
-        // Delete single topic
         Topic t = ts.getTopicByID(id);
-
         ts.deleteTopic(t.getFullTopicString());
-
-        //ss.getAllSubscribersForTopic(t.getFullTopicString()).stream().forEach(s -> ss.removeSubscriber(s));
-
         return t;
     }
 
@@ -100,7 +89,6 @@ public class TopicController {
     public @ResponseBody Subscriber deleteSingleSubscriber(@PathVariable("id") String id) {
         log.info("Deleting subscriber with ID: " + id);
         SubscriptionService ss = SubscriptionService.getInstance();
-        // Delete single subscriber
         Subscriber s = ss.getSubscriberByID(id);
         ss.removeSubscriber(s);
         return s;
