@@ -24,6 +24,7 @@
 
 package no.ntnu.okse.protocol.wsn;
 
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -212,12 +213,17 @@ public class WSNotificationServer extends AbstractProtocolServer {
                 /* OKSE custom WS-Nu web services */
                 WSNCommandProxy broker = new WSNCommandProxy();
                 WSNSubscriptionManager subscriptionManager = new WSNSubscriptionManager();
+                WSNRegistrationManager registrationManager = new WSNRegistrationManager();
                 SubscriptionService.getInstance().addSubscriptionChangeListener(subscriptionManager);
+                SubscriptionService.getInstance().addPublisherChangeListener(registrationManager);
 
                 broker.quickBuild("broker", this._requestParser);
                 subscriptionManager.quickBuild("subscriptionManager", this._requestParser);
                 subscriptionManager.initCoreSubscriptionService(SubscriptionService.getInstance());
+                registrationManager.quickBuild("registrationManager", this._requestParser);
+                registrationManager.initCoreSubscriptionService(SubscriptionService.getInstance());
                 broker.setSubscriptionManager(subscriptionManager);
+                broker.setRegistrationManager(registrationManager);
 
                 // Create a new thread for the Jetty Server to run in
                 this._serverThread = new Thread(() -> {
@@ -293,7 +299,11 @@ public class WSNotificationServer extends AbstractProtocolServer {
      */
     @Override
     public void sendMessage(Message message) {
-        log.info("Recieved message for distribution");
+        log.debug("WSNServer recieved message for distribution");
+        if (!message.getOriginProtocol().equals(protocolServerType)) {
+            log.debug("The message originated from other protocol than WSNotification");
+            // TODO: Generate a Notify object and call acceptMessage on the hub with the notify
+        }
     }
 
     /**
@@ -561,7 +571,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
                 request.method(HttpMethod.GET);
                 log.info("Sending message without content to " + requestInformation.getEndpointReference());
                 ContentResponse response = request.send();
-                totalMessages++;
+                totalRequests++;
 
                 return new InternalMessage(InternalMessage.STATUS_OK | InternalMessage.STATUS_HAS_MESSAGE, response.getContentAsString());
             /* Request with message */

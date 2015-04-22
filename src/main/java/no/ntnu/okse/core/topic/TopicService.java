@@ -27,7 +27,6 @@ package no.ntnu.okse.core.topic;
 import no.ntnu.okse.core.AbstractCoreService;
 import no.ntnu.okse.core.event.TopicChangeEvent;
 import no.ntnu.okse.core.event.listeners.TopicChangeListener;
-import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -95,6 +94,16 @@ public class TopicService extends AbstractCoreService {
     }
 
     /**
+     * This method must contain the operations needed for the subclass to register itself as a listener
+     * to the different objects it wants to listen to. This method will be called after all Core Services have
+     * been booted.
+     */
+    @Override
+    public void registerListenerSupport() {
+        // TODO: Register self as listener to stuff
+    }
+
+    /**
      * This method Stops the TopicService
      * @throws InterruptedException An exception that might occur if thread is interrupted while waiting for put
      * command thread lock to open up.
@@ -117,7 +126,7 @@ public class TopicService extends AbstractCoreService {
         while (_running) {
             try {
                 TopicTask task = queue.take();
-                log.info(task.getType() + " job recieved, executing task...");
+                log.debug(task.getType() + " job recieved, executing task...");
                 task.run();
             } catch (InterruptedException e) {
                 log.warn("Interrupt caught, consider sending a No-Op TopicTask to the queue to awaken the thread.");

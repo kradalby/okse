@@ -45,9 +45,14 @@ import java.io.File;
  */
 public class Application {
 
+    // Version
+    public static final String VERSION = "0.0.1a";
+
     /* Default global variables */
-    public static long DEFAULT_SUBSCRIPTION_TERMINATION_TIME = 15552000000L; // Half a year
     public static boolean BROADCAST_SYSTEM_MESSAGES_TO_SUBSCRIBERS = false;
+    public static boolean CACHE_MESSAGES = true;
+    public static long DEFAULT_SUBSCRIPTION_TERMINATION_TIME = 15552000000L; // Half a year
+    public static long DEFAULT_PUBLISHER_TERMINATION_TIME = 15552000000L; // Half a year
 
     private static Logger log;
     public static CoreService cs;

@@ -27,10 +27,14 @@ package no.ntnu.okse.core.subscription;
 import no.ntnu.okse.core.AbstractCoreService;
 import no.ntnu.okse.core.event.PublisherChangeEvent;
 import no.ntnu.okse.core.event.SubscriptionChangeEvent;
+import no.ntnu.okse.core.event.TopicChangeEvent;
 import no.ntnu.okse.core.event.listeners.PublisherChangeListener;
 import no.ntnu.okse.core.event.listeners.SubscriptionChangeListener;
+import no.ntnu.okse.core.event.listeners.TopicChangeListener;
 import no.ntnu.okse.core.topic.Topic;
+import no.ntnu.okse.core.topic.TopicService;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -39,7 +43,7 @@ import java.util.concurrent.LinkedBlockingQueue;
  * <p>
  * okse is licenced under the MIT licence.
  */
-public class SubscriptionService extends AbstractCoreService {
+public class SubscriptionService extends AbstractCoreService implements TopicChangeListener {
 
     private static SubscriptionService _singleton;
     private static Thread _serviceThread;
@@ -99,6 +103,17 @@ public class SubscriptionService extends AbstractCoreService {
     }
 
     /**
+     * This method must contain the operations needed for this class to register itself as a listener
+     * to the different instances it wants to listen to. This method will be called after all Core Services have
+     * been booted.
+     */
+    @Override
+    public void registerListenerSupport() {
+        // Register self as listener to TopicService events
+        TopicService.getInstance().addTopicChangeListener(this);
+    }
+
+    /**
      * Main run method that will be called when the subclass' serverThread is started
      */
     @Override
@@ -107,7 +122,7 @@ public class SubscriptionService extends AbstractCoreService {
         while (_running) {
             try {
                 SubscriptionTask task = queue.take();
-                log.info(task.getType() + " job recieved, executing task...");
+                log.debug(task.getType() + " job recieved, executing task...");
                 // Perform the task
                 task.run();
             } catch (InterruptedException e) {
@@ -370,7 +385,7 @@ public class SubscriptionService extends AbstractCoreService {
         // TODO: Also maek into stream and use filter lambdas
         // TODO: Will this trigger concurrent modification exception if new subs are added during iteration?
         for (Subscriber s: _subscribers) {
-            if (s.getAddress().equals(address) &&
+            if (s.getHost().equals(address) &&
                     s.getPort().equals(port) &&
                     s.getTopic().equals(topic.getFullTopicString())) {
                 return s;
@@ -391,7 +406,7 @@ public class SubscriptionService extends AbstractCoreService {
         // TODO: Will this trigger concurrent modification exception if new subs are added during iteration?
 
         // Iterate over all subscribers
-        _subscribers.stream()
+        getAllSubscribers().stream()
                     // Only pass on those who match topic argument
                     .filter(s -> s.getTopic().equals(topic))
                     // Collect in the results set
@@ -401,11 +416,44 @@ public class SubscriptionService extends AbstractCoreService {
     }
 
     /**
-     * Retrive a HashSet of all subscribers on the broker
+     * Retrieve a HashSet of all subscribers that have subscribed to a specific topic
+     * @param topic A raw topic string of the topic to select subscribers from
+     * @return A HashSet of Subscriber objects that have subscribed to the specified topic
+     */
+    public HashSet<Publisher> getAllPublishersForTopic(String topic) {
+        // Initialize a collector
+        HashSet<Publisher> results = new HashSet<>();
+
+        // TODO: Will this trigger concurrent modification exception if new subs are added during iteration?
+
+        // Iterate over all subscribers
+        getAllPublishers().stream()
+                // Only pass on those who match topic argument
+                .filter(p -> p.getTopic().equals(topic))
+                        // Collect in the results set
+                .forEach(p -> results.add(p));
+
+        return results;
+    }
+
+    /**
+     * Retrive a HashSet of all subscribers on the broker. This HashSet is a shallow clone of the internal
+     * data structure, preventing unintended modification.
+     * 
      * @return A HashSet of Subscriber objects that have subscribed on the broker
      */
     public HashSet<Subscriber> getAllSubscribers() {
         return (HashSet<Subscriber>) _subscribers.clone();
+    }
+
+    /**
+     * Retrieve a HashSet of all publishers on the broker. This HashSet is a shallow clone of the internal
+     * data structure, preventing unintended modification.
+     *
+     * @return A HashSet of Publisher objects that have registered on the broker
+     */
+    public HashSet<Publisher> getAllPublishers() {
+        return (HashSet<Publisher>) _publishers.clone();
     }
 
     /* ------------------------------------------------------------------------------------------ */
@@ -465,4 +513,22 @@ public class SubscriptionService extends AbstractCoreService {
     }
 
     /* End listener support */
+
+    /* Start observation methods */
+
+    @Override
+    public void topicChanged(TopicChangeEvent event) {
+        if (event.getType().equals(TopicChangeEvent.Type.DELETE)) {
+
+            // Fetch the raw topic string from the event Topic object
+            String fullRawTopicString = event.getData().getFullTopicString();
+
+            // Remove all the subscribers for the topic that was deleted
+            getAllSubscribersForTopic(fullRawTopicString).forEach(s -> removeSubscriber(s));
+            // Remove all the publishers for the topic that was deleted
+            getAllPublishersForTopic(fullRawTopicString).forEach(p -> removePublisher(p));
+        }
+    }
+
+    /* End observation methods */
 }

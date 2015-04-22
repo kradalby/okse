@@ -27,13 +27,13 @@ package no.ntnu.okse.core.messaging;
 import no.ntnu.okse.Application;
 import no.ntnu.okse.core.AbstractCoreService;
 import no.ntnu.okse.core.CoreService;
-import no.ntnu.okse.core.topic.Topic;
+import no.ntnu.okse.core.event.TopicChangeEvent;
+import no.ntnu.okse.core.event.listeners.TopicChangeListener;
 import no.ntnu.okse.core.topic.TopicService;
-import org.apache.log4j.Logger;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
@@ -41,12 +41,13 @@ import java.util.concurrent.LinkedBlockingQueue;
  * <p>
  * okse is licenced under the MIT licence.
  */
-public class MessageService extends AbstractCoreService {
+public class MessageService extends AbstractCoreService implements TopicChangeListener {
 
     private static boolean _invoked = false;
     private static MessageService _singleton;
     private static Thread _serviceThread;
     private LinkedBlockingQueue<Message> queue;
+    private ConcurrentHashMap<String, Message> latestMessages;
 
     /**
      * Private Constructor that recieves invocation from getInstance, enabling the singleton pattern for this class
@@ -62,6 +63,7 @@ public class MessageService extends AbstractCoreService {
     protected void init() {
         log.info("Initializing MessageService...");
         queue = new LinkedBlockingQueue<>();
+        latestMessages = new ConcurrentHashMap<>();
         _invoked = true;
     }
 
@@ -91,6 +93,17 @@ public class MessageService extends AbstractCoreService {
     }
 
     /**
+     * This method must contain the operations needed for ths class to register itself as a listener
+     * to the different objects it wants to listen to. This method will be called after all Core Services have
+     * been booted.
+     */
+    @Override
+    public void registerListenerSupport() {
+        // Register self as a listener for topic events
+        TopicService.getInstance().addTopicChangeListener(this);
+    }
+
+    /**
      * This method should be called from within the run-scope of the serverThread thread instance
      */
     public void run() {
@@ -105,12 +118,12 @@ public class MessageService extends AbstractCoreService {
                     // Do we have a system message?
                     if (m.isSystemMessage() && m.getTopic() == null) {
 
-                        log.info("Recieved message was a SystemMessage: " + m.getMessage());
+                        log.debug("Recieved message was a SystemMessage: " + m.getMessage());
 
                         // Check if we are to broadcast this system message
                         if (Application.BROADCAST_SYSTEM_MESSAGES_TO_SUBSCRIBERS) {
 
-                            log.info("System Message Broadcast set to TRUE, distributing system message...");
+                            log.debug("System Message Broadcast set to TRUE, distributing system message...");
 
                             // Generate duplicate messages to all topics and iterate over them
                             generateMessageToAllTopics(m).stream().forEach(message -> {
@@ -133,7 +146,12 @@ public class MessageService extends AbstractCoreService {
                     // Tell the ExecutorService to execute the following job
                     CoreService.getInstance().execute(() -> {
                         // Fetch all registered protocol servers, and call the sendMessage() method on them
-                        CoreService.getInstance().getAllProtocolServers().forEach(p -> p.sendMessage(m));
+                        CoreService.getInstance().getAllProtocolServers().forEach(p -> {
+                            // Add message to latestMessages cache
+                            latestMessages.put(m.getTopic().getFullTopicString(), m);
+                            // Fire the sendMessage on all servers
+                            p.sendMessage(m);
+                        });
                         // Set the message as processed, and store the completion time
                         LocalDateTime completedAt = m.setProcessed();
                         log.info("Message successfully distributed: " + m + " (" + completedAt + ")");
@@ -168,6 +186,37 @@ public class MessageService extends AbstractCoreService {
         }
     }
 
+    /**
+     * Adds a Message object into the message queue for distribution
+     * @param m The message object to be distributed
+     */
+    public void distributeMessage(Message m) {
+        try {
+            this.queue.put(m);
+        } catch (InterruptedException e) {
+            log.error("Interrupted while trying to inject message into queue");
+        }
+    }
+
+    /**
+     * Retrieves the latest message sent on a specific topic
+     * @param topic The topic to retrieve the latest message for
+     * @return The message object for the specified topic, null if there has not been any messages yet
+     */
+    public Message getLatestMessage(String topic) {
+        if (latestMessages.containsKey(topic)) return latestMessages.get(topic);
+
+        return null;
+    }
+
+    /**
+     * Check if the OKSE system is currently caching messages
+     * @return True if this setting is set to true, false otherwise
+     */
+    public boolean isCachingMessages() {
+        return Application.CACHE_MESSAGES;
+    }
+
     /* ----------------------------------------------------------------------------------------------- */
 
     /* Private helper methods */
@@ -193,4 +242,22 @@ public class MessageService extends AbstractCoreService {
         return generated;
     }
 
+    /* Begin observation methods */
+
+    @Override
+    public void topicChanged(TopicChangeEvent event) {
+        if (event.getType().equals(TopicChangeEvent.Type.DELETE)) {
+            // Fetch the raw topic string from the deleted topic
+            String rawTopicString = event.getData().getFullTopicString();
+
+            // If we have messages in cache for the topic in question, remove it to remove any remaining
+            // reference to the Topic node, so the garbage collector can do its job.
+            if (latestMessages.containsKey(rawTopicString)) {
+                latestMessages.remove(rawTopicString);
+                log.debug("Removed a message from cache due to its topic being deleted");
+            }
+        }
+    }
+
+    /* End observation methods */
 }

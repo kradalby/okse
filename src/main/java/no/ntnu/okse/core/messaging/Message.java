@@ -32,6 +32,7 @@ import org.springframework.security.crypto.codec.Hex;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 
 /**
  * Created by Aleksander Skraastad (myth) on 4/17/15.
@@ -46,7 +47,9 @@ public class Message {
     private final Topic topic;
     private final String message;
     private final String messageID;
+    private String originProtocol;
     private static Logger log;
+    private HashMap<String, String> attributes;
 
     // Mutable fields
     private LocalDateTime processed;
@@ -61,6 +64,10 @@ public class Message {
         this.message = message;
         this.systemMessage = false;
         this.messageID = generateMessageID();
+        this.attributes = new HashMap<>();
+        if (publisher != null) {
+            this.originProtocol = publisher.getOriginProtocol();
+        } else originProtocol = null;
     }
 
     /**
@@ -125,6 +132,22 @@ public class Message {
     }
 
     /**
+     * Sets the originating protocol of this message
+     * @param originProtocol A string containing the name of the originating protocol of this message
+     */
+    public void setOriginProtocol(String originProtocol) {
+        this.originProtocol = originProtocol;
+    }
+
+    /**
+     * Retrieve the originating protocol of this message
+     * @return A string containing the name of the originating protocol, null if it is a system message or other
+     */
+    public String getOriginProtocol() {
+        return this.originProtocol;
+    }
+
+    /**
      * Returns a LocalDateTime object of when this message object was initialized
      * @return A LocalDateTime object representing the creation time of this object.
      */
@@ -148,6 +171,26 @@ public class Message {
     public LocalDateTime setProcessed() {
         if (!isProcessed()) this.processed = LocalDateTime.now();
         return this.processed;
+    }
+
+    /**
+     * Set an attribute on this Message object
+     * @param key They key of the attribute
+     * @param value The value of the attribute
+     */
+    public void setAttribute(String key, String value) {
+        if (attributes.containsKey(key)) attributes.replace(key, value);
+        else attributes.put(key, value);
+    }
+
+    /**
+     * Retrieve an attribute from this message object
+     * @param key The key to fetch the value of
+     * @return The value if the attribute exists, null otherwise
+     */
+    public String getAttribute(String key) {
+        if (attributes.containsKey(key)) return attributes.get(key);
+        return null;
     }
 
     /**
