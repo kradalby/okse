@@ -299,7 +299,11 @@ public class WSNotificationServer extends AbstractProtocolServer {
      */
     @Override
     public void sendMessage(Message message) {
-        log.info("Recieved message for distribution");
+        log.debug("WSNServer recieved message for distribution");
+        if (!message.getOriginProtocol().equals(protocolServerType)) {
+            log.debug("The message originated from other protocol than WSNotification");
+            // TODO: Generate a Notify object and call acceptMessage on the hub with the notify
+        }
     }
 
     /**

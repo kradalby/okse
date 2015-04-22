@@ -29,8 +29,8 @@ import no.ntnu.okse.core.event.listeners.PublisherChangeListener;
 import no.ntnu.okse.core.subscription.Publisher;
 import no.ntnu.okse.core.subscription.SubscriptionService;
 import org.apache.log4j.Logger;
+import org.ntnunotif.wsnu.services.general.ServiceUtilities;
 import org.ntnunotif.wsnu.services.implementations.notificationbroker.AbstractNotificationBroker;
-import org.ntnunotif.wsnu.services.implementations.notificationproducer.AbstractNotificationProducer;
 import org.ntnunotif.wsnu.services.implementations.publisherregistrationmanager.AbstractPublisherRegistrationManager;
 import org.oasis_open.docs.wsn.br_2.DestroyRegistration;
 import org.oasis_open.docs.wsn.br_2.DestroyRegistrationResponse;
@@ -40,6 +40,8 @@ import org.oasis_open.docs.wsrf.rw_2.ResourceUnknownFault;
 
 import javax.jws.WebMethod;
 import javax.jws.WebService;
+import javax.xml.ws.Service;
+import javax.xml.ws.wsaddressing.W3CEndpointReference;
 import java.util.HashMap;
 
 /**
@@ -150,6 +152,7 @@ public class WSNRegistrationManager extends AbstractPublisherRegistrationManager
     }
 
     @Override
+    @WebMethod
     public DestroyRegistrationResponse destroyRegistration(DestroyRegistration destroyRegistration) throws ResourceNotDestroyedFault, ResourceUnknownFault {
         return null;
     }

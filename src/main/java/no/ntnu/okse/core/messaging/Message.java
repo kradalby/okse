@@ -47,6 +47,7 @@ public class Message {
     private final Topic topic;
     private final String message;
     private final String messageID;
+    private String originProtocol;
     private static Logger log;
     private HashMap<String, String> attributes;
 
@@ -64,6 +65,9 @@ public class Message {
         this.systemMessage = false;
         this.messageID = generateMessageID();
         this.attributes = new HashMap<>();
+        if (publisher != null) {
+            this.originProtocol = publisher.getOriginProtocol();
+        } else originProtocol = null;
     }
 
     /**
@@ -125,6 +129,22 @@ public class Message {
     public boolean messageSentFromRegisteredPublisher() {
         if (this.publisher == null) return false;
         return true;
+    }
+
+    /**
+     * Sets the originating protocol of this message
+     * @param originProtocol A string containing the name of the originating protocol of this message
+     */
+    public void setOriginProtocol(String originProtocol) {
+        this.originProtocol = originProtocol;
+    }
+
+    /**
+     * Retrieve the originating protocol of this message
+     * @return A string containing the name of the originating protocol, null if it is a system message or other
+     */
+    public String getOriginProtocol() {
+        return this.originProtocol;
     }
 
     /**
