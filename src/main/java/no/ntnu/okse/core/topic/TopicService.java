@@ -27,7 +27,6 @@ package no.ntnu.okse.core.topic;
 import no.ntnu.okse.core.AbstractCoreService;
 import no.ntnu.okse.core.event.TopicChangeEvent;
 import no.ntnu.okse.core.event.listeners.TopicChangeListener;
-import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Arrays;

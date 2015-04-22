@@ -25,6 +25,7 @@
 package no.ntnu.okse.examples;
 
 import no.ntnu.okse.core.messaging.Message;
+import no.ntnu.okse.core.subscription.Subscriber;
 import no.ntnu.okse.core.subscription.SubscriptionService;
 import no.ntnu.okse.protocol.AbstractProtocolServer;
 import org.apache.log4j.Logger;

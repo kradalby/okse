@@ -168,17 +168,6 @@ public class MessageService extends AbstractCoreService implements TopicChangeLi
     }
 
     /**
-     * Retrieves the latest message sent on a specific topic
-     * @param topic The topic to retrieve the latest message for
-     * @return The message object for the specified topic, null if there has not been any messages yet
-     */
-    public Message getLatestMessage(String topic) {
-        if (latestMessages.containsKey(topic)) return latestMessages.get(topic);
-
-        return null;
-    }
-
-    /**
      * Graceful shutdown method
      */
     @Override
@@ -207,6 +196,25 @@ public class MessageService extends AbstractCoreService implements TopicChangeLi
         } catch (InterruptedException e) {
             log.error("Interrupted while trying to inject message into queue");
         }
+    }
+
+    /**
+     * Retrieves the latest message sent on a specific topic
+     * @param topic The topic to retrieve the latest message for
+     * @return The message object for the specified topic, null if there has not been any messages yet
+     */
+    public Message getLatestMessage(String topic) {
+        if (latestMessages.containsKey(topic)) return latestMessages.get(topic);
+
+        return null;
+    }
+
+    /**
+     * Check if the OKSE system is currently caching messages
+     * @return True if this setting is set to true, false otherwise
+     */
+    public boolean isCachingMessages() {
+        return Application.CACHE_MESSAGES;
     }
 
     /* ----------------------------------------------------------------------------------------------- */
