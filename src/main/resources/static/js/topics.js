@@ -42,10 +42,32 @@ var Topics = (function($) {
                     "<td>" + topic.fullTopicString + "</td>" +
                     "<td>" + topic.root + "</td>" +
                     "<td>" + topic.leaf + "</td>" +
-                    '<td><div class="btn-group" role="group"><a class="btn btn-xs btn-danger delete-topic">Delete</a><a class="btn btn-xs btn-warning show-subscribers">Subscribers</a></div></td>' +
+                    '<td><div class="btn-group" role="group">' +
+                        '<a class="btn btn-xs btn-danger delete-topic">Delete</a>' +
+                        '<a class="btn btn-xs btn-warning show-subscribers" data-id="' + topic.topicID + '">Subscribers</a>' +
+                    '</div></td>' +
                 '</tr>'
         });
         trHTML += '<tr><td colspan="6"><a class="btn btn-block btn-danger delete-all-topics">Delete all topics</a></td></tr>';
+        return trHTML
+    }
+
+    /*
+     Creates, fills and returns a <tr>-element. The <tr>-element is generated based on the subscribers
+     list from the OKSE-RestAPI. It also adds all the buttons needed for deleting subscribers. It uses the id for
+     this purpose. This function does not manipulate the DOM by checking if an element exists. It overwrites everything.
+     */
+    var createTableForSubscribers = function(subscribers) {
+        var trHTML = '';
+        $.each(subscribers, function (i, subscriber) {
+            trHTML +=
+                '<tr id="'+ subscriber.subscriberID +' ">' +
+                    '<td>' + subscriber.originProtocol + '</td>' +
+                    '<td>' + subscriber.host + '</td>' +
+                    '<td>' + subscriber.port + '</td>' +
+                    '<td><a class="btn btn-xs btn-block btn-warning delete-subscriber">Delete</a></td>' +
+                '</tr>';
+        });
         return trHTML
     }
 
@@ -56,6 +78,7 @@ var Topics = (function($) {
     var unBindButtons = function() {
         $('.delete-topic').off('click');
         $('.delete-subscriber').off('click');
+        $('.show-subscriber').off('click');
     }
 
     /*
@@ -63,6 +86,7 @@ var Topics = (function($) {
      */
     var bindButtons = function() {
         // need to unbind all buttons between binding and add an id to topic a elements
+
         $('.delete-topic').on('click', function(e) {
             e.preventDefault();
             if (confirm("Are you sure you want to delete this topic? This will remove all subscribers and child topics.")) {
@@ -81,39 +105,54 @@ var Topics = (function($) {
                 }, "DELETE")
             }
         });
+
         $('.delete-subscriber').on('click', function(e) {
             e.preventDefault();
 
             if (confirm("Are you sure you want to delete this subscriber?")) {
+                var subscriberID = $(e.target).closest('tr').attr('id')
                 $(e.target).closest("tr").addClass("deleted")
                 $(e.target).addClass("disabled")
-                Main.ajax(("topics/delete/subscriber/" + this.id), function() {
+                Main.ajax(("topics/delete/subscriber/" + subscriberID), function() {
                     console.log("[Debug][Topics] Unable to remove subscriber with id: " + e.target.id);
                     $(e.target).closest("tr").removeClass("deleted")
                     $(e.target).removeClass("disabled")
                 }, function(response) {
-                    if (response.subscriberID == e.target.id) {
+                    if (response.subscriberID == subscriberID) {
                         console.log("[Debug][Topics] Callback from server; subscriber deleted")
                         $(e.target).closest("tr").remove()
                     }
                 }, "DELETE")
             }
         });
+
+        $('.show-subscribers').on('click', function() {
+            console.log("[Debug][Topics] Showing subscribers modal for topic with id: " + $(this).data('id'))
+            $.ajax({
+                type: 'GET',
+                url: '/api/topics/get/' + $(this).data('id') + '/subscriber/all',
+                dataType: 'json',
+                success: function(data) {
+                    console.log("[Debug][Topics] Callback from server; showing subscribers modal")
+                    if (!(data.length == 0)) {
+                        var table = createTableForSubscribers(data)
+                        $('#subscribers-table').html(table)
+                        $('#subscribers-modal').modal('show')
+                    }
+                },
+                error: function(xhr) {
+                    console.log(xhr.responseText)
+                    console.log("[Debug][Topics] Couldn't fetch subscriber")
+                }
+            });
+
+            return false;
+        });
     }
 
     return {
         init: function() {
-            $('#delete-all-topics').on('click', function(e) {
-                e.preventDefault()
 
-                Main.ajax("topics/delete/all", function() {
-                    console.log("[Debug][Topics] Unable to remove all topics");
-                }, function() {
-                    $('#topics-column').html('');
-                    console.log("[Debug][Topics] Removing all topics");
-                }, "DELETE")
-
-            });
         },
         error: function(xhr, status, error) {
           console.error("[Error][Topics] in Ajax with the following callback [status: " + xhr.status +  " readyState: " + xhr.readyState + " responseText: " + xhr.responseText + "]")

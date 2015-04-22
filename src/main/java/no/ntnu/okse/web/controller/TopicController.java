@@ -28,7 +28,6 @@ import no.ntnu.okse.core.subscription.Subscriber;
 import no.ntnu.okse.core.subscription.SubscriptionService;
 import no.ntnu.okse.core.topic.Topic;
 import no.ntnu.okse.core.topic.TopicService;
-import no.ntnu.okse.web.model.Topics;
 import org.apache.log4j.Logger;
 import org.springframework.web.bind.annotation.*;
 
@@ -46,8 +45,7 @@ public class TopicController {
 
     private static final String GET_ALL_TOPICS = "/get/all";
     private static final String GET_SINGLE_TOPIC = "/get/{id}";
-    private static final String GET_ALL_SUBSCRIBERS = "/get/subscriber/all";
-    private static final String GET_SINGLE_SUBSCRIBER = "/get/subscriber/{id}";
+    private static final String GET_ALL_SUBSCRIBERS_FOR_TOPIC = "/get/{id}/subscriber/all";
     private static final String DELETE_ALL_TOPICS = "/delete/all";
     private static final String DELETE_SINGLE_TOPIC = "/delete/{id}";
     private static final String DELETE_SINGLE_SUBSCRIBER = "/delete/subscriber/{id}";
@@ -61,6 +59,19 @@ public class TopicController {
         HashSet<Topic> allTopics = ts.getAllTopics();
 
         return allTopics;
+    }
+
+    @RequestMapping(method = RequestMethod.GET, value = GET_ALL_SUBSCRIBERS_FOR_TOPIC)
+    public @ResponseBody HashSet<Subscriber> getAllSubscribersForTopic(@PathVariable("id") String id) {
+        log.info("Fetching all subscribers for topic with ID: " + id);
+        TopicService ts = TopicService.getInstance();
+        SubscriptionService ss = SubscriptionService.getInstance();
+
+        Topic t = ts.getTopicByID(id);
+
+        HashSet<Subscriber> result = ss.getAllSubscribersForTopic(t.getFullTopicString());
+
+        return result;
     }
 
     @RequestMapping(method = RequestMethod.DELETE, value = DELETE_ALL_TOPICS)
