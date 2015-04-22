@@ -2,6 +2,7 @@ package no.ntnu.okse.protocol.amqp;
 
 import no.ntnu.okse.core.messaging.Message;
 import no.ntnu.okse.core.subscription.Publisher;
+import no.ntnu.okse.core.subscription.Subscriber;
 import no.ntnu.okse.core.subscription.SubscriptionService;
 import no.ntnu.okse.core.topic.Topic;
 import no.ntnu.okse.protocol.AbstractProtocolServer;
@@ -86,7 +87,7 @@ public class AMQPServer extends AbstractProtocolServer{
             log.info("AMQPServer booted successfully");
         }
         //Tester sendmessage()
-        sendMessage(new Message("Test message", new Topic("Test","raw"), new Publisher("Test", "127.0.0.1", 1234, "OKSE")));
+        sendMessage(new Message("Test message", new Topic("test","raw"), new Publisher("Test", "127.0.0.1", 1234, "OKSE")));
     }
 
     /**
@@ -156,21 +157,30 @@ public class AMQPServer extends AbstractProtocolServer{
      */
     @Override
     public void sendMessage(Message message) {
-        log.info("[AMQP] Sending message: " + message);
-        try {
-            Messenger mng = new MessengerImpl();
-            mng.start();
-            MessageImpl msg = new MessageImpl();
-            msg.setAddress("127.0.0.1");
-            msg.setSubject(message.getTopic().getFullTopicString());
-            for (String body : new String[]{message.getMessage()}) {
-                msg.setBody(new AmqpValue(body));
-                mng.put(msg);
-            }
-            mng.send();
-            mng.stop();
-        } catch (Exception e) {
-            log.info("Qpid proton error", e);
-        }
+        SubscriptionService subservice = SubscriptionService.getInstance();
+        //Mulig vi må lage en egen bindings klasse for filtrering (* og #)
+        HashSet<Subscriber> subscribers = subservice.getAllSubscribersForTopic(message.getTopic().getFullTopicString());
+        subscribers.forEach(s -> {
+            if (s.getOriginProtocol().equals(this.getProtocolServerType())) {
+                    //Do the shait
+                    log.info("[AMQP] Sending message to " +s.getHost() + " " + message);
+                    try {
+                        Messenger mng = new MessengerImpl();
+                        mng.start();
+                        MessageImpl msg = new MessageImpl();
+                        msg.setAddress(s.getHost());
+                        msg.setSubject(message.getTopic().getFullTopicString());
+                        for (String body : new String[]{message.getMessage()}) {
+                            msg.setBody(new AmqpValue(body));
+                            mng.put(msg);
+                        }
+                        mng.send();
+                        mng.stop();
+                    } catch (Exception e) {
+                        log.info("Qpid proton error", e);
+                    }
+                }
+            });
+
     }
 }
