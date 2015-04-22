@@ -71,8 +71,10 @@ var Main = (function($) {
         Global function that sets the click interval for the log-tab after the user wants to activate it again.
      */
     var setIntervalForLogTab = function() {
+        clearInterval(clickInterval)
+        ajax({url: Logs.url(), type: 'GET', success: Logs.refresh})
         clickInterval = setInterval(function () {
-            Main.ajax({
+            ajax({
                 url: Logs.url(),
                 type: 'GET',
                 success: Logs.refresh
