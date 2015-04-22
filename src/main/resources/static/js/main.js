@@ -28,49 +28,54 @@
 var Main = (function($) {
 
     // Global variable for holding the interval used to update the panes
-    var clickInterval;
+    var clickInterval
+
+    // The base url, that appends to all ajax-requests
+    var BASE_URL = "/api/"
 
     /*
-        Private method for setting up the AJAX with the correct CSRF-token
-        (must do this to be able to do POST-requests)
+        Sets some default settings for every AJAX request, like the request url and data type.
     */
     var setupAjax = function() {
-        var token = $("input[name='_csrf']").val();
-        var header = "X-CSRF-TOKEN";
         $.ajaxSetup({
-            beforeSend: function(xhr) {
-                xhr.setRequestHeader(header, token);
-            }
+            error: error,
+            dataType: 'json'
         });
         console.log("[Debug][Main] Successfully set up AJAX")
     }
 
     /*
         Global, generic AJAX-function for all AJAX-requests across the complete page.
-        Takes in five arguments, defining the request. All urls are appended to '/api/'
+        Takes in five arguments, defining the request. All urls are appended to BASE_URL
+        All settings can be overridden by applying other inputs in the settings object.
+        Sets up the AJAX with the correct CSRF-token (must do this to be able to do POST-requests)
      */
     var ajax = function(settings) {
+        var token = $("meta[name='_csrf']").attr("content");
+        var header = $("meta[name='_csrf_header']").attr("content");
         $.ajax({
-            url: "/api/" + settings.url,
+            url: BASE_URL + settings.url,
             type: settings.type,
             dataType: settings.dataType,
-            beforeSend: function(xhr, settings) {
+            beforeSend: function(xhr) {
                 xhr.url = settings.url
+                xhr.setRequestHeader(header, token)
             },
             success: settings.success,
             error: settings.error
 
         })
-    };
+    }
 
+    /*
+        Global function that sets the click interval for the log-tab after the user wants to activate it again.
+     */
     var setIntervalForLogTab = function() {
         clickInterval = setInterval(function () {
             Main.ajax({
                 url: Logs.url(),
                 type: 'GET',
-                dataType: 'json',
-                success: Logs.success,
-                error: error
+                success: Logs.refresh
             });
         }, $('#settings-update-interval').val() * 1000);
     }
@@ -85,13 +90,16 @@ var Main = (function($) {
         });
     }
 
+    /*
+        Global error function that shows the Ajax callback and request url.
+     */
     var error = function(xhr, status, error)    {
         console.error("[Error][" + xhr.url + "] in Ajax with the following callback [status: " + xhr.status +  " readyState: " + xhr.readyState + " responseText: " + xhr.responseText + "]")
     }
 
     var refresh = function(response) {
-        updateSubscribers(response.subscribers)
         console.log("[Debug][Main]" + JSON.stringify(response))
+        updateSubscribers(response.subscribers)
     }
 
     return {
@@ -99,6 +107,7 @@ var Main = (function($) {
         error: error,
         init: function() {
             setupAjax()
+
             $(".nav-tabs").on("click", "a", function(e){
                 clearInterval(clickInterval)
                 var clickedElement = $(this).attr("href").substring(1)
@@ -106,9 +115,7 @@ var Main = (function($) {
 
                 var ajaxSettings = {
                     url: clickedElement,
-                    type: 'GET',
-                    dataType: 'json',
-                    error: error
+                    type: 'GET'
                 };
 
                 switch (clickedElement) {
@@ -123,6 +130,7 @@ var Main = (function($) {
                         ajaxSettings.success = Stats.refresh
                         break;
                     case "log":
+                        ajaxSettings.url = Logs.url()
                         ajaxSettings.success = Logs.refresh
                         break;
                     case "config":
@@ -144,9 +152,7 @@ var Main = (function($) {
                     ajax({
                         url: 'main',
                         type: 'GET',
-                        dataType: 'json',
-                        success: refresh,
-                        error: error
+                        success: refresh
                     })}, 2000);
             }
         },

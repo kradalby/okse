@@ -56,7 +56,6 @@ var Logs = (function($) {
             Main.ajax({
                 url: 'log/levels',
                 type: 'GET',
-                dataType: 'json',
                 success: function(data) {
                     console.log("[Debug][Logs] Adding log level buttons")
                     var buttons = ""
@@ -74,11 +73,14 @@ var Logs = (function($) {
                             $('#button-' + level).addClass('active').siblings().removeClass('active');
                             logLevel = level
                             updateUrl()
-                            Main.ajax(Logs.url(), Logs.error, Logs.refresh, "GET")
+                            Main.ajax({
+                                url: Logs.url(),
+                                type: 'GET',
+                                success: Logs.refresh
+                            });
                         })
                     })
-                },
-                error: Main.error
+                }
             });
 
             /*
@@ -89,7 +91,6 @@ var Logs = (function($) {
             Main.ajax({
                 url: 'log/files',
                 type: 'GET',
-                dataType: 'json',
                 success: function(data) {
                     console.log("[Debug][Logs] Adding log files buttons")
                     var files = ""
@@ -107,11 +108,14 @@ var Logs = (function($) {
                             $('#button-logID-' + i).addClass('active').siblings().removeClass('active');
                             logID = i
                             updateUrl()
-                            Main.ajax(Logs.url(), Logs.error, Logs.refresh, "GET")
+                            Main.ajax({
+                                url: Logs.url(),
+                                type: 'GET',
+                                success: Logs.refresh
+                            });
                         })
                     })
-                },
-                error: Main.error
+                }
             });
 
             $("#log-length").keyup(function(){
@@ -120,8 +124,7 @@ var Logs = (function($) {
                 Main.ajax({
                     url: Logs.url(),
                     type: 'GET',
-                    success: Logs.refresh,
-                    error: Main.error
+                    success: Logs.refresh
                 });
             });
 

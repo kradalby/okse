@@ -92,21 +92,18 @@ var Topics = (function($) {
                 $(e.target).closest('tr').addClass('deleted')
                 $(e.target).addClass("disabled")
 
-                $.ajax({
+                Main.ajax({
+                    url: 'topics/delete/' + topicID,
                     type: 'DELETE',
-                    url: '/api/topics/delete/' + topicID,
-                    dataType: 'json',
                     success: function(topic) {
-                        if (topic.topicID == topicID) {
-                            console.log("[Debug][Topics] Callback from server; topic and subscribers deleted")
-                            $(e.target).closest('tr').remove()
-                        }
+                        console.log("[Debug][Topics] Callback from server; topic and subscribers deleted")
+                        //$(e.target).closest('tr').remove()
                     },
                     error: function(xhr, status, error) {
                         console.log("[Debug][Topics] Unable to remove topic with id: " + e.target.id)
                         $(e.target).closest('tr').removeClass('deleted')
                         $(e.target).removeClass("disabled")
-                        error(xhr, status, error)
+                        Main.error(xhr, status, error)
                     }
                 });
             }
@@ -121,21 +118,17 @@ var Topics = (function($) {
                 $(e.target).closest("tr").addClass("deleted")
                 $(e.target).addClass("disabled")
 
-                $.ajax({
+                Main.ajax({
+                    url: 'topics/delete/subscriber/' + subscriberID,
                     type: 'DELETE',
-                    url: '/api/topics/delete/subscriber/' + subscriberID,
-                    dataType: 'json',
                     success: function(subscriber) {
-                        if (subscriber.subscriberID == subscriberID) {
-                            console.log("[Debug][Topics] Callback from server; subscriber deleted")
-                            $(e.target).closest("tr").remove()
-                        }
+                        console.log("[Debug][Topics] Callback from server; subscriber deleted")
                     },
                     error: function(xhr, status, error) {
                         console.log("[Debug][Topics] Unable to remove subscriber with id: " + e.target.id)
                         $(e.target).closest("tr").removeClass("deleted")
                         $(e.target).removeClass("disabled")
-                        error(xhr, status, error)
+                        Main.error(xhr, status, error)
                     }
                 });
             }
@@ -145,10 +138,9 @@ var Topics = (function($) {
             e.preventDefault()
 
             console.log("[Debug][Topics] Showing subscribers modal for topic with id: " + $(this).data('id'))
-            $.ajax({
+            Main.ajax({
+                url: 'topics/get/' + $(this).data('id') + '/subscriber/all',
                 type: 'GET',
-                url: '/api/topics/get/' + $(this).data('id') + '/subscriber/all',
-                dataType: 'json',
                 success: function(data) {
                     console.log("[Debug][Topics] Callback from server; showing subscribers modal")
                     if (!(data.length == 0)) {
@@ -158,20 +150,14 @@ var Topics = (function($) {
                         $('#subscribers-table').html('<tr class="danger"><td colspan="4"><h4 class="text-center">No subscribers returned from SubscriptionService</h4></td></tr>')
                     }
                     $('#subscribers-modal').modal('show')
-                },
-                error: error
+                }
             });
 
             return false;
         });
     }
 
-    var error = function(xhr, status, error) {
-        console.error("[Error][Topics] in Ajax with the following callback [status: " + xhr.status +  " readyState: " + xhr.readyState + " responseText: " + xhr.responseText + "]")
-    }
-
     return {
-        error: error,
         refresh: function(response) {
             unBindButtons();
 
