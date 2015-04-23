@@ -167,6 +167,7 @@ var Main = (function($) {
                         type: 'GET',
                         success: refresh
                     })}, 2000);
+                Logs.init()
             }
         }
     }
@@ -176,7 +177,6 @@ var Main = (function($) {
 $(document).ready(function(){
     Main.init()
     Topics.init()
-    Logs.init()
     Config.init()
 });
 
