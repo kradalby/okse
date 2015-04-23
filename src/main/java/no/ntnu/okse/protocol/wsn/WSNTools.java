@@ -87,8 +87,6 @@ public class WSNTools {
             notify = WsnUtilities.createNotify(msg, subscriptionReference);
         }
 
-        System.out.println(notify.toString());
-
         return notify;
     }
 }
