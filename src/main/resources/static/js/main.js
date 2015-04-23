@@ -100,7 +100,6 @@ var Main = (function($) {
     }
 
     var refresh = function(response) {
-        console.log("[Debug][Main]" + JSON.stringify(response))
         updateSubscribers(response.subscribers)
     }
 
