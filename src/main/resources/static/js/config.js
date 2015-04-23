@@ -36,9 +36,6 @@ var Config = (function($) {
     }
 
     return {
-        error: function(xhr, status, error) {
-            console.error("[Error][Config] in Ajax with the following callback [status: " + xhr.status +  " readyState: " + xhr.readyState + " responseText: " + xhr.responseText + "]")
-        },
         refresh: function(response) {
             console.log("[Debug][Config]" + JSON.stringify(response))
         },

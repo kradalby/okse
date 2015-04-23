@@ -24,7 +24,13 @@
 
 package no.ntnu.okse.core.topic;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import org.apache.log4j.Logger;
+import org.springframework.security.crypto.codec.Hex;
+
 import javax.validation.constraints.NotNull;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.HashSet;
 import java.util.Iterator;
 
@@ -33,35 +39,65 @@ import java.util.Iterator;
  * <p>
  * okse is licenced under the MIT licence.
  */
+@JsonIgnoreProperties({"parent", "children" })
 public class Topic {
 
     private String name;
+    private final String topicID;
     private String type;
     private Topic parent;
     private HashSet<Topic> children;
+    private static Logger log;
 
     public Topic() {
-        init(null, null);
-    }
-
-    public Topic(String name, String type) {
-        init(name, type);
-    }
-
-    /**
-     * Private initialization method.
-     * @param name Either the name of the topic or null if no name to be set on init.
-     * @param type Either the type of the topic or null of no type to be set on init.
-     */
-    private void init(String name, String type) {
         if (name == null) this.name = "UNNAMED";
         else this.name = name;
         if (type == null) this.type = "UNKNOWN";
         else this.type = type;
 
+        topicID = generateTopicID();
+
+        parent = null;
+        children = new HashSet<>();    }
+
+    public Topic(String name, String type) {
+        log = Logger.getLogger(Topic.class.getName());
+        if (name == null) this.name = "UNNAMED";
+        else this.name = name;
+        if (type == null) this.type = "UNKNOWN";
+        else this.type = type;
+
+        topicID = generateTopicID();
+
         parent = null;
         children = new HashSet<>();
     }
+
+    /**
+     * Private method that generates an MD5 topic ID
+     *
+     * @return A string containing the generated topicID
+     */
+    private String generateTopicID() {
+        try {
+            MessageDigest m = MessageDigest.getInstance("MD5");
+            m.update(Long.toString(System.nanoTime()).getBytes());
+            byte[] hash = m.digest();
+            String topicID = new String(Hex.encode(hash));
+
+            return topicID;
+        } catch (NoSuchAlgorithmException e) {
+            log.error("Could not generate a topic ID (MD5 algorithm not found)");
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns the id of this topic
+     * @return A string containing the id of this topic node
+     */
+    public String getTopicID() { return topicID; }
 
     /**
      * Returns the name of this topic.
@@ -72,19 +108,17 @@ public class Topic {
     }
 
     /**
+     * Sets the name of this topic
+     * @param name A string representing the name of this topic
+     */
+    public void setName(String name) { this.name = name; }
+
+    /**
      * Returns the name of this topic in ignorecase (lowercase) mode.
      * @return A lowercase string representation of the name of this topic.
      */
     public String getNameIgnoreCase() {
         return name.toLowerCase();
-    }
-
-    /**
-     * Sets a new name of this topic.
-     * @param name A string containing the new name of the topic node.
-     */
-    public void setName(String name) {
-        this.name = name;
     }
 
     /**
@@ -246,4 +280,5 @@ public class Topic {
     public String toString() {
         return "Topic{" + this.getFullTopicString() + "}";
     }
+
 }
