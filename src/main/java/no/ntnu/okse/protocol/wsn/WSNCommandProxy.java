@@ -112,6 +112,22 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         this.registrationManager = pubManager;
     }
 
+    /**
+     * Returns the WSNSubscriptionManager associated with this broker proxy
+     * @return The WSNSubscriptionManager instance
+     */
+    public WSNSubscriptionManager getProxySubscriptionManager() {
+        return this._subscriptionManager;
+    }
+
+    /**
+     * Returns the WSNRegistrationManager associated with this broker proxy
+     * @return The WSNRegistrationManager instance
+     */
+    public WSNRegistrationManager getProxyRegistrationManager() {
+        return this._registrationManager;
+    }
+
     @Override
     @WebMethod(exclude = true)
     public boolean keyExists(String s) {
@@ -658,13 +674,13 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
                 pubRef = pubHandle.endpointTerminationTuple.endpoint;
             }
 
-            // Generate the NotificationHolderType
-            NotificationMessageHolderType holderType = WSNTools.generateNotificationMessageHolderType(
-                    currentMessage, null, pubRef, askedFor.getDialect()
+            // Generate the NotificationMessage
+            Notify notify = WSNTools.generateNotificationMessage(
+                    currentMessage, null, pubRef, getCurrentMessageRequest.getTopic().getDialect()
             );
 
             // Add the HolderType to the response
-            response.getAny().add(holderType.getMessage());
+            response.getAny().add(notify.getNotificationMessage().get(0));
 
             // Return the response
             return response;
