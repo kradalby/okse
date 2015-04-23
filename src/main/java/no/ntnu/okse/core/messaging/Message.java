@@ -29,6 +29,7 @@ import no.ntnu.okse.core.topic.Topic;
 import org.apache.log4j.Logger;
 import org.springframework.security.crypto.codec.Hex;
 
+import javax.xml.bind.annotation.XmlElement;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;

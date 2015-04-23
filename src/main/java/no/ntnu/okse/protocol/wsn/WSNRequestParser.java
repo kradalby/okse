@@ -96,16 +96,16 @@ public class WSNRequestParser implements Hub {
 
         // There is content that should be dealt with
         else {
-            log.info("Forwarding message with content...");
+            log.debug("Forwarding message with content...");
 
             try {
 
                 XMLParser.parse(message);
-                log.info("Successfully parsed message.");
+                log.debug("Successfully parsed message.");
 
                 try {
 
-                    log.info("Attempting to cast to JAXBElement");
+                    log.debug("Attempting to cast to JAXBElement");
                     JAXBElement msg = (JAXBElement) message.getMessage();
                     Class messageClass = msg.getDeclaredType();
 
