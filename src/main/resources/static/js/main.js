@@ -107,6 +107,17 @@ var Main = (function($) {
     return {
         ajax: ajax,
         error: error,
+        setIntervalForLogTab: setIntervalForLogTab,
+        clearIntervalForTab: function() {
+            clearInterval(clickInterval)
+        },
+        displayMessage: function(message) {
+            $('#messages').append(
+                '<div class="alert alert-danger">' +
+                    '<a class="close" data-dismiss="alert">&times;</a>' +
+                    '<strong>Error: </strong>' + message +
+                '</div>');
+        },
         init: function() {
             setupAjax()
 
@@ -157,18 +168,15 @@ var Main = (function($) {
                         success: refresh
                     })}, 2000);
             }
-        },
-        clearIntervalForTab: function() {
-            clearInterval(clickInterval)
-        },
-        setIntervalForLogTab: setIntervalForLogTab
+        }
     }
 
 })(jQuery);
 
 $(document).ready(function(){
     Main.init()
-    Config.init()
+    Topics.init()
     Logs.init()
+    Config.init()
 });
 

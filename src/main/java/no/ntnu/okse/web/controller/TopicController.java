@@ -70,10 +70,13 @@ public class TopicController {
     }
 
     @RequestMapping(method = RequestMethod.DELETE, value = DELETE_ALL_TOPICS)
-    public void deleteAllTopics() {
+    public @ResponseBody String deleteAllTopics() {
         log.info("Deleting all topics");
         TopicService ts = TopicService.getInstance();
-        // TODO: Implement this
+        HashSet<Topic> allRootTopics = ts.getAllRootTopics();
+        allRootTopics.forEach(t -> ts.deleteTopic(t.getFullTopicString()));
+
+        return "{ \"deleted\" :true }";
     }
 
     @RequestMapping(method = RequestMethod.DELETE, value = DELETE_SINGLE_TOPIC)

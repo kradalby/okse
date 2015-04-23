@@ -97,12 +97,12 @@ var Topics = (function($) {
                     type: 'DELETE',
                     success: function(topic) {
                         console.log("[Debug][Topics] Callback from server; topic and subscribers deleted")
-                        //$(e.target).closest('tr').remove()
                     },
                     error: function(xhr, status, error) {
                         console.log("[Debug][Topics] Unable to remove topic with id: " + e.target.id)
                         $(e.target).closest('tr').removeClass('deleted')
                         $(e.target).removeClass("disabled")
+                        Main.displayMessage('Unable to remove topic!')
                         Main.error(xhr, status, error)
                     }
                 });
@@ -150,6 +150,10 @@ var Topics = (function($) {
                         $('#subscribers-table').html('<tr class="danger"><td colspan="4"><h4 class="text-center">No subscribers returned from SubscriptionService</h4></td></tr>')
                     }
                     $('#subscribers-modal').modal('show')
+                },
+                error: function(xhr, status, error) {
+                    Main.displayMessage('Unable to show subscribers!')
+                    Main.error(xhr, status, error)
                 }
             });
 
@@ -158,8 +162,30 @@ var Topics = (function($) {
     }
 
     return {
+        init: function() {
+            $('#delete-all-topics').on('click', function() {
+                Main.ajax({
+                    url: 'topics/delete/all',
+                    type: 'DELETE',
+                    success: function(data) {
+                        console.log("[Debug][Topics] Callback from server; deleted all topics");
+                        if (data.deleted == true) {
+                            $('#topics-table').addClass('deleted')
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        Main.displayMessage('Unable to remove all topics!')
+                        Main.error(xhr, status, error)
+                    }
+                });
+            });
+        },
         refresh: function(response) {
             unBindButtons();
+
+            if ($('#topics-table').hasClass('deleted')) {
+                $('#topics-table').removeClass('deleted');
+            }
 
             if (!(response.length == 0)) {
                 var table = createTableForAllTopics(response)

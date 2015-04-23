@@ -53,7 +53,7 @@
         Fake header, nothing to see in this header! The real header is in fragments/header.html
     </nav>
     <div class="container">
-        <div class="row">
+        <div class="row" id="messages">
             <div th:if="${param.error}" class="alert alert-danger" role="alert">
                 Invalid username or password!
             </div>
