@@ -9,7 +9,7 @@ DEBUG = False
 INTERVAL = 1
 RUNS = 1
 SOAP_HEADER = "application/soap+xml;charset=utf-8"
-MODE = {
+MODES = {
     "full": "All available",
     "notify": "Notification",
     "subscribe": "Subscription",
