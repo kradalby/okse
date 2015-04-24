@@ -25,12 +25,12 @@
 package no.ntnu.okse.protocol.wsn;
 
 import no.ntnu.okse.core.messaging.Message;
-import no.ntnu.okse.core.subscription.Publisher;
-import org.ntnunotif.wsnu.services.implementations.notificationbroker.AbstractNotificationBroker;
+import org.ntnunotif.wsnu.services.general.WsnUtilities;
 import org.oasis_open.docs.wsn.b_2.*;
 import org.oasis_open.docs.wsn.t_1.*;
 
-import javax.xml.ws.wsaddressing.W3CEndpointReferenceBuilder;
+import javax.xml.bind.JAXBElement;
+import javax.xml.namespace.QName;
 
 /**
  * Created by Aleksander Skraastad (myth) on 4/21/15.
@@ -56,46 +56,37 @@ public class WSNTools {
      * @param dialect The dialect used for this message
      * @return A completely built NotificationMessageHolderType used in WS-Nu for storing notifications
      */
-    public static NotificationMessageHolderType generateNotificationMessageHolderType(
-        Message message,
-        String subscriptionReference,
-        String publisherReference,
-        String dialect
+    public static Notify generateNotificationMessage(
+            Message message,
+            String subscriptionReference,
+            String publisherReference,
+            String dialect
     ) {
-        // Create the HolderType
-        NotificationMessageHolderType holderType = b2_factory.createNotificationMessageHolderType();
-        // Create the Message object
-        NotificationMessageHolderType.Message innerMessage = b2_factory.createNotificationMessageHolderTypeMessage();
-        // Create the TopicExpressionType
+
         TopicExpressionType topicType = b2_factory.createTopicExpressionType();
-        // Set the Dialect on the TopicExpressionType
-        topicType.setDialect(dialect);
-        // Add the actual topic to the TopicExpressionType
-        topicType.getContent().add(message.getTopic().getFullTopicString());
-        // Set the Topic on the HolderType
-        holderType.setTopic(topicType);
+        if (dialect != null) {
+            // Set the Dialect on the TopicExpressionType
+            topicType.setDialect(dialect);
+            // Add the actual topic to the TopicExpressionType
+            topicType.getContent().add(message.getTopic().getFullTopicString());
+        }
 
-        // Build the endpointReferences
-        W3CEndpointReferenceBuilder builder = new W3CEndpointReferenceBuilder();
-        // Build SubscriptionReference
-        builder.address(subscriptionReference);
-        holderType.setSubscriptionReference(builder.build());
-        // Build ProducerReference
-        builder.address(publisherReference);
-        holderType.setProducerReference(builder.build());
+        Notify notify;
 
-        // Set the actual message content
-        innerMessage.setAny(message.getMessage());
+        @SuppressWarnings("unchecked")
+        JAXBElement msg = new JAXBElement(new QName("npex:NotifyContent"), String.class, message.getMessage());
 
-        // Connect the inner Message to the HolderType
-        holderType.setMessage(innerMessage);
+        // Figure out what createNofity method to call
+        if (publisherReference != null && dialect != null) {
+            notify = WsnUtilities.createNotify(msg, subscriptionReference, publisherReference, topicType);
+        } else if (publisherReference != null) {
+            notify = WsnUtilities.createNotify(msg, subscriptionReference, publisherReference);
+        } else if (dialect != null) {
+            notify = WsnUtilities.createNotify(msg, subscriptionReference, topicType);
+        } else {
+            notify = WsnUtilities.createNotify(msg, subscriptionReference);
+        }
 
-        // Return the complete HolderType
-        return holderType;
-    }
-
-    public static AbstractNotificationBroker.PublisherHandle getPublisherHandleIfExists(Publisher p) {
-        // TODO Maek dis
-        return null;
+        return notify;
     }
 }

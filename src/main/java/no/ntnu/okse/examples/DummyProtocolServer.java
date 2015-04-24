@@ -25,7 +25,11 @@
 package no.ntnu.okse.examples;
 
 import no.ntnu.okse.core.messaging.Message;
+import no.ntnu.okse.core.messaging.MessageService;
+import no.ntnu.okse.core.subscription.Subscriber;
 import no.ntnu.okse.core.subscription.SubscriptionService;
+import no.ntnu.okse.core.topic.Topic;
+import no.ntnu.okse.core.topic.TopicService;
 import no.ntnu.okse.protocol.AbstractProtocolServer;
 import org.apache.log4j.Logger;
 
@@ -116,6 +120,9 @@ public class DummyProtocolServer extends AbstractProtocolServer {
 
         while (_running) {
             try {
+                // Add a topic
+                TopicService.getInstance().addTopic("test");
+
                 // Await a connection
                 Socket connection = serverSocket.accept();
                 log.info("New connection: " + connection.getRemoteSocketAddress().toString());
@@ -130,6 +137,13 @@ public class DummyProtocolServer extends AbstractProtocolServer {
                 while ((command = reader.readLine()) != null) {
                     // Log the recieved command
                     log.info("Command recieved: " + command);
+
+                    Topic t = TopicService.getInstance().getTopic("test");
+
+                    // Fire a Message to other subscribers on the "test" topic
+                    Message m = new Message("Here was some data", t, null);
+                    m.setOriginProtocol(protocolServerType);
+                    MessageService.getInstance().distributeMessage(m);
 
                     // Update stats
                     totalMessages++;
@@ -172,6 +186,8 @@ public class DummyProtocolServer extends AbstractProtocolServer {
      */
     @Override
     public void sendMessage(Message message) {
-        log.info("[FAKE] Sending message: " + message);
+        if (!message.getOriginProtocol().equals(protocolServerType)) {
+            log.info("[FAKE] Sending message: " + message);
+        }
     }
 }

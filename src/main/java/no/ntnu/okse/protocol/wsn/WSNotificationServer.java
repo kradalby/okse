@@ -53,9 +53,12 @@ import org.eclipse.jetty.xml.XmlConfiguration;
 import org.ntnunotif.wsnu.base.internal.ServiceConnection;
 import org.ntnunotif.wsnu.base.util.InternalMessage;
 import org.ntnunotif.wsnu.base.util.RequestInformation;
+import org.ntnunotif.wsnu.services.general.WsnUtilities;
 import org.ntnunotif.wsnu.services.implementations.notificationbroker.NotificationBrokerImpl;
 import org.ntnunotif.wsnu.services.implementations.publisherregistrationmanager.SimplePublisherRegistrationManager;
 import org.ntnunotif.wsnu.services.implementations.subscriptionmanager.SimpleSubscriptionManager;
+import org.oasis_open.docs.wsn.b_2.NotificationMessageHolderType;
+import org.oasis_open.docs.wsn.b_2.Notify;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -79,6 +82,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
 
     private Server _server;
     private WSNRequestParser _requestParser;
+    private WSNCommandProxy _commandProxy;
     private final ArrayList<Connector> _connectors = new ArrayList();
     private HttpClient _client;
     private HttpHandler _handler;
@@ -212,6 +216,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
 
                 /* OKSE custom WS-Nu web services */
                 WSNCommandProxy broker = new WSNCommandProxy();
+                _commandProxy = broker;
                 WSNSubscriptionManager subscriptionManager = new WSNSubscriptionManager();
                 WSNRegistrationManager registrationManager = new WSNRegistrationManager();
                 SubscriptionService.getInstance().addSubscriptionChangeListener(subscriptionManager);
@@ -299,7 +304,23 @@ public class WSNotificationServer extends AbstractProtocolServer {
      */
     @Override
     public void sendMessage(Message message) {
-        log.info("Recieved message for distribution");
+        log.debug("WSNServer recieved message for distribution");
+        if (!message.getOriginProtocol().equals(protocolServerType)) {
+            log.debug("The message originated from other protocol than WSNotification");
+
+            /* HERE BE FUCKING DRAGONS */
+
+            // Create wrapper provided the message, subscriptionref, publisherref and dialect
+            Notify notify = WSNTools.generateNotificationMessage(
+                    message,
+                    "http://herp.derp/snake",
+                    message.getAttribute(WSNSubscriptionManager.WSN_ENDPOINT_TOKEN),
+                    WSNTools._ConcreteTopicExpression
+            );
+
+            // Pass it on to the broker proxy for processing
+            _commandProxy.sendNotification(notify);
+        }
     }
 
     /**
@@ -395,7 +416,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
                 }
             }
 
-            log.info("Accepted message, trying to instantiate WSNu InternalMessage");
+            log.debug("Accepted message, trying to instantiate WSNu InternalMessage");
 
             // Get message content, if any
             InternalMessage outgoingMessage;
@@ -406,16 +427,16 @@ public class WSNotificationServer extends AbstractProtocolServer {
                 outgoingMessage = new InternalMessage(InternalMessage.STATUS_OK, null);
             }
 
-            log.info("WSNInternalMessage: " + outgoingMessage);
+            log.debug("WSNInternalMessage: " + outgoingMessage);
 
             outgoingMessage.getRequestInformation().setEndpointReference(request.getRemoteHost());
             outgoingMessage.getRequestInformation().setRequestURL(request.getRequestURI());
             outgoingMessage.getRequestInformation().setParameters(request.getParameterMap());
 
-            log.info("EndpointReference: " + outgoingMessage.getRequestInformation().getEndpointReference());
-            log.info("Request URI: " + outgoingMessage.getRequestInformation().getRequestURL());
+            log.debug("EndpointReference: " + outgoingMessage.getRequestInformation().getEndpointReference());
+            log.debug("Request URI: " + outgoingMessage.getRequestInformation().getRequestURL());
 
-            log.info("Forwarding message to requestParser...");
+            log.debug("Forwarding message to requestParser...");
 
             // Push the outgoingMessage to the request parser. Based on the status flags of the return message
             // we should know what has happened, and which response we should send.
@@ -565,7 +586,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
             if ((message.statusCode & InternalMessage.STATUS_HAS_MESSAGE) == 0) {
 
                 request.method(HttpMethod.GET);
-                log.info("Sending message without content to " + requestInformation.getEndpointReference());
+                log.debug("Sending message without content to " + requestInformation.getEndpointReference());
                 ContentResponse response = request.send();
                 totalRequests++;
 
