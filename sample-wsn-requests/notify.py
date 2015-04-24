@@ -5,9 +5,9 @@ import time
 import requests
 from random import shuffle
 
-DEBUG = False
+DEBUG = True
 INTERVAL = 1
-RUNS = 1
+RUNS = 10
 SOAP_HEADER = "application/soap+xml;charset=utf-8"
 MODES = {
     "full": "All available",
