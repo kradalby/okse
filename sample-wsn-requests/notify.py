@@ -6,9 +6,16 @@ import requests
 from random import shuffle
 
 DEBUG = False
-INTERVAL = 0.1
-RUNS = 50
+INTERVAL = 1
+RUNS = 1
 SOAP_HEADER = "application/soap+xml;charset=utf-8"
+MODE = {
+    "full": "All available",
+    "notify": "Notification",
+    "subscribe": "Subscription",
+    "register": "PublisherRegistration",
+    "getcurrent": "GetCurrentMessage",
+}
 
 RANDOM_WORDS = [
     "why",
@@ -37,14 +44,56 @@ NOTIFY = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 </s:Body>
 </s:Envelope>"""
 
+SUBSCRIBE = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns6:Envelope xmlns:ns2="http://www.w3.org/2005/08/addressing"
+xmlns:ns3="http://docs.oasis-open.org/wsn/b-2"
+xmlns:ns4="http://docs.oasis-open.org/wsn/t-1"
+xmlns:ns5="http://docs.oasis-open.org/wsrf/bf-2"
+xmlns:ns6="http://schemas.xmlsoap.org/soap/envelope/">
+<ns6:Header>
+<ns2:Action>http://docs.oasis-open.org/wsn/bw-2/NotificationProducer/SubscribeRequest</ns2:Action>
+</ns6:Header>
+<ns6:Body>
+<ns3:Subscribe>
+<ns3:ConsumerReference><ns2:Address>%s</ns2:Address></ns3:ConsumerReference>
+<ns3:Filter><ns3:TopicExpression Dialect="http://docs.oasis-open.org/wsn/t-1/TopicExpression/Concrete">%s</ns3:TopicExpression></ns3:Filter>
+</ns3:Subscribe>
+</ns6:Body>
+</ns6:Envelope>
+"""
+
+REGISTER = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<s:Envelope xmlns:wsa="http://www.w3.org/2005/08/addressing"
+xmlns:wsn-b="http://docs.oasis-open.org/wsn/b-2"
+xmlns:wsn-br="http://docs.oasis-open.org/wsn/br-2"
+xmlns:wsn-bw="http://docs.oasis-open.org/wsn/bw-2"
+xmlns:wsn-brw="http://docs.oasis-open.org/wsn/brw-2"
+xmlns:wsrf-bf="http://docs.oasis-open.org/wsrf/bf-2"
+xmlns:wsrf-bfw="http://docs.oasis-open.org/wsrf/bfw-2"
+xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+<s:Header><wsa:Action>http://docs.oasis-open.org/wsn/brw-2/RegisterPublisher/RegisterPublisherRequest</wsa:Action>
+</s:Header>
+<s:Body>
+<wsn-br:RegisterPublisher><wsn-br:PublisherReference><wsa:Address>%s</wsa:Address></wsn-br:PublisherReference>
+<wsn-br:Topic Dialect="http://docs.oasis-open.org/wsn/t-1/TopicExpression/Concrete">%s</wsn-br:Topic>
+<wsn-br:Demand>false</wsn-br:Demand>
+<wsn-br:InitialTerminationTime>2016-01-01T00:00:00.00000Z</wsn-br:InitialTerminationTime>
+</wsn-br:RegisterPublisher>
+</s:Body>
+</s:Envelope>
+"""
+
 class WSNRequest(object):
     """
     The Notify class extracts info from command line during startup
     """
 
+    MODE = None
     HOST = None
     PORT = None
     TOPIC = None
+
+    ### BEGIN Initialization / Constructor
 
     def __init__(self):
         """
@@ -52,21 +101,61 @@ class WSNRequest(object):
         """
         self.arg_parse()
 
+    ### BEGIN Helper methods
+
     def arg_parse(self):
         """
         Extract needed startup info from commandline
         """
 
-        if len(sys.argv) != 4:
+        if len(sys.argv) != 5:
             print "Invalid arguments: python %s <host> <port> <topic>" % sys.argv[0]
             exit(1)
         try:
-            self.HOST = sys.argv[1]
-            self.PORT = int(sys.argv[2])
-            self.TOPIC = sys.argv[3]
+            self.MODE = sys.argv[1]
+            self.HOST = sys.argv[2]
+            self.PORT = int(sys.argv[3])
+            self.TOPIC = sys.argv[4]
         except ValueError:
             print "Invalid arguments: python %s <host> <port> <topic>" % sys.argv[0]
             exit(1)
+
+    def generate_url(self):
+        """
+        Constructs a W3C URL
+        """
+
+        return "http://%s:%d/" % (self.HOST, self.PORT)
+
+    def generate_headers(self):
+        """
+        Generate the dictionary of headers to be sent
+        """
+
+        return {"Content-Type": SOAP_HEADER}
+
+    def print_response(self, response):
+        """
+        Prints the headers and response body of a response
+        """
+
+        print "--- RESPONSE HEADERS ----------------------------------"
+        print response.headers
+        print "--- RESPONSE BODY -------------------------------------"
+        print response.text
+        print "--- RESPONSE END --------------------------------------"
+
+    def send_request(self, payload):
+        """
+        Sends the provided payload and prints response if DEBUG is True
+        """
+
+        response = requests.post(self.generate_url(), headers=self.generate_headers(), data=payload)
+
+        if (DEBUG):
+            self.print_response(response)
+
+    ### BEGIN public API
 
     def send_notify(self, message):
         """
@@ -75,30 +164,44 @@ class WSNRequest(object):
 
         # Generate the payload
         payload = NOTIFY % (self.TOPIC, message)
-        headers = {"Content-Type": 'text/xml; charset="UTF-8"'}
-        url = "http://%s:%d/" % (self.HOST, self.PORT)
 
-        if (DEBUG):
-            print payload
+        # Send the request
+        self.send_request(payload)
 
-        # Fire the post request
-        response = requests.post(url, headers=headers, data=payload)
+    def send_subscription(self):
+        """
+        Sends a subscription request
+        """
 
-        if (DEBUG):
-            print "--- RESPONSE HEADERS-------------------------------"
-            print response.headers
-            print "--- RESPONSE PAYLOAD ------------------------------"
-            print response.text
-            print "--- RESPONSE END ----------------------------------"
+        # Generate the payload
+        payload = SUBSCRIBE % ('http://localhost:8081', self.TOPIC)
+
+        # Send the request
+        self.send_request(payload)
+
+    def send_registration(self):
+        """
+        Sends a publisher registration request
+        """
+
+        # Generate the payload
+        payload = REGISTER % ('http://localhost:61000', self.TOPIC)
+
+        # Send the request
+        self.send_request(payload)
+
+    def send_get_current_message(self):
+        """
+        Sends a GetCurrentMessage request
+        """
+
 
 
 # Start the bruteforcer
 if __name__ == "__main__":
 
-    if len(sys.argv) != 4:
-        exit("Invalid arguments: python %s <host> <port> <topic>" % sys.argv[0])
-
     wsn_request = WSNRequest()
+    print "[i] Running in %s mode..." % MODES[sys.argv[1]]
 
     i = 0
 
