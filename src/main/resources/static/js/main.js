@@ -100,13 +100,23 @@ var Main = (function($) {
     }
 
     var refresh = function(response) {
-        console.log("[Debug][Main]" + JSON.stringify(response))
         updateSubscribers(response.subscribers)
     }
 
     return {
         ajax: ajax,
         error: error,
+        setIntervalForLogTab: setIntervalForLogTab,
+        clearIntervalForTab: function() {
+            clearInterval(clickInterval)
+        },
+        displayMessage: function(message) {
+            $('#messages').append(
+                '<div class="alert alert-danger">' +
+                    '<a class="close" data-dismiss="alert">&times;</a>' +
+                    '<strong>Error: </strong>' + message +
+                '</div>');
+        },
         init: function() {
             setupAjax()
 
@@ -156,19 +166,16 @@ var Main = (function($) {
                         type: 'GET',
                         success: refresh
                     })}, 2000);
+                Logs.init()
             }
-        },
-        clearIntervalForTab: function() {
-            clearInterval(clickInterval)
-        },
-        setIntervalForLogTab: setIntervalForLogTab
+        }
     }
 
 })(jQuery);
 
 $(document).ready(function(){
     Main.init()
+    Topics.init()
     Config.init()
-    Logs.init()
 });
 
