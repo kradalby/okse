@@ -29,6 +29,8 @@ import no.ntnu.okse.core.subscription.SubscriptionService;
 import no.ntnu.okse.core.topic.Topic;
 import no.ntnu.okse.core.topic.TopicService;
 import org.apache.log4j.Logger;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -53,10 +55,22 @@ public class TopicController {
 
 
     @RequestMapping(method = RequestMethod.GET, value = GET_ALL_TOPICS)
-    public HashSet<Topic> getAlltopics() {
+    public @ResponseBody HashMap<String, HashMap<String, Object>> getAlltopics() {
         TopicService ts = TopicService.getInstance();
+        SubscriptionService ss = SubscriptionService.getInstance();
         HashSet<Topic> allTopics = ts.getAllTopics();
-        return allTopics;
+
+        HashMap<String, HashMap<String, Object>> results = new HashMap<>();
+
+        allTopics.forEach(t -> {
+            HashMap<String, Object> topicInfo = new HashMap<>();
+            int subscribers = ss.getAllSubscribersForTopic(t.getFullTopicString()).size();
+            topicInfo.put("subscribers", subscribers);
+            topicInfo.put("topic", t);
+            results.put(t.getFullTopicString(), topicInfo);
+        });
+
+        return results;
     }
 
     @RequestMapping(method = RequestMethod.GET, value = GET_ALL_SUBSCRIBERS_FOR_TOPIC)
@@ -70,10 +84,13 @@ public class TopicController {
     }
 
     @RequestMapping(method = RequestMethod.DELETE, value = DELETE_ALL_TOPICS)
-    public void deleteAllTopics() {
+    public @ResponseBody String deleteAllTopics() {
         log.info("Deleting all topics");
         TopicService ts = TopicService.getInstance();
-        // TODO: Implement this
+        HashSet<Topic> allRootTopics = ts.getAllRootTopics();
+        allRootTopics.forEach(t -> ts.deleteTopic(t.getFullTopicString()));
+
+        return "{ \"deleted\" :true }";
     }
 
     @RequestMapping(method = RequestMethod.DELETE, value = DELETE_SINGLE_TOPIC)
