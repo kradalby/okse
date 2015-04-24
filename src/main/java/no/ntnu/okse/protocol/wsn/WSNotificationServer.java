@@ -24,10 +24,7 @@
 
 package no.ntnu.okse.protocol.wsn;
 
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashSet;
@@ -61,6 +58,7 @@ import org.ntnunotif.wsnu.services.implementations.subscriptionmanager.SimpleSub
 import org.oasis_open.docs.wsn.b_2.NotificationMessageHolderType;
 import org.oasis_open.docs.wsn.b_2.Notify;
 import org.oasis_open.docs.wsn.b_2.TopicExpressionType;
+import sun.corba.OutputStreamFactory;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
