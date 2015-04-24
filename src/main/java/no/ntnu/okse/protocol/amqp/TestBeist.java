@@ -24,6 +24,10 @@
 
 package no.ntnu.okse.protocol.amqp;
 
+import no.ntnu.okse.core.messaging.MessageService;
+import no.ntnu.okse.core.subscription.SubscriptionService;
+import no.ntnu.okse.core.topic.Topic;
+import no.ntnu.okse.core.topic.TopicService;
 import org.apache.log4j.Logger;
 import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.apache.qpid.proton.engine.*;
@@ -37,6 +41,7 @@ public class TestBeist extends BaseHandler {
 
 
     private static Logger log;
+    private static SubscriptionService ss;
 
     public TestBeist() {
         log = Logger.getLogger(TestBeist.class.getName());
@@ -45,38 +50,10 @@ public class TestBeist extends BaseHandler {
     @Override
     public void onLinkLocalOpen(Event event) {
         log.debug("test");
+        ss = SubscriptionService.getInstance();
     }
 
 
-    @Override
-    public void onDelivery(Event event) {
-        log.debug("I got a delivery");
-        Delivery dlv = event.getDelivery();
-        Link link = dlv.getLink();
-        if (link instanceof Sender) {
-            dlv.settle();
-        } else {
-            Receiver rcv = (Receiver) link;
-            if (!dlv.isPartial()) {
-                byte[] bytes = new byte[dlv.pending()];
-                rcv.recv(bytes, 0, bytes.length);
-                Message msg = Message.Factory.create();
-                msg.decode(bytes, 0, bytes.length);
-                System.out.println(msg.getAddress());
-                Address address = new Address(msg.getAddress());
-                System.out.println(address.getName());
-                System.out.println(msg.getBody().toString());
-                //String address = router.getAddress(rcv);
-//                MessageBytes messageBytes = new MessageBytes(bytes);
-//                messages.put(address, messageBytes);
-//                dlv.disposition(Accepted.getInstance());
-//                dlv.settle();
-//                if (!quiet) {
-//                    log.debug(String.format("Got message(%s): %s", address, messageBytes));
-//                }
-//                send(address);
-            }
-        }
-    }
+
 
 }
