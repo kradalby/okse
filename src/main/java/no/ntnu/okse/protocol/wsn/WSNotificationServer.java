@@ -312,9 +312,9 @@ public class WSNotificationServer extends AbstractProtocolServer {
 
             // Create wrapper provided the message, subscriptionref, publisherref and dialect
             Notify notify = WSNTools.generateNotificationMessage(
-                    message,
+                    message,    // OKSE Message object
+                    message.getAttribute(WSNSubscriptionManager.WSN_ENDPOINT_TOKEN), //
                     "http://herp.derp/snake",
-                    message.getAttribute(WSNSubscriptionManager.WSN_ENDPOINT_TOKEN),
                     WSNTools._ConcreteTopicExpression
             );
 

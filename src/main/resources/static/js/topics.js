@@ -35,14 +35,16 @@ var Topics = (function($) {
      */
     var createTableForAllTopics = function(topics) {
         var trHTML = ""
-        $.each(topics, function(i, topic) {
+        $.each(topics, function(i, topicInfo) {
+            var topic = topicInfo.topic
+            var subscribers = topicInfo.subscribers
             trHTML +=
                 '<tr id="' + topic.topicID +'">' +
                     '<td>' + topic.name + '</td>' +
                     '<td>' + topic.fullTopicString + '</td>' +
                     '<td>' + topic.root + '</td>' +
                     '<td>' + topic.leaf + '</td>' +
-                    '<td>' + '<a class="btn btn-xs btn-block btn-warning show-subscribers" data-id="' + topic.topicID + '">Subscribers</a></td>' +
+                    '<td>' + '<a class="btn btn-xs btn-block btn-warning show-subscribers" data-id="' + topic.topicID + '">Subscribers <span class="badge">' + subscribers +'</span></a></td>' +
                     '<td>' + '<a class="btn btn-xs btn-block btn-danger delete-topic">Delete</a></td>' +
                 '</tr>'
         });
@@ -97,12 +99,12 @@ var Topics = (function($) {
                     type: 'DELETE',
                     success: function(topic) {
                         console.log("[Debug][Topics] Callback from server; topic and subscribers deleted")
-                        //$(e.target).closest('tr').remove()
                     },
                     error: function(xhr, status, error) {
                         console.log("[Debug][Topics] Unable to remove topic with id: " + e.target.id)
                         $(e.target).closest('tr').removeClass('deleted')
                         $(e.target).removeClass("disabled")
+                        Main.displayMessage('Unable to remove topic!')
                         Main.error(xhr, status, error)
                     }
                 });
@@ -150,6 +152,10 @@ var Topics = (function($) {
                         $('#subscribers-table').html('<tr class="danger"><td colspan="4"><h4 class="text-center">No subscribers returned from SubscriptionService</h4></td></tr>')
                     }
                     $('#subscribers-modal').modal('show')
+                },
+                error: function(xhr, status, error) {
+                    Main.displayMessage('Unable to show subscribers!')
+                    Main.error(xhr, status, error)
                 }
             });
 
@@ -158,10 +164,41 @@ var Topics = (function($) {
     }
 
     return {
+        init: function() {
+            $('#delete-all-topics').on('click', function(e) {
+                e.preventDefault()
+
+                if (confirm("Are you sure you want to delete all the topics? This will also remove all subscriptions.")) {
+
+                    Main.ajax({
+                        url: 'topics/delete/all',
+                        type: 'DELETE',
+                        success: function(data) {
+                            console.log("[Debug][Topics] Callback from server; deleted all topics");
+                            if (data.deleted == true) {
+                                $('#topics-table').addClass('deleted')
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            Main.displayMessage('Unable to remove all topics!')
+                            Main.error(xhr, status, error)
+                        }
+                    });
+                }
+            });
+        },
         refresh: function(response) {
             unBindButtons();
 
-            if (!(response.length == 0)) {
+            // This is done becuse unlike when we get all subscribers, which returnes an array,
+            // this returns an object, and therefore we must count the keys
+            var count = Object.keys(response).length
+
+            if ($('#topics-table').hasClass('deleted')) {
+                $('#topics-table').removeClass('deleted');
+            }
+
+            if (!(count == 0)) {
                 var table = createTableForAllTopics(response)
                 $('#topics-table').html(table)
             } else {
