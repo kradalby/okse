@@ -31,6 +31,8 @@ import org.oasis_open.docs.wsn.t_1.*;
 
 import javax.xml.bind.JAXBElement;
 import javax.xml.namespace.QName;
+import javax.xml.ws.wsaddressing.W3CEndpointReference;
+import javax.xml.ws.wsaddressing.W3CEndpointReferenceBuilder;
 
 /**
  * Created by Aleksander Skraastad (myth) on 4/21/15.
@@ -63,29 +65,40 @@ public class WSNTools {
             String dialect
     ) {
 
-        TopicExpressionType topicType = b2_factory.createTopicExpressionType();
-        if (dialect != null) {
-            // Set the Dialect on the TopicExpressionType
-            topicType.setDialect(dialect);
-            // Add the actual topic to the TopicExpressionType
-            topicType.getContent().add(message.getTopic().getFullTopicString());
-        }
-
-        Notify notify;
+        // Build wrapper classes
+        Notify notify = b2_factory.createNotify();
+        NotificationMessageHolderType holderType = b2_factory.createNotificationMessageHolderType();
+        NotificationMessageHolderType.Message innerMessage = b2_factory.createNotificationMessageHolderTypeMessage();
 
         @SuppressWarnings("unchecked")
         JAXBElement msg = new JAXBElement(new QName("npex:NotifyContent"), String.class, message.getMessage());
 
         // Figure out what createNofity method to call
-        if (publisherReference != null && dialect != null) {
-            notify = WsnUtilities.createNotify(msg, subscriptionReference, publisherReference, topicType);
-        } else if (publisherReference != null) {
-            notify = WsnUtilities.createNotify(msg, subscriptionReference, publisherReference);
-        } else if (dialect != null) {
-            notify = WsnUtilities.createNotify(msg, subscriptionReference, topicType);
-        } else {
-            notify = WsnUtilities.createNotify(msg, subscriptionReference);
+        if (subscriptionReference != null) {
+            // Build a W3CEndpointReference from the subRef string
+            holderType.setSubscriptionReference(new W3CEndpointReferenceBuilder().address(subscriptionReference).build());
         }
+        if (publisherReference != null) {
+            // Build a W3CEndpointReference from the pubRef string
+            holderType.setProducerReference(new W3CEndpointReferenceBuilder().address(publisherReference).build());
+        }
+        if (dialect != null) {
+            // Create the topic expression with content and dialect if provided
+            TopicExpressionType topicType = b2_factory.createTopicExpressionType();
+            // Set the Dialect on the TopicExpressionType
+            topicType.setDialect(dialect);
+            // Add the actual topic to the TopicExpressionType
+            topicType.getContent().add(message.getTopic().getFullTopicString());
+            // Add the topicExpression to the messageWrapper
+            holderType.setTopic(topicType);
+        }
+
+        // Set the content of innerMessage
+        innerMessage.setAny(msg);
+        // Add the innerMessage to holderType
+        holderType.setMessage(innerMessage);
+        // Add the holderType to the notify wrapper
+        notify.getNotificationMessage().add(holderType);
 
         return notify;
     }

@@ -154,7 +154,7 @@ public class MessageService extends AbstractCoreService implements TopicChangeLi
                         });
                         // Set the message as processed, and store the completion time
                         LocalDateTime completedAt = m.setProcessed();
-                        log.info("Message successfully distributed: " + m + " (Finished at: " + completedAt);
+                        log.info("Message successfully distributed: " + m + " (Finished at: " + completedAt + ")");
                     });
 
                 } catch (InterruptedException e) {
