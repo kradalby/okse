@@ -83,6 +83,26 @@ xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
 </s:Envelope>
 """
 
+GET_CURRENT_MESSAGE = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<s:Envelope xmlns:wsa="http://www.w3.org/2005/08/addressing"
+xmlns:wsnt="http://docs.oasis-open.org/wsn/b-2"
+xmlns:wsn-br="http://docs.oasis-open.org/wsn/br-2"
+xmlns:wsn-bw="http://docs.oasis-open.org/wsn/bw-2"
+xmlns:wsn-brw="http://docs.oasis-open.org/wsn/brw-2"
+xmlns:wsrf-bf="http://docs.oasis-open.org/wsrf/bf-2"
+xmlns:wsrf-bfw="http://docs.oasis-open.org/wsrf/bfw-2"
+xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+<s:Header><wsa:Action>http://docs.oasis-open.org/wsn/bw-2/NotificationProducer/GetCurrentMessageRequest</wsa:Action>
+</s:Header>
+<s:Body>
+<wsnt:GetCurrentMessage>
+<wsnt:Topic Dialect="http://docs.oasis-open.org/wsn/t-1/TopicExpression/Concrete">%s</wsnt:Topic>
+</wsnt:GetCurrentMessage>
+</s:Body>
+</s:Envelope>
+"""
+
+
 class WSNRequest(object):
     """
     The Notify class extracts info from command line during startup
@@ -173,6 +193,8 @@ class WSNRequest(object):
         Sends a subscription request
         """
 
+        print "[i] Sending a %s request..." % MODES[sys.argv[1]]
+
         # Generate the payload
         payload = SUBSCRIBE % ('http://localhost:8081', self.TOPIC)
 
@@ -183,6 +205,8 @@ class WSNRequest(object):
         """
         Sends a publisher registration request
         """
+
+        print "[i] Sending a %s request..." % MODES[sys.argv[1]]
 
         # Generate the payload
         payload = REGISTER % ('http://localhost:61000', self.TOPIC)
@@ -195,27 +219,56 @@ class WSNRequest(object):
         Sends a GetCurrentMessage request
         """
 
+        print "[i] Sending a %s request..." % MODES[sys.argv[1]]
+
+        # Generate the payload
+        payload = GET_CURRENT_MESSAGE % (self.TOPIC)
+
+        # Send the request
+        self.send_request(payload)
 
 
 # Start the bruteforcer
 if __name__ == "__main__":
 
     wsn_request = WSNRequest()
-    print "[i] Running in %s mode..." % MODES[sys.argv[1]]
+    mode = sys.argv[1]
+    print "[i] Running in %s mode..." % MODES[mode]
 
     i = 0
 
-    while i < RUNS:
-        print "[%d] Sending Notify..." % (i + 1)
-        # Shuffle the random words
-        shuffle(RANDOM_WORDS)
-        # Create the message
-        message = " ".join(RANDOM_WORDS)
-        # Send the notify
-        wsn_request.send_notify(message)
-        # Increment the run counter
-        i += 1
-        # Sleep for INTERVAL
-        time.sleep(INTERVAL)
+    if mode == 'notify':
+        while i < RUNS:
+            print "[%d] Sending Notify..." % (i + 1)
+            # Shuffle the random words
+            shuffle(RANDOM_WORDS)
+            # Create the message
+            message = " ".join(RANDOM_WORDS)
+            # Send the notify
+            wsn_request.send_notify(message)
+            # Increment the run counter
+            i += 1
+            # Sleep for INTERVAL
+            time.sleep(INTERVAL)
+
+    elif mode == 'subscribe':
+        wsn_request.send_subscription()
+
+    elif mode == 'register':
+        wsn_request.send_registration()
+
+    elif mode == 'getcurrent':
+        wsn_request.send_get_current_message()
+
+    elif mode == 'all':
+        print "[i] Performing all requests in order..."
+
+        wsn_request.send_subscription()
+        time.sleep(2)
+        wsn_request.send_registration()
+        time.sleep(2)
+        wsn_request.send_notify("Test Message")
+        time.sleep(2)
+        wsn_request.send_get_current_message()
 
     print "[X] Complete."
