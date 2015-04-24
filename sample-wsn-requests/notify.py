@@ -6,8 +6,8 @@ import requests
 from random import shuffle
 
 DEBUG = False
-INTERVAL = 0.005
-RUNS = 1000
+INTERVAL = 0.1
+RUNS = 50
 SOAP_HEADER = "application/soap+xml;charset=utf-8"
 
 RANDOM_WORDS = [
