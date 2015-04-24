@@ -664,23 +664,11 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
             // Initialize the response object
             GetCurrentMessageResponse response = new GetCurrentMessageResponse();
 
-            // Initialize our publisherReference
-            String pubRef = null;
-
-            // Attempt to fetch an associated PublisherHandle
-            PublisherHandle pubHandle = _registrationManager.getPublisherHandle(currentMessage.getPublisher());
-            if (pubHandle != null) {
-                // Extract the endpoint
-                pubRef = pubHandle.endpointTerminationTuple.endpoint;
-            }
-
             // Generate the NotificationMessage
-            Notify notify = WSNTools.generateNotificationMessage(
-                    currentMessage, null, pubRef, getCurrentMessageRequest.getTopic().getDialect()
-            );
+            log.debug("Generated Notify wrapper");
 
-            // Add the HolderType to the response
-            response.getAny().add(notify.getNotificationMessage().get(0));
+            /* Add the HolderType to the response */
+            response.getAny().add(new JAXBElement(new QName("NotifyContent"), String.class, currentMessage.getMessage()));
 
             // Return the response
             return response;
