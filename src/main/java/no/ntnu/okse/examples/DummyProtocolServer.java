@@ -26,20 +26,20 @@ package no.ntnu.okse.examples;
 
 import no.ntnu.okse.core.messaging.Message;
 import no.ntnu.okse.core.messaging.MessageService;
-import no.ntnu.okse.core.subscription.Subscriber;
-import no.ntnu.okse.core.subscription.SubscriptionService;
 import no.ntnu.okse.core.topic.Topic;
 import no.ntnu.okse.core.topic.TopicService;
 import no.ntnu.okse.protocol.AbstractProtocolServer;
 import org.apache.log4j.Logger;
 
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
+import java.nio.channels.*;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
 /**
  * Created by Aleksander Skraastad (myth) on 4/19/15.
@@ -55,8 +55,9 @@ public class DummyProtocolServer extends AbstractProtocolServer {
     private static boolean _invoked;
 
     // Fields
-    private ServerSocket serverSocket;
-    private HashSet<Socket> connections;
+    private ServerSocketChannel serverChannel;
+    private HashSet<SocketChannel> clients;
+    private Selector selector;
 
     /**
      * Private constructor
@@ -84,11 +85,15 @@ public class DummyProtocolServer extends AbstractProtocolServer {
         log = Logger.getLogger(DummyProtocolServer.class.getName());
         protocolServerType = "DummyProtocol";
         _invoked = true;
-        connections = new HashSet<>();
+        clients = new HashSet<>();
         this.port = port;
         try {
-            this.serverSocket = new ServerSocket(this.port);
-            log.info("ServerSocket listening on port " + this.port);
+
+            // Create a multiplexer (Selector)
+            selector = Selector.open();
+            // Open a ServerSocketChanel
+            serverChannel = ServerSocketChannel.open();
+
         } catch (IOException e) {
             log.error("Failed to initialize DummyProtocolServer");
         }
@@ -102,6 +107,30 @@ public class DummyProtocolServer extends AbstractProtocolServer {
         if (!_running) {
             _running = true;
             log.info("Booting DummyProtocolServer...");
+
+            try {
+                // Bind the serverchannel localhost on 61001
+                serverChannel.socket().bind(new InetSocketAddress("0.0.0.0", this.port));
+                // Set to non-blocking
+                serverChannel.configureBlocking(false);
+                // Register the serverChannel to the selector
+                serverChannel.register(selector, SelectionKey.OP_ACCEPT);
+
+                log.debug(protocolServerType + " listening on " + serverChannel.socket().getInetAddress().getHostAddress() +
+                        ":" + serverChannel.socket().getLocalPort());
+
+            } catch (UnknownHostException e) {
+                log.error("Could not bind socket: " + e.getMessage());
+                totalErrors++;
+            } catch (ClosedChannelException e) {
+                log.error("Closed channel: " + e.getMessage());
+                totalErrors++;
+            } catch (IOException e) {
+                log.error("I/O exception: " + e.getMessage());
+                totalErrors++;
+            }
+
+            // Create and start the serverThread
             _serverThread = new Thread(() -> this.run());
             _serverThread.setName("DummyProtocolServer");
             _serverThread.start();
@@ -114,51 +143,101 @@ public class DummyProtocolServer extends AbstractProtocolServer {
      */
     @Override
     public void run() {
-        // Declare reader and writer
-        BufferedReader reader;
-        DataOutputStream writer;
-
+        // Main run loop
         while (_running) {
             try {
-                // Add a topic
-                TopicService.getInstance().addTopic("test");
+                // Start multiplexing, this will block until a channel is in a ready state
+                selector.select();
 
-                // Await a connection
-                Socket connection = serverSocket.accept();
-                log.info("New connection: " + connection.getRemoteSocketAddress().toString());
-                // Connect the reader to the socket connection's inputstream
-                reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                // Connect the writer to the socket connection's outputstream
-                writer = new DataOutputStream(connection.getOutputStream());
+                // Initialize the read and write buffers
+                ByteBuffer readBuffer, writeBuffer;
 
-                String command;
+                // Fetch the selected keys and make iterator
+                Set selectedKeys = selector.selectedKeys();
+                Iterator<SelectionKey> iterator = selectedKeys.iterator();
 
-                // While the connection is active, read a command
-                while ((command = reader.readLine()) != null) {
-                    // Log the recieved command
-                    log.info("Command recieved: " + command);
+                while (iterator.hasNext()) {
 
-                    Topic t = TopicService.getInstance().getTopic("test");
+                    // Fetch and store next key and remove from iterator
+                    SelectionKey key = iterator.next();
+                    iterator.remove();
 
-                    // Fire a Message to other subscribers on the "test" topic
-                    Message m = new Message("Here was some data", t, null);
-                    m.setOriginProtocol(protocolServerType);
-                    MessageService.getInstance().distributeMessage(m);
+                    // Check if it is a new connection from a client (Only serverSocketChannel will have this flag)
+                    if (key.isAcceptable()) {
+                        // Accept the connection and store the channel
+                        SocketChannel client = serverChannel.accept();
+                        clients.add(client);
+                        // Set the client to non-blocking mode
+                        client.configureBlocking(false);
+                        // Register the client in the selector
+                        client.register(selector, SelectionKey.OP_READ);
 
-                    // Update stats
-                    totalMessages++;
-                    totalRequests++;
+                        // Continue with next key
+                        continue;
+                    }
 
-                    // Return a response
-                    writer.write("OK\n".getBytes("UTF-8"));
-                    writer.flush();
+                    if (key.isReadable()) {
+                        // Fetch the client in question
+                        SocketChannel client = (SocketChannel) key.channel();
+                        // Allocate a buffer
+                        readBuffer = ByteBuffer.allocate(4096);
+
+                        // Read from the client
+                        int bytesRead = client.read(readBuffer);
+
+                        // Extract the message
+                        readBuffer.flip();
+                        // Create byte array to store read data
+                        byte[] rawData = new byte[bytesRead];
+                        // Fetch the read data from the buffer
+                        readBuffer.get(rawData, 0, bytesRead);
+                        // Create a string from the read data
+                        String command = new String(rawData).trim();
+                        // Clear the buffer
+                        readBuffer.clear();
+
+                        log.debug("Command recieved: " + command);
+                        totalRequests++;
+
+                        // Write a response
+                        byte[] response = new String("Executing: " + command + "\n").getBytes();
+                        writeBuffer = ByteBuffer.wrap(response);
+                        client.write(writeBuffer);
+
+                        // Parse and execute the command
+                        boolean valid = parseCommand(command);
+                        String result;
+                        if (valid) {
+                            result = "Command executed.\n";
+                        } else {
+                            result = "Invalid command.\n";
+                            totalBadRequests++;
+                        }
+
+                        // Send confirmation of execution
+                        writeBuffer = ByteBuffer.wrap(result.getBytes());
+                        client.write(writeBuffer);
+                        writeBuffer.clear();
+
+                        // If we recieved an exit, close socket and cancel the key
+                        if (command.equalsIgnoreCase("exit")) {
+                            client.socket().close();
+                            key.cancel();
+                        }
+
+                        break;
+                    }
                 }
 
             } catch (IOException e) {
                 totalErrors++;
-                log.error("I/O exception during accept(): " + e.getMessage());
+                log.error("I/O exception during select operation: " + e.getMessage());
+            } catch (Exception e) {
+                totalErrors++;
+                log.error("Unknown exception: " + e.getMessage());
             }
         }
+
     }
 
     /**
@@ -189,5 +268,42 @@ public class DummyProtocolServer extends AbstractProtocolServer {
         if (!message.getOriginProtocol().equals(protocolServerType)) {
             log.info("[FAKE] Sending message: " + message);
         }
+    }
+
+    /* Private helper methods */
+
+    /**
+     * Parse an incoming command from the raw string
+     * @param command The command string recieved from the client
+     */
+    private boolean parseCommand(String command) {
+        String[] args = command.split(" ");
+        try {
+            // message <topic> <message content>
+            if (args[0].equalsIgnoreCase("message")) {
+                // Attempt to fetch the topic
+                Topic t = TopicService.getInstance().getTopic(args[1]);
+                // If it exists build a message string and distribute it
+                if (t != null) {
+                    StringBuilder builder = new StringBuilder();
+                    for (int i = 2; i < args.length; i++) {
+                        builder.append(args[i] + " ");
+                    }
+                    String msg = builder.toString().trim();
+                    Message message = new Message(msg, t, null);
+                    message.setOriginProtocol(protocolServerType);
+                    MessageService.getInstance().distributeMessage(message);
+                    totalMessages++;
+
+                    return true;
+                }
+            } else if (args[0].equalsIgnoreCase("exit")) {
+                return true;
+            }
+        } catch (ArrayIndexOutOfBoundsException e) {
+            log.error("Recieved invalid command: " + command);
+        }
+
+        return false;
     }
 }
