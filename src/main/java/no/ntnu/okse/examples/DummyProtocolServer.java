@@ -172,6 +172,8 @@ public class DummyProtocolServer extends AbstractProtocolServer {
                         // Register the client in the selector
                         client.register(selector, SelectionKey.OP_READ);
 
+                        log.info("New client:" + client.socket().getInetAddress() + ":" + client.socket().getPort());
+
                         // Continue with next key
                         continue;
                     }
@@ -221,6 +223,8 @@ public class DummyProtocolServer extends AbstractProtocolServer {
 
                         // If we recieved an exit, close socket and cancel the key
                         if (command.equalsIgnoreCase("exit")) {
+                            clients.remove(client);
+                            log.info("Disconnected client:" + client.socket().getInetAddress() + ":" + client.socket().getPort());
                             client.socket().close();
                             key.cancel();
                         }

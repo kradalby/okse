@@ -51,6 +51,7 @@ import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.xml.XmlConfiguration;
 import org.ntnunotif.wsnu.base.internal.ServiceConnection;
+import org.ntnunotif.wsnu.base.net.NuNamespaceContextResolver;
 import org.ntnunotif.wsnu.base.util.InternalMessage;
 import org.ntnunotif.wsnu.base.util.RequestInformation;
 import org.ntnunotif.wsnu.services.general.WsnUtilities;
@@ -59,10 +60,13 @@ import org.ntnunotif.wsnu.services.implementations.publisherregistrationmanager.
 import org.ntnunotif.wsnu.services.implementations.subscriptionmanager.SimpleSubscriptionManager;
 import org.oasis_open.docs.wsn.b_2.NotificationMessageHolderType;
 import org.oasis_open.docs.wsn.b_2.Notify;
+import org.oasis_open.docs.wsn.b_2.TopicExpressionType;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.xml.XMLConstants;
+import javax.xml.namespace.QName;
 
 /**
  * Created by Aleksander Skraastad (myth) on 3/12/15.
@@ -308,18 +312,68 @@ public class WSNotificationServer extends AbstractProtocolServer {
         if (!message.getOriginProtocol().equals(protocolServerType)) {
             log.debug("The message originated from other protocol than WSNotification");
 
-            /* HERE BE FUCKING DRAGONS */
-
             // Create wrapper provided the message, subscriptionref, publisherref and dialect
             Notify notify = WSNTools.generateNotificationMessage(
                     message,    // OKSE Message object
-                    message.getAttribute(WSNSubscriptionManager.WSN_ENDPOINT_TOKEN), //
-                    "http://herp.derp/snake",
+                    message.getAttribute(WSNSubscriptionManager.WSN_ENDPOINT_TOKEN), // Returns publisherKey found
+                    null, // We do not yet know the recipient endpoints
                     WSNTools._ConcreteTopicExpression
             );
 
-            // Pass it on to the broker proxy for processing
-            _commandProxy.sendNotification(notify);
+            /*
+                Start to resolve recipients. The reason we cannot re-use the WSNCommandProxy's
+                sendNotification method is that it will inject the message to the MessageService for relay
+                thus creating duplicate messages.
+             */
+
+            NuNamespaceContextResolver namespaceContextResolver = new NuNamespaceContextResolver();
+
+            // bind namespaces to topics
+            for (NotificationMessageHolderType holderType : notify.getNotificationMessage()) {
+
+                TopicExpressionType topic = holderType.getTopic();
+
+                if (holderType.getTopic() != null) {
+                    NuNamespaceContextResolver.NuResolvedNamespaceContext context = namespaceContextResolver.resolveNamespaceContext(topic);
+
+                    if (context == null) {
+                        continue;
+                    }
+
+                    context.getAllPrefixes().forEach(prefix -> {
+                        // check if this is the default xmlns attribute
+                        if (!prefix.equals(XMLConstants.XMLNS_ATTRIBUTE)) {
+                            // add namespace context to the expression node
+                            topic.getOtherAttributes().put(new QName("xmlns:" + prefix), context.getNamespaceURI(prefix));
+                        }
+                    });
+                }
+            }
+
+            // Remember current message with context
+            Notify currentMessage = notify;
+            NuNamespaceContextResolver currentMessageNamespaceContextResolver = namespaceContextResolver;
+
+            // For all valid recipients
+            for (String recipient : _commandProxy.getAllRecipients()) {
+
+                // Filter do filter handling, if any
+                Notify toSend = _commandProxy.getRecipientFilteredNotify(recipient, notify, namespaceContextResolver);
+
+                // If any message was left to send, send it
+                if (toSend != null) {
+                    InternalMessage outMessage = new InternalMessage(
+                            InternalMessage.STATUS_OK |
+                                    InternalMessage.STATUS_HAS_MESSAGE |
+                                    InternalMessage.STATUS_ENDPOINTREF_IS_SET,
+                            toSend
+                    );
+                    // Update the requestinformation
+                    outMessage.getRequestInformation().setEndpointReference(_commandProxy.getEndpointReferenceOfRecipient(recipient));
+                    // Pass it along to the requestparser
+                    _requestParser.acceptLocalMessage(outMessage);
+                }
+            }
         }
     }
 
