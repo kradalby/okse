@@ -38,7 +38,7 @@ var Logs = (function($) {
     }
 
     var updateLogView = function(data) {
-        var HTML = '<pre>';
+        var HTML = '<pre class="log-view">';
         $.each(data.lines, function (i, line) {
            HTML += line + '\n'
         });
@@ -53,64 +53,106 @@ var Logs = (function($) {
             * Create buttons
             * Initialize buttons with filters
             * */
-            Main.ajax("log/levels", function(){
-                console.log("[Debug][Logs] Failed to load log levels")
-            }, function(data) {
-                console.log("[Debug][Logs] Adding log level buttons")
-                var buttons = ""
-                $.each(data, function(i, level) {
-                    buttons += '<a class="btn btn-default" role="button" id="button-' + level +'">' + level + '</a>'
-                })
-                $("#log-level").html(buttons)
-                $.each(data, function(i, level) {
-                    $("#button-" + level).on("click", function(){
-                        logLevel = level
-                        updateUrl()
-                        Main.ajax(Logs.url(), Logs.error, Logs.refresh, "GET")
+            Main.ajax({
+                url: 'log/levels',
+                type: 'GET',
+                success: function(data) {
+                    console.log("[Debug][Logs] Adding log level buttons")
+                    var buttons = ""
+                    $.each(data, function(i, level) {
+                        if (i == 0) {
+                            buttons += '<button type="button" class="btn btn-info active" id="button-' + level + '">' + level + '</button>'
+                        } else {
+                            buttons += '<button type="button" class="btn btn-info" id="button-' + level + '">' + level + '</button>'
+                        }
+                    });
+                    $("#log-level").html(buttons)
+                    $.each(data, function(i, level) {
+                        $("#button-" + level).on("click", function(e){
+                            e.preventDefault()
+                            $('#button-' + level).addClass('active').siblings().removeClass('active');
+                            logLevel = level
+                            updateUrl()
+                            Main.setIntervalForLogTab()
+                            /*
+                            Main.ajax({
+                                url: Logs.url(),
+                                type: 'GET',
+                                success: Logs.refresh
+
+                            });
+                            */
+                        })
                     })
-                })
-            }, "GET", "json")
+                }
+            });
 
             /*
              * Get log files from the backend.
              * Create buttons
              * Initialize buttons with filters
              * */
-            Main.ajax("log/files", function(){
-                console.log("[Debug][Logs] Failed to load log files")
-            }, function(data) {
-                console.log("[Debug][Logs] Adding log files buttons")
-                var files = ""
-                $.each(data, function(i) {
-                    files += '<a class="btn btn-default" role="button" id="button-logID-' + i +'">' + data[i] + '</a>'
-                })
-                $("#log-file").html(files)
-                $.each(data, function(i) {
-                    $("#button-logID-" + i).on("click", function(){
-                        logID = i
-                        updateUrl()
-                        Main.ajax(Logs.url(), Logs.error, Logs.refresh, "GET")
+            Main.ajax({
+                url: 'log/files',
+                type: 'GET',
+                success: function(data) {
+                    console.log("[Debug][Logs] Adding log files buttons")
+                    var files = ""
+                    $.each(data, function(i) {
+                        if (i == 0) {
+                            files += '<button type="button" class="btn btn-success active" id="button-logID-' + i + '">' + data[i] + '</button>'
+                        } else {
+                            files += '<button type="button" class="btn btn-success" id="button-logID-' + i + '">' + data[i] + '</button>'
+                        }
                     })
-                })
-            }, "GET", "json")
+                    $("#log-file").html(files)
+                    $.each(data, function(i) {
+                        $("#button-logID-" + i).on("click", function(e){
+                            e.preventDefault()
+                            $('#button-logID-' + i).addClass('active').siblings().removeClass('active');
+                            logID = i
+                            updateUrl()
+                            Main.setIntervalForLogTab()
+                            /*
+                            Main.ajax({
+                                url: Logs.url(),
+                                type: 'GET',
+                                success: Logs.refresh
+                            });
+                            */
+                        })
+                    })
+                }
+            });
+
             $("#log-length").keyup(function(){
                 logLength = $(this).val()
                 updateUrl()
-                Main.ajax(Logs.url(), Logs.error, Logs.refresh, "GET")
-            })
+                Main.setIntervalForLogTab()
+                /*
+                Main.ajax({
+                    url: Logs.url(),
+                    type: 'GET',
+                    success: Logs.refresh
+                });
+                */
+            });
 
             /*
              * Add a listener to clear interval
              * */
-            $("#button-refresh").on("click", function() {
-                if (!$(this).hasClass("disabled")) {
-                    $(this).addClass("disabled")
+            $("#button-refresh").on("click", function(e) {
+                e.preventDefault()
+                if (!$(this).hasClass("active")) {
+                    $(this).addClass("active")
+                    $(this).text("Stop refresh")
+                    Main.setIntervalForLogTab()
+                } else {
+                    $(this).removeClass("active");
+                    $(this).text("Start refresh")
                     Main.clearIntervalForTab()
                 }
             })
-        },
-        error: function(xhr, status, error) {
-            console.error("[Error][Logs] in Ajax with the following callback [status: " + xhr.status +  " readyState: " + xhr.readyState + " responseText: " + xhr.responseText + "]")
         },
         refresh: function(data) {
             $('#log-name').html(data.name)
@@ -121,4 +163,4 @@ var Logs = (function($) {
         }
     }
 
-})(jQuery)
+})(jQuery);

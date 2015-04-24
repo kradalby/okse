@@ -27,13 +27,10 @@ package no.ntnu.okse.core.topic;
 import no.ntnu.okse.core.AbstractCoreService;
 import no.ntnu.okse.core.event.TopicChangeEvent;
 import no.ntnu.okse.core.event.listeners.TopicChangeListener;
-import org.apache.log4j.Logger;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.stream.Collectors;
 
 /**
  * Created by Aleksander Skraastad (myth) on 4/11/15.
@@ -92,6 +89,16 @@ public class TopicService extends AbstractCoreService {
             _serviceThread.setName("TopicService");
             _serviceThread.start();
         }
+    }
+
+    /**
+     * This method must contain the operations needed for the subclass to register itself as a listener
+     * to the different objects it wants to listen to. This method will be called after all Core Services have
+     * been booted.
+     */
+    @Override
+    public void registerListenerSupport() {
+        // TODO: Register self as listener to stuff
     }
 
     /**
@@ -188,6 +195,27 @@ public class TopicService extends AbstractCoreService {
     public Topic getTopic(String rawTopicString) {
         if (allTopics.containsKey(rawTopicString)) return allTopics.get(rawTopicString);
         return null;
+    }
+
+    /**
+     * Attempts to fetch a topic based on the ID
+     * @param id The topic ID to use in the search
+     * @return A topic if found, null otherwhise.
+     */
+    public Topic getTopicByID(String id) {
+        List<Topic> result = new ArrayList<>();
+
+        allTopics.forEach((k, t) -> {
+            if (t.getTopicID().equals(id)) result.add(t);
+        });
+
+        if (result.size() > 1) {
+            log.warn("Found multiple topics with the same hash/ID.");
+            return null;
+        } else if (result.size() != 1) {
+            return null;
+        }
+        return result.get(0);
     }
 
     /**

@@ -29,6 +29,7 @@ import no.ntnu.okse.core.messaging.Message;
 import no.ntnu.okse.core.messaging.MessageService;
 import no.ntnu.okse.core.subscription.Publisher;
 import no.ntnu.okse.core.subscription.Subscriber;
+import no.ntnu.okse.core.topic.Topic;
 import no.ntnu.okse.core.topic.TopicService;
 
 import org.apache.log4j.Logger;
@@ -80,8 +81,6 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
 
     private Logger log;
     private FilterSupport filterSupport;
-    private boolean cacheMessages;
-    private final Map<String, NotificationMessageHolderType> latestMessages = new HashMap<>();
     private WSNSubscriptionManager _subscriptionManager;
     private WSNRegistrationManager _registrationManager;
 
@@ -89,7 +88,6 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         this.log = Logger.getLogger(WSNCommandProxy.class.getName());
         this.setHub(hub);
         this.filterSupport = FilterSupport.createDefaultFilterSupport();
-        this.cacheMessages = true;
         this._subscriptionManager = null;
         this._registrationManager = null;
     }
@@ -97,7 +95,6 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
     public WSNCommandProxy() {
         this.log = Logger.getLogger(WSNCommandProxy.class.getName());
         this.filterSupport = FilterSupport.createDefaultFilterSupport();
-        this.cacheMessages = true;
         this._subscriptionManager = null;
         this._registrationManager = null;
     }
@@ -113,6 +110,22 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
     public void setRegistrationManager(WSNRegistrationManager pubManager) {
         this._registrationManager = pubManager;
         this.registrationManager = pubManager;
+    }
+
+    /**
+     * Returns the WSNSubscriptionManager associated with this broker proxy
+     * @return The WSNSubscriptionManager instance
+     */
+    public WSNSubscriptionManager getProxySubscriptionManager() {
+        return this._subscriptionManager;
+    }
+
+    /**
+     * Returns the WSNRegistrationManager associated with this broker proxy
+     * @return The WSNRegistrationManager instance
+     */
+    public WSNRegistrationManager getProxyRegistrationManager() {
+        return this._registrationManager;
     }
 
     @Override
@@ -191,31 +204,50 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
             return;
         }
 
-        // Check if we should cache message
-        if (cacheMessages) {
-            // Take out the latest messages
-            for (NotificationMessageHolderType messageHolderType : notify.getNotificationMessage()) {
-                TopicExpressionType topic = messageHolderType.getTopic();
+        MessageService messageService = MessageService.getInstance();
+        TopicService topicService = TopicService.getInstance();
+        Message message;
 
-                // If it is connected to a topic, remember it
-                if (topic != null) {
+        for (NotificationMessageHolderType messageHolderType : notify.getNotificationMessage()) {
+            TopicExpressionType topic = messageHolderType.getTopic();
 
-                    try {
+            // If it is connected to a topic, remember it
+            if (topic != null) {
+                try {
 
-                        List<QName> topicQNames = TopicValidator.evaluateTopicExpressionToQName(topic, namespaceContextResolver.resolveNamespaceContext(topic));
-                        String topicName = TopicUtils.topicToString(topicQNames);
-                        latestMessages.put(topicName, messageHolderType);
+                    List<QName> topicQNames = TopicValidator.evaluateTopicExpressionToQName(topic, namespaceContextResolver.resolveNamespaceContext(topic));
+                    String topicName = TopicUtils.topicToString(topicQNames);
 
-                    } catch (InvalidTopicExpressionFault invalidTopicExpressionFault) {
-                        log.warn("Tried to send a topic with an invalid expression");
-                        invalidTopicExpressionFault.printStackTrace();
-                    } catch (MultipleTopicsSpecifiedFault multipleTopicsSpecifiedFault) {
-                        log.warn("Tried to send a message with multiple topics");
-                        multipleTopicsSpecifiedFault.printStackTrace();
-                    } catch (TopicExpressionDialectUnknownFault topicExpressionDialectUnknownFault) {
-                        log.warn("Tried to send a topic with an invalid expression dialect");
-                        topicExpressionDialectUnknownFault.printStackTrace();
+                    // If the topic exists in the OKSE TopicService
+                    if (topicService.topicExists(topicName)) {
+                        // Extract the content
+                        String content = messageHolderType.getMessage().getAny().toString();
+                        // Fetch the topic object
+                        Topic okseTopic = topicService.getTopic(topicName);
+                        // Generate the message
+                        message = new Message(content, okseTopic, null);
+                        // Extract the endpoint reference from publisher
+                        W3CEndpointReference publisherReference = messageHolderType.getProducerReference();
+                        // If we have a publisherReference, add it to the message
+                        if (publisherReference != null) {
+                            message.setAttribute(WSNSubscriptionManager.WSN_ENDPOINT_TOKEN, ServiceUtilities.getAddress(publisherReference));
+                        }
+                        // Update the originating protocol
+                        message.setOriginProtocol(WSNotificationServer.getInstance().getProtocolServerType());
+
+                        // Add the message to the message queue for dispatch
+                        messageService.distributeMessage(message);
                     }
+
+                } catch (InvalidTopicExpressionFault invalidTopicExpressionFault) {
+                    log.warn("Tried to send a topic with an invalid expression");
+                    invalidTopicExpressionFault.printStackTrace();
+                } catch (MultipleTopicsSpecifiedFault multipleTopicsSpecifiedFault) {
+                    log.warn("Tried to send a message with multiple topics");
+                    multipleTopicsSpecifiedFault.printStackTrace();
+                } catch (TopicExpressionDialectUnknownFault topicExpressionDialectUnknownFault) {
+                    log.warn("Tried to send a topic with an invalid expression dialect");
+                    topicExpressionDialectUnknownFault.printStackTrace();
                 }
             }
         }
@@ -248,9 +280,6 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         currentMessage = notify;
         currentMessageNamespaceContextResolver = namespaceContextResolver;
 
-        // Derp derp
-        log.info(notify.getNotificationMessage().stream().map(n -> n.getTopic().getContent()).reduce((a, b) -> b).toString());
-
         // For all valid recipients
         for (String recipient : this.getAllRecipients()) {
 
@@ -261,8 +290,8 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
             if (toSend != null) {
                 InternalMessage outMessage = new InternalMessage(
                         InternalMessage.STATUS_OK |
-                        InternalMessage.STATUS_HAS_MESSAGE |
-                        InternalMessage.STATUS_ENDPOINTREF_IS_SET,
+                                InternalMessage.STATUS_HAS_MESSAGE |
+                                InternalMessage.STATUS_ENDPOINTREF_IS_SET,
                         toSend
                 );
                 // Update the requestinformation
@@ -560,6 +589,10 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         publisher.setAttribute(WSNRegistrationManager.WSN_PUBLISHER_TOKEN, newSubscriptionKey);
         publisher.setAttribute(WSNSubscriptionManager.WSN_DIALECT_TOKEN, rawDialect);
 
+        // Create the topic
+        TopicService.getInstance().addTopic(rawTopicString);
+
+        // Register the publisher
         _registrationManager.addPublisher(publisher, pubHandle);
 
         // Initialize the response payload
@@ -597,7 +630,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
     public GetCurrentMessageResponse getCurrentMessage(GetCurrentMessage getCurrentMessageRequest) throws InvalidTopicExpressionFault, TopicExpressionDialectUnknownFault, MultipleTopicsSpecifiedFault, ResourceUnknownFault, NoCurrentMessageOnTopicFault, TopicNotSupportedFault {
         log.debug("getCurrentMessage called");
 
-        if (!cacheMessages) {
+        if (!MessageService.getInstance().isCachingMessages()) {
             log.warn("Someone tried to get current message when caching is disabled");
             ExceptionUtilities.throwNoCurrentMessageOnTopicFault("en", "No messages are stored on Topic " +
                     getCurrentMessageRequest.getTopic().getContent());
@@ -607,13 +640,16 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         // Find out which topic there was asked for (Exceptions automatically thrown)
         TopicExpressionType askedFor = getCurrentMessageRequest.getTopic();
 
+        // Check if there was a specified topic element
         if (askedFor == null) {
             log.warn("Topic missing from getCurrentMessage request");
             ExceptionUtilities.throwInvalidTopicExpressionFault("en", "Topic missing from request.");
         }
 
+        // Fetch the topic QNames
         List<QName> topicQNames = TopicValidator.evaluateTopicExpressionToQName(askedFor, connection.getRequestInformation().getNamespaceContext(askedFor));
 
+        // Fetch the topic as a String
         String topicName = TopicUtils.topicToString(topicQNames);
 
         // Fetch the latest message from the MessageService
@@ -625,24 +661,33 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
 
             return null;
         } else {
+            // Initialize the response object
             GetCurrentMessageResponse response = new GetCurrentMessageResponse();
 
+            // Initialize our publisherReference
             String pubRef = null;
-            String subRef = null;
 
-            if (!(currentMessage.getPublisher() == null)) {
-                pubRef = currentMessage.getPublisher().getAttribute(WSNSubscriptionManager.WSN_ENDPOINT_TOKEN);
+            // Attempt to fetch an associated PublisherHandle
+            PublisherHandle pubHandle = _registrationManager.getPublisherHandle(currentMessage.getPublisher());
+            if (pubHandle != null) {
+                // Extract the endpoint
+                pubRef = pubHandle.endpointTerminationTuple.endpoint;
             }
 
-            NotificationMessageHolderType holderType = WSNTools.generateNotificationMessageHolderType(
-                    currentMessage, currentMessage.getTopic().getFullTopicString(), pubRef
+            // Generate the NotificationMessage
+            Notify notify = WSNTools.generateNotificationMessage(
+                    currentMessage, null, pubRef, getCurrentMessageRequest.getTopic().getDialect()
             );
 
-            response.getAny().add(holderType.getMessage());
+            // Add the HolderType to the response
+            response.getAny().add(notify.getNotificationMessage().get(0));
 
+            // Return the response
             return response;
         }
     }
+
+    /* Begin obeservation methods */
 
     @Override
     public void publisherChanged(PublisherRegistrationEvent publisherRegistrationEvent) {
@@ -653,4 +698,6 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
     public void subscriptionChanged(SubscriptionEvent subscriptionEvent) {
         log.debug("SubscriptionChanged event triggered");
     }
+
+    /* End observation methods */
 }

@@ -24,17 +24,14 @@
 
 package no.ntnu.okse.web.controller;
 
-import no.ntnu.okse.Application;
+import no.ntnu.okse.core.subscription.Subscriber;
 import no.ntnu.okse.core.subscription.SubscriptionService;
-import no.ntnu.okse.web.model.Subscriber;
-import no.ntnu.okse.web.model.Topic;
+import no.ntnu.okse.core.topic.Topic;
+import no.ntnu.okse.core.topic.TopicService;
 import org.apache.log4j.Logger;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Random;
+import java.util.*;
 
 
 /**
@@ -46,33 +43,57 @@ import java.util.Random;
 @RequestMapping("/api/topics")
 public class TopicController {
 
+    private static final String GET_ALL_TOPICS = "/get/all";
+    private static final String GET_ALL_SUBSCRIBERS_FOR_TOPIC = "/get/{id}/subscriber/all";
+    private static final String DELETE_ALL_TOPICS = "/delete/all";
+    private static final String DELETE_SINGLE_TOPIC = "/delete/{id}";
+    private static final String DELETE_SINGLE_SUBSCRIBER = "/delete/subscriber/{id}";
+
     private static Logger log = Logger.getLogger(TopicController.class.getName());
 
-    @RequestMapping(method = RequestMethod.GET)
-    public Topic topics() {
-        log.info("Subscribers: " + SubscriptionService.getInstance().getAllSubscribers().size());
 
-
-        return new Topic(new Random().nextLong(), "testTopic", new ArrayList<Subscriber>(Arrays.asList(
-                new Subscriber("128.0.0.1", "8080", "WSN", new HashMap<String, String>()),
-                new Subscriber("78.91.14.24", "234", "DDS", new HashMap<String, String>()),
-                new Subscriber("192.168.1.1", "58080", "ZeroMQ", new HashMap<String, String>())
-        )));
+    @RequestMapping(method = RequestMethod.GET, value = GET_ALL_TOPICS)
+    public HashSet<Topic> getAlltopics() {
+        TopicService ts = TopicService.getInstance();
+        HashSet<Topic> allTopics = ts.getAllTopics();
+        return allTopics;
     }
 
-    @RequestMapping(method = RequestMethod.POST, value = "/delete/all")
-    public void deleteAll() {
+    @RequestMapping(method = RequestMethod.GET, value = GET_ALL_SUBSCRIBERS_FOR_TOPIC)
+    public @ResponseBody HashSet<Subscriber> getAllSubscribersForTopic(@PathVariable("id") String id) {
+        log.info("Fetching all subscribers for topic with ID: " + id);
+        TopicService ts = TopicService.getInstance();
+        SubscriptionService ss = SubscriptionService.getInstance();
+        Topic t = ts.getTopicByID(id);
+        HashSet<Subscriber> result = ss.getAllSubscribersForTopic(t.getFullTopicString());
+        return result;
+    }
+
+    @RequestMapping(method = RequestMethod.DELETE, value = DELETE_ALL_TOPICS)
+    public void deleteAllTopics() {
         log.info("Deleting all topics");
+        TopicService ts = TopicService.getInstance();
+        // TODO: Implement this
     }
 
-    @RequestMapping(method = RequestMethod.POST, value = "/delete/{id}")
-    public void deleteOneTopic(@PathVariable String id) {
-        log.info("Deleting topic with ID: " + id);
+    @RequestMapping(method = RequestMethod.DELETE, value = DELETE_SINGLE_TOPIC)
+    public @ResponseBody Topic deleteSingleTopic(@PathVariable("id") String id) {
+        log.info("Deleting Topic with ID: " + id);
+        TopicService ts = TopicService.getInstance();
+        Topic t = ts.getTopicByID(id);
+        ts.deleteTopic(t.getFullTopicString());
+        return t;
     }
 
-    @RequestMapping(method = RequestMethod.POST, value="/delete/subscriber/{id}")
-    public void deleteOneSubscriber(@PathVariable String id) {
+    @RequestMapping(method = RequestMethod.DELETE, value= DELETE_SINGLE_SUBSCRIBER)
+    public @ResponseBody Subscriber deleteSingleSubscriber(@PathVariable("id") String id) {
         log.info("Deleting subscriber with ID: " + id);
+        SubscriptionService ss = SubscriptionService.getInstance();
+        Subscriber s = ss.getSubscriberByID(id);
+        ss.removeSubscriber(s);
+        return s;
+
+
     }
 
 

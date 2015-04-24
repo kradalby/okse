@@ -36,7 +36,7 @@ var Stats = (function($) {
         $.each(data.protocols, function (i, protocolstats) {
             if ($('#' + protocolstats.protocolServerType).length === 0) {
                 HTML +=
-                    '<div class="panel-heading" id="" + protocolstats.protocolServerType><strong>' + protocolstats.protocolServerType + '</strong></div>' +
+                    '<div class="panel-heading" id="" + protocolstats.protocolServerType>' + protocolstats.protocolServerType + '</div>' +
                         '<ul class="list-group">' +
                         '<li class="list-group-item"> <strong>Requests handled:</strong> ' + protocolstats.totalRequests + '</li>' +
                         '<li class="list-group-item"> <strong>Messages sent:</strong> ' + protocolstats.totalMessages + '</li>' +
@@ -47,9 +47,6 @@ var Stats = (function($) {
     }
 
     return {
-        error: function(xhr, status, error) {
-            console.error("[Error][Stats] in Ajax with the following callback [status: " + xhr.status +  " readyState: " + xhr.readyState + " responseText: " + xhr.responseText + "]")
-        },
         refresh: function(data) {
             $('#stats-total-messages').html('<strong>Messages sent: </strong>' + data.totalMessages)
             $('#stats-total-requests').html('<strong>Requests handled: </strong>' + data.totalRequests)
@@ -65,4 +62,4 @@ var Stats = (function($) {
         }
     }
 
-})(jQuery)
+})(jQuery);
