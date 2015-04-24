@@ -24,6 +24,7 @@
 
 package no.ntnu.okse.web.controller;
 
+import com.google.common.collect.Lists;
 import no.ntnu.okse.web.model.Log;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.TrueFileFilter;
@@ -50,18 +51,24 @@ public class LogController {
     private static final String LOG_LEVELS = "/levels";
     private static final String LOG_FILES = "/files";
 
-    private static final HashMap<String, ArrayList<String>> logLevels = new HashMap<String, ArrayList<String>>(){{
+    private static final LinkedHashMap<String, ArrayList<String>> logLevels = new LinkedHashMap<String, ArrayList<String>>(){{
         put("DEBUG", new ArrayList<String>(){{
             add("DEBUG");
             add("INFO");
             add("WARN");
+            add("ERROR");
         }});
         put("INFO", new ArrayList<String>(){{
             add("INFO");
             add("WARN");
+            add("ERROR");
         }});
         put("WARN", new ArrayList<String>(){{
             add("WARN");
+            add("ERROR");
+        }});
+        put("ERROR", new ArrayList<String>(){{
+            add("ERROR");
         }});
     }};
 
@@ -137,8 +144,10 @@ public class LogController {
     }
 
     @RequestMapping(value = LOG_LEVELS, method = RequestMethod.GET)
-    public @ResponseBody Set<String> logLevelsAvailable() {
-        return logLevels.keySet();
+    public @ResponseBody List<Object> logLevelsAvailable() {
+        List<Object> reverseList = Lists.reverse(
+                Lists.newArrayList(logLevels.keySet()));
+        return reverseList;
     }
 
 }
