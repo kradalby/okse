@@ -68,6 +68,9 @@ public class WSNRegistrationManager extends AbstractPublisherRegistrationManager
     private HashMap<String, Publisher> localPublisherMap;
     private HashMap<String, AbstractNotificationBroker.PublisherHandle> localPublisherHandle;
 
+    /**
+     * Empty constructor that initializes the log and local mappings
+     */
     public WSNRegistrationManager() {
         log = Logger.getLogger(WSNRegistrationManager.class.getName());
         _subscriptionService = null;
@@ -75,17 +78,41 @@ public class WSNRegistrationManager extends AbstractPublisherRegistrationManager
         localPublisherHandle = new HashMap<>();
     }
 
+    /**
+     * Helper method that initializes this proxy manager with the reference to the OKSE SubscriptionService
+     * @param service
+     */
     public void initCoreSubscriptionService(SubscriptionService service) {
         _subscriptionService = service;
     }
 
+    /**
+     * Check if the registrationKey already exists
+     * @param registrationKey The registrationKey to check
+     * @return True if the registrationKey exists, false otherwise
+     */
+    public boolean keyExists(String registrationKey) {
+        return localPublisherMap.containsKey(registrationKey);
+    }
+
+    /**
+     * The main method to add a publisher to the managing system, and the OKSE SubscriptionService
+     * @param p The Publisher object to be added
+     * @param pubHandle The WS-Nu PublisherHandle connected to the new Publisher
+     */
     public void addPublisher(Publisher p, AbstractNotificationBroker.PublisherHandle pubHandle) {
         _subscriptionService.addPublisher(p);
         localPublisherMap.put(p.getAttribute(WSN_PUBLISHER_TOKEN), p);
         localPublisherHandle.put(p.getAttribute(WSN_PUBLISHER_TOKEN), pubHandle);
     }
 
+    /**
+     * Required method from the WS-Nu abstract class, IS NOT USED
+     * @param s The Publisher key
+     * @param l The TerminationTime in milliseconds since unix epoch
+     */
     @Override
+    @Deprecated
     public void addPublisher(String s, long l) {
         log.warn("WS-Nu default addPublisher with hashKey and terminationTime called. " +
                 "Locate offending method and change to addSubscriber(Publisher p, PublisherHandle pubHandle)");
