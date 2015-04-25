@@ -368,7 +368,7 @@ class WSNRequest(object):
 
         self.send_request(payload, endpoint="/%s" % subscription_reference)
 
-    def send_unregister(self, publisher_reference)
+    def send_unregister(self, publisher_reference):
         """
         Sends a DestroyRegistration request
         """
