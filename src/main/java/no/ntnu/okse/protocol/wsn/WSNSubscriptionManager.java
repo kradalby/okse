@@ -49,24 +49,56 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
     private HashMap<String, Subscriber> localSubscriberMap;
     private HashMap<String, AbstractNotificationProducer.SubscriptionHandle> localSubscriberHandle;
 
+    /**
+     * Empty constructor that initializes the log and local maps
+     */
     public WSNSubscriptionManager() {
         log = Logger.getLogger(WSNSubscriptionManager.class.getName());
         localSubscriberMap = new HashMap<>();
         localSubscriberHandle = new HashMap<>();
     }
 
+    /* Helper methods */
+
+    /**
+     * This method is called from the CommandProxy to set a reference to our SubscriptionService
+     * @param subService
+     */
     public void initCoreSubscriptionService(SubscriptionService subService) {
         this._subscriptionService = subService;
     }
 
+    /**
+     * Check to see if a subscriptionKey exists
+     * @param s The key to check if exists
+     * @return True if the key exists, false otherwise
+     */
     @Override
+    @WebMethod(exclude = true)
     public boolean keyExists(String s) {
         return localSubscriberMap.containsKey(s);
     }
 
+    /**
+     * Check to see if a subscriber exists
+     * @param s The subscriptionKey to check if exists
+     * @return True if the subscriber exists, false otherwise
+     */
     @Override
+    @WebMethod(exclude = true)
     public boolean hasSubscription(String s) {
         return localSubscriberMap.containsKey(s);
+    }
+
+    /**
+     * Check to see if a subscription is paused or not
+     * @param subscriptionReference The subscriptionKey to be checked
+     * @return True if the subscriber is paused, false otherwise
+     */
+    @WebMethod(exclude = true)
+    public boolean subscriptionIsPaused(String subscriptionReference) {
+        return localSubscriberMap.containsKey(subscriptionReference) &&
+                localSubscriberMap.get(subscriptionReference).getAttribute("paused").equals("true");
     }
 
     /**
@@ -278,7 +310,6 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
         return null;
     }
 
-    @Override
     @WebResult(name = "ResumeSubscriptionResponse", targetNamespace = "http://docs.oasis-open.org/wsn/b-2", partName = "ResumeSubscriptionResponse")
     @WebMethod(operationName = "ResumeSubscription")
     public ResumeSubscriptionResponse resumeSubscription
@@ -286,6 +317,8 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
                     @WebParam(partName = "ResumeSubscriptionRequest", name = "ResumeSubscription", targetNamespace = "http://docs.oasis-open.org/wsn/b-2")
                     ResumeSubscription resumeSubscriptionRequest
             ) throws ResourceUnknownFault, ResumeFailedFault {
+
+        log.debug("Recieved Resume request");
 
         // Fetch the request information
         RequestInformation requestInformation = connection.getRequestInformation();
@@ -343,59 +376,70 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
         return null;
     }
 
-    @Override
     @WebResult(name = "PauseSubscriptionResponse", targetNamespace = "http://docs.oasis-open.org/wsn/b-2", partName = "PauseSubscriptionResponse")
     @WebMethod(operationName = "PauseSubscription")
     public PauseSubscriptionResponse pauseSubscription
             (
                     @WebParam(partName = "PauseSubscriptionRequest", name = "PauseSubscription", targetNamespace = "http://docs.oasis-open.org/wsn/b-2")
                     PauseSubscription pauseSubscriptionRequest
-            )
-            throws ResourceUnknownFault, PauseFailedFault {
+            ) throws ResourceUnknownFault, PauseFailedFault {
+
+        log.debug("Recieved Pause request");
+
+        // Fetch the request information
         RequestInformation requestInformation = connection.getRequestInformation();
 
         for (Map.Entry<String, String[]> entry : requestInformation.getParameters().entrySet()) {
-            if(!entry.getKey().equals(WsnUtilities.subscriptionString)){
+            // If the parameter is not the subscription token (we are not checking the value, just the key)
+            if (!entry.getKey().equals(WSN_SUBSCRIBER_TOKEN)) {
                 continue;
             }
 
             /* If there is not one value, something is wrong, but try the first one*/
-            if(entry.getValue().length > 1){
+            if (entry.getValue().length > 1) {
                 String subRef = entry.getValue()[0];
-                if(!_subscriptions.containsKey(subRef)){
-                    if(!subscriptionIsPaused(subRef)){
-                        Log.d("SimplePausableSubscriptionManager", "Paused subscription");
-                        _pausedSubscriptions.add(subRef);
-                        fireSubscriptionChanged(subRef, SubscriptionEvent.Type.PAUSE);
+                if (!localSubscriberMap.containsKey(subRef)) {
+                    if (!subscriptionIsPaused(subRef)) {
+                        // Tell the subscriptionService to pause the subscriber
+                        _subscriptionService.pauseSubscriber(localSubscriberMap.get(subRef));
+                        // Return the response
                         return new PauseSubscriptionResponse();
                     } else {
+                        log.debug("Attempt to pause an already paused subscription");
                         ExceptionUtilities.throwPauseFailedFault("en", "Subscription is already paused");
                     }
                 }
+                log.debug("Recieved ill-formated subscription parameter in Pause request");
                 ExceptionUtilities.throwResourceUnknownFault("en", "Ill-formated subscription-parameter");
-            } else if(entry.getValue().length == 0){
+            } else if(entry.getValue().length == 0) {
+                log.debug("Subscription parameter missing in Pause request");
                 ExceptionUtilities.throwPauseFailedFault("en", "Subscription-parameter in URL is missing value");
             }
 
+            // Extract and store the subscriptionReference
             String subRef = entry.getValue()[0];
 
             /* The subscriptions is not recognized */
-            if(!_subscriptions.containsKey(subRef)){
-                Log.d("SimplePausableSubscriptionManager", "Subscription not found");
-                Log.d("SimplePausableSubscriptionManager", "Expected: " + subRef);
+            if (!localSubscriberMap.containsKey(subRef)) {
+                log.debug("Subscription not found");
+                log.debug("Expected: " + subRef);
                 ExceptionUtilities.throwResourceUnknownFault("en", "Subscription not found.");
             }
 
-            Log.d("SimplePausableSubscriptionManager", "Paused subscription");
-            _subscriptions.remove(subRef);
-            fireSubscriptionChanged(subRef, SubscriptionEvent.Type.PAUSE);
+            // Tell the SubscriptionService to pause the subscriber
+            _subscriptionService.pauseSubscriber(localSubscriberMap.get(subRef));
+
+            // Return the response
             return new PauseSubscriptionResponse();
         }
         ExceptionUtilities.throwPauseFailedFault("en", "The subscription was not found as any parameter" +
                 " in the request-uri. Please send a request on the form: " +
-                "\"http://urlofthis.domain/webservice/?"+WsnUtilities.subscriptionString+"=subscriptionreference");
+                "\"http://urlofthis.domain/webservice/?"+WSN_SUBSCRIBER_TOKEN+"=subscriptionreference");
+
         return null;
     }
+
+    /* Listener support methods */
 
     // We catch subscriptionchange events to update local maps upon remove, renew etc
     // But not on subscribe, since we are the initiating source we can update the local maps first,
@@ -423,13 +467,5 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
                 // TODO: after addSubscriber
             }
         }
-    }
-
-    /* Helper methods */
-
-    @WebMethod(exclude = true)
-    public boolean subscriptionIsPaused(String subscriptionReference) {
-        return localSubscriberMap.containsKey(subscriptionReference) &&
-            localSubscriberMap.get(subscriptionReference).getAttribute("paused").equals("true");
     }
 }
