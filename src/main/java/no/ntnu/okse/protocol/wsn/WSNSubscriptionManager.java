@@ -1,5 +1,6 @@
 package no.ntnu.okse.protocol.wsn;
 
+import com.sun.org.apache.xerces.internal.jaxp.datatype.XMLGregorianCalendarImpl;
 import no.ntnu.okse.core.event.SubscriptionChangeEvent;
 import no.ntnu.okse.core.event.listeners.SubscriptionChangeListener;
 import no.ntnu.okse.core.subscription.Publisher;
@@ -27,9 +28,10 @@ import javax.jws.WebResult;
 import javax.jws.WebService;
 import javax.jws.soap.SOAPBinding;
 import javax.xml.bind.annotation.XmlSeeAlso;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import javax.xml.datatype.DatatypeConfigurationException;
+import javax.xml.datatype.DatatypeFactory;
+import javax.xml.datatype.XMLGregorianCalendar;
+import java.util.*;
 
 
 /**
@@ -298,8 +300,29 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
             // Send a renewSubscriber task to the SubscriptionService
             _subscriptionService.renewSubscriber(localSubscriberMap.get(subRef), time);
 
+            // Create the response
+            RenewResponse response = new RenewResponse();
+            GregorianCalendar gc = new GregorianCalendar();
+            GregorianCalendar cgc = new GregorianCalendar();
+            Date terminationDate = new Date(time*1000);
+            Date currentDate = new Date();
+            gc.setTime(terminationDate);
+            cgc.setTime(currentDate);
+            XMLGregorianCalendar terminationTime = null;
+            XMLGregorianCalendar currentTime = null;
+
+            try {
+                terminationTime = DatatypeFactory.newInstance().newXMLGregorianCalendar(gc);
+                currentTime = DatatypeFactory.newInstance().newXMLGregorianCalendar(cgc);
+            } catch (DatatypeConfigurationException e) {
+                log.error("Failed to generate the XMLGregorianCalendar instance");
+            }
+            // Add the XMLGregorianCalendar instances if they successfully were generated
+            if (terminationTime != null) response.setTerminationTime(terminationTime);
+            if (currentTime != null) response.setCurrentTime(currentTime);
+
             // Return the response
-            return new RenewResponse();
+            return response;
         }
 
         log.debug("Subscription not found, probably ill-formatted request");
