@@ -385,22 +385,22 @@ if __name__ == "__main__":
 
     elif mode == 'renew':
         subscription_reference = raw_input("Enter the subscription reference: ")
-        subscription_refecence = subscription_reference.rtrim()
+        subscription_refecence = subscription_reference.rstrip()
         wsn_request.send_renew_subscription(subscription_reference)
 
     elif mode == 'pause':
         subscription_reference = raw_input("Enter the subscription reference: ")
-        subscription_reference = subscription_reference.rtrim()
+        subscription_reference = subscription_reference.rstrip()
         wsn_request.send_pause_subscription(subscription_reference)
 
     elif mode == 'resume':
         subscription_reference = raw_input("Enter the subscription reference: ")
-        subscription_reference = subscription_reference.rtrim()
+        subscription_reference = subscription_reference.rstrip()
         wsn_request.send_resume_subscription(subscription_reference)
 
     elif mode == 'unsubscribe':
         subscription_reference = raw_input("Enter the subscription reference: ")
-        subscription_reference = subscription_reference.rtrim()
+        subscription_reference = subscription_reference.rstrip()
         wsn_request.send_unsubscribe(subscription_reference)
 
     elif mode == 'all':
@@ -409,7 +409,7 @@ if __name__ == "__main__":
         wsn_request.send_subscription()
         time.sleep(2)
         subscription_reference = raw_input("Enter the subscription reference: ")
-        subscription_reference = subscription_reference.rtrim()
+        subscription_reference = subscription_reference.rstrip()
         wsn_request.send_registration()
         time.sleep(2)
         wsn_request.send_notify("Test Message")
