@@ -118,7 +118,7 @@ xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
 </s:Header>
 <s:Body>
 <wsnt:Renew>
-<wsnt:TerminationTime>2016-01-02T00:00:00.00000Z</wsnt:TerminationTime>
+<wsnt:TerminationTime>2016-01-02T00:00:00Z</wsnt:TerminationTime>
 </wsnt:Renew>
 </s:Body>
 </s:Envelope>
@@ -220,7 +220,7 @@ class WSNRequest(object):
         Constructs a W3C URL
         """
 
-        return "http://%s:%d" % (self.HOST, self.PORT)
+        return "http://%s:%d%s" % (self.HOST, self.PORT, endpoint)
 
     def generate_headers(self):
         """

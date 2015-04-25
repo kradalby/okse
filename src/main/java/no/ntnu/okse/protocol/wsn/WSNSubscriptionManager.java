@@ -265,6 +265,8 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
         log.debug("Received renew request");
         /* Find the subscription tag */
         for(Map.Entry<String, String[]> entry : requestInformation.getParameters().entrySet()) {
+            log.debug("Current key processing: " + entry.getKey());
+            log.debug("Current value processing: " + entry.getValue());
             if (!entry.getKey().equals(WSN_SUBSCRIBER_TOKEN)) {
                 continue;
             }
