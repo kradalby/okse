@@ -193,6 +193,9 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         // Check if we have the current recipient registered
         if (!this._subscriptionManager.hasSubscription(s)) {
             return null;
+        } else {
+            // Check if the subscription is paused
+            if (_subscriptionManager.subscriptionIsPaused(s)) return null;
         }
 
         // If we dont have filter support, nothing more to do.

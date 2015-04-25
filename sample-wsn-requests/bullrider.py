@@ -10,7 +10,7 @@ INTERVAL = 1
 RUNS = 10
 SOAP_HEADER = "application/soap+xml;charset=utf-8"
 MODES = {
-    "full": "All available",
+    "all": "All available",
     "notify": "Notification",
     "subscribe": "Subscribe",
     "unsubscribe": "Unsubscribe",

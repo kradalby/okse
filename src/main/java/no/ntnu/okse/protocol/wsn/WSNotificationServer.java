@@ -356,10 +356,6 @@ public class WSNotificationServer extends AbstractProtocolServer {
                 }
             }
 
-            // Remember current message with context
-            Notify currentMessage = notify;
-            NuNamespaceContextResolver currentMessageNamespaceContextResolver = namespaceContextResolver;
-
             // For all valid recipients
             for (String recipient : _commandProxy.getAllRecipients()) {
 
