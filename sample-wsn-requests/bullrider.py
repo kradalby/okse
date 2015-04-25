@@ -105,6 +105,78 @@ xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
 </s:Envelope>
 """
 
+RENEW = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<s:Envelope xmlns:wsa="http://www.w3.org/2005/08/addressing"
+xmlns:wsnt="http://docs.oasis-open.org/wsn/b-2"
+xmlns:wsn-br="http://docs.oasis-open.org/wsn/br-2"
+xmlns:wsn-bw="http://docs.oasis-open.org/wsn/bw-2"
+xmlns:wsn-brw="http://docs.oasis-open.org/wsn/brw-2"
+xmlns:wsrf-bf="http://docs.oasis-open.org/wsrf/bf-2"
+xmlns:wsrf-bfw="http://docs.oasis-open.org/wsrf/bfw-2"
+xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+<s:Header><wsa:Action>http://docs.oasis-open.org/wsn/bw-2/SubscriptionManager/RenewRequest</wsa:Action>
+</s:Header>
+<s:Body>
+<wsnt:Renew>
+<wsnt:TerminationTime>2016-01-02T00:00:00.00000Z</wsnt:TerminationTime>
+</wsnt:Renew>
+</s:Body>
+</s:Envelope>
+"""
+
+PAUSE = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<s:Envelope xmlns:wsa="http://www.w3.org/2005/08/addressing"
+xmlns:wsnt="http://docs.oasis-open.org/wsn/b-2"
+xmlns:wsn-br="http://docs.oasis-open.org/wsn/br-2"
+xmlns:wsn-bw="http://docs.oasis-open.org/wsn/bw-2"
+xmlns:wsn-brw="http://docs.oasis-open.org/wsn/brw-2"
+xmlns:wsrf-bf="http://docs.oasis-open.org/wsrf/bf-2"
+xmlns:wsrf-bfw="http://docs.oasis-open.org/wsrf/bfw-2"
+xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+<s:Header><wsa:Action>http://docs.oasis-open.org/wsn/bw-2/SubscriptionManager/PauseSubscriptionRequest</wsa:Action>
+</s:Header>
+<s:Body>
+<wsnt:PauseSubscription/>
+</s:Body>
+</s:Envelope>
+"""
+
+RESUME = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<s:Envelope xmlns:wsa="http://www.w3.org/2005/08/addressing"
+xmlns:wsnt="http://docs.oasis-open.org/wsn/b-2"
+xmlns:wsn-br="http://docs.oasis-open.org/wsn/br-2"
+xmlns:wsn-bw="http://docs.oasis-open.org/wsn/bw-2"
+xmlns:wsn-brw="http://docs.oasis-open.org/wsn/brw-2"
+xmlns:wsrf-bf="http://docs.oasis-open.org/wsrf/bf-2"
+xmlns:wsrf-bfw="http://docs.oasis-open.org/wsrf/bfw-2"
+xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+<s:Header><wsa:Action>http://docs.oasis-open.org/wsn/bw-2/SubscriptionManager/ResumeSubscriptionRequest</wsa:Action>
+</s:Header>
+<s:Body>
+<wsnt:ResumeSubscription/>
+</s:Body>
+</s:Envelope>
+"""
+
+UNSUBSCRIBE = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<s:Envelope xmlns:wsa="http://www.w3.org/2005/08/addressing"
+xmlns:wsnt="http://docs.oasis-open.org/wsn/b-2"
+xmlns:wsn-br="http://docs.oasis-open.org/wsn/br-2"
+xmlns:wsn-bw="http://docs.oasis-open.org/wsn/bw-2"
+xmlns:wsn-brw="http://docs.oasis-open.org/wsn/brw-2"
+xmlns:wsrf-bf="http://docs.oasis-open.org/wsrf/bf-2"
+xmlns:wsrf-bfw="http://docs.oasis-open.org/wsrf/bfw-2"
+xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+<s:Header><wsa:Action>http://docs.oasis-open.org/wsn/bw-2/SubscriptionManager/UnsubscribeRequest</wsa:Action>
+</s:Header>
+<s:Body>
+<wsnt:Unsubscribe/>
+</s:Body>
+</s:Envelope>
+"""
+
+
+
 
 class WSNRequest(object):
     """
@@ -143,12 +215,12 @@ class WSNRequest(object):
             print "Invalid arguments: python %s <host> <port> <topic>" % sys.argv[0]
             exit(1)
 
-    def generate_url(self):
+    def generate_url(self, endpoint):
         """
         Constructs a W3C URL
         """
 
-        return "http://%s:%d/" % (self.HOST, self.PORT)
+        return "http://%s:%d" % (self.HOST, self.PORT)
 
     def generate_headers(self):
         """
@@ -168,12 +240,12 @@ class WSNRequest(object):
         print response.text
         print "--- RESPONSE END --------------------------------------"
 
-    def send_request(self, payload):
+    def send_request(self, payload, endpoint="/"):
         """
         Sends the provided payload and prints response if DEBUG is True
         """
 
-        response = requests.post(self.generate_url(), headers=self.generate_headers(), data=payload)
+        response = requests.post(self.generate_url(endpoint), headers=self.generate_headers(), data=payload)
 
         if (DEBUG):
             self.print_response(response)
@@ -238,9 +310,9 @@ class WSNRequest(object):
         print "[i] Sending a %s request..." % MODES[sys.argv[1]]
 
         # Generate the payload
-        # TODO: Make the payload
+        payload = RENEW
 
-        self.send_request(payload)
+        self.send_request(payload, endpoint="/%s" % subscription_reference)
 
     def send_pause_subscription(self, subscription_reference):
         """
@@ -250,9 +322,9 @@ class WSNRequest(object):
         print "[i] Sending a %s request..." % MODES[sys.argv[1]]
 
         # Generate the payload
-        # TODO: Make the payload
+        payload = PAUSE
 
-        self.send_request(payload)
+        self.send_request(payload, endpoint="/%s" % subscription_reference)
 
     def send_resume_subscription(self, subscription_reference):
         """
@@ -262,9 +334,9 @@ class WSNRequest(object):
         print "[i] Sending a %s request..." % MODES[sys.argv[1]]
 
         # Generate the payload
-        # TODO: Make the payload
+        payload = RESUME
 
-        self.send_request(payload)
+        self.send_request(payload, endpoint="/%s" % subscription_reference)
 
     def send_unsubscribe(self, subscription_reference):
         """
@@ -274,9 +346,9 @@ class WSNRequest(object):
         print "[i] Sending a %s request..." % MODES[sys.argv[1]]
 
         # Generate the payload
-        # TODO: Make the payload
+        payload = UNSUBSCRIBE
 
-        self.send_request(payload)
+        self.send_request(payload, endpoint="/%s" % subscription_reference)
 
 
 # Start the bruteforcer
