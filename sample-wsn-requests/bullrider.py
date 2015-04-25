@@ -12,7 +12,8 @@ SOAP_HEADER = "application/soap+xml;charset=utf-8"
 MODES = {
     "full": "All available",
     "notify": "Notification",
-    "subscribe": "Subscription",
+    "subscribe": "Subscribe",
+    "unsubscribe": "Unsubscribe",
     "register": "PublisherRegistration",
     "getcurrent": "GetCurrentMessage",
     "renew": "RenewSubscription",
