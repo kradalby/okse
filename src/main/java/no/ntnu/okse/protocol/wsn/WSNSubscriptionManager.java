@@ -15,6 +15,8 @@ import org.ntnunotif.wsnu.services.implementations.notificationbroker.AbstractNo
 import org.ntnunotif.wsnu.services.implementations.notificationproducer.AbstractNotificationProducer;
 import org.ntnunotif.wsnu.services.implementations.subscriptionmanager.AbstractSubscriptionManager;
 import org.oasis_open.docs.wsn.b_2.*;
+import org.oasis_open.docs.wsn.bw_2.PauseFailedFault;
+import org.oasis_open.docs.wsn.bw_2.ResumeFailedFault;
 import org.oasis_open.docs.wsn.bw_2.UnableToDestroySubscriptionFault;
 import org.oasis_open.docs.wsn.bw_2.UnacceptableTerminationTimeFault;
 import org.oasis_open.docs.wsrf.rw_2.ResourceUnknownFault;
@@ -205,16 +207,16 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
 
         ExceptionUtilities.throwUnableToDestroySubscriptionFault("en", "The subscription was not found as any parameter" +
                 " in the request-uri. Please send a request on the form: " +
-                "\"http://urlofthis.domain/webservice/?" + WsnUtilities.subscriptionString + "=subscriptionreference");
+                "\"http://urlofthis.domain/webservice/?" + WSN_SUBSCRIBER_TOKEN + "=subscriptionreference");
         return null;
     }
 
     /**
      * SimpleSubscriptionManager's implementation of renew.
-     * @param renewRequest
-     * @return
-     * @throws ResourceUnknownFault
-     * @throws UnacceptableTerminationTimeFault
+     * @param renewRequest The incoming renewRequest parsed from XML
+     * @return A RenewResponse XML object
+     * @throws ResourceUnknownFault If the subscriptionReference was not found, or missing
+     * @throws UnacceptableTerminationTimeFault If the terminationTime was either unparseable or in the past
      */
     @Override
     @WebResult(name = "RenewResponse", targetNamespace = "http://docs.oasis-open.org/wsn/b-2", partName = "RenewResponse")
@@ -229,7 +231,7 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
         log.debug("Received renew request");
         /* Find the subscription tag */
         for(Map.Entry<String, String[]> entry : requestInformation.getParameters().entrySet()) {
-            if (!entry.getKey().equals(WsnUtilities.subscriptionString)) {
+            if (!entry.getKey().equals(WSN_SUBSCRIBER_TOKEN)) {
                 continue;
             }
             log.debug("Found subscription parameter");
@@ -268,8 +270,8 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
         log.debug("Subscription not found, probably ill-formatted request");
         ExceptionUtilities.throwResourceUnknownFault("en", "The subscription was not found as any parameter" +
                 " in the request-uri. Please send a request on the form: " +
-                "\"http://urlofthis.domain/webservice/?" + WsnUtilities.subscriptionString + "=subscriptionreference");
-        
+                "\"http://urlofthis.domain/webservice/?" + WSN_SUBSCRIBER_TOKEN + "=subscriptionreference");
+
         return null;
     }
 
@@ -280,23 +282,26 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
             (
                     @WebParam(partName = "ResumeSubscriptionRequest", name = "ResumeSubscription", targetNamespace = "http://docs.oasis-open.org/wsn/b-2")
                     ResumeSubscription resumeSubscriptionRequest
-            )
-            throws ResourceUnknownFault, ResumeFailedFault {
+            ) throws ResourceUnknownFault, ResumeFailedFault {
+
+        // Fetch the request information
         RequestInformation requestInformation = connection.getRequestInformation();
 
+        // Iterate through the parameters
         for (Map.Entry<String, String[]> entry : requestInformation.getParameters().entrySet()) {
-            if(!entry.getKey().equals(WsnUtilities.subscriptionString)){
+            // If it is not the subscriptionReference, continue
+            if (!entry.getKey().equals(WSN_SUBSCRIBER_TOKEN)) {
                 continue;
             }
 
             /* If there is not one value, something is wrong, but try the first one*/
-            if(entry.getValue().length > 1){
+            if (entry.getValue().length > 1) {
+                // Fetch the first value
                 String subRef = entry.getValue()[0];
-                if(!_subscriptions.containsKey(subRef)){
-                    if(subscriptionIsPaused(subRef)){
-                        Log.d("SimplePausableSubscriptionManager", "Resumed subscription");
-                        _pausedSubscriptions.add(subRef);
-                        fireSubscriptionChanged(subRef, SubscriptionEvent.Type.RESUME);
+
+                if (!localSubscriberMap.containsKey(subRef)) {
+                    if (subscriptionIsPaused(subRef)) {
+                        _subscriptionService.resume
                         return new ResumeSubscriptionResponse();
                     } else {
                         ExceptionUtilities.throwResumeFailedFault("en", "Subscription is not paused");
@@ -411,9 +416,9 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
 
     /* Helper methods */
 
-    @Override
     @WebMethod(exclude = true)
     public boolean subscriptionIsPaused(String subscriptionReference) {
-        return _subscriptions.containsKey(subscriptionReference) && _pausedSubscriptions.contains(subscriptionReference);
+        return localSubscriberMap.containsKey(subscriptionReference) &&
+            localSubscriberMap.get(subscriptionReference).getAttribute("paused").equals("true");
     }
 }

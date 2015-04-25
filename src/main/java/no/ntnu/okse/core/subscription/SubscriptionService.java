@@ -231,6 +231,22 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
     }
 
     /**
+     * Service-local private method to reusme the subscription for a particular subscriber
+     * @param s The subscriber that is to be resumed
+     */
+    private void resumeSubscriberLocal(Subscriber s) {
+        if (_subscribers.contains(s)) {
+            // Set the Paused attribute to false
+            s.setAttribute("paused", "false");
+            log.info("Resumed subscriber: " + s);
+            // FIre the resume event
+            fireSubcriptionChangeEvent(s, SubscriptionChangeEvent.Type.RESUME);
+        } else {
+            log.warn("Attempt to modify a subscriber that does not exist in the service!");
+        }
+    }
+
+    /**
      * Service-local private method to register a publisher to the publisher set
      * @param p : The publisher object that is to be registered
      */
@@ -318,7 +334,7 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
     }
 
     /**
-     * Public method to pause a subscroption
+     * Public method to pause a subscription
      * @param s The subciber object that is to be paused
      */
     public void pauseSubscriber(Subscriber s) {
@@ -331,6 +347,21 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
             insertTask(task);
         } else {
             log.warn("Attempt to modify a subscriber that did not exist in the service!");
+        }
+    }
+
+    /**
+     * Public method to resume a subscription
+     * @param s The subscriber object that is to be resumed
+     */
+    public void resumeSubscriber(Subscriber s) {
+        if (_subscribers.contains(s)) {
+            // Create the job
+            Runnable job = () -> resumeSubscriberLocal(s);
+            // Initialize the SubscriptionTask wrapper
+            SubscriptionTask task = new SubscriptionTask(SubscriptionTask.Type.UPDATE_SUBSCRIBER, job);
+            // Inject the task
+            insertTask(task);
         }
     }
     /* End subscriber public API */
