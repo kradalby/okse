@@ -573,7 +573,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         // Generate a new subkey
         String newSubscriptionKey = generateSubscriptionKey();
         // Generate the publisherRegistrationEndpoint
-        String subscriptionEndpoint = generateHashedURLFromKey(WsnUtilities.publisherRegistrationString, newSubscriptionKey);
+        String subscriptionEndpoint = generateHashedURLFromKey(WSNRegistrationManager.WSN_PUBLISHER_TOKEN, newSubscriptionKey);
 
         // Send subscriptionRequest back if isDemand isRequested
         if (registerPublisherRequest.isDemand()) {

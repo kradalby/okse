@@ -19,6 +19,7 @@ MODES = {
     "renew": "RenewSubscription",
     "pause": "PauseSubscription",
     "resume": "ResumeSubscription",
+    "unregister": "DestroyRegistration",
 }
 
 RANDOM_WORDS = [
@@ -176,6 +177,22 @@ xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
 </s:Envelope>
 """
 
+UNREGISTER = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<s:Envelope xmlns:wsa="http://www.w3.org/2005/08/addressing"
+xmlns:wsnt="http://docs.oasis-open.org/wsn/b-2"
+xmlns:wsn-br="http://docs.oasis-open.org/wsn/br-2"
+xmlns:wsn-bw="http://docs.oasis-open.org/wsn/bw-2"
+xmlns:wsn-brw="http://docs.oasis-open.org/wsn/brw-2"
+xmlns:wsrf-bf="http://docs.oasis-open.org/wsrf/bf-2"
+xmlns:wsrf-bfw="http://docs.oasis-open.org/wsrf/bfw-2"
+xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+<s:Header><wsa:Action>http://docs.oasis-open.org/wsn/brw-2/PublisherRegistrationManager/DestroyRegistrationRequest</wsa:Action>
+</s:Header>
+<s:Body>
+<wsn-br:DestroyRegistration/>
+</s:Body>
+</s:Envelope>
+"""
 
 
 
@@ -351,6 +368,18 @@ class WSNRequest(object):
 
         self.send_request(payload, endpoint="/%s" % subscription_reference)
 
+    def send_unregister(self, publisher_reference)
+        """
+        Sends a DestroyRegistration request
+        """
+
+        print "[i] Sending a %s request..." % MODES[sys.argv[1]]
+
+        # Generate the payload
+        payload = UNREGISTER
+
+        self.send_request(payload, endpoint="/%s" % publisher_reference)
+
 
 # Start the bruteforcer
 if __name__ == "__main__":
@@ -404,6 +433,11 @@ if __name__ == "__main__":
         subscription_reference = subscription_reference.rstrip()
         wsn_request.send_unsubscribe(subscription_reference)
 
+    elif mode == 'unregister':
+        publisher_reference = raw_input("Enter the publisher reference: ")
+        publisher_reference = publisher_reference.rstrip()
+        wsn_request.send_unregister(publisher_reference)
+
     elif mode == 'all':
         print "[i] Performing all requests in order..."
 
@@ -413,6 +447,8 @@ if __name__ == "__main__":
         subscription_reference = subscription_reference.rstrip()
         wsn_request.send_registration()
         time.sleep(2)
+        publisher_reference = raw_input("Enter the publisher reference: ")
+        publisher_reference = publisher_reference.rstrip()
         wsn_request.send_notify("Test Message")
         time.sleep(2)
         wsn_request.send_get_current_message()
@@ -426,5 +462,7 @@ if __name__ == "__main__":
         wsn_request.send_resume_subscription(subscription_reference)
         time.sleep(2)
         wsn_request.send_unsubscribe(subscription_reference)
+        time.sleep(2)
+        wsn_request.send_unregister(publisher_reference)
 
     print "[X] Complete."
