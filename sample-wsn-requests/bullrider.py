@@ -15,6 +15,9 @@ MODES = {
     "subscribe": "Subscription",
     "register": "PublisherRegistration",
     "getcurrent": "GetCurrentMessage",
+    "renew": "RenewSubscription",
+    "pause": "PauseSubscription",
+    "resume": "ResumeSubscription",
 }
 
 RANDOM_WORDS = [
@@ -227,6 +230,54 @@ class WSNRequest(object):
         # Send the request
         self.send_request(payload)
 
+    def send_renew_subscription(self, subscription_reference):
+        """
+        Sends a Renew request
+        """
+
+        print "[i] Sending a %s request..." % MODES[sys.argv[1]]
+
+        # Generate the payload
+        # TODO: Make the payload
+
+        self.send_request(payload)
+
+    def send_pause_subscription(self, subscription_reference):
+        """
+        Sends a Pause request
+        """
+
+        print "[i] Sending a %s request..." % MODES[sys.argv[1]]
+
+        # Generate the payload
+        # TODO: Make the payload
+
+        self.send_request(payload)
+
+    def send_resume_subscription(self, subscription_reference):
+        """
+        Sends a Resume request
+        """
+
+        print "[i] Sending a %s request..." % MODES[sys.argv[1]]
+
+        # Generate the payload
+        # TODO: Make the payload
+
+        self.send_request(payload)
+
+    def send_unsubscribe(self, subscription_reference):
+        """
+        Sends a Unsubscribe request
+        """
+
+        print "[i] Sending a %s request..." % MODES[sys.argv[1]]
+
+        # Generate the payload
+        # TODO: Make the payload
+
+        self.send_request(payload)
+
 
 # Start the bruteforcer
 if __name__ == "__main__":
@@ -260,15 +311,47 @@ if __name__ == "__main__":
     elif mode == 'getcurrent':
         wsn_request.send_get_current_message()
 
+    elif mode == 'renew':
+        subscription_reference = raw_input("Enter the subscription reference: ")
+        subscription_refecence = subscription_reference.rtrim()
+        wsn_request.send_renew_subscription(subscription_reference)
+
+    elif mode == 'pause':
+        subscription_reference = raw_input("Enter the subscription reference: ")
+        subscription_reference = subscription_reference.rtrim()
+        wsn_request.send_pause_subscription(subscription_reference)
+
+    elif mode == 'resume':
+        subscription_reference = raw_input("Enter the subscription reference: ")
+        subscription_reference = subscription_reference.rtrim()
+        wsn_request.send_resume_subscription(subscription_reference)
+
+    elif mode == 'unsubscribe':
+        subscription_reference = raw_input("Enter the subscription reference: ")
+        subscription_reference = subscription_reference.rtrim()
+        wsn_request.send_unsubscribe(subscription_reference)
+
     elif mode == 'all':
         print "[i] Performing all requests in order..."
 
         wsn_request.send_subscription()
         time.sleep(2)
+        subscription_reference = raw_input("Enter the subscription reference: ")
+        subscription_reference = subscription_reference.rtrim()
         wsn_request.send_registration()
         time.sleep(2)
         wsn_request.send_notify("Test Message")
         time.sleep(2)
         wsn_request.send_get_current_message()
+        time.sleep(2)
+        wsn_request.send_renew_subscription(subscription_reference)
+        time.sleep(2)
+        wsn_request.send_pause_subscription(subscription_reference)
+        time.sleep(2)
+        wsn_request.send_notify("Notify sent during paused subscription")
+        time.sleep(2)
+        wsn_request.send_resume_subscription(subscription_reference)
+        time.sleep(2)
+        wsn_request.send_unsubscribe(subscription_reference)
 
     print "[X] Complete."
