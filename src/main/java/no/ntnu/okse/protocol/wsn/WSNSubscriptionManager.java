@@ -9,7 +9,9 @@ import no.ntnu.okse.core.subscription.SubscriptionService;
 import org.apache.log4j.Logger;
 import org.ntnunotif.wsnu.base.util.RequestInformation;
 import org.ntnunotif.wsnu.services.eventhandling.SubscriptionEvent;
+import org.ntnunotif.wsnu.services.filterhandling.FilterSupport;
 import org.ntnunotif.wsnu.services.general.ExceptionUtilities;
+import org.ntnunotif.wsnu.services.general.HelperClasses;
 import org.ntnunotif.wsnu.services.general.ServiceUtilities;
 import org.ntnunotif.wsnu.services.general.WsnUtilities;
 import org.ntnunotif.wsnu.services.implementations.notificationbroker.AbstractNotificationBroker;
@@ -112,6 +114,7 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
      */
     public void addSubscriber(Subscriber s, AbstractNotificationProducer.SubscriptionHandle subHandle) {
         _subscriptionService.addSubscriber(s);
+        log.debug("Adding Subscriber to local mappings: " + s.getAttribute(WSN_SUBSCRIBER_TOKEN));
         localSubscriberMap.put(s.getAttribute(WSN_SUBSCRIBER_TOKEN), s);
         localSubscriberHandle.put(s.getAttribute(WSN_SUBSCRIBER_TOKEN), subHandle);
     }
@@ -266,15 +269,15 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
         /* Find the subscription tag */
         for(Map.Entry<String, String[]> entry : requestInformation.getParameters().entrySet()) {
             log.debug("Current key processing: " + entry.getKey());
-            log.debug("Current value processing: " + entry.getValue());
             if (!entry.getKey().equals(WSN_SUBSCRIBER_TOKEN)) {
                 continue;
             }
             log.debug("Found subscription parameter");
+            String subRef;
 
             /* There is not one value, something is wrong, but try the first one */
             if (entry.getValue().length >= 1) {
-                String subRef = entry.getValue()[0];
+                subRef = entry.getValue()[0];
 
                 if (!localSubscriberMap.containsKey(subRef)) {
                     log.debug("Attempt to renew a subscription that did not exist");
@@ -287,7 +290,10 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
             }
 
             // Extract and store the subscriptionReference
-            String subRef = entry.getValue()[0];
+            subRef = entry.getValue()[0];
+
+            log.debug("SubscriptionReference is: " + subRef);
+            log.debug("Matched Subscriber object is: " + localSubscriberMap.get(subRef));
 
             // Parse the new termination time
             long time = ServiceUtilities.interpretTerminationTime(renewRequest.getTerminationTime());
@@ -306,7 +312,7 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
             RenewResponse response = new RenewResponse();
             GregorianCalendar gc = new GregorianCalendar();
             GregorianCalendar cgc = new GregorianCalendar();
-            Date terminationDate = new Date(time*1000);
+            Date terminationDate = new Date(time);
             Date currentDate = new Date();
             gc.setTime(terminationDate);
             cgc.setTime(currentDate);

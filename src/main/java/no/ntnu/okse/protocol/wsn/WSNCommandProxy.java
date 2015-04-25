@@ -492,6 +492,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
 
         // Register the OKSE subscriber to the SubscriptionService, via the WSNSubscriptionManager
         log.debug("Passing the subscriber to the SubscriptionService...");
+
         _subscriptionManager.addSubscriber(subscriber, subscriptionHandle);
 
         return response;

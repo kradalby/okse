@@ -321,7 +321,7 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
      * @param timeout The new timeout of the subscription represented as seconds since unix epoch
      */
     public void renewSubscriber(Subscriber s, Long timeout) {
-        if (!_subscribers.contains(s)) {
+        if (_subscribers.contains(s)) {
             // Create the job
             Runnable job = () -> renewSubscriberLocal(s, timeout);
             // Initialize the SubscriptionTask wrapper
