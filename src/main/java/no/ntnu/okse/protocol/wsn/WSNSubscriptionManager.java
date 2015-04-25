@@ -241,10 +241,12 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
                 String subRef = entry.getValue()[0];
 
                 if (!localSubscriberMap.containsKey(subRef)) {
+                    log.debug("Attempt to renew a subscription that did not exist");
                     ExceptionUtilities.throwResourceUnknownFault("en", "Given resource was unknown: " + subRef);
                 }
             /* We just continue down here as the time-fetching operations are rather large */
             } else if(entry.getValue().length == 0) {
+                log.debug("Attempt to renew a blank subscription reference");
                 ExceptionUtilities.throwResourceUnknownFault("en", "A blank resource is always unknown.");
             }
 
@@ -256,6 +258,7 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
 
             // Verify new termination time
             if(time < System.currentTimeMillis()) {
+                log.debug("Recieved a terminationTime in renew request that had already passed");
                 ExceptionUtilities.throwUnacceptableTerminationTimeFault("en", "Tried to renew a subscription so it " +
                         "should last until a time that has already passed.");
             }
@@ -301,34 +304,42 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
 
                 if (!localSubscriberMap.containsKey(subRef)) {
                     if (subscriptionIsPaused(subRef)) {
-                        _subscriptionService.resume
+                        log.debug("SubscriptionReference in resume request found, passing to SubscriptionService");
+                        // Tell the SubscriptionService to resume the Subscriber
+                        _subscriptionService.resumeSubscriber(localSubscriberMap.get(subRef));
+                        // Return the response
                         return new ResumeSubscriptionResponse();
                     } else {
+                        log.warn("Attempt to resume a subscriber that was not paused");
                         ExceptionUtilities.throwResumeFailedFault("en", "Subscription is not paused");
                     }
                 }
+                log.warn("Recieved a malformed subscription parameter during resume request");
                 ExceptionUtilities.throwResourceUnknownFault("en", "Ill-formated subscription-parameter");
-            } else if(entry.getValue().length == 0){
+            } else if(entry.getValue().length == 0) {
+                log.warn("Subscription-parameter in URL is missing value during resume request");
                 ExceptionUtilities.throwResumeFailedFault("en", "Subscription-parameter in URL is missing value");
             }
 
+            // Extract and store the subscriptionReference
             String subRef = entry.getValue()[0];
 
             /* The subscriptions is not recognized */
-            if(!_subscriptions.containsKey(subRef)){
-                Log.d("SimplePausableSubscriptionManager", "Subscription not found");
-                Log.d("SimplePausableSubscriptionManager", "Expected: " + subRef);
+            if(!localSubscriberMap.containsKey(subRef)){
+                log.debug("ResumeRequest: Subscription not found");
+                log.debug("ResumeRequest expected: " + subRef);
                 ExceptionUtilities.throwResourceUnknownFault("en", "Subscription not found.");
             }
 
-            Log.d("SimplePausableSubscriptionManager", "Paused subscription");
-            _subscriptions.remove(subRef);
-            fireSubscriptionChanged(subRef, SubscriptionEvent.Type.RESUME);
+            // Tell the SubscriptionService to resume the subscriber
+            _subscriptionService.resumeSubscriber(localSubscriberMap.get(subRef));
+
+            // Return the response
             return new ResumeSubscriptionResponse();
         }
         ExceptionUtilities.throwResumeFailedFault("en", "The subscription was not found as any parameter" +
                 " in the request-uri. Please send a request on the form: " +
-                "\"http://urlofthis.domain/webservice/?"+WsnUtilities.subscriptionString+"=subscriptionreference");
+                "\"http://urlofthis.domain/webservice/?"+WSN_SUBSCRIBER_TOKEN+"=subscriptionreference");
         return null;
     }
 
