@@ -205,6 +205,8 @@ public class WSNRequestParser implements Hub {
                         }
 
                         if (e.getLinkedException() != null) {
+                            // For DEBUG purposes
+                            e.printStackTrace();
                             faultMessage += "\n\tWith linked exception:" + e.getLinkedException().getClass().getName();
                             faultMessage += e.getLinkedException().getMessage() == null ? "" : e.getLinkedException().getMessage();
                         }
@@ -235,7 +237,6 @@ public class WSNRequestParser implements Hub {
                     return new InternalMessage(InternalMessage.STATUS_FAULT, null);
 
                 } catch (IllegalArgumentException e) {
-
                     log.error("parseMessage(): Error not parseable, the error can not be a wsdl-specified one.");
                     return new InternalMessage(InternalMessage.STATUS_FAULT | InternalMessage.STATUS_FAULT_INVALID_PAYLOAD, null);
 
