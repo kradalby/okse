@@ -204,7 +204,7 @@ class WSNRequest(object):
         """
 
         if len(sys.argv) != 5:
-            print "Invalid arguments: python %s <host> <port> <topic>" % sys.argv[0]
+            print "Invalid arguments: python %s <mode> <host> <port> <topic>" % sys.argv[0]
             exit(1)
         try:
             self.MODE = sys.argv[1]
@@ -212,7 +212,7 @@ class WSNRequest(object):
             self.PORT = int(sys.argv[3])
             self.TOPIC = sys.argv[4]
         except ValueError:
-            print "Invalid arguments: python %s <host> <port> <topic>" % sys.argv[0]
+            print "Invalid arguments: python %s <mode> <host> <port> <topic>" % sys.argv[0]
             exit(1)
 
     def generate_url(self, endpoint):
