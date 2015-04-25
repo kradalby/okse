@@ -27,7 +27,16 @@
  */
 var Main = (function($) {
 
-    // Global variable for holding the interval used to update the panes
+    // Private variable for error messages
+    var statusErrorMap = {
+        '400' : "Server understood the request, but request content was invalid.",
+        '401' : "Unauthorized access.",
+        '403' : "Forbidden resource can't be accessed.",
+        '500' : "Internal server error.",
+        '503' : "Service unavailable."
+    };
+
+    //  Private variable for holding the interval used to update the panes
     var clickInterval
 
     // The base url, that appends to all ajax-requests
@@ -96,7 +105,15 @@ var Main = (function($) {
         Global error function that shows the Ajax callback and request url.
      */
     var error = function(xhr, status, error)    {
-        console.error("[Error][" + xhr.url + "] in Ajax with the following callback [status: " + xhr.status +  " readyState: " + xhr.readyState + " responseText: " + xhr.responseText + "]")
+        if (xhr.status != 200) {
+            var errorMessage = statusErrorMap[xhr.status]
+            if (!errorMessage) { errorMessage = "Unknown error" }
+            console.error("[Error][" + xhr.url + "] in Ajax with the following callback {" +
+                "status: " + xhr.status +  " " +
+                "errorMessage: " + errorMessage+ " " +
+                "readyState: " + xhr.readyState + " " +
+                "responseText: " + xhr.responseText + "}")
+        }
     }
 
     var refresh = function(response) {
