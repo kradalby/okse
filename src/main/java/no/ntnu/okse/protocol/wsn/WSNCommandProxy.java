@@ -446,7 +446,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         String newSubscriptionKey = generateSubscriptionKey();
         log.debug("Generating WS-Nu endpoint reference url to subscriptionManager using key: " + newSubscriptionKey + " and prefix: " + WsnUtilities.subscriptionString);
 
-        String subscriptionEndpoint = this.generateHashedURLFromKey(WsnUtilities.subscriptionString, newSubscriptionKey);
+        String subscriptionEndpoint = this.generateHashedURLFromKey(_subscriptionManager.WSN_SUBSCRIBER_TOKEN, newSubscriptionKey);
 
         log.debug("Setting up W3C endpoint reference builder");
         /* Build endpoint reference */
