@@ -102,6 +102,7 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
     @WebMethod(exclude = true)
     public boolean subscriptionIsPaused(String subscriptionReference) {
         return localSubscriberMap.containsKey(subscriptionReference) &&
+                localSubscriberMap.get(subscriptionReference).getAttribute("paused") != null &&
                 localSubscriberMap.get(subscriptionReference).getAttribute("paused").equals("true");
     }
 

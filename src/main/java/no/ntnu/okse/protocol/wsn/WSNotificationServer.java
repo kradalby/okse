@@ -376,6 +376,8 @@ public class WSNotificationServer extends AbstractProtocolServer {
                     _requestParser.acceptLocalMessage(outMessage);
                 }
             }
+        } else {
+            log.debug("Message originated from WSN protocol, already processed");
         }
     }
 
@@ -496,7 +498,13 @@ public class WSNotificationServer extends AbstractProtocolServer {
 
             // Push the outgoingMessage to the request parser. Based on the status flags of the return message
             // we should know what has happened, and which response we should send.
-            InternalMessage returnMessage = WSNotificationServer.this._requestParser.parseMessage(outgoingMessage, response.getOutputStream());
+            InternalMessage returnMessage = null;
+            try {
+                returnMessage = WSNotificationServer.this._requestParser.parseMessage(outgoingMessage, response.getOutputStream());
+            } catch (Exception e) {
+                log.error("Uncaught exception: " + e.getMessage());
+                log.trace(e.getStackTrace());
+            }
 
             // Improper response from WSNRequestParser! FC WHAT DO?
             if (returnMessage == null) {

@@ -215,7 +215,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
      *
      * @param notify               the {@link org.oasis_open.docs.wsn.b_2.Notify} to send
      * @param w3CEndpointReference the reference of the receiving endpoint
-     * @throws IllegalAccessException
+     * @throws IllegalAccessException If not permitted
      */
     @WebMethod(exclude = true)
     public void sendSingleNotify(Notify notify, W3CEndpointReference w3CEndpointReference) {
@@ -268,18 +268,23 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
                     List<QName> topicQNames = TopicValidator.evaluateTopicExpressionToQName(topic, namespaceContextResolver.resolveNamespaceContext(topic));
                     String topicName = TopicUtils.topicToString(topicQNames);
 
+                    log.debug("Message topic extracted: " + topicName);
+
                     // If the topic exists in the OKSE TopicService
                     if (topicService.topicExists(topicName)) {
+                        log.debug("Topic existed, generating OKSE Message for distribution");
                         // Extract the content
                         String content = messageHolderType.getMessage().getAny().toString();
                         // Fetch the topic object
                         Topic okseTopic = topicService.getTopic(topicName);
                         // Generate the message
                         message = new Message(content, okseTopic, null);
+                        log.debug("OKSE Message generated");
                         // Extract the endpoint reference from publisher
                         W3CEndpointReference publisherReference = messageHolderType.getProducerReference();
                         // If we have a publisherReference, add it to the message
                         if (publisherReference != null) {
+                            log.debug("We had a publisher-reference, updating OKSE Message");
                             message.setAttribute(WSNSubscriptionManager.WSN_ENDPOINT_TOKEN, ServiceUtilities.getAddress(publisherReference));
                         }
                         // Update the originating protocol
@@ -303,7 +308,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         }
 
         /* Start Message Parsing */
-
+        log.debug("Start message parsing and namespace binding");
         // bind namespaces to topics
         for (NotificationMessageHolderType holderType : notify.getNotificationMessage()) {
 
@@ -325,6 +330,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
                 });
             }
         }
+        log.debug("Processing valid recipients...");
 
         // Remember current message with context
         currentMessage = notify;
@@ -350,6 +356,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
                 hub.acceptLocalMessage(outMessage);
             }
         }
+        log.debug("Finished sending message to valid WS-Notification recipients");
     }
 
     /**

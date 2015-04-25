@@ -251,7 +251,8 @@ class WSNRequest(object):
         """
         Prints the headers and response body of a response
         """
-
+        print "--- RESPONSE CODE -------------------------------------"
+        print response.status_code
         print "--- RESPONSE HEADERS ----------------------------------"
         print response.headers
         print "--- RESPONSE BODY -------------------------------------"
@@ -286,7 +287,7 @@ class WSNRequest(object):
         Sends a subscription request
         """
 
-        print "[i] Sending a %s request..." % MODES[sys.argv[1]]
+        print "[i] Sending a Subscribe request"
 
         # Generate the payload
         payload = SUBSCRIBE % ('http://localhost:8081', self.TOPIC)
@@ -299,7 +300,7 @@ class WSNRequest(object):
         Sends a publisher registration request
         """
 
-        print "[i] Sending a %s request..." % MODES[sys.argv[1]]
+        print "[i] Sending a PublisherRegistration request"
 
         # Generate the payload
         payload = REGISTER % ('http://localhost:61000', self.TOPIC)
@@ -312,7 +313,7 @@ class WSNRequest(object):
         Sends a GetCurrentMessage request
         """
 
-        print "[i] Sending a %s request..." % MODES[sys.argv[1]]
+        print "[i] Sending a GetCurrentMessage request"
 
         # Generate the payload
         payload = GET_CURRENT_MESSAGE % (self.TOPIC)
@@ -325,7 +326,7 @@ class WSNRequest(object):
         Sends a Renew request
         """
 
-        print "[i] Sending a %s request..." % MODES[sys.argv[1]]
+        print "[i] Sending a RenewSubscription request"
 
         # Generate the payload
         payload = RENEW
@@ -337,7 +338,7 @@ class WSNRequest(object):
         Sends a Pause request
         """
 
-        print "[i] Sending a %s request..." % MODES[sys.argv[1]]
+        print "[i] Sending a PauseSubscription request"
 
         # Generate the payload
         payload = PAUSE
@@ -349,7 +350,7 @@ class WSNRequest(object):
         Sends a Resume request
         """
 
-        print "[i] Sending a %s request..." % MODES[sys.argv[1]]
+        print "[i] Sending a ResumeSubscription request"
 
         # Generate the payload
         payload = RESUME
@@ -361,7 +362,7 @@ class WSNRequest(object):
         Sends a Unsubscribe request
         """
 
-        print "[i] Sending a %s request..." % MODES[sys.argv[1]]
+        print "[i] Sending a Unsubscribe request"
 
         # Generate the payload
         payload = UNSUBSCRIBE
@@ -373,7 +374,7 @@ class WSNRequest(object):
         Sends a DestroyRegistration request
         """
 
-        print "[i] Sending a %s request..." % MODES[sys.argv[1]]
+        print "[i] Sending a DestroyRegistration request"
 
         # Generate the payload
         payload = UNREGISTER
@@ -442,14 +443,12 @@ if __name__ == "__main__":
         print "[i] Performing all requests in order..."
 
         wsn_request.send_subscription()
-        time.sleep(2)
         subscription_reference = raw_input("Enter the subscription reference: ")
         subscription_reference = subscription_reference.rstrip()
         wsn_request.send_registration()
-        time.sleep(2)
         publisher_reference = raw_input("Enter the publisher reference: ")
         publisher_reference = publisher_reference.rstrip()
-        wsn_request.send_notify("Test Message")
+        wsn_request.send_notify("Test message that should arrive at consumer address.")
         time.sleep(2)
         wsn_request.send_get_current_message()
         time.sleep(2)
@@ -457,7 +456,7 @@ if __name__ == "__main__":
         time.sleep(2)
         wsn_request.send_pause_subscription(subscription_reference)
         time.sleep(2)
-        wsn_request.send_notify("Notify sent during paused subscription")
+        wsn_request.send_notify("Notify sent during paused subscription that should not be recieved.")
         time.sleep(2)
         wsn_request.send_resume_subscription(subscription_reference)
         time.sleep(2)
