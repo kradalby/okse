@@ -34,6 +34,7 @@ import no.ntnu.okse.protocol.wsn.WSNotificationServer;
 import no.ntnu.okse.web.Server;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
+import org.ntnunotif.wsnu.base.util.Log;
 
 import java.io.File;
 
@@ -66,7 +67,10 @@ public class Application {
      */
     public static void main(String[] args) {
         PropertyConfigurator.configure("config/log4j.properties");
+        // Turn off WS-Nu debug output
+        Log.setEnableDebug(false);
         log = Logger.getLogger(Application.class.getName());
+        log.info("Starting OKSE " + VERSION);
 
         File dbFile = new File("okse.db");
 
