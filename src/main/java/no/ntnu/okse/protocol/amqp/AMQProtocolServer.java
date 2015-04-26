@@ -46,6 +46,9 @@ public class AMQProtocolServer extends AbstractProtocolServer {
     private static AMQProtocolServer _singleton;
     private static String hostname = "78.91.25.248";
 
+    private Driver driver;
+    private AMQPServer server;
+
     private AMQProtocolServer(Integer port) {this.init(port);}
 
 
@@ -82,11 +85,12 @@ public class AMQProtocolServer extends AbstractProtocolServer {
     public void run() {
         try {
             Collector collector = Collector.Factory.create();
-            Router router = new Router();
-            Driver driver = new Driver(collector, new Handshaker(),
-                new FlowController(1024), router,
-                new AMQPServer(router, false),
-                    new TestBeist());
+            //Router router = new Router();
+            SubscriptionHandler sh = new SubscriptionHandler();
+            server = new AMQPServer(sh, false);
+            driver = new Driver(collector, new Handshaker(),
+                new FlowController(1024), sh,
+                server);
             driver.listen(hostname, port);
             driver.run();
         } catch (IOException e) {
@@ -98,6 +102,7 @@ public class AMQProtocolServer extends AbstractProtocolServer {
     @Override
     public void stopServer() {
         _running = false;
+        //TODO: implement driver.stop()
 
     }
 
@@ -108,6 +113,10 @@ public class AMQProtocolServer extends AbstractProtocolServer {
 
     @Override
     public void sendMessage(Message message) {
-        log.info("KRAMQP");
+        server.addMessageToQueue(message);
+    }
+
+    public void incrementTotalMessages() {
+        totalMessages++;
     }
 }

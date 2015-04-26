@@ -24,10 +24,15 @@
 
 package no.ntnu.okse.protocol.amqp;
 
+import no.ntnu.okse.core.subscription.Subscriber;
+import no.ntnu.okse.core.subscription.SubscriptionService;
+import no.ntnu.okse.core.topic.Topic;
+import no.ntnu.okse.core.topic.TopicService;
 import org.apache.log4j.Logger;
 import org.apache.qpid.proton.amqp.transport.Source;
 import org.apache.qpid.proton.amqp.transport.Target;
 import org.apache.qpid.proton.engine.*;
+import org.apache.qpid.proton.engine.impl.SenderImpl;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -40,7 +45,7 @@ import java.util.concurrent.ThreadLocalRandom;
  * Most of this code is from the qpid-proton-demo (https://github.com/rhs/qpid-proton-demo) by Rafael Schloming
  * Created by kradalby on 24/04/15.
  */
-public class Router extends BaseHandler {
+public class SubscriptionHandler extends BaseHandler {
 
     public static class Routes<T extends Link> {
 
@@ -65,16 +70,22 @@ public class Router extends BaseHandler {
             return routes.get(idx);
         }
 
+        public void printRouteTable() {
+            routes.forEach((route) -> {
+                System.out.println(route.toString());
+            });
+        }
+
     }
 
     private static final Routes<Sender> EMPTY_OUT = new Routes<Sender>();
     private static final Routes<Receiver> EMPTY_IN = new Routes<Receiver>();
-    private static Logger log = Logger.getLogger(Router.class.getName());
+    private static Logger log = Logger.getLogger(SubscriptionHandler.class.getName());
 
     final private Map<String,Routes<Sender>> outgoing = new HashMap<String,Routes<Sender>>();
     final private Map<String,Routes<Receiver>> incoming = new HashMap<String,Routes<Receiver>>();
 
-    public Router() {}
+    public SubscriptionHandler() {}
 
     private String getAddress(Source source) {
         if (source == null) {
@@ -115,6 +126,11 @@ public class Router extends BaseHandler {
     }
 
     private void add(Sender sender) {
+        Subscriber subscriber = new Subscriber(sender.getSource().getAddress(), 1337, getAddress(sender), "AMQP");
+        SubscriptionService.getInstance().addSubscriber(subscriber);
+        TopicService.getInstance().addTopic(getAddress(sender));
+
+
         String address = getAddress(sender);
         Routes<Sender> routes = outgoing.get(address);
         if (routes == null) {
@@ -125,6 +141,7 @@ public class Router extends BaseHandler {
         log.debug("Adding sender: " + sender.getName() + " to route: " + address);
         log.debug(outgoing.toString());
         routes.add(sender);
+        routes.printRouteTable();
     }
 
     private void remove(Sender sender) {
@@ -150,6 +167,7 @@ public class Router extends BaseHandler {
         log.debug("Adding receiver: " + receiver.getName() + " to route: " + address);
         log.debug(incoming.toString());
         routes.add(receiver);
+        routes.printRouteTable();
     }
 
     private void remove(Receiver receiver) {

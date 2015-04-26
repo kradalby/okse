@@ -38,10 +38,7 @@ import org.apache.qpid.proton.engine.Sender;
 import org.apache.qpid.proton.message.Message;
 import org.apache.qpid.proton.messenger.impl.Address;
 
-import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 
 /**
@@ -77,13 +74,13 @@ public class AMQPServer extends BaseHandler {
     }
 
     final private MessageStore messages = new MessageStore();
-    final private Router router;
+    final private SubscriptionHandler subscriptionHandler;
     private static Logger log;
     private boolean quiet;
     private int tag = 0;
 
-    public AMQPServer(Router router, boolean quiet) {
-        this.router = router;
+    public AMQPServer(SubscriptionHandler subscriptionHandler, boolean quiet) {
+        this.subscriptionHandler = subscriptionHandler;
         this.quiet = quiet;
         log = Logger.getLogger(AMQPServer.class.getName());
     }
@@ -98,12 +95,13 @@ public class AMQPServer extends BaseHandler {
 
     private int send(String address, Sender snd) {
         if (snd == null) {
-            Router.Routes<Sender> routes = router.getOutgoing(address);
+            SubscriptionHandler.Routes<Sender> routes = subscriptionHandler.getOutgoing(address);
             snd = routes.choose();
             if (snd == null) {
                 return 0;
             }
         }
+        log.debug("Fetched this sender: " + snd.toString());
 
         int count = 0;
         while (snd.getCredit() > 0 && snd.getQueued() < 1024) {
@@ -112,35 +110,73 @@ public class AMQPServer extends BaseHandler {
                 snd.drained();
                 return count;
             }
+            log.debug(String.format("Preparing to send: %s", msg.toString()));
             Delivery dlv = snd.delivery(nextTag());
             byte[] bytes = msg.getBytes();
             snd.send(bytes, 0, bytes.length);
             dlv.settle();
             count++;
             if (!quiet) {
-                log.debug(String.format("Sent message(%s): %s", address, msg));
+                log.debug(String.format("Sent message(%s): %s to %s", address, msg.toString(), snd.toString()));
             }
         }
 
         return count;
     }
 
+//    private int send(String address, Sender snd) {
+//        Router.Routes<Sender> routes = router.getOutgoing(address);
+//        List<Sender> senders;
+//        senders = routes.getAllRoutes();
+//        System.out.println(senders.toString());
+//        //snd = routes.choose();
+//        if (senders == null) {
+//            return 0;
+//        }
+//
+//        int count = 0;
+//        MessageBytes msg = messages.get(address);
+//        for (Sender sender : senders) {
+//            while (sender.getCredit() > 0 && sender.getQueued() < 1024) {
+//                System.out.println(msg.toString());
+//                System.out.println(sender.getRemoteSource().getAddress());
+//                System.out.println(sender.getRemoteTarget().getAddress());
+//                System.out.println(sender.getSource().getAddress());
+//                System.out.println(sender.getTarget().getAddress());
+//                if (msg == null) {
+//                    sender.drained();
+//                    break;
+//                }
+//                Delivery dlv = sender.delivery(nextTag());
+//                byte[] bytes = msg.getBytes();
+//                sender.send(bytes, 0, bytes.length);
+//                dlv.settle();
+//                count++;
+//                if (!quiet) {
+//                    log.debug(String.format("Sent message(%s): %s", address, msg));
+//                }
+//            }
+//        }
+//
+//        return count;
+//    }
+
     @Override
     public void onLinkFlow(Event evt) {
         Link link = evt.getLink();
         if (link instanceof Sender) {
             Sender snd = (Sender) link;
-            send(router.getAddress(snd), snd);
+            send(subscriptionHandler.getAddress(snd), snd);
         }
     }
 
-//    @Override
-//    public void onDelivery(Event evt) {
-//        Delivery dlv = evt.getDelivery();
-//        Link link = dlv.getLink();
-//        if (link instanceof Sender) {
-//            dlv.settle();
-//        } else {
+    public void addMessageToQueue(no.ntnu.okse.core.messaging.Message message) {
+        MessageBytes msg = new MessageBytes(message.getMessage().getBytes());
+        String address = message.getTopic().getFullTopicString();
+        messages.put(address, msg);
+        log.debug("Added message on topic: " + address + " to queue");
+        send(address);
+//
 //            Receiver rcv = (Receiver) link;
 //            if (!dlv.isPartial()) {
 //                byte[] bytes = new byte[dlv.pending()];
@@ -156,7 +192,7 @@ public class AMQPServer extends BaseHandler {
 //                send(address);
 //            }
 //        }
-//    }
+    }
 
     @Override
     public void onDelivery(Event event) {
@@ -170,6 +206,12 @@ public class AMQPServer extends BaseHandler {
             if (!dlv.isPartial()) {
                 byte[] bytes = new byte[dlv.pending()];
                 rcv.recv(bytes, 0, bytes.length);
+                System.out.println(rcv.getRemoteSource().getAddress());
+                System.out.println(rcv.getRemoteTarget().getAddress());
+                System.out.println(rcv.getSource().getAddress());
+                System.out.println(rcv.getTarget().getAddress());
+                String derp = subscriptionHandler.getAddress(rcv);
+                System.out.println("HERE: " + derp);
                 Message msg = Message.Factory.create();
                 msg.decode(bytes, 0, bytes.length);
                 Address address = new Address(msg.getAddress());
@@ -180,23 +222,45 @@ public class AMQPServer extends BaseHandler {
 
                 no.ntnu.okse.core.messaging.Message message =
                         new no.ntnu.okse.core.messaging.Message(msg.getBody().toString(), t, null);
-                message.setOriginProtocol(protocolServerType);
-                
+                message.setOriginProtocol(AMQProtocolServer.getInstance().getProtocolServerType());
+
                 MessageService.getInstance().distributeMessage(message);
-                totalMessages++;
+                AMQProtocolServer.getInstance().incrementTotalMessages();
 
                 System.out.println(address.getName());
                 System.out.println(msg.getBody().toString());
-                //String address = router.getAddress(rcv);
-//                MessageBytes messageBytes = new MessageBytes(bytes);
-//                messages.put(address, messageBytes);
-//                dlv.disposition(Accepted.getInstance());
-//                dlv.settle();
-//                if (!quiet) {
-//                    log.debug(String.format("Got message(%s): %s", address, messageBytes));
-//                }
-//                send(address);
+
+                dlv.disposition(Accepted.getInstance());
+                dlv.settle();
+                log.debug(String.format("Got message(%s): %s from %s", address, message, rcv.toString()));
+
             }
         }
     }
+
+//    @Override
+//    public void onDelivery(Event evt) {
+//        Delivery dlv = evt.getDelivery();
+//        Link link = dlv.getLink();
+//        if (link instanceof Sender) {
+//            dlv.settle();
+//        } else {
+//            Receiver rcv = (Receiver) link;
+//            if (!dlv.isPartial()) {
+//                byte[] bytes = new byte[dlv.pending()];
+//                rcv.recv(bytes, 0, bytes.length);
+//                String address = subscriptionHandler.getAddress(rcv);
+//                MessageBytes message = new MessageBytes(bytes);
+//                messages.put(address, message);
+//                dlv.disposition(Accepted.getInstance());
+//                dlv.settle();
+//                if (!quiet) {
+//                    System.out.println(String.format("Got message(%s): %s", address, message));
+//                }
+//                send(address);
+//            }
+//        }
+//    }
+
+
 }
