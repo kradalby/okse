@@ -29,12 +29,18 @@
 
 var Config = (function($) {
 
+    var bindButtons = function() {
+        $("#add-predefined-mapping").on('click', function(e) {
+            console.log('[Debug][Config] Add predefined mapping between ' + $('#from-topic').val() + ' --> ' + $('#to-topic').val())
+        });
+    }
+
     return {
-        error: function() {
-            console.log("error in ajax for config")
+        refresh: function(response) {
+            console.log("[Debug][Config]" + JSON.stringify(response))
         },
-        refresh: function(data) {
-            console.log(JSON.stringify(data))
+        init: function() {
+            bindButtons()
         }
     }
 

@@ -1,0 +1,47 @@
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity3"
+      layout:decorator="layout">
+<head>
+</head>
+<body>
+<th:block layout:fragment="mainpane">
+    <div class="tab-pane active" id="main">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="panel panel-info">
+                    <!-- Default panel contents -->
+                    <div class="panel-heading">Operating environment</div>
+                    <!-- <div class="panel-body"></div> -->
+                    <!-- List group -->
+                    <ul class="list-group">
+                        <li class="list-group-item" th:each="entry : ${environment}">
+                            <strong th:text="${entry.key} + ': '"></strong><span th:text="${entry.value}"></span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="panel panel-info">
+                    <!-- Default panel contents -->
+                    <div class="panel-heading">Status</div>
+                    <!-- <div class="panel-body"></div> -->
+                    <!-- List group -->
+                    <ul class="list-group">
+                        <li class="list-group-item"><strong>Broker: </strong><span th:text="${projectName}">Unknown</span></li>
+                        <li class="list-group-item"><strong>Subscribers: </strong><span class="total-subscribers" th:text="${subscribers}">Unknown</span></li>
+                        <li class="list-group-item" th:each="ip : ${serverIpAddresses}">
+                            <strong>Bound to IP: </strong><span th:text="${ip}">Unknown</span>
+                        </li>
+                        <li class="list-group-item"><strong>Bound to port: </strong>Different for all protocols</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <p>Nothing to see here at the moment!</p>
+            </div>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>

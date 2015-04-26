@@ -24,16 +24,22 @@
 
 package no.ntnu.okse.web.controller;
 
+import no.ntnu.okse.core.subscription.SubscriptionService;
 import org.springframework.beans.factory.annotation.Value;
 import no.ntnu.okse.Application;
-import no.ntnu.okse.core.event.PageLoadEvent;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+import java.net.*;
+import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Properties;
 import java.util.logging.Logger;
 
@@ -45,36 +51,55 @@ import java.util.logging.Logger;
 @Controller
 public class IndexController {
 
+    private static org.apache.log4j.Logger log = org.apache.log4j.Logger.getLogger(IndexController.class.getName());
+
     @Value("${spring.application.name}")
     private String appName;
-
-    @Value("${server.port}")
-    private String port;
 
     private Properties environment = System.getProperties();
 
     @RequestMapping("/")
     public String index(Model model) {
-        model.addAttribute("projectName", appName);
-        model.addAttribute("serverPort", port);
-        model.addAttribute("environment", createEnvironmentList());
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
-        try {
-            model.addAttribute("serverAddress", InetAddress.getLocalHost().getHostAddress());
-        } catch (UnknownHostException e) {
-            model.addAttribute("serverAddress", "Unknown");
+        if (auth instanceof AnonymousAuthenticationToken) {
+            // The user is not logged in
+            return "fragments/indexNotLoggedIn";
         }
 
-        Application.cs.getExecutor().execute(() -> {
-            try {
-                Application.cs.getEventQueue().put(new PageLoadEvent("PageLoad", "CorrectDataObject", "String"));
-            } catch (InterruptedException e) {
-                Logger.getLogger(Application.class.getName()).info(e.getMessage());
-            } catch (IllegalArgumentException e1) {
-                Logger.getLogger(Application.class.getName()).info(e1.getMessage());
+        model.addAttribute("projectName", appName);
+        model.addAttribute("environment", createEnvironmentList());
+        model.addAttribute("subscribers", SubscriptionService.getInstance().getAllSubscribers().size());
+
+        HashSet<String> ipAddresses = new HashSet<>();
+
+        String ip;
+        try {
+            Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+            while (interfaces.hasMoreElements()) {
+                NetworkInterface iFace = interfaces.nextElement();
+                // Filters out 127.0.0.1 and inactive interfaces
+                if (iFace.isLoopback() || !iFace.isUp())
+                    continue;
+
+                Enumeration<InetAddress> addresses = iFace.getInetAddresses();
+                iFace.getInterfaceAddresses();
+                while(addresses.hasMoreElements()) {
+                    InetAddress addr = addresses.nextElement();
+                    // We are only interested in Inet4Addresses
+                    if (addr instanceof Inet6Address)
+                        continue;
+                    ip = addr.getHostAddress();
+                    ipAddresses.add(ip);
+                }
             }
-        });
-        return "fragments/index";
+        } catch (SocketException e) {
+            throw new RuntimeException(e);
+        }
+
+        model.addAttribute("serverIpAddresses", ipAddresses);
+
+        return "fragments/indexLoggedIn";
 
     }
 

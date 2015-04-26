@@ -24,57 +24,76 @@
 
 package no.ntnu.okse.web.model;
 
-import org.hyperic.sigar.*;
+import java.util.ArrayList;
+
 
 /**
  * Created by Fredrik on 06/03/15.
  */
 public class Stats {
-    private final double ramUse;
-    private final double cpuUse;
-    private final long mbSent;
-    private final long mbReceived;
-    private final long messagesSent;
-    private final long messagesReceived;
+    private final long ramTotal;
+    private final long ramFee;
+
+    private final double cpuAvailable;
+    private final int totalRequests;
+    private final int totalMessages;
+    private final int totalBadRequests;
+    private final int totalErrors;
+
+    private final ArrayList<ProtocolStats> protocolstats;
+    // Baseformat
+    int mb = 1024*1024;
+
+    public Stats(long ramFree, long ramTotal, double cpuAvailable, int totalRequests, int totalMessages, int totalBadRequests, int totalErrors, ArrayList<ProtocolStats> protocolstats) {
 
 
-    public Stats(double ramUse, double cpuUse, long mbSent, long mbReceived, long messagesSent, long messagesReceived){
-        this.ramUse = ramUse;
-        this.cpuUse = cpuUse;
-        this.mbSent = mbSent;
-        this.mbReceived = mbReceived;
-        this.messagesSent = messagesSent;
-        this.messagesReceived = messagesReceived;
+        this.ramFee = ramFree;
+        this.ramTotal = ramTotal;
+        this.cpuAvailable = cpuAvailable;
+        this.totalRequests = totalRequests;
+        this.totalMessages = totalMessages;
 
-        Sigar sigar = new Sigar();
-        //final Mem mem = sigar.getMem();
+        this.protocolstats = protocolstats;
+
+
+        this.totalBadRequests = totalBadRequests;
+        this.totalErrors = totalErrors;
 
     }
 
+    public int getTotalRequests() {
+        return totalRequests;
+    }
 
-    public double getRamUse() {
-        return ramUse;
+    public int getTotalMessages() {
+        return totalMessages;
+    }
+
+    public int getTotalBadRequests() {
+        return totalBadRequests;
+    }
+
+    public int getTotalErrors() {
+        return totalErrors;
+    }
+
+    public long getRamUse() {
+        return (ramTotal - ramFee)/mb;
     }
 
     public double getCpuUse() {
-        return cpuUse;
+        return cpuAvailable;
     }
 
-    public long getMbSent() {
-        return mbSent;
+
+    public long getRamTotal(){
+      return ramTotal/mb;
     }
 
-    public long getMbReceived() {
-        return mbReceived;
-    }
+    public double getRamFree(){ return ramFee/mb; }
 
-    public long getMessagesSent() {
-        return messagesSent;
-    }
+    public ArrayList<ProtocolStats> getProtocols() { return protocolstats; }
 
-    public long getMessagesReceived() {
-        return messagesReceived;
-    }
 
 
 

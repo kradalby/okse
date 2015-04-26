@@ -1,0 +1,67 @@
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity3"
+      layout:decorator="layout">
+<head>
+</head>
+<body>
+<th:block layout:fragment="statspane">
+    <div class="tab-pane" id="stats">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="panel panel-info">
+                    <!-- Default panel contents -->
+                    <div class="panel-heading">System</div>
+                    <!-- <div class="panel-body"></div> -->
+                    <!-- List group -->
+                    <ul class="list-group">
+                        <li class="list-group-item" id="cpucores"><strong>CPU cores: </strong>0</li>
+                        <li class="list-group-item" id="totalram"><strong>Total RAM: </strong>0 MB</li>
+                        <li class="list-group-item" id="freeram"><strong>Free RAM: </strong>0 MB</li>
+                        <li class="list-group-item" id="ramuse"><strong>Used RAM: </strong>0 MB</li>
+                    </ul>
+                </div>
+                <div class="panel panel-info">
+                    <!-- Default panel contents -->
+                    <div class="panel-heading">Status</div>
+                    <!-- <div class="panel-body"></div> -->
+                    <!-- List group -->
+                    <ul class="list-group">
+                        <li class="list-group-item"><strong>Subscribers: </strong><span class="total-subscribers" th:text="${subscribers}">Unknown</span></li>
+                        <li class="list-group-item" th:each="ip : ${serverIpAddresses}">
+                            <strong>Bound to IP: </strong><span th:text="${ip}">Unknown</span>
+                        </li>
+                        <li class="list-group-item"><strong>Bound to port: </strong>Different for all protocols</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="panel panel-info">
+                    <!-- Default panel contents -->
+                    <div class="panel-heading" id="usage-column">Usage</div>
+                    <!-- <div class="panel-body"></div> -->
+                    <!-- List group -->
+                    <ul class="list-group">
+                        <li class="list-group-item" id="stats-total-requests"><strong>Requests handled: </strong>0</li>
+                        <li class="list-group-item" id="stats-total-messages"><strong>Messages sent: </strong>0</li>
+                        <li class="list-group-item" id="stats-total-badrequests"><strong>Bad requests: </strong>0</li>
+                        <li class="list-group-item" id="stats-total-error"><strong>Total errors: </strong>0</li>
+                        <li class="list-group-item" id="stats-total-megabytes-recieved"><strong>MB recieved: </strong>0</li>
+                        <li class="list-group-item" id="stats-total-megabytes-sent"><strong>MB sent: </strong>0</li>
+                    </ul>
+
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="panel panel-info" id="protocolList">
+                    <!-- Default panel contents -->
+                    <div class="panel-heading">Protocols</div>
+                    <!-- <div class="panel-body"></div> -->
+                    <!-- List group -->
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>

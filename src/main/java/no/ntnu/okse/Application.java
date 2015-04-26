@@ -25,9 +25,16 @@
 package no.ntnu.okse;
 
 import no.ntnu.okse.core.CoreService;
+import no.ntnu.okse.core.messaging.MessageService;
+import no.ntnu.okse.core.subscription.SubscriptionService;
+import no.ntnu.okse.core.topic.TopicService;
 import no.ntnu.okse.db.DB;
+import no.ntnu.okse.examples.DummyProtocolServer;
+import no.ntnu.okse.protocol.wsn.WSNotificationServer;
 import no.ntnu.okse.web.Server;
 import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
+import org.ntnunotif.wsnu.base.util.Log;
 
 import java.io.File;
 
@@ -39,6 +46,16 @@ import java.io.File;
  */
 public class Application {
 
+    // Version
+    public static final String VERSION = "0.0.1a";
+
+    /* Default global variables */
+    public static String OKSE_SYSTEM_NAME = "OKSE System";
+    public static boolean BROADCAST_SYSTEM_MESSAGES_TO_SUBSCRIBERS = false;
+    public static boolean CACHE_MESSAGES = true;
+    public static long DEFAULT_SUBSCRIPTION_TERMINATION_TIME = 15552000000L; // Half a year
+    public static long DEFAULT_PUBLISHER_TERMINATION_TIME = 15552000000L; // Half a year
+
     private static Logger log;
     public static CoreService cs;
     public static Server webserver;
@@ -46,9 +63,12 @@ public class Application {
     /**
      * Main method for the OKSE Message Broker
      * Used to initate the complete application (CoreService and WebServer)
-     * @param args Command line arguments, most probably not used
+     * @param args Command line arguments
      */
     public static void main(String[] args) {
+        PropertyConfigurator.configure("config/log4j.properties");
+        // Turn off WS-Nu debug output
+        Log.setEnableDebug(false);
         log = Logger.getLogger(Application.class.getName());
 
         File dbFile = new File("okse.db");
@@ -60,16 +80,24 @@ public class Application {
             log.info("okse.db exists");
         }
 
-        // Boot system threads and start run processes.
+        // Initialize main system components
         webserver = new Server();
-        cs = new CoreService();
-        webserver.run();
-        cs.start();
+        cs = CoreService.getInstance();
 
-        try {
-            cs.join();
-        } catch (InterruptedException e) {
-            log.trace(e.getStackTrace());
-        }
+        /* REGISTER CORE SERVICES HERE */
+        cs.registerService(TopicService.getInstance());
+        cs.registerService(MessageService.getInstance());
+        cs.registerService(SubscriptionService.getInstance());
+
+        /* REGISTER PROTOCOL SERVERS HERE */
+        cs.addProtocolServer(WSNotificationServer.getInstance());
+        cs.addProtocolServer(DummyProtocolServer.getInstance());    // Example ProtocolServer
+
+        // Start the admin console
+        webserver.run();
+
+        // Start the CoreService
+        log.info("Starting OKSE " + VERSION);
+        cs.boot();
     }
 }

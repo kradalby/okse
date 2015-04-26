@@ -28,14 +28,38 @@
 
 var Stats = (function($) {
 
+    /*
+     Creates, fills and returns a tr element
+     */
+    var fillTable = function(data) {
+        var HTML = '';
+        $.each(data.protocols, function (i, protocolstats) {
+            if ($('#' + protocolstats.protocolServerType).length === 0) {
+                HTML +=
+                    '<div class="panel-heading" id="" + protocolstats.protocolServerType>' + protocolstats.protocolServerType + '</div>' +
+                        '<ul class="list-group">' +
+                        '<li class="list-group-item"> <strong>Requests handled:</strong> ' + protocolstats.totalRequests + '</li>' +
+                        '<li class="list-group-item"> <strong>Messages sent:</strong> ' + protocolstats.totalMessages + '</li>' +
+                        '</ul>'
+            }
+        });
+        return HTML
+    }
+
     return {
-        error: function() {
-            console.log("error in ajax for Stats")
-        },
         refresh: function(data) {
-            console.log(JSON.stringify(data))
+            $('#stats-total-messages').html('<strong>Messages sent: </strong>' + data.totalMessages)
+            $('#stats-total-requests').html('<strong>Requests handled: </strong>' + data.totalRequests)
+
+            $('#stats-total-badrequests').html('<strong>Bad requests: </strong>' + data.totalBadRequests)
+            $('#stats-total-error').html('<strong>Total errors: </strong>' + data.totalErrors)
+
+            $('#totalram').html('<strong>Total RAM: </strong>' + data.ramTotal + ' MB')
+            $('#freeram').html('<strong>Free RAM: </strong>' + data.ramFree + ' MB')
+            $('#ramuse').html('<strong>Used RAM: </strong>' + data.ramUse + ' MB')
+            $('#cpucores').html('<strong>CPU cores: </strong>' + data.cpuUse)
+            $('#protocolList').html(fillTable(data))
         }
     }
 
-
-})(jQuery)
+})(jQuery);

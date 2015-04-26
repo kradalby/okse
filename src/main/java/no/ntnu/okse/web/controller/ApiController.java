@@ -24,16 +24,12 @@
 
 package no.ntnu.okse.web.controller;
 
-import no.ntnu.okse.web.model.Subscriber;
-import no.ntnu.okse.web.model.Topic;
+import no.ntnu.okse.core.subscription.SubscriptionService;
+import org.apache.log4j.Logger;
 import org.springframework.web.bind.annotation.*;
 
 import java.lang.String;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Created by Håkon Ødegård Løvdal (hakloev) on 25/02/15.
@@ -42,51 +38,15 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 @RestController
 public class ApiController {
-    private int counter = 0;
 
-    @RequestMapping(value = "/api/topics", method = RequestMethod.GET)
-    public Topic topics(@RequestParam(value="name", defaultValue="World") String name) {
-        if (counter % 5 == 0) {
-            counter++;
-            return new Topic(1233L, "myTopic", new ArrayList<Subscriber>(Arrays.asList(
-                    new Subscriber("127.0.1.1", "765", "mqtt", new HashMap<String, String>()),
-                    new Subscriber("0.0.0.0", "60618", "WSN", new HashMap<String, String>()),
-                    new Subscriber("localhost", "235", "amqp", new HashMap<String, String>()),
-                    new Subscriber("127.0.0.1", "324", "ZeroMQ", new HashMap<String, String>())
-            )));
-        } else if (counter % 10 == 0) {
-            counter++;
-            return new Topic(1233L, "myTopic", new ArrayList<Subscriber>(Arrays.asList(
-                    new Subscriber("127.0.1.1", "765", "mqtt", new HashMap<String, String>()),
-                    new Subscriber("0.0.0.0", "60618", "WSN", new HashMap<String, String>()),
-                    new Subscriber("78.91.14.23", "435", "DDS", new HashMap<String, String>()),
-                    new Subscriber("localhost", "555", "WSN", new HashMap<String, String>())
-            )));
-        } else {
-            counter++;
-            return new Topic(1233L, "testTopic", new ArrayList<Subscriber>(Arrays.asList(
-                    new Subscriber("128.0.0.1", "8080", "WSN", new HashMap<String, String>()),
-                    new Subscriber("78.91.14.24", "234", "DDS", new HashMap<String, String>()),
-                    new Subscriber("192.168.1.1", "58080", "ZeroMQ", new HashMap<String, String>())
-            )));
-        }
-    }
+    private static Logger log = Logger.getLogger(ApiController.class.getName());
 
     @RequestMapping(value = "/api/main", method = RequestMethod.GET)
-    public List<Topic> main() {
-        List<Topic> allTheShit = new ArrayList<>();
-        return allTheShit;
+    public HashMap<String, String> main() {
+        HashMap<String, String> mainApi = new HashMap<>();
+        mainApi.put("subscribers", String.valueOf(SubscriptionService.getInstance().getAllSubscribers().size()));
+        return mainApi;
     }
 
-    @RequestMapping(value = "/api/stats", method = RequestMethod.GET)
-    public List<Topic> stats() {
-        List<Topic> allTheShit = new ArrayList<>();
-        return allTheShit;
-    }
 
-    @RequestMapping(value = "/api/config", method = RequestMethod.GET)
-    public List<Topic> config(){
-        List<Topic> allTheShit = new ArrayList<>();
-        return allTheShit;
-    }
 }

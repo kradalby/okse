@@ -30,8 +30,16 @@ body {
     padding-top: 20px;
 }
 
+.table {
+    margin-bottom: 0;
+}
+
+.panel.panel-collapse {
+    margin-bottom: 0;
+}
+
 .panel-heading h3 {
-    pointer:cursor;
+    cursor: pointer;
 }
 
 .panel-heading h3:after {
@@ -42,4 +50,21 @@ body {
 }
 .panel-heading h3.collapsed:after {
     content:"\e080";
+}
+
+.btn-row {
+    margin: 10px 0;
+}
+
+.log-view {
+    background-color: rgba(210, 210, 210, 0.2);
+    cursor: text;
+    padding: 15px;
+    margin-bottom: 0;
+    border: 0;
+    font-family: monospace;
+}
+
+.deleted {
+    opacity: 0.3;
 }
