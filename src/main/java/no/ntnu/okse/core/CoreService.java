@@ -24,6 +24,7 @@
 
 package no.ntnu.okse.core;
 
+import no.ntnu.okse.Application;
 import no.ntnu.okse.core.event.Event;
 
 import no.ntnu.okse.core.event.SystemEvent;
@@ -43,14 +44,17 @@ import java.util.concurrent.LinkedBlockingQueue;
  */
 public class CoreService extends AbstractCoreService {
 
+    // Common service fields
     private static CoreService _singleton;
     private static Thread _serviceThread;
     private static boolean _invoked = false;
 
+    // Service specific fields
     private LinkedBlockingQueue<Event> eventQueue;
     private ExecutorService executor;
     private HashSet<AbstractCoreService> services;
     private ArrayList<ProtocolServer> protocolServers;
+    private long bootTime;
 
     /**
      * Constructs the CoreService instance. Constructor is private due to the singleton pattern used for
@@ -89,6 +93,7 @@ public class CoreService extends AbstractCoreService {
      */
     @Override
     public void boot() {
+        bootTime = System.currentTimeMillis();
         if (!_running) {
             log.info("Booting CoreService...");
             _serviceThread = new Thread(() -> {
@@ -118,13 +123,14 @@ public class CoreService extends AbstractCoreService {
     public void run() {
         _running = true;
         log.info("CoreService booted successfully");
-        log.info("Attempting to boot ProtocolServers");
 
         // Call the boot() method on all registered Core Services
+        log.info("Booting core services");
         this.bootCoreServices();
-        log.info("Completed booting CoreServices");
+        log.info("Completed core services");
 
         // Call the boot() method on all registered ProtocolServers
+        log.info("Booting ProtocolServers");
         this.bootProtocolServers();
         log.info("Completed booting ProtocolServers");
 
@@ -132,6 +138,8 @@ public class CoreService extends AbstractCoreService {
         log.info("Setting up listener support for all core services");
         this.registerListenerSupportForAllCoreServices();
         log.info("Completed setting up listener support for all core services");
+
+        log.info("OKSE Booted in " + (System.currentTimeMillis() - bootTime) + "ms");
 
         // Initiate main run loop, which awaits Events to be committed to the eventQueue
         while (_running) {
@@ -303,7 +311,7 @@ public class CoreService extends AbstractCoreService {
         log.info("Stopping all ProtocolServers...");
 
         // Create a system message
-        Message m = new Message("The broker is shutting down", null, null);
+        Message m = new Message("The broker is shutting down", null, null, Application.OKSE_SYSTEM_NAME);
         // Wait until message is processed
         while (!m.isProcessed()) {
             try {

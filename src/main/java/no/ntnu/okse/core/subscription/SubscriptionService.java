@@ -33,12 +33,12 @@ import no.ntnu.okse.core.event.listeners.SubscriptionChangeListener;
 import no.ntnu.okse.core.event.listeners.TopicChangeListener;
 import no.ntnu.okse.core.topic.Topic;
 import no.ntnu.okse.core.topic.TopicService;
+import org.eclipse.jetty.util.ConcurrentHashSet;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 /**

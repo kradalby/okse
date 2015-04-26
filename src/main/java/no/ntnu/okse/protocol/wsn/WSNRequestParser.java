@@ -408,7 +408,7 @@ public class WSNRequestParser implements Hub {
             }
 
         }
-        log.info("Found no matching connection for URL: " + endpointReference);
+        log.debug("Found no matching connection for URL: " + endpointReference);
         return null;
     }
 
