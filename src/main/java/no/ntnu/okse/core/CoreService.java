@@ -44,14 +44,17 @@ import java.util.concurrent.LinkedBlockingQueue;
  */
 public class CoreService extends AbstractCoreService {
 
+    // Common service fields
     private static CoreService _singleton;
     private static Thread _serviceThread;
     private static boolean _invoked = false;
 
+    // Service specific fields
     private LinkedBlockingQueue<Event> eventQueue;
     private ExecutorService executor;
     private HashSet<AbstractCoreService> services;
     private ArrayList<ProtocolServer> protocolServers;
+    private long bootTime;
 
     /**
      * Constructs the CoreService instance. Constructor is private due to the singleton pattern used for
@@ -90,6 +93,7 @@ public class CoreService extends AbstractCoreService {
      */
     @Override
     public void boot() {
+        bootTime = System.currentTimeMillis();
         if (!_running) {
             log.info("Booting CoreService...");
             _serviceThread = new Thread(() -> {
@@ -133,6 +137,8 @@ public class CoreService extends AbstractCoreService {
         log.info("Setting up listener support for all core services");
         this.registerListenerSupportForAllCoreServices();
         log.info("Completed setting up listener support for all core services");
+
+        log.info("OKSE Booted in " + (System.currentTimeMillis() - bootTime) + "ms");
 
         // Initiate main run loop, which awaits Events to be committed to the eventQueue
         while (_running) {

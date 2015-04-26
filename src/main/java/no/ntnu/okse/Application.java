@@ -70,7 +70,6 @@ public class Application {
         // Turn off WS-Nu debug output
         Log.setEnableDebug(false);
         log = Logger.getLogger(Application.class.getName());
-        log.info("Starting OKSE " + VERSION);
 
         File dbFile = new File("okse.db");
 
@@ -98,6 +97,7 @@ public class Application {
         webserver.run();
 
         // Start the CoreService
+        log.info("Starting OKSE " + VERSION);
         cs.boot();
     }
 }
