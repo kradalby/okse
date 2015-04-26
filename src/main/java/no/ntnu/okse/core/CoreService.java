@@ -123,13 +123,14 @@ public class CoreService extends AbstractCoreService {
     public void run() {
         _running = true;
         log.info("CoreService booted successfully");
-        log.info("Attempting to boot ProtocolServers");
 
         // Call the boot() method on all registered Core Services
+        log.info("Booting core services");
         this.bootCoreServices();
-        log.info("Completed booting CoreServices");
+        log.info("Completed core services");
 
         // Call the boot() method on all registered ProtocolServers
+        log.info("Booting ProtocolServers");
         this.bootProtocolServers();
         log.info("Completed booting ProtocolServers");
 
