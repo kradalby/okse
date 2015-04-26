@@ -24,6 +24,7 @@
 
 package no.ntnu.okse.core;
 
+import no.ntnu.okse.Application;
 import no.ntnu.okse.core.event.Event;
 
 import no.ntnu.okse.core.event.SystemEvent;
@@ -303,7 +304,7 @@ public class CoreService extends AbstractCoreService {
         log.info("Stopping all ProtocolServers...");
 
         // Create a system message
-        Message m = new Message("The broker is shutting down", null, null);
+        Message m = new Message("The broker is shutting down", null, null, Application.OKSE_SYSTEM_NAME);
         // Wait until message is processed
         while (!m.isProcessed()) {
             try {

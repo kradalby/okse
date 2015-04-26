@@ -175,7 +175,7 @@ public class MessageService extends AbstractCoreService implements TopicChangeLi
         _running = false;
         // Create a new message with topic = null, hence it will reside upon the config flag for system messages
         // in the web admin if the message is distributed to all topics or just performed as a no-op.
-        Message m = new Message("The broker is shutting down.", null, null);
+        Message m = new Message("The broker is shutting down.", null, null, Application.OKSE_SYSTEM_NAME);
         // Set it to system message
         m.setSystemMessage(true);
 
@@ -232,7 +232,7 @@ public class MessageService extends AbstractCoreService implements TopicChangeLi
         // Iterate over all topics and generate individual messages per topic
         TopicService.getInstance().getAllTopics().stream().forEach(t -> {
             // Create the message wrapper
-            Message msg = new Message(m.getMessage(), t, m.getPublisher());
+            Message msg = new Message(m.getMessage(), t, m.getPublisher(), m.getOriginProtocol());
             // Flag the generated message the same as the originating message
             msg.setSystemMessage(m.isSystemMessage());
             // Add the message to the collector

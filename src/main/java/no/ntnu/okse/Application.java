@@ -49,6 +49,7 @@ public class Application {
     public static final String VERSION = "0.0.1a";
 
     /* Default global variables */
+    public static String OKSE_SYSTEM_NAME = "OKSE System";
     public static boolean BROADCAST_SYSTEM_MESSAGES_TO_SUBSCRIBERS = false;
     public static boolean CACHE_MESSAGES = true;
     public static long DEFAULT_SUBSCRIPTION_TERMINATION_TIME = 15552000000L; // Half a year
