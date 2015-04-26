@@ -39,7 +39,7 @@ public abstract class AbstractProtocolServer implements ProtocolServer {
     protected boolean _running;
 
     protected String protocolServerType;
-    protected int totalRequests, totalMessages, totalBadRequests, totalErrors;
+    protected int totalRequests, totalBadRequests, totalErrors, totalMessagesRecieved, totalMessagesSent;
 
     /**
      * Constructor that just initializes the fields to default values
@@ -48,7 +48,8 @@ public abstract class AbstractProtocolServer implements ProtocolServer {
         port = 0;
         _running = false;
         protocolServerType = "";
-        totalMessages = 0;
+        totalMessagesSent = 0;
+        totalMessagesRecieved = 0;
         totalRequests = 0;
         totalBadRequests = 0;
         totalErrors = 0;
@@ -69,12 +70,18 @@ public abstract class AbstractProtocolServer implements ProtocolServer {
     }
 
     /**
-     * Total amount of messages from this WSNotificationServer that has passed through this server instance.
-     * @return: An integer representing the total amount of messages.
+     * Total amount of messages that has been sent through WSNotificationServer
+     * @return: An integer representing the total amount of messages sent.
      */
-    public int getTotalMessages() {
-        return totalMessages;
+    public int getTotalMessagesSent() {
+        return totalMessagesSent;
     }
+
+    /**
+     * Total amount of messages that has been recieved on WSNotificationServer
+     * @return An integer representing the total amount of messages recieved.
+     */
+    public int getTotalMessagesRecieved() { return totalMessagesRecieved; }
 
     /**
      * This interface method must return the total amount of bad requests recieved by the protocol server.
@@ -88,6 +95,10 @@ public abstract class AbstractProtocolServer implements ProtocolServer {
      */
     public int getTotalErrors() { return totalErrors; };
 
+    /**
+     * Returns the Port of this ProtocolServer
+     * @return The Port the server is bound to
+     */
     public int getPort() { return this.port; }
 
     // Initializer

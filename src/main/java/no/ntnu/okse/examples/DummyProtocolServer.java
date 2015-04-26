@@ -297,7 +297,7 @@ public class DummyProtocolServer extends AbstractProtocolServer {
                     Message message = new Message(msg, t, null);
                     message.setOriginProtocol(protocolServerType);
                     MessageService.getInstance().distributeMessage(message);
-                    totalMessages++;
+                    totalMessagesRecieved++;
 
                     return true;
                 }

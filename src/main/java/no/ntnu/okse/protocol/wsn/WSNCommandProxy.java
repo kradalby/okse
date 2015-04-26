@@ -332,6 +332,9 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         }
         log.debug("Processing valid recipients...");
 
+        // Update statistics
+        WSNotificationServer.getInstance().incrementTotalMessagesRecieved();
+
         // Remember current message with context
         currentMessage = notify;
         currentMessageNamespaceContextResolver = namespaceContextResolver;
@@ -354,6 +357,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
                 outMessage.getRequestInformation().setEndpointReference(getEndpointReferenceOfRecipient(recipient));
                 // Pass it along to the requestparser
                 hub.acceptLocalMessage(outMessage);
+
             }
         }
         log.debug("Finished sending message to valid WS-Notification recipients");

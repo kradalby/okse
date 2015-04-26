@@ -415,9 +415,6 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
      * @return The Subscriber, if found, null otherwise.
      */
     public Subscriber getSubscriber(String address, Integer port, Topic topic) {
-        // TODO: FIX THIS AS EVERY SUBSCRIBER MUST HAVE A UNIQUE ID
-        // TODO: Also maek into stream and use filter lambdas
-        // TODO: Will this trigger concurrent modification exception if new subs are added during iteration?
         for (Subscriber s: _subscribers) {
             if (s.getHost().equals(address) &&
                     s.getPort().equals(port) &&
@@ -507,6 +504,22 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
      */
     public HashSet<Publisher> getAllPublishers() {
         return (HashSet<Publisher>) _publishers.clone();
+    }
+
+    /**
+     * Fetch the number of registered subscribers
+     * @return The total number of subscribers
+     */
+    public int getNumberOfSubscribers() {
+        return _subscribers.size();
+    }
+
+    /**
+     * Fetch the number of registered publishers
+     * @return The total number of publishers
+     */
+    public int getNumberOfPublishers() {
+        return _publishers.size();
     }
 
     /* ------------------------------------------------------------------------------------------ */

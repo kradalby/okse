@@ -243,11 +243,19 @@ public class CoreService extends AbstractCoreService {
     }
 
     /**
-     * Statistics for total number of messages that has passed through all protocol servers
-     * @return: An integer representing the total amount of messages.
+     * Statistics for total number of messages that has been recieved through all protocol servers
+     * @return: An integer representing the total amount of messages recieved.
      */
-    public int getTotalMessagesFromProtocolServers() {
-        return protocolServers.stream().map(ProtocolServer::getTotalMessages).reduce(0, (a, b) -> a + b);
+    public int getTotalMessagesRecievedFromProtocolServers() {
+        return protocolServers.stream().map(ProtocolServer::getTotalMessagesRecieved).reduce(0, (a, b) -> a + b);
+    }
+
+    /**
+     * Statistics for total number of messages that has been sent through all protocol servers
+     * @return An integer representing the total number of messages sent
+     */
+    public int getTotalMessagesSentFromProtocolServers() {
+        return protocolServers.stream().map(ProtocolServer::getTotalMessagesSent).reduce(0, (a, b) -> a + b);
     }
 
     /**
