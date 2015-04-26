@@ -49,6 +49,25 @@ NOTIFY = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 </s:Body>
 </s:Envelope>"""
 
+NOTIFY_MULTIPLE = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<s:Envelope xmlns:ns2="http://www.w3.org/2001/12/soap-envelope" xmlns:ns3="http://docs.oasis-open.org/wsrf/bf-2" xmlns:wsa="http://www.w3.org/2005/08/addressing" xmlns:wsnt="http://docs.oasis-open.org/wsn/b-2" xmlns:ns6="http://docs.oasis-open.org/wsn/t-1" xmlns:ns7="http://docs.oasis-open.org/wsn/br-2" xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns9="http://docs.oasis-open.org/wsrf/r-2">
+<s:Header>
+<wsa:Action>http://docs.oasis-open.org/wsn/bw-2/NotificationConsumer/Notify</wsa:Action>
+</s:Header>
+<s:Body>
+<wsnt:Notify>
+<wsnt:NotificationMessage>
+<wsnt:Topic Dialect="http://docs.oasis-open.org/wsn/t-1/TopicExpression/Concrete">%s</wsnt:Topic>
+<wsnt:Message><npex:NotifyContent xmlns:npex="http://brute.force/test/">%s</npex:NotifyContent></wsnt:Message>
+</wsnt:NotificationMessage>
+<wsnt:NotificationMessage>
+<wsnt:Topic Dialect="http://docs.oasis-open.org/wsn/t-1/TopicExpression/Simple">%s</wsnt:Topic>
+<wsnt:Message><npex:NotifyContent xmlns:npex="http://brute.force/test/">%s</npex:NotifyContent></wsnt:Message>
+</wsnt:NotificationMessage>
+</wsnt:Notify>
+</s:Body>
+</s:Envelope>"""
+
 SUBSCRIBE = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <ns6:Envelope xmlns:ns2="http://www.w3.org/2005/08/addressing"
 xmlns:ns3="http://docs.oasis-open.org/wsn/b-2"
@@ -282,6 +301,18 @@ class WSNRequest(object):
         # Send the request
         self.send_request(payload)
 
+    def send_notify_multiple(self, message_one, message_two):
+        """
+        Sends a notify to the provided host and port with two notification
+        messages bundled into one Notify request
+        """
+
+        # Generate the payload
+        payload = NOTIFY % (self.TOPIC, message_one, self.TOPIC, message_two)
+
+        # Send the request
+        self.send_request(payload
+
     def send_subscription(self):
         """
         Sends a subscription request
@@ -405,6 +436,18 @@ if __name__ == "__main__":
             # Sleep for INTERVAL
             time.sleep(INTERVAL)
 
+    elif mode == 'multinotify':
+        # Shuffle the words
+        shuffle(RANDOM_WORDS)
+        # Generate the first message
+        msg1 = " ".join(RANDOM_WORDS)
+        # Shuffle the words once more
+        shuffle(RANDOM_WORDS)
+        # Generate the second message
+        msg2 = " ".join(RANDOM_WORDS)
+        # Send the notify
+        wsn_request.send_notify_multiple(msg1, msg2)
+
     elif mode == 'subscribe':
         wsn_request.send_subscription()
 
@@ -449,6 +492,8 @@ if __name__ == "__main__":
         publisher_reference = raw_input("Enter the publisher reference: ")
         publisher_reference = publisher_reference.rstrip()
         wsn_request.send_notify("Test message that should arrive at consumer address.")
+        time.sleep(2)
+        wsn_request.send_notify_multiple("Test message 1 (Concrete)", "Test message 2 (Simple)")
         time.sleep(2)
         wsn_request.send_get_current_message()
         time.sleep(2)
