@@ -12,6 +12,7 @@ SOAP_HEADER = "application/soap+xml;charset=utf-8"
 MODES = {
     "all": "All available",
     "notify": "Notification",
+    "multinotify": "MultiNotification",
     "subscribe": "Subscribe",
     "unsubscribe": "Unsubscribe",
     "register": "PublisherRegistration",
@@ -308,10 +309,10 @@ class WSNRequest(object):
         """
 
         # Generate the payload
-        payload = NOTIFY % (self.TOPIC, message_one, self.TOPIC, message_two)
+        payload = NOTIFY_MULTIPLE % (self.TOPIC, message_one, self.TOPIC, message_two)
 
         # Send the request
-        self.send_request(payload
+        self.send_request(payload)
 
     def send_subscription(self):
         """
