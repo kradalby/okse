@@ -62,6 +62,7 @@ public class TopicController {
 
         HashMap<String, HashMap<String, Object>> results = new HashMap<>();
 
+        // TODO: This may need optimicing. Currently this operation is quite expensive.
         allTopics.forEach(t -> {
             HashMap<String, Object> topicInfo = new HashMap<>();
             int subscribers = ss.getAllSubscribersForTopic(t.getFullTopicString()).size();
