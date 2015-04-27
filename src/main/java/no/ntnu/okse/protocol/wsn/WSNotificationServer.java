@@ -305,6 +305,13 @@ public class WSNotificationServer extends AbstractProtocolServer {
     }
 
     /**
+     * Support method to allow other classes in the wsn package to increment total messages recieved
+     */
+    protected void incrementTotalMessagesRecieved() {
+        totalMessagesRecieved++;
+    }
+
+    /**
      * This interface method must take in an instance of Message, which contains the appropriate references
      * and flags needed to distribute the message to consumers. Implementation specific details can vary from
      * protocol to protocol, but the end result of a method call to sendMessage is that the message is delivered,
@@ -681,7 +688,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
                     log.info("Sending message with content to " + requestInformation.getEndpointReference());
                     request.content(new InputStreamContentProvider((InputStream) message.getMessage()), "application/soap+xml;charset/utf-8");
                     ContentResponse response = request.send();
-                    totalMessages++;
+                    totalMessagesSent++;
 
                     // Check what HTTP status we recieved, if is not A-OK, flag the internalmessage as fault
                     // and make the response content the message of the InternalMessage returned

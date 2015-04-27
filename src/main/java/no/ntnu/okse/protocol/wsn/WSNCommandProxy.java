@@ -278,7 +278,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
                         // Fetch the topic object
                         Topic okseTopic = topicService.getTopic(topicName);
                         // Generate the message
-                        message = new Message(content, okseTopic, null);
+                        message = new Message(content, okseTopic, null, WSNotificationServer.getInstance().getProtocolServerType());
                         log.debug("OKSE Message generated");
                         // Extract the endpoint reference from publisher
                         W3CEndpointReference publisherReference = messageHolderType.getProducerReference();
@@ -287,8 +287,6 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
                             log.debug("We had a publisher-reference, updating OKSE Message");
                             message.setAttribute(WSNSubscriptionManager.WSN_ENDPOINT_TOKEN, ServiceUtilities.getAddress(publisherReference));
                         }
-                        // Update the originating protocol
-                        message.setOriginProtocol(WSNotificationServer.getInstance().getProtocolServerType());
 
                         // Add the message to the message queue for dispatch
                         messageService.distributeMessage(message);
@@ -332,6 +330,9 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         }
         log.debug("Processing valid recipients...");
 
+        // Update statistics
+        WSNotificationServer.getInstance().incrementTotalMessagesRecieved();
+
         // Remember current message with context
         currentMessage = notify;
         currentMessageNamespaceContextResolver = namespaceContextResolver;
@@ -354,6 +355,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
                 outMessage.getRequestInformation().setEndpointReference(getEndpointReferenceOfRecipient(recipient));
                 // Pass it along to the requestparser
                 hub.acceptLocalMessage(outMessage);
+
             }
         }
         log.debug("Finished sending message to valid WS-Notification recipients");

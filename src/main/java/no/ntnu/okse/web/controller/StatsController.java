@@ -46,7 +46,7 @@ public class StatsController {
     public Stats stats() {
 
         // ProtocolServer statistics
-        int totalMessages = Application.cs.getTotalMessagesFromProtocolServers();
+        int totalMessages = Application.cs.getTotalMessagesSentFromProtocolServers();
         int totalRequests = Application.cs.getTotalRequestsFromProtocolServers();
 
         int totalBadRequests = Application.cs.getTotalBadRequestsFromProtocolServers();
@@ -59,7 +59,7 @@ public class StatsController {
         ArrayList<ProtocolStats> protocolstats = new ArrayList<>();
 
         for (ProtocolServer each : protocols) {
-            protocolstats.add(new ProtocolStats(each.getProtocolServerType(), each.getTotalRequests(), each.getTotalMessages()));
+            protocolstats.add(new ProtocolStats(each.getProtocolServerType(), each.getTotalRequests(), each.getTotalMessagesSent()));
         }
 
         Stats stat = new Stats(freeRam, totalRam, cpuAvailable, totalRequests, totalMessages, totalBadRequests, totalErrors, protocolstats);

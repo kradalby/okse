@@ -34,6 +34,7 @@ import no.ntnu.okse.protocol.wsn.WSNotificationServer;
 import no.ntnu.okse.web.Server;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
+import org.ntnunotif.wsnu.base.util.Log;
 
 import java.io.File;
 
@@ -49,6 +50,7 @@ public class Application {
     public static final String VERSION = "0.0.1a";
 
     /* Default global variables */
+    public static String OKSE_SYSTEM_NAME = "OKSE System";
     public static boolean BROADCAST_SYSTEM_MESSAGES_TO_SUBSCRIBERS = false;
     public static boolean CACHE_MESSAGES = true;
     public static long DEFAULT_SUBSCRIPTION_TERMINATION_TIME = 15552000000L; // Half a year
@@ -65,6 +67,8 @@ public class Application {
      */
     public static void main(String[] args) {
         PropertyConfigurator.configure("config/log4j.properties");
+        // Turn off WS-Nu debug output
+        Log.setEnableDebug(false);
         log = Logger.getLogger(Application.class.getName());
 
         File dbFile = new File("okse.db");
@@ -93,6 +97,7 @@ public class Application {
         webserver.run();
 
         // Start the CoreService
+        log.info("Starting OKSE " + VERSION);
         cs.boot();
     }
 }
