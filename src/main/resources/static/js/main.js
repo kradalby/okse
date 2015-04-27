@@ -91,16 +91,6 @@ var Main = (function($) {
         }, $('#settings-update-interval').val() * 1000);
     }
 
-    // TODO: For now, it only updates when in main-pane. Needs to change in stats pane later on
-    // Updates all the subscriber counters on the page (both the main-pane and the stats-pane
-    var updateSubscribers = function(subscribers) {
-        $('.total-subscribers').each(function() {
-            if ($(this).val() != subscribers) {
-                $(this).text(subscribers)
-            }
-        });
-    }
-
     /*
         Global error function that shows the Ajax callback and request url.
      */
@@ -117,7 +107,8 @@ var Main = (function($) {
     }
 
     var refresh = function(response) {
-        updateSubscribers(response.subscribers)
+        Stats.refreshSubscribersAndPublishers(response.subscribers, response.publishers)
+        $('#runtime').html(response.runtime)
     }
 
     return {
@@ -156,6 +147,7 @@ var Main = (function($) {
                         ajaxSettings.success = Topics.refresh
                         break;
                     case "stats":
+                        ajaxSettings.url = clickedElement + '/get/all'
                         ajaxSettings.success = Stats.refresh
                         break;
                     case "log":

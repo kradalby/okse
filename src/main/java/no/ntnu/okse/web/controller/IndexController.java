@@ -67,9 +67,13 @@ public class IndexController {
             return "fragments/indexNotLoggedIn";
         }
 
+        SubscriptionService ss = SubscriptionService.getInstance();
+
         model.addAttribute("projectName", appName);
         model.addAttribute("environment", createEnvironmentList());
-        model.addAttribute("subscribers", SubscriptionService.getInstance().getAllSubscribers().size());
+        model.addAttribute("subscribers", ss.getNumberOfSubscribers());
+        model.addAttribute("publishers", ss.getNumberOfPublishers());
+        model.addAttribute("runtime", Application.getRunningTime().toString());
 
         HashSet<String> ipAddresses = new HashSet<>();
 
