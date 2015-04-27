@@ -30,6 +30,7 @@ import no.ntnu.okse.web.model.ProtocolStats;
 import no.ntnu.okse.web.model.Stats;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
@@ -42,8 +43,10 @@ import java.util.ArrayList;
 @RequestMapping(value = "/api/stats")
 public class StatsController {
 
-    @RequestMapping(method = RequestMethod.GET)
-    public Stats stats() {
+    private static final String GET_STATS = "/get/all";
+
+    @RequestMapping(method = RequestMethod.GET, value = GET_STATS)
+    public @ResponseBody Stats stats() {
 
         // ProtocolServer statistics
         int totalMessages = Application.cs.getTotalMessagesSentFromProtocolServers();
@@ -66,12 +69,6 @@ public class StatsController {
 
 
         return stat;
-
-
-
-
-
-
     }
 }
 
