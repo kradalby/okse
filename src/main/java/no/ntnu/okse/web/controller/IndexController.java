@@ -73,6 +73,7 @@ public class IndexController {
         model.addAttribute("environment", createEnvironmentList());
         model.addAttribute("subscribers", ss.getNumberOfSubscribers());
         model.addAttribute("publishers", ss.getNumberOfPublishers());
+        model.addAttribute("runtime", Application.getRunningTime().toString());
 
         HashSet<String> ipAddresses = new HashSet<>();
 
