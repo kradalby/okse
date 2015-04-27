@@ -42,9 +42,14 @@ public class ApiController {
     private static Logger log = Logger.getLogger(ApiController.class.getName());
 
     @RequestMapping(value = "/api/main", method = RequestMethod.GET)
-    public HashMap<String, String> main() {
-        HashMap<String, String> mainApi = new HashMap<>();
-        mainApi.put("subscribers", String.valueOf(SubscriptionService.getInstance().getAllSubscribers().size()));
+    public @ResponseBody HashMap<String, Object> main() {
+        SubscriptionService ss = SubscriptionService.getInstance();
+
+        HashMap<String, Object> mainApi = new HashMap<String, Object>(){{
+            put("subscribers", ss.getNumberOfSubscribers());
+            put("publishers", ss.getNumberOfPublishers());
+        }};
+
         return mainApi;
     }
 
