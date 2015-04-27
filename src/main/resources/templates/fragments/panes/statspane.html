@@ -16,7 +16,7 @@
                     <div class="panel-body">
                         <div class="alert alert-warning">
                             <strong>Note: </strong>
-                            Some fancy information about 'em protocols
+                            Below is a table with different useful statistics for every protocol registered in the CoreService.
                         </div>
                     </div>
                     <!-- Table -->
@@ -25,10 +25,11 @@
                             <thead>
                             <tr>
                                 <th>Protocol</th>
-                                <th>Subscribers</th>
-                                <th>Publishers</th>
                                 <th>Sent</th>
                                 <th>Received</th>
+                                <th>Requests</th>
+                                <th>Bad requests</th>
+                                <th>Errors</th>
                             </tr>
                             </thead>
                             <tbody id="protocol-table">
@@ -47,12 +48,13 @@
                             <!-- <div class="panel-body"></div> -->
                             <!-- List group -->
                             <ul class="list-group">
-                                <li class="list-group-item" id="stats-total-requests"><strong>Requests handled: </strong>0</li>
-                                <li class="list-group-item" id="stats-total-messages"><strong>Messages sent: </strong>0</li>
-                                <li class="list-group-item" id="stats-total-badrequests"><strong>Bad requests: </strong>0</li>
-                                <li class="list-group-item" id="stats-total-error"><strong>Total errors: </strong>0</li>
-                                <li class="list-group-item" id="stats-total-megabytes-recieved"><strong>MB recieved: </strong>0</li>
-                                <li class="list-group-item" id="stats-total-megabytes-sent"><strong>MB sent: </strong>0</li>
+                                <li class="list-group-item"><strong>Messages sent: </strong><span id="messagesSent">0</span></li>
+                                <li class="list-group-item"><strong>Messages received: </strong><span id="messagesReceived">0</span></li>
+                                <li class="list-group-item"><strong>Requests: </strong><span id="totalRequests">0</span></li>
+                                <li class="list-group-item"><strong>Bad requests: </strong><span id="badRequests">0</span></li>
+                                <li class="list-group-item"><strong>Errors: </strong><span id="totalErrors">0</span></li>
+                                <li class="list-group-item"><strong>Subscribers: </strong><span class="totalSubscribers">0</span></li>
+                                <li class="list-group-item"><strong>Publishers: </strong><span class="totalPublishers">0</span></li>
                             </ul>
                         </div>
                     </div>
@@ -63,19 +65,11 @@
                             <!-- <div class="panel-body"></div> -->
                             <!-- List group -->
                             <ul class="list-group">
-                                <li class="list-group-item" id="cpucores"><strong>CPU cores: </strong>0</li>
-                                <li class="list-group-item" id="totalram"><strong>Total RAM: </strong>0 MB</li>
-                                <li class="list-group-item" id="freeram"><strong>Free RAM: </strong>0 MB</li>
-                                <li class="list-group-item" id="ramuse"><strong>Used RAM: </strong>0 MB</li>
+                                <li class="list-group-item"><strong>CPU cores: </strong><span id="cpuCores">0</span></li>
+                                <li class="list-group-item"><strong>Total RAM: </strong><span id="totalRam">0</span> MB</li>
+                                <li class="list-group-item"><strong>Free RAM: </strong><span id="freeRam">0</span> MB</li>
+                                <li class="list-group-item"><strong>Used RAM: </strong><span id="usedRam">0</span> MB</li>
                             </ul>
-                        </div>
-                    </div>
-                    <div class="col-md-12">
-                        <div class="panel panel-info" id="protocolList">
-                            <!-- Default panel contents -->
-                            <div class="panel-heading">Protocols</div>
-                            <!-- <div class="panel-body"></div> -->
-                            <!-- List group -->
                         </div>
                     </div>
                 </div>
