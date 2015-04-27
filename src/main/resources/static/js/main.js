@@ -108,6 +108,7 @@ var Main = (function($) {
 
     var refresh = function(response) {
         Stats.refreshSubscribersAndPublishers(response.subscribers, response.publishers)
+        $('#runtime').html(response.runtime)
     }
 
     return {
