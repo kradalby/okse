@@ -54,7 +54,6 @@ public class CoreService extends AbstractCoreService {
     private ExecutorService executor;
     private HashSet<AbstractCoreService> services;
     private ArrayList<ProtocolServer> protocolServers;
-    private long bootTime;
 
     /**
      * Constructs the CoreService instance. Constructor is private due to the singleton pattern used for
@@ -93,7 +92,6 @@ public class CoreService extends AbstractCoreService {
      */
     @Override
     public void boot() {
-        bootTime = System.currentTimeMillis();
         if (!_running) {
             log.info("Booting CoreService...");
             _serviceThread = new Thread(() -> {
@@ -139,7 +137,7 @@ public class CoreService extends AbstractCoreService {
         this.registerListenerSupportForAllCoreServices();
         log.info("Completed setting up listener support for all core services");
 
-        log.info("OKSE Booted in " + (System.currentTimeMillis() - bootTime) + "ms");
+        log.info("OKSE " + Application.VERSION + " booted in " + Application.getRunningTime().toString());
 
         // Initiate main run loop, which awaits Events to be committed to the eventQueue
         while (_running) {

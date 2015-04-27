@@ -37,6 +37,7 @@ import org.apache.log4j.PropertyConfigurator;
 import org.ntnunotif.wsnu.base.util.Log;
 
 import java.io.File;
+import java.time.Duration;
 
 
 /**
@@ -49,7 +50,10 @@ public class Application {
     // Version
     public static final String VERSION = "0.0.1a";
 
-    /* Default global variables */
+    // Initialization time
+    public static long startedAt = System.currentTimeMillis();
+
+    /* Default global fields */
     public static String OKSE_SYSTEM_NAME = "OKSE System";
     public static boolean BROADCAST_SYSTEM_MESSAGES_TO_SUBSCRIBERS = false;
     public static boolean CACHE_MESSAGES = true;
@@ -99,5 +103,21 @@ public class Application {
         // Start the CoreService
         log.info("Starting OKSE " + VERSION);
         cs.boot();
+    }
+
+    /**
+     * Returns a Duration instance of the time the Application has been running
+     * @return The amount of time the application has been running
+     */
+    public static Duration getRunningTime() {
+        return Duration.ofMillis(System.currentTimeMillis() - startedAt);
+    }
+
+    /**
+     * Resets the time at which the system was initialized. This method
+     * can be used during a system restart from
+     */
+    public static void resetStartTime() {
+        startedAt = System.currentTimeMillis();
     }
 }
