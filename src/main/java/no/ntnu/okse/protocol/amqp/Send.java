@@ -57,8 +57,9 @@ public class Send {
     }
 
     private Send(String args[]) {
-        address = "78.91.8.191";
-        subject = "TEST";
+        //address = "78.91.8.191";
+        //address = "127.0.0.1";
+        //subject = "TEST";
 
         int i = 0;
         while (i < args.length) {

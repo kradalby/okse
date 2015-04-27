@@ -69,8 +69,8 @@ public class Recv {
             }
         }
         if (addrs.size() == 0) {
-            addrs.add("amqp://~0.0.0.0");
-            //addrs.add("127.0.0.1");
+            //addrs.add("amqp://~0.0.0.0");
+            addrs.add("amqp://~127.0.0.1/test");
             //addrs.add("amqp://78.91.8.191");
             //System.out.println("adding address " + addrs.get(0));
         }
