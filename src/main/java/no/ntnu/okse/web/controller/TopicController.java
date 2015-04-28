@@ -76,6 +76,7 @@ public class TopicController {
 
     @RequestMapping(method = RequestMethod.GET, value = GET_ALL_SUBSCRIBERS_FOR_TOPIC)
     public @ResponseBody HashSet<Subscriber> getAllSubscribersForTopic(@PathVariable("id") String id) {
+        // TODO: Add the topicName and change it to HashMap on return.
         log.info("Fetching all subscribers for topic with ID: " + id);
         TopicService ts = TopicService.getInstance();
         SubscriptionService ss = SubscriptionService.getInstance();
