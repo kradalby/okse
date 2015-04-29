@@ -29,12 +29,9 @@ import no.ntnu.okse.core.subscription.SubscriptionService;
 import no.ntnu.okse.core.topic.Topic;
 import no.ntnu.okse.core.topic.TopicService;
 import org.apache.log4j.Logger;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
-
 
 /**
  * Created by Håkon Ødegård Løvdal (hakloev) on 13/03/15.
@@ -53,7 +50,6 @@ public class TopicController {
 
     private static Logger log = Logger.getLogger(TopicController.class.getName());
 
-
     @RequestMapping(method = RequestMethod.GET, value = GET_ALL_TOPICS)
     public @ResponseBody HashMap<String, HashMap<String, Object>> getAlltopics() {
         TopicService ts = TopicService.getInstance();
@@ -64,23 +60,32 @@ public class TopicController {
 
         // TODO: This may need optimicing. Currently this operation is quite expensive.
         allTopics.forEach(t -> {
-            HashMap<String, Object> topicInfo = new HashMap<>();
             int subscribers = ss.getAllSubscribersForTopic(t.getFullTopicString()).size();
-            topicInfo.put("subscribers", subscribers);
-            topicInfo.put("topic", t);
+            HashMap<String, Object> topicInfo = new HashMap<String, Object>(){{
+                put("subscribers", subscribers);
+                put("topic", t);
+            }};
             results.put(t.getFullTopicString(), topicInfo);
         });
 
         return results;
+
     }
 
     @RequestMapping(method = RequestMethod.GET, value = GET_ALL_SUBSCRIBERS_FOR_TOPIC)
-    public @ResponseBody HashSet<Subscriber> getAllSubscribersForTopic(@PathVariable("id") String id) {
-        log.info("Fetching all subscribers for topic with ID: " + id);
+    public @ResponseBody HashMap<String, Object> getAllSubscribersForTopic(@PathVariable("id") String id) {
+        // TODO: Add the topicName and change it to HashMap on return.
         TopicService ts = TopicService.getInstance();
         SubscriptionService ss = SubscriptionService.getInstance();
         Topic t = ts.getTopicByID(id);
-        HashSet<Subscriber> result = ss.getAllSubscribersForTopic(t.getFullTopicString());
+        log.info("Fetching all subscribers for topic with ID: " + id);
+        HashSet<Subscriber> subscribers = ss.getAllSubscribersForTopic(t.getFullTopicString());
+
+        HashMap<String, Object> result = new HashMap<String, Object>(){{
+            put("topic", t.getFullTopicString());
+            put("subscribers", subscribers);
+        }};
+
         return result;
     }
 
@@ -95,12 +100,16 @@ public class TopicController {
     }
 
     @RequestMapping(method = RequestMethod.DELETE, value = DELETE_SINGLE_TOPIC)
-    public @ResponseBody Topic deleteSingleTopic(@PathVariable("id") String id) {
+    public @ResponseBody HashMap<String, Object> deleteSingleTopic(@PathVariable("id") String id) {
         log.info("Deleting Topic with ID: " + id);
         TopicService ts = TopicService.getInstance();
         Topic t = ts.getTopicByID(id);
         ts.deleteTopic(t.getFullTopicString());
-        return t;
+        HashMap<String, Object> result = new HashMap<String, Object>(){{
+            put("topicID", t.getTopicID());
+            put("children", t.getChildren());
+        }};
+        return result;
     }
 
     @RequestMapping(method = RequestMethod.DELETE, value= DELETE_SINGLE_SUBSCRIBER)

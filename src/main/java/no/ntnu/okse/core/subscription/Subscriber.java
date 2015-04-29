@@ -24,6 +24,7 @@
 
 package no.ntnu.okse.core.subscription;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import no.ntnu.okse.core.topic.Topic;
 import org.apache.log4j.Logger;
 import org.springframework.security.crypto.codec.Hex;
@@ -37,6 +38,7 @@ import java.util.HashMap;
  * <p>
  * okse is licenced under the MIT licence.
  */
+@JsonIgnoreProperties({"timeout"})
 public class Subscriber {
 
     private final String host;
