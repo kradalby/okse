@@ -187,6 +187,9 @@ var Topics = (function($) {
                             console.log("[Debug][Topics] Callback from server; deleted all topics");
                             if (data.deleted == true) {
                                 $('#topics-table').addClass('deleted')
+                                $('#topics-table').find('a').each(function() {
+                                    $(this).addClass('disabled')
+                                });
                             }
                         },
                         error: function(xhr, status, error) {
