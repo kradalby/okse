@@ -106,9 +106,17 @@ var Main = (function($) {
         }
     }
 
+    var refreshRuntimeStatistics = function(statistics) {
+        $('#totalRam').html(statistics.totalRam)
+        $('#freeRam').html(statistics.freeRam)
+        $('#usedRam').html(statistics.usedRam)
+        $('#cpuCores').html(statistics.cpuAvailable)
+    }
+
     var refresh = function(response) {
         Stats.refreshSubscribersAndPublishers(response.subscribers, response.publishers)
-        $('#runtime').html(response.runtime)
+        $('#uptime').html(response.uptime)
+        refreshRuntimeStatistics(response.runtimeStatistics)
     }
 
     return {
