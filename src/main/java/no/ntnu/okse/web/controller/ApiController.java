@@ -25,6 +25,7 @@
 package no.ntnu.okse.web.controller;
 
 import no.ntnu.okse.Application;
+import no.ntnu.okse.core.Utilities;
 import no.ntnu.okse.core.subscription.SubscriptionService;
 import org.apache.log4j.Logger;
 import org.springframework.web.bind.annotation.*;
@@ -50,7 +51,7 @@ public class ApiController {
         HashMap<String, Object> mainApi = new HashMap<String, Object>(){{
             put("subscribers", ss.getNumberOfSubscribers());
             put("publishers", ss.getNumberOfPublishers());
-            put("runtime", Application.getRunningTime().toString());
+            put("runtime", Utilities.getDurationAsISO8601(Application.getRunningTime()));
         }};
 
         return mainApi;
