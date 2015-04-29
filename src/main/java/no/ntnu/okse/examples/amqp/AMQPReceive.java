@@ -71,7 +71,7 @@ public class AMQPReceive {
             }
         }
         if (addrs.size() == 0) {
-            addrs.add("amqp://78.91.25.248:5672/bang/bang");
+            addrs.add("amqp://127.0.0.1:5672/bang/bang");
         }
     }
 
@@ -111,6 +111,7 @@ public class AMQPReceive {
             while (!done) {
                 mng.recv();
                 while (mng.incoming() > 0) {
+                    System.out.println("derp");
                     Message msg = mng.get();
                     ++ct;
                     print(ct, msg);

@@ -87,9 +87,13 @@ public class AMQPSend {
             mng.start();
             Message msg = new MessageImpl();
             msg.setAddress(address);
+            System.out.println(msg.getAddress());
             if (subject != null) msg.setSubject(subject);
+            System.out.println(msg.getSubject());
             for (String body : bodies) {
+                System.out.println(body);
                 msg.setBody(new AmqpValue(body));
+                System.out.println(msg.getBody());
                 mng.put(msg);
             }
             mng.send();

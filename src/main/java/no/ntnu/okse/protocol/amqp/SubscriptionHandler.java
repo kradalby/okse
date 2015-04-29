@@ -70,6 +70,10 @@ public class SubscriptionHandler extends BaseHandler {
             return routes.get(idx);
         }
 
+        public List<T> getRoutes() {
+            return routes;
+        }
+
         public void printRouteTable() {
             routes.forEach((route) -> {
                 System.out.println(route.toString());
