@@ -64,10 +64,11 @@ public class TopicController {
 
         // TODO: This may need optimicing. Currently this operation is quite expensive.
         allTopics.forEach(t -> {
-            HashMap<String, Object> topicInfo = new HashMap<>();
             int subscribers = ss.getAllSubscribersForTopic(t.getFullTopicString()).size();
-            topicInfo.put("subscribers", subscribers);
-            topicInfo.put("topic", t);
+            HashMap<String, Object> topicInfo = new HashMap<String, Object>(){{
+                put("subscribers", subscribers);
+                put("topic", t);
+            }};
             results.put(t.getFullTopicString(), topicInfo);
         });
 
@@ -75,13 +76,19 @@ public class TopicController {
     }
 
     @RequestMapping(method = RequestMethod.GET, value = GET_ALL_SUBSCRIBERS_FOR_TOPIC)
-    public @ResponseBody HashSet<Subscriber> getAllSubscribersForTopic(@PathVariable("id") String id) {
+    public @ResponseBody HashMap<String, Object> getAllSubscribersForTopic(@PathVariable("id") String id) {
         // TODO: Add the topicName and change it to HashMap on return.
-        log.info("Fetching all subscribers for topic with ID: " + id);
         TopicService ts = TopicService.getInstance();
         SubscriptionService ss = SubscriptionService.getInstance();
         Topic t = ts.getTopicByID(id);
-        HashSet<Subscriber> result = ss.getAllSubscribersForTopic(t.getFullTopicString());
+        log.info("Fetching all subscribers for topic with ID: " + id);
+        HashSet<Subscriber> subscribers = ss.getAllSubscribersForTopic(t.getFullTopicString());
+
+        HashMap<String, Object> result = new HashMap<String, Object>(){{
+            put("topic", t.getFullTopicString());
+            put("subscribers", subscribers);
+        }};
+
         return result;
     }
 

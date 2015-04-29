@@ -146,12 +146,13 @@ var Topics = (function($) {
                 type: 'GET',
                 success: function(data) {
                     console.log("[Debug][Topics] Callback from server; showing subscribers modal")
-                    if (!(data.length == 0)) {
-                        var table = createTableForSubscribers(data)
+                    if (!(data.subscribers.length == 0)) {
+                        var table = createTableForSubscribers(data.subscribers)
                         $('#subscribers-table').html(table)
                     } else {
                         $('#subscribers-table').html('<tr class="danger"><td colspan="4"><h4 class="text-center">No subscribers returned from SubscriptionService</h4></td></tr>')
                     }
+                    $('#subscribers-topic').html(data.topic)
                     $('#subscribers-modal').modal('show')
                 },
                 error: function(xhr, status, error) {
