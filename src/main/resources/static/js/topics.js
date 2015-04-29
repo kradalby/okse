@@ -82,7 +82,7 @@ var Topics = (function($) {
     }
 
     /*
-        Binds the buttons after
+        Binds the buttons after the AJAX-request success function has completed
      */
     var bindButtons = function() {
 
@@ -94,12 +94,20 @@ var Topics = (function($) {
                 var topicID = $(e.target).closest("tr").attr("id")
                 $(e.target).closest('tr').addClass('deleted')
                 $(e.target).addClass("disabled")
+                $(e.target).parent().prev('td').find('a').addClass('disabled')
 
                 Main.ajax({
                     url: 'topics/delete/' + topicID,
                     type: 'DELETE',
-                    success: function(topic) {
+                    success: function(data) {
                         console.log("[Debug][Topics] Callback from server; topic and subscribers deleted")
+                        // Disabling all children topics also
+                        $.each(data.children, function(i, topic) {
+                            $('#' + topic.topicID).addClass('deleted')
+                            $('#' + topic.topicID).find('a').each(function() {
+                                $(this).addClass('disabled')
+                            });
+                        });
                     },
                     error: function(xhr, status, error) {
                         console.log("[Debug][Topics] Unable to remove topic with id: " + e.target.id)

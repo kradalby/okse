@@ -29,12 +29,9 @@ import no.ntnu.okse.core.subscription.SubscriptionService;
 import no.ntnu.okse.core.topic.Topic;
 import no.ntnu.okse.core.topic.TopicService;
 import org.apache.log4j.Logger;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
-
 
 /**
  * Created by Håkon Ødegård Løvdal (hakloev) on 13/03/15.
@@ -52,7 +49,6 @@ public class TopicController {
     private static final String DELETE_SINGLE_SUBSCRIBER = "/delete/subscriber/{id}";
 
     private static Logger log = Logger.getLogger(TopicController.class.getName());
-
 
     @RequestMapping(method = RequestMethod.GET, value = GET_ALL_TOPICS)
     public @ResponseBody HashMap<String, HashMap<String, Object>> getAlltopics() {
@@ -73,6 +69,7 @@ public class TopicController {
         });
 
         return results;
+
     }
 
     @RequestMapping(method = RequestMethod.GET, value = GET_ALL_SUBSCRIBERS_FOR_TOPIC)
@@ -103,12 +100,16 @@ public class TopicController {
     }
 
     @RequestMapping(method = RequestMethod.DELETE, value = DELETE_SINGLE_TOPIC)
-    public @ResponseBody Topic deleteSingleTopic(@PathVariable("id") String id) {
+    public @ResponseBody HashMap<String, Object> deleteSingleTopic(@PathVariable("id") String id) {
         log.info("Deleting Topic with ID: " + id);
         TopicService ts = TopicService.getInstance();
         Topic t = ts.getTopicByID(id);
         ts.deleteTopic(t.getFullTopicString());
-        return t;
+        HashMap<String, Object> result = new HashMap<String, Object>(){{
+            put("topicID", t.getTopicID());
+            put("children", t.getChildren());
+        }};
+        return result;
     }
 
     @RequestMapping(method = RequestMethod.DELETE, value= DELETE_SINGLE_SUBSCRIBER)
