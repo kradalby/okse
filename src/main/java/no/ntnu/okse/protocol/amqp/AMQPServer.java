@@ -169,6 +169,7 @@ public class AMQPServer extends BaseHandler {
             System.out.println(snd.getSession().getConnection().getRemoteHostname());
             System.out.println(snd.getSession().getConnection().getRemoteProperties());
 
+            dlv.disposition(Accepted.getInstance());
             dlv.settle();
 
             count++;
@@ -184,9 +185,8 @@ public class AMQPServer extends BaseHandler {
     public void addMessageToQueue(no.ntnu.okse.core.messaging.Message message) {
         Message msg = convertOkseMessageToAMQP(message);
 
-
-
         MessageBytes mb = convertAMQPMessageToMessageBytes(msg);
+
         String address = message.getTopic().getFullTopicString();
         messages.put(address, mb);
 
@@ -198,13 +198,13 @@ public class AMQPServer extends BaseHandler {
 
     public static MessageBytes convertAMQPMessageToMessageBytes(Message msg) {
         int encoded;
-        byte[] buffer = new byte[64];
+        byte[] buffer = new byte[1];
         while (true) {
             try {
                 encoded = msg.encode(buffer, 0, buffer.length);
                 break;
             } catch (java.nio.BufferOverflowException e) {
-                buffer = new byte[buffer.length*2];
+                buffer = new byte[buffer.length+1];
             }
         }
         MessageBytes mb = new MessageBytes(buffer);
