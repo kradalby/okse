@@ -45,6 +45,9 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.lang.instrument.Instrumentation;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.*;
 
 
@@ -197,8 +200,49 @@ public class AMQPServer extends BaseHandler {
     }
 
     public static MessageBytes convertAMQPMessageToMessageBytes(Message msg) {
+
+        Class<?> c = msg.getClass();
+        try {
+            Field f = c.getDeclaredField("_body");
+            System.out.println("bytes" + f.getByte(msg));
+        } catch (NoSuchFieldException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+
+        int removeByte = String.valueOf(msg.getPriority()).getBytes().length +
+                String.valueOf(msg.getDeliveryCount()).getBytes().length +
+                String.valueOf(msg.getTtl()).getBytes().length +
+                msg.getContentEncoding().getBytes().length;
+
+        int bytes = 0;
+        for (Method m : msg.getClass().getMethods()) {
+            if (m.getName().startsWith("get") && m.getParameterTypes().length == 0) {
+                Object r = null;
+                try {
+                    r = m.invoke(msg);
+                    bytes += r.toString().getBytes().length;
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                } catch (InvocationTargetException e) {
+                    e.printStackTrace();
+                } catch (NullPointerException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        bytes = bytes - removeByte;
+        System.out.println("Totalt antall bytes: " + bytes);
         int encoded;
-        byte[] buffer = new byte[1];
+        int test = 0;
+        String body = msg.getBody().toString();
+        if(msg.getAddress().getBytes() != null && msg.getSubject().getBytes() != null ){
+            test = msg.getAddress().getBytes().length + msg.getSubject().getBytes().length + body.getBytes().length;
+        }
+        System.out.println("Dette er test: " + test);
+        System.out.println(msg.getBody().toString());
+        byte[] buffer = new byte[test];
         while (true) {
             try {
                 encoded = msg.encode(buffer, 0, buffer.length);
