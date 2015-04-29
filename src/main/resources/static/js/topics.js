@@ -44,6 +44,7 @@ var Topics = (function($) {
                     '<td>' + topic.fullTopicString + '</td>' +
                     '<td>' + topic.root + '</td>' +
                     '<td>' + topic.leaf + '</td>' +
+                    '<td>' + 'Unknown' + '</td>' + // TODO: Add the XPath/Dialect here when it becomes available
                     '<td>' + '<a class="btn btn-xs btn-block btn-warning show-subscribers" data-id="' + topic.topicID + '">Subscribers <span class="badge">' + subscribers +'</span></a></td>' +
                     '<td>' + '<a class="btn btn-xs btn-block btn-danger delete-topic">Delete</a></td>' +
                 '</tr>'
