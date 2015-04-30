@@ -32,6 +32,7 @@ import org.springframework.security.crypto.codec.Hex;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
+import java.util.HashSet;
 
 /**
  * Created by Aleksander Skraastad (myth) on 4/5/15.
@@ -49,7 +50,7 @@ public class Subscriber {
     private final String originProtocol;
     private final String subscriberID;
     private static Logger log;
-
+    private HashSet<String> filters;
 
     /**
      * Constructs a Subscriber object from the required fields
@@ -183,6 +184,32 @@ public class Subscriber {
     public boolean shouldExpire() {
         if (timeout == null) return true;
         return false;
+    }
+
+    /**
+     * Add a message content filter to the subscriber
+     * @param filterString The filterString to be added
+     */
+    public void addFilter(String filterString) {
+        if (!filters.contains(filterString)) filters.add(filterString);
+        else log.warn("Attempt to add a filter that already exists.");
+    }
+
+    /**
+     * Removes a message content filter from the subscriber
+     * @param filterString The filterString to be removed
+     */
+    public void removeFilter(String filterString) {
+        if (filters.contains(filterString)) filters.remove(filterString);
+        else log.warn("Attempt to remove a filter that did not exist.");
+    }
+
+    /**
+     * Retrieve the set of message content filters on this subscriber object.
+     * @return A shallow clone of the internal filter set.
+     */
+    public HashSet<String> getFilterSet() {
+        return (HashSet<String>) filters.clone();
     }
 
     /**
