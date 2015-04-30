@@ -239,6 +239,7 @@ public class AMQPServer extends BaseHandler {
             }
         }
     }
+}
 
 //    @Override
 //    public void onDelivery(Event evt) {
@@ -264,7 +265,6 @@ public class AMQPServer extends BaseHandler {
 //        }
 //    }
 
-}
 /**
  * Send a message using AMQPServer
  *
@@ -304,3 +304,4 @@ public class AMQPServer extends BaseHandler {
 
     }
 
+*/

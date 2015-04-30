@@ -44,7 +44,7 @@ public class AMQProtocolServer extends AbstractProtocolServer {
     private static final String configurationFile = "";
 
     private static AMQProtocolServer _singleton;
-    private static String hostname = "78.91.9.241";
+    private static String hostname = "192.168.101.182"; //"78.91.9.241";
 
     private Driver driver;
     private AMQPServer server;
