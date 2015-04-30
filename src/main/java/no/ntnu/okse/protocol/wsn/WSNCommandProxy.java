@@ -429,6 +429,9 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         FilterType filters = subscribeRequest.getFilter();
         Map<QName, Object> filtersPresent = null;
 
+        // TODO: Investigate effects of multiple topicexpression.
+        // TODO: Investigate how X-Path expressions are evaluated and how we should store them
+
         if (filters != null) {
             log.debug("Filters present. Attempting to iterate over filters...");
             filtersPresent = new HashMap<>();
