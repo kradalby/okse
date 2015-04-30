@@ -40,10 +40,7 @@ import org.apache.qpid.proton.engine.Sender;
 import org.apache.qpid.proton.message.Message;
 import org.apache.qpid.proton.messenger.impl.Address;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
+import java.io.*;
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -199,24 +196,9 @@ public class AMQPServer extends BaseHandler {
         System.out.println(message.getMessage());
     }
 
-    public static MessageBytes convertAMQPMessageToMessageBytes(Message msg) {
+    public MessageBytes convertAMQPMessageToMessageBytes(Message msg) {
 
-        Class<?> c = msg.getClass();
-        try {
-            Field f = c.getDeclaredField("_body");
-            System.out.println("bytes" + f.getByte(msg));
-        } catch (NoSuchFieldException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }
-
-        int removeByte = String.valueOf(msg.getPriority()).getBytes().length +
-                String.valueOf(msg.getDeliveryCount()).getBytes().length +
-                String.valueOf(msg.getTtl()).getBytes().length +
-                msg.getContentEncoding().getBytes().length;
-
-        int bytes = 0;
+        /*int bytes = 0;
         for (Method m : msg.getClass().getMethods()) {
             if (m.getName().startsWith("get") && m.getParameterTypes().length == 0) {
                 Object r = null;
@@ -224,27 +206,53 @@ public class AMQPServer extends BaseHandler {
                     r = m.invoke(msg);
                     bytes += r.toString().getBytes().length;
                 } catch (IllegalAccessException e) {
-                    e.printStackTrace();
+                    //e.printStackTrace();
                 } catch (InvocationTargetException e) {
-                    e.printStackTrace();
+                    //e.printStackTrace();
                 } catch (NullPointerException e) {
-                    e.printStackTrace();
+                    //e.printStackTrace();
                 }
             }
+        }*/
+        /*ByteArrayOutputStream out = new ByteArrayOutputStream();
+        DataOutputStream dout = new DataOutputStream(out);
+        try {
+            dout.writeChars(msg.getBody().toString());
+            dout.close();
+            out.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        bytes = bytes - removeByte;
-        System.out.println("Totalt antall bytes: " + bytes);
+
+        byte[] storingData = out.toByteArray();*/
+
+
+        //System.out.println("Totalt antall bytes: " + storingData.length);
+        int guestimateByteSize = 0;
+        if(msg.getBody().toString().length() != 0){
+            guestimateByteSize += msg.getBody().toString().getBytes().length;
+        }
+        if(msg.getAddress().getBytes().length != 0){
+            guestimateByteSize += msg.getAddress().getBytes().length;
+        }
+        if(msg.getSubject().getBytes().length != 0){
+            guestimateByteSize += msg.getSubject().getBytes().length;
+        }
+        System.out.println("Totalt antall bytes from guestimate int: " + guestimateByteSize);
         int encoded;
-        int test = 0;
-        String body = msg.getBody().toString();
-        if(msg.getAddress().getBytes() != null && msg.getSubject().getBytes() != null ){
+
+       /* if(msg.getAddress().getBytes() != null && msg.getSubject().getBytes() != null ){
             test = msg.getAddress().getBytes().length + msg.getSubject().getBytes().length + body.getBytes().length;
         }
+
         System.out.println("Dette er test: " + test);
-        System.out.println(msg.getBody().toString());
-        byte[] buffer = new byte[test];
+        System.out.println(msg.getBody().toString());*/
+
+        byte[] buffer = new byte[guestimateByteSize];
+        System.out.println("This is buffer.length: " + buffer.length);
         while (true) {
             try {
+                log.debug("While loop: encode block, buffer length: " + buffer.length);
                 encoded = msg.encode(buffer, 0, buffer.length);
                 break;
             } catch (java.nio.BufferOverflowException e) {
@@ -252,10 +260,11 @@ public class AMQPServer extends BaseHandler {
             }
         }
         MessageBytes mb = new MessageBytes(buffer);
+        System.out.println("This is mb.length: " + mb.getBytes().length);
         return mb;
     }
 
-    public static Message convertOkseMessageToAMQP(no.ntnu.okse.core.messaging.Message message) {
+    public Message convertOkseMessageToAMQP(no.ntnu.okse.core.messaging.Message message) {
         Message msg = Message.Factory.create();
 
         Section body = new AmqpValue(message.getMessage());

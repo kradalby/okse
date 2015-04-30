@@ -113,7 +113,9 @@ public class AMQProtocolServer extends AbstractProtocolServer {
 
     @Override
     public void sendMessage(Message message) {
-        server.addMessageToQueue(message);
+        if (!message.getOriginProtocol().equals(protocolServerType)) {
+            server.addMessageToQueue(message);
+        }
     }
 
     public void incrementTotalMessages() {
