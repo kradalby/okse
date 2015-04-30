@@ -68,3 +68,8 @@ body {
 .deleted {
     opacity: 0.3;
 }
+
+#protocol-table-head > tr > th:not(:first-child),
+#protocol-table > tr > td:not(:first-child) {
+    text-align: right;
+}

@@ -62,7 +62,7 @@ var Stats = (function($) {
     var refreshRuntimeStatistics = function(statistics) {
         $('#totalRam').html(statistics.totalRam)
         $('#freeRam').html(statistics.freeRam)
-        $('#ramUse').html(statistics.usedRam)
+        $('#usedRam').html(statistics.usedRam)
         $('#cpuCores').html(statistics.cpuAvailable)
     }
 
