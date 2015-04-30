@@ -92,6 +92,7 @@ public class AMQPSendMassive {
             Messenger mng = Messenger.Factory.create();
             mng.start();
             Message msg = Message.Factory.create();
+
             msg.setAddress(address);
             System.out.println(msg.getAddress());
             if (subject != null) msg.setSubject(subject);

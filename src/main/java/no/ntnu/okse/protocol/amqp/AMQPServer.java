@@ -231,6 +231,7 @@ public class AMQPServer extends BaseHandler {
                 System.out.println("queue and shit");
             }
         } catch (InterruptedException e) {
+            AMQProtocolServer.getInstance().incrementTotalErrors();
             log.error("This happened: " + e.getMessage());
         }
     }
@@ -241,6 +242,7 @@ public class AMQPServer extends BaseHandler {
         if (link instanceof Sender) {
             Sender snd = (Sender) link;
             send(subscriptionHandler.getAddress(snd), snd);
+            AMQProtocolServer.getInstance().getTotalRequests();
         }
     }
 

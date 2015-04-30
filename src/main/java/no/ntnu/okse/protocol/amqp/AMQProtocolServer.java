@@ -119,4 +119,16 @@ public class AMQProtocolServer extends AbstractProtocolServer {
     public void incrementTotalMessages() {
         totalMessages++;
     }
+
+    public void incrementTotalRequests() {
+        totalRequests++;
+    }
+
+    public void incrementTotalBadRequest() {
+        totalBadRequests++;
+    }
+
+    public void incrementTotalErrors() {
+        totalErrors++;
+    }
 }
