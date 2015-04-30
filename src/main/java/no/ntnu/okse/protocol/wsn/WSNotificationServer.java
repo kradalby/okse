@@ -51,15 +51,22 @@ import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.xml.XmlConfiguration;
 import org.ntnunotif.wsnu.base.internal.ServiceConnection;
+import org.ntnunotif.wsnu.base.net.NuNamespaceContextResolver;
 import org.ntnunotif.wsnu.base.util.InternalMessage;
 import org.ntnunotif.wsnu.base.util.RequestInformation;
+import org.ntnunotif.wsnu.services.general.WsnUtilities;
 import org.ntnunotif.wsnu.services.implementations.notificationbroker.NotificationBrokerImpl;
 import org.ntnunotif.wsnu.services.implementations.publisherregistrationmanager.SimplePublisherRegistrationManager;
 import org.ntnunotif.wsnu.services.implementations.subscriptionmanager.SimpleSubscriptionManager;
+import org.oasis_open.docs.wsn.b_2.NotificationMessageHolderType;
+import org.oasis_open.docs.wsn.b_2.Notify;
+import org.oasis_open.docs.wsn.b_2.TopicExpressionType;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.xml.XMLConstants;
+import javax.xml.namespace.QName;
 
 /**
  * Created by Aleksander Skraastad (myth) on 3/12/15.
@@ -79,6 +86,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
 
     private Server _server;
     private WSNRequestParser _requestParser;
+    private WSNCommandProxy _commandProxy;
     private final ArrayList<Connector> _connectors = new ArrayList();
     private HttpClient _client;
     private HttpHandler _handler;
@@ -212,6 +220,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
 
                 /* OKSE custom WS-Nu web services */
                 WSNCommandProxy broker = new WSNCommandProxy();
+                _commandProxy = broker;
                 WSNSubscriptionManager subscriptionManager = new WSNSubscriptionManager();
                 WSNRegistrationManager registrationManager = new WSNRegistrationManager();
                 SubscriptionService.getInstance().addSubscriptionChangeListener(subscriptionManager);
@@ -299,7 +308,73 @@ public class WSNotificationServer extends AbstractProtocolServer {
      */
     @Override
     public void sendMessage(Message message) {
-        log.info("Recieved message for distribution");
+        log.debug("WSNServer recieved message for distribution");
+        if (!message.getOriginProtocol().equals(protocolServerType)) {
+            log.debug("The message originated from other protocol than WSNotification");
+
+            // Create wrapper provided the message, subscriptionref, publisherref and dialect
+            Notify notify = WSNTools.generateNotificationMessage(
+                    message,    // OKSE Message object
+                    message.getAttribute(WSNSubscriptionManager.WSN_ENDPOINT_TOKEN), // Returns publisherKey found
+                    null, // We do not yet know the recipient endpoints
+                    WSNTools._ConcreteTopicExpression
+            );
+
+            /*
+                Start to resolve recipients. The reason we cannot re-use the WSNCommandProxy's
+                sendNotification method is that it will inject the message to the MessageService for relay
+                thus creating duplicate messages.
+             */
+
+            NuNamespaceContextResolver namespaceContextResolver = new NuNamespaceContextResolver();
+
+            // bind namespaces to topics
+            for (NotificationMessageHolderType holderType : notify.getNotificationMessage()) {
+
+                TopicExpressionType topic = holderType.getTopic();
+
+                if (holderType.getTopic() != null) {
+                    NuNamespaceContextResolver.NuResolvedNamespaceContext context = namespaceContextResolver.resolveNamespaceContext(topic);
+
+                    if (context == null) {
+                        continue;
+                    }
+
+                    context.getAllPrefixes().forEach(prefix -> {
+                        // check if this is the default xmlns attribute
+                        if (!prefix.equals(XMLConstants.XMLNS_ATTRIBUTE)) {
+                            // add namespace context to the expression node
+                            topic.getOtherAttributes().put(new QName("xmlns:" + prefix), context.getNamespaceURI(prefix));
+                        }
+                    });
+                }
+            }
+
+            // Remember current message with context
+            Notify currentMessage = notify;
+            NuNamespaceContextResolver currentMessageNamespaceContextResolver = namespaceContextResolver;
+
+            // For all valid recipients
+            for (String recipient : _commandProxy.getAllRecipients()) {
+
+                // Filter do filter handling, if any
+                Notify toSend = _commandProxy.getRecipientFilteredNotify(recipient, notify, namespaceContextResolver);
+
+                // If any message was left to send, send it
+                if (toSend != null) {
+                    InternalMessage outMessage = new InternalMessage(
+                            InternalMessage.STATUS_OK |
+                                    InternalMessage.STATUS_HAS_MESSAGE |
+                                    InternalMessage.STATUS_ENDPOINTREF_IS_SET,
+                            toSend
+                    );
+                    // Update the requestinformation
+                    outMessage.getRequestInformation().setEndpointReference(_commandProxy.getEndpointReferenceOfRecipient(recipient));
+                    // Pass it along to the requestparser
+                    _requestParser.acceptLocalMessage(outMessage);
+                }
+            }
+        }
     }
 
     /**
@@ -395,7 +470,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
                 }
             }
 
-            log.info("Accepted message, trying to instantiate WSNu InternalMessage");
+            log.debug("Accepted message, trying to instantiate WSNu InternalMessage");
 
             // Get message content, if any
             InternalMessage outgoingMessage;
@@ -406,16 +481,16 @@ public class WSNotificationServer extends AbstractProtocolServer {
                 outgoingMessage = new InternalMessage(InternalMessage.STATUS_OK, null);
             }
 
-            log.info("WSNInternalMessage: " + outgoingMessage);
+            log.debug("WSNInternalMessage: " + outgoingMessage);
 
             outgoingMessage.getRequestInformation().setEndpointReference(request.getRemoteHost());
             outgoingMessage.getRequestInformation().setRequestURL(request.getRequestURI());
             outgoingMessage.getRequestInformation().setParameters(request.getParameterMap());
 
-            log.info("EndpointReference: " + outgoingMessage.getRequestInformation().getEndpointReference());
-            log.info("Request URI: " + outgoingMessage.getRequestInformation().getRequestURL());
+            log.debug("EndpointReference: " + outgoingMessage.getRequestInformation().getEndpointReference());
+            log.debug("Request URI: " + outgoingMessage.getRequestInformation().getRequestURL());
 
-            log.info("Forwarding message to requestParser...");
+            log.debug("Forwarding message to requestParser...");
 
             // Push the outgoingMessage to the request parser. Based on the status flags of the return message
             // we should know what has happened, and which response we should send.
@@ -565,7 +640,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
             if ((message.statusCode & InternalMessage.STATUS_HAS_MESSAGE) == 0) {
 
                 request.method(HttpMethod.GET);
-                log.info("Sending message without content to " + requestInformation.getEndpointReference());
+                log.debug("Sending message without content to " + requestInformation.getEndpointReference());
                 ContentResponse response = request.send();
                 totalRequests++;
 

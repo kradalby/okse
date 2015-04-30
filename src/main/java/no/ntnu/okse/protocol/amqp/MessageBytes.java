@@ -10,61 +10,41 @@
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
 
-body {
-    padding-top: 70px;
-}
+package no.ntnu.okse.protocol.amqp;
 
-.tab-content {
-    padding-top: 20px;
-}
+/**
+ * Most of this code is from the qpid-proton-demo (https://github.com/rhs/qpid-proton-demo) by Rafael Schloming
+ * Created by kradalby on 24/04/15.
+ */
+public class MessageBytes {
 
-.table {
-    margin-bottom: 0;
-}
+    private final byte[] bytes;
 
-.panel.panel-collapse {
-    margin-bottom: 0;
-}
+    public MessageBytes(byte[] bytes) {
+        this.bytes = bytes;
+    }
 
-.panel-heading h3 {
-    cursor: pointer;
-}
+    public MessageBytes(String string) {
+        this.bytes = string.getBytes();
+    }
 
-.panel-heading h3:after {
-    font-family:'Glyphicons Halflings';
-    content:"\e114";
-    float: right;
-    color: white;
-}
-.panel-heading h3.collapsed:after {
-    content:"\e080";
-}
+    public byte[] getBytes() {
+        return bytes;
+    }
 
-.btn-row {
-    margin: 10px 0;
-}
-
-.log-view {
-    background-color: rgba(210, 210, 210, 0.2);
-    cursor: text;
-    padding: 15px;
-    margin-bottom: 0;
-    border: 0;
-    font-family: monospace;
-}
-
-.deleted {
-    opacity: 0.3;
+    public String toString() {
+        return new String(bytes);
+    }
 }

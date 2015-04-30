@@ -30,7 +30,7 @@ import no.ntnu.okse.core.subscription.SubscriptionService;
 import no.ntnu.okse.core.topic.TopicService;
 import no.ntnu.okse.db.DB;
 import no.ntnu.okse.examples.DummyProtocolServer;
-import no.ntnu.okse.protocol.amqp.AMQPServer;
+import no.ntnu.okse.protocol.amqp.AMQProtocolServer;
 import no.ntnu.okse.protocol.wsn.WSNotificationServer;
 import no.ntnu.okse.web.Server;
 import org.apache.log4j.Logger;
@@ -46,10 +46,14 @@ import java.io.File;
  */
 public class Application {
 
+    // Version
+    public static final String VERSION = "0.0.1a";
+
     /* Default global variables */
+    public static boolean BROADCAST_SYSTEM_MESSAGES_TO_SUBSCRIBERS = false;
+    public static boolean CACHE_MESSAGES = true;
     public static long DEFAULT_SUBSCRIPTION_TERMINATION_TIME = 15552000000L; // Half a year
     public static long DEFAULT_PUBLISHER_TERMINATION_TIME = 15552000000L; // Half a year
-    public static boolean BROADCAST_SYSTEM_MESSAGES_TO_SUBSCRIBERS = false;
 
     private static Logger log;
     public static CoreService cs;
@@ -84,8 +88,8 @@ public class Application {
 
         /* REGISTER PROTOCOL SERVERS HERE */
         cs.addProtocolServer(WSNotificationServer.getInstance());
-        cs.addProtocolServer(AMQPServer.getInstance());
-        //cs.addProtocolServer(DummyProtocolServer.getInstance());    // Example ProtocolServer
+        cs.addProtocolServer(DummyProtocolServer.getInstance());    // Example ProtocolServer
+        cs.addProtocolServer(AMQProtocolServer.getInstance());
 
         // Start the admin console
         webserver.run();

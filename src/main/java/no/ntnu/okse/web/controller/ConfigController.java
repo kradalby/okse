@@ -15,20 +15,23 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/config")
 public class ConfigController {
 
+    private static final String ADD_EXISISTING_MAPPING = "/mapping/exsisting/add/{topic}/{newTopic}";
+    private static final String ADD_PREDEFINED_MAPPING = "/mapping/predefined/{topic}/{newTopic}";
+
     private static Logger log = Logger.getLogger(ConfigController.class.getName());
 
     @RequestMapping(method = RequestMethod.GET)
-    public void config() {
-        // should return
+    public String config() {
+        return "Temporary place holder";
     }
 
-    @RequestMapping(method = RequestMethod.POST, value="/mapping/exsisting/add/{topic}/{newTopic}")
-    public void addExsistingMapping(@PathVariable String topic, @PathVariable String newTopic) {
+    @RequestMapping(method = RequestMethod.POST, value=ADD_EXISISTING_MAPPING)
+    public void addExsistingMapping(@PathVariable("topic") String topic, @PathVariable("newTopic") String newTopic) {
         log.debug("Trying to add existing mapping between  " + topic + " --> " + newTopic);
     }
 
-    @RequestMapping(method = RequestMethod.POST, value = "/mapping/predefined/{topic}/{newTopic}")
-    public void addPredefinedMapping(@PathVariable String topic, @PathVariable String newTopic) {
+    @RequestMapping(method = RequestMethod.POST, value = ADD_PREDEFINED_MAPPING)
+    public void addPredefinedMapping(@PathVariable("topic") String topic, @PathVariable("newTopic") String newTopic) {
         log.debug("Trying to add predefined mapping between " + topic + " --> " + newTopic);
     }
 }

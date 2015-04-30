@@ -25,9 +25,13 @@
 package no.ntnu.okse.protocol.wsn;
 
 import no.ntnu.okse.core.messaging.Message;
+import org.ntnunotif.wsnu.services.general.WsnUtilities;
 import org.oasis_open.docs.wsn.b_2.*;
 import org.oasis_open.docs.wsn.t_1.*;
 
+import javax.xml.bind.JAXBElement;
+import javax.xml.namespace.QName;
+import javax.xml.ws.wsaddressing.W3CEndpointReference;
 import javax.xml.ws.wsaddressing.W3CEndpointReferenceBuilder;
 
 /**
@@ -49,44 +53,53 @@ public class WSNTools {
      * Generates a WS-Notification Notification Message from the provided arguments
      *
      * @param message An OKSE message object containing all the required fields
-     * @param topic The raw topic string this message is destined for
      * @param subscriptionReference The subscription reference endpoint
      * @param publisherReference The publisher reference endpoint
      * @param dialect The dialect used for this message
      * @return A completely built NotificationMessageHolderType used in WS-Nu for storing notifications
      */
-    public static NotificationMessageHolderType generateNotificationMessageHolderType(
-        Message message,
-        String topic,
-        String subscriptionReference,
-        String publisherReference,
-        String dialect
+    public static Notify generateNotificationMessage(
+            Message message,
+            String subscriptionReference,
+            String publisherReference,
+            String dialect
     ) {
-        // Create the HolderType
+
+        // Build wrapper classes
+        Notify notify = b2_factory.createNotify();
         NotificationMessageHolderType holderType = b2_factory.createNotificationMessageHolderType();
-        // Create the Message object
         NotificationMessageHolderType.Message innerMessage = b2_factory.createNotificationMessageHolderTypeMessage();
-        // Create the TopicExpressionType
-        TopicExpressionType topicType = b2_factory.createTopicExpressionType();
-        // Set the Dialect on the TopicExpressionType
-        topicType.setDialect(dialect);
-        // Add the actual topic to the TopicExpressionType
-        topicType.getContent().add(topic);
-        // Set the Topic on the HolderType
-        holderType.setTopic(topicType);
 
-        // Set the actual contents of the message to the Message element
-        innerMessage.setAny("Test");
+        @SuppressWarnings("unchecked")
+        JAXBElement msg = new JAXBElement(new QName("npex:NotifyContent"), String.class, message.getMessage());
 
-        W3CEndpointReferenceBuilder endRefBuilder = new W3CEndpointReferenceBuilder();
-        if (!message.getPublisher().getAttribute("wsn-endpoint").equals(null)) {
-            endRefBuilder.address(message.getPublisher().getHostAndPort() + message.getPublisher().getAttribute(WSNSubscriptionManager.WSN_ENDPOINT_TOKEN));
-        } else {
-            endRefBuilder.address(message.getPublisher().getHostAndPort());
+        // Figure out what createNofity method to call
+        if (subscriptionReference != null) {
+            // Build a W3CEndpointReference from the subRef string
+            holderType.setSubscriptionReference(new W3CEndpointReferenceBuilder().address(subscriptionReference).build());
+        }
+        if (publisherReference != null) {
+            // Build a W3CEndpointReference from the pubRef string
+            holderType.setProducerReference(new W3CEndpointReferenceBuilder().address(publisherReference).build());
+        }
+        if (dialect != null) {
+            // Create the topic expression with content and dialect if provided
+            TopicExpressionType topicType = b2_factory.createTopicExpressionType();
+            // Set the Dialect on the TopicExpressionType
+            topicType.setDialect(dialect);
+            // Add the actual topic to the TopicExpressionType
+            topicType.getContent().add(message.getTopic().getFullTopicString());
+            // Add the topicExpression to the messageWrapper
+            holderType.setTopic(topicType);
         }
 
-        holderType.setProducerReference(endRefBuilder.build());
+        // Set the content of innerMessage
+        innerMessage.setAny(msg);
+        // Add the innerMessage to holderType
+        holderType.setMessage(innerMessage);
+        // Add the holderType to the notify wrapper
+        notify.getNotificationMessage().add(holderType);
 
-        return holderType;
+        return notify;
     }
 }

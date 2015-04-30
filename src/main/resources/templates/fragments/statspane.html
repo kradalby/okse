@@ -45,6 +45,19 @@
                         <li class="list-group-item" id="ramuse"><strong>Used RAM: </strong>0 MB</li>
                     </ul>
                 </div>
+                <div class="panel panel-info">
+                    <!-- Default panel contents -->
+                    <div class="panel-heading">Status</div>
+                    <!-- <div class="panel-body"></div> -->
+                    <!-- List group -->
+                    <ul class="list-group">
+                        <li class="list-group-item"><strong>Subscribers: </strong><span class="total-subscribers" th:text="${subscribers}">Unknown</span></li>
+                        <li class="list-group-item" th:each="ip : ${serverIpAddresses}">
+                            <strong>Bound to IP: </strong><span th:text="${ip}">Unknown</span>
+                        </li>
+                        <li class="list-group-item"><strong>Bound to port: </strong>Different for all protocols</li>
+                    </ul>
+                </div>
             </div>
             <div class="col-md-4">
                 <div class="panel panel-info">
