@@ -40,19 +40,19 @@ import java.util.stream.Collectors;
  * okse is licenced under the MIT licence.
  */
 @RestController
-@RequestMapping("/api/topics")
+@RequestMapping("/api/topic")
 public class TopicController {
 
     private static final String GET_ALL_TOPICS = "/get/all";
-    private static final String GET_ALL_SUBSCRIBERS_FOR_TOPIC = "/get/{id}/subscriber/all";
     private static final String DELETE_ALL_TOPICS = "/delete/all";
     private static final String DELETE_SINGLE_TOPIC = "/delete/{id}";
-    private static final String DELETE_SINGLE_SUBSCRIBER = "/delete/subscriber/{id}";
 
     private static Logger log = Logger.getLogger(TopicController.class.getName());
 
     @RequestMapping(method = RequestMethod.GET, value = GET_ALL_TOPICS)
-    public @ResponseBody HashMap<String, HashMap<String, Object>> getAlltopics() {
+    public
+    @ResponseBody
+    HashMap<String, HashMap<String, Object>> getAlltopics() {
         TopicService ts = TopicService.getInstance();
         SubscriptionService ss = SubscriptionService.getInstance();
         HashSet<Topic> allTopics = ts.getAllTopics();
@@ -62,7 +62,7 @@ public class TopicController {
         // TODO: This may need optimicing. Currently this operation is quite expensive.
         allTopics.forEach(t -> {
             int subscribers = ss.getAllSubscribersForTopic(t.getFullTopicString()).size();
-            HashMap<String, Object> topicInfo = new HashMap<String, Object>(){{
+            HashMap<String, Object> topicInfo = new HashMap<String, Object>() {{
                 put("subscribers", subscribers);
                 put("topic", t);
             }};
@@ -70,24 +70,6 @@ public class TopicController {
         });
 
         return results;
-
-    }
-
-    @RequestMapping(method = RequestMethod.GET, value = GET_ALL_SUBSCRIBERS_FOR_TOPIC)
-    public @ResponseBody HashMap<String, Object> getAllSubscribersForTopic(@PathVariable("id") String id) {
-        // TODO: Add the topicName and change it to HashMap on return.
-        TopicService ts = TopicService.getInstance();
-        SubscriptionService ss = SubscriptionService.getInstance();
-        Topic t = ts.getTopicByID(id);
-        log.info("Fetching all subscribers for topic with ID: " + id);
-        HashSet<Subscriber> subscribers = ss.getAllSubscribersForTopic(t.getFullTopicString());
-
-        HashMap<String, Object> result = new HashMap<String, Object>(){{
-            put("topic", t.getFullTopicString());
-            put("subscribers", subscribers);
-        }};
-
-        return result;
     }
 
     @RequestMapping(method = RequestMethod.DELETE, value = DELETE_ALL_TOPICS)
@@ -116,17 +98,23 @@ public class TopicController {
         return result;
     }
 
-    @RequestMapping(method = RequestMethod.DELETE, value= DELETE_SINGLE_SUBSCRIBER)
-    public @ResponseBody Subscriber deleteSingleSubscriber(@PathVariable("id") String id) {
-        log.info("Deleting subscriber with ID: " + id);
+    /*
+    @RequestMapping(method = RequestMethod.GET, value = GET_ALL_SUBSCRIBERS_FOR_TOPIC)
+    public @ResponseBody HashMap<String, Object> getAllSubscribersForTopic(@PathVariable("id") String id) {
+        // TODO: Add the topicName and change it to HashMap on return.
+        TopicService ts = TopicService.getInstance();
         SubscriptionService ss = SubscriptionService.getInstance();
-        Subscriber s = ss.getSubscriberByID(id);
-        ss.removeSubscriber(s);
-        return s;
+        Topic t = ts.getTopicByID(id);
+        log.info("Fetching all subscribers for topic with ID: " + id);
+        HashSet<Subscriber> subscribers = ss.getAllSubscribersForTopic(t.getFullTopicString());
 
+        HashMap<String, Object> result = new HashMap<String, Object>(){{
+            put("topic", t.getFullTopicString());
+            put("subscribers", subscribers);
+        }};
 
+        return result;
     }
-
-
+    */
 
 }

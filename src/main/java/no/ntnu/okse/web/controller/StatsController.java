@@ -42,7 +42,7 @@ import java.util.HashMap;
  */
 
 @RestController
-@RequestMapping(value = "/api/stats")
+@RequestMapping(value = "/api/statistics")
 public class StatsController {
 
     private static final String GET_STATS = "/get/all";

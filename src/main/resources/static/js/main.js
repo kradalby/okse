@@ -151,10 +151,10 @@ var Main = (function($) {
                         ajaxSettings.success = refresh
                         break;
                     case "topics":
-                        ajaxSettings.url = clickedElement + '/get/all'
+                        ajaxSettings.url = 'topic/get/all'
                         ajaxSettings.success = Topics.refresh
                         break;
-                    case "stats":
+                    case "statistics":
                         ajaxSettings.url = clickedElement + '/get/all'
                         ajaxSettings.success = Stats.refresh
                         break;
@@ -164,6 +164,9 @@ var Main = (function($) {
                         break;
                     case "config":
                         ajaxSettings.success = Config.refresh
+                        break;
+                    case "subscribers":
+                        ajaxSettings.url = 'subscriber/get/all'
                         break;
                     default:
                         console.error("[Error][Main] Unknown nav-tab clicked, this should not happen!")
