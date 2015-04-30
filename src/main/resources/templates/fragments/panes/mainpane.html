@@ -6,55 +6,55 @@
 </head>
 <body>
 <th:block layout:fragment="mainpane">
-    <div class="tab-pane active" id="main">
-        <div class="row">
-            <div class="col-md-4">
-                <div class="panel panel-info">
-                    <!-- Default panel contents -->
-                    <div class="panel-heading">Status</div>
-                    <!-- <div class="panel-body"></div> -->
-                    <!-- List group -->
-                    <ul class="list-group">
-                        <li class="list-group-item"><strong>Broker: </strong><span th:text="${projectName}">Unknown</span></li>
-                        <li class="list-group-item"><strong>Uptime: </strong><span id="uptime" th:text="${uptime}">Unknown</span></li>
-                        <li class="list-group-item" th:each="ip : ${serverIpAddresses}">
-                            <strong>Bound to IP: </strong><span th:text="${ip}">Unknown</span>
-                        </li>
-                        <li class="list-group-item"><strong>Bound to port: </strong>Different for all protocols</li>
-                        <li class="list-group-item"><strong>Subscribers: </strong><span class="totalSubscribers" th:text="${subscribers}">Unknown</span></li>
-                        <li class="list-group-item"><strong>Publishers: </strong><span class="totalPublishers" th:text="${publishers}">Unknown</span></li>
-                    </ul>
-                </div>
+<div class="tab-pane active" id="main">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="panel panel-info">
+                <!-- Default panel contents -->
+                <div class="panel-heading">Status</div>
+                <!-- <div class="panel-body"></div> -->
+                <!-- List group -->
+                <ul class="list-group">
+                    <li class="list-group-item"><strong>Broker: </strong><span th:text="${projectName}">Unknown</span></li>
+                    <li class="list-group-item"><strong>Uptime: </strong><span id="uptime" th:text="${uptime}">Unknown</span></li>
+                    <li class="list-group-item" th:each="ip : ${serverIpAddresses}">
+                        <strong>Bound to IP: </strong><span th:text="${ip}">Unknown</span>
+                    </li>
+                    <li class="list-group-item"><strong>Bound to port: </strong>Different for all protocols</li>
+                    <li class="list-group-item"><strong>Subscribers: </strong><span class="totalSubscribers" th:text="${subscribers}">Unknown</span></li>
+                    <li class="list-group-item"><strong>Publishers: </strong><span class="totalPublishers" th:text="${publishers}">Unknown</span></li>
+                </ul>
             </div>
-            <div class="col-md-4">
-                <div class="panel panel-info">
-                    <!-- Default panel contents -->
-                    <div class="panel-heading">Operating environment</div>
-                    <!-- <div class="panel-body"></div> -->
-                    <!-- List group -->
-                    <ul class="list-group">
-                        <li class="list-group-item" th:each="entry : ${environment}">
-                            <strong th:text="${entry.key} + ': '"></strong><span th:text="${entry.value}"></span>
-                        </li>
-                    </ul>
-                </div>
+        </div>
+        <div class="col-md-4">
+            <div class="panel panel-info">
+                <!-- Default panel contents -->
+                <div class="panel-heading">Operating environment</div>
+                <!-- <div class="panel-body"></div> -->
+                <!-- List group -->
+                <ul class="list-group">
+                    <li class="list-group-item" th:each="entry : ${environment}">
+                        <strong th:text="${entry.key} + ': '"></strong><span th:text="${entry.value}"></span>
+                    </li>
+                </ul>
             </div>
-            <div class="col-md-4">
-                <div class="panel panel-info">
-                    <!-- Default panel contents -->
-                    <div class="panel-heading">System</div>
-                    <!-- <div class="panel-body"></div> -->
-                    <!-- List group -->
-                    <ul class="list-group">
-                        <li class="list-group-item"><strong>CPU cores: </strong><span id="cpuCores">0</span></li>
-                        <li class="list-group-item"><strong>Total RAM: </strong><span id="totalRam">0</span> MB</li>
-                        <li class="list-group-item"><strong>Free RAM: </strong><span id="freeRam">0</span> MB</li>
-                        <li class="list-group-item"><strong>Used RAM: </strong><span id="usedRam">0</span> MB</li>
-                    </ul>
-                </div>
+        </div>
+        <div class="col-md-4">
+            <div class="panel panel-info">
+                <!-- Default panel contents -->
+                <div class="panel-heading">System</div>
+                <!-- <div class="panel-body"></div> -->
+                <!-- List group -->
+                <ul class="list-group">
+                    <li class="list-group-item"><strong>CPU cores: </strong><span id="cpuCores">0</span></li>
+                    <li class="list-group-item"><strong>Total RAM: </strong><span id="totalRam">0</span> MB</li>
+                    <li class="list-group-item"><strong>Free RAM: </strong><span id="freeRam">0</span> MB</li>
+                    <li class="list-group-item"><strong>Used RAM: </strong><span id="usedRam">0</span> MB</li>
+                </ul>
             </div>
         </div>
     </div>
+</div>
 </th:block>
 </body>
 </html>
