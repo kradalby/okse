@@ -32,6 +32,7 @@ import org.apache.log4j.Logger;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Created by Håkon Ødegård Løvdal (hakloev) on 13/03/15.
@@ -107,8 +108,11 @@ public class TopicController {
         ts.deleteTopic(t.getFullTopicString());
         HashMap<String, Object> result = new HashMap<String, Object>(){{
             put("topicID", t.getTopicID());
-            put("children", t.getChildren());
+            /*put("children", t.getChildren());*/
         }};
+
+
+
         return result;
     }
 

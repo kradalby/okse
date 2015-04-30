@@ -40,23 +40,23 @@ var Topics = (function($) {
             var subscribers = topicInfo.subscribers
             trHTML +=
                 '<tr id="' + topic.topicID +'">' +
-                    '<td>' + topic.name + '</td>' +
                     '<td>' + topic.fullTopicString + '</td>' +
                     '<td>' + topic.root + '</td>' +
                     '<td>' + topic.leaf + '</td>' +
-                    '<td>' + 'Unknown' + '</td>' + // TODO: Add the XPath/Dialect here when it becomes available
-                    '<td>' + '<a class="btn btn-xs btn-block btn-warning show-subscribers" data-id="' + topic.topicID + '">Subscribers <span class="badge">' + subscribers +'</span></a></td>' +
+                    '<td>' + '<span class="badge">' + subscribers + '</span></td>' +
                     '<td>' + '<a class="btn btn-xs btn-block btn-danger delete-topic">Delete</a></td>' +
                 '</tr>'
         });
         return trHTML
     }
 
+
     /*
      Creates, fills and returns a <tr>-element. The <tr>-element is generated based on the subscribers
      list from the OKSE-RestAPI. It also adds all the buttons needed for deleting subscribers. It uses the id for
      this purpose. This function does not manipulate the DOM by checking if an element exists. It overwrites everything.
      */
+    /*
     var createTableForSubscribers = function(subscribers) {
         var trHTML = '';
         $.each(subscribers, function (i, subscriber) {
@@ -70,16 +70,14 @@ var Topics = (function($) {
         });
         return trHTML
     }
+    */
+
 
     /*
         Unbinds the buttons that change on every AJAX-response.
         Removes the 'click'-listener
      */
-    var unBindButtons = function() {
-        $('.delete-topic').off('click');
-        $('.delete-subscriber').off('click');
-        $('.show-subscriber').off('click');
-    }
+    var unBindButtons = function() { $('.delete-topic').off('click'); }
 
     /*
         Binds the buttons after the AJAX-request success function has completed
@@ -90,17 +88,17 @@ var Topics = (function($) {
             e.preventDefault();
 
             if (confirm("Are you sure you want to delete this topic? This will remove all subscribers and child topics.")) {
-
+                // Disable the topic and buttons temporarily
                 var topicID = $(e.target).closest("tr").attr("id")
                 $(e.target).closest('tr').addClass('deleted')
                 $(e.target).addClass("disabled")
-                $(e.target).parent().prev('td').find('a').addClass('disabled')
 
                 Main.ajax({
                     url: 'topics/delete/' + topicID,
                     type: 'DELETE',
                     success: function(data) {
                         console.log("[Debug][Topics] Callback from server; topic and subscribers deleted")
+                        /*
                         // Disabling all children topics also
                         $.each(data.children, function(i, topic) {
                             $('#' + topic.topicID).addClass('deleted')
@@ -108,6 +106,7 @@ var Topics = (function($) {
                                 $(this).addClass('disabled')
                             });
                         });
+                        */
                     },
                     error: function(xhr, status, error) {
                         console.log("[Debug][Topics] Unable to remove topic with id: " + e.target.id)
@@ -120,6 +119,7 @@ var Topics = (function($) {
             }
         });
 
+        /*
         $('.delete-subscriber').on('click', function(e) {
             e.preventDefault()
 
@@ -144,7 +144,8 @@ var Topics = (function($) {
                 });
             }
         });
-
+        */
+        /*
         $('.show-subscribers').on('click', function(e) {
             e.preventDefault()
 
@@ -171,6 +172,7 @@ var Topics = (function($) {
 
             return false;
         });
+        */
     }
 
     return {
@@ -185,6 +187,7 @@ var Topics = (function($) {
                         type: 'DELETE',
                         success: function(data) {
                             console.log("[Debug][Topics] Callback from server; deleted all topics");
+                            // Disable all topics and buttons
                             if (data.deleted == true) {
                                 $('#topics-table').addClass('deleted')
                                 $('#topics-table').find('a').each(function() {
@@ -207,9 +210,8 @@ var Topics = (function($) {
             // this returns an object, and therefore we must count the keys
             var count = Object.keys(response).length
 
-            if ($('#topics-table').hasClass('deleted')) {
-                $('#topics-table').removeClass('deleted');
-            }
+            // Remove 'deleted class' if it exists
+            if ($('#topics-table').hasClass('deleted')) { $('#topics-table').removeClass('deleted'); }
 
             if (!(count == 0)) {
                 var table = createTableForAllTopics(response)

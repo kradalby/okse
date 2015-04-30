@@ -5,22 +5,20 @@
 <head>
 </head>
 <body>
-<th:block layout:fragment="topicspane">
-    <div class="tab-pane" id="topics">
+<th:block layout:fragment="subscriberspane">
+    <div class="tab-pane" id="subscribers">
         <div class="row">
-            <div class="col-md-12" id="topics-column">
-                <!-- All topics will be inserted here -->
+            <div class="col-md-12" id="subscribers-column">
+                <!-- All subscribers will be inserted here -->
                 <div class="panel panel-info">
                     <!-- Default panel contents -->
-                    <div class="panel-heading">All topics</div>
+                    <div class="panel-heading">All subscribers</div>
                     <div class="panel-body">
                         <div class="alert alert-warning">
                             <strong>Note: </strong>
-                            All the topics registered in the broker will be shown below. If you choose to delete a topic,
-                            all the child topics will be removed from the table on the next refresh.
-                            Furthermore, all subscriptions will also be removed in case of a topic being deleted.
+                            Something really fancy about all 'em subscribers.
                         </div>
-                        <a class="btn btn-danger" id="delete-all-topics">Delete all topics</a>
+                        <a class="btn btn-danger" id="delete-all-subscribers">Delete all subscribers</a>
                     </div>
                     <!-- Table -->
                     <div class="table-responsive">
@@ -28,13 +26,14 @@
                             <thead>
                                 <tr>
                                     <th>Topic</th>
-                                    <th>Root</th>
-                                    <th>Leaf</th>
-                                    <th>Subscribers</th>
+                                    <th>Protocol</th>
+                                    <th>Host</th>
+                                    <th>Port</th>
+                                    <th>Filter</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
-                            <tbody id="topics-table">
+                            <tbody id="subscribers-table">
 
                             </tbody>
                         </table>
