@@ -97,6 +97,7 @@ public class Driver extends BaseHandler {
             Event ev = collector.peek();
             if (ev == null) break;
             ev.dispatch(this);
+            log.debug("Dispatching new event in AMQP");
             for (Handler h : handlers) {
                 ev.dispatch(h);
             }
@@ -152,6 +153,19 @@ public class Driver extends BaseHandler {
             sasl.done(Sasl.PN_SASL_OK);
             transport.bind(conn);
             new ChannelHandler(sock, SelectionKey.OP_READ, transport);
+        }
+    }
+
+
+    private class IncommingOkseMessageHandler implements Selectable {
+
+        @Override
+        public void selected() throws IOException {
+            for (Handler h : handlers) {
+                if (h instanceof AMQPServer) {
+                    ((AMQPServer) h).sendNextMessageInQueue();
+                }
+            }
         }
     }
 

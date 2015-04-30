@@ -46,6 +46,7 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.lang.instrument.Instrumentation;
 import java.util.*;
+import java.util.concurrent.LinkedBlockingQueue;
 
 
 /**
@@ -78,6 +79,8 @@ public class AMQPServer extends BaseHandler {
             return msg;
         }
 
+
+
     }
 
     final private MessageStore messages = new MessageStore();
@@ -85,11 +88,13 @@ public class AMQPServer extends BaseHandler {
     private static Logger log;
     private boolean quiet;
     private int tag = 0;
+    private LinkedBlockingQueue<String> queue;
 
     public AMQPServer(SubscriptionHandler subscriptionHandler, boolean quiet) {
         this.subscriptionHandler = subscriptionHandler;
         this.quiet = quiet;
         log = Logger.getLogger(AMQPServer.class.getName());
+        queue = new LinkedBlockingQueue<>();
     }
 
     private byte[] nextTag() {
@@ -132,14 +137,6 @@ public class AMQPServer extends BaseHandler {
     }
 
     private int send(String address) {
-//        if (snd == null) {
-//            SubscriptionHandler.Routes<Sender> routes = subscriptionHandler.getOutgoing(address);
-//            snd = routes.choose();
-//            if (snd == null) {
-//                return 0;
-//            }
-//        }
-//        log.debug("Fetched this sender: " + snd.toString());
 
         List<Sender> sendersOnTopic = subscriptionHandler.getOutgoing(address).getRoutes();
 
@@ -158,9 +155,8 @@ public class AMQPServer extends BaseHandler {
             System.out.println(dlv.getLink().getRemoteTarget().getAddress());
 
             byte[] bytes = mb.getBytes();
-            int derp = snd.send(bytes, 0, bytes.length);
+            snd.send(bytes, 0, bytes.length);
 
-            System.out.println(derp);
             System.out.println(bytes.length);
             System.out.println(snd.current());
             System.out.println(snd.current() == dlv);
@@ -168,6 +164,7 @@ public class AMQPServer extends BaseHandler {
             System.out.println(snd.getSession().getConnection().getHostname());
             System.out.println(snd.getSession().getConnection().getRemoteHostname());
             System.out.println(snd.getSession().getConnection().getRemoteProperties());
+
 
             dlv.disposition(Accepted.getInstance());
             dlv.settle();
@@ -189,9 +186,11 @@ public class AMQPServer extends BaseHandler {
 
         String address = message.getTopic().getFullTopicString();
         messages.put(address, mb);
+        queue.add(address);
 
         log.debug("Added message on topic: " + address + " to queue");
-        send(address);
+
+        //send(address);
 
         System.out.println(message.getMessage());
     }
@@ -223,6 +222,17 @@ public class AMQPServer extends BaseHandler {
         System.out.println(msg.getSubject());
         System.out.println(msg.getBody());
         return msg;
+    }
+
+    public void sendNextMessageInQueue() {
+        try {
+            if (queue.size() > 0) {
+                send(queue.take());
+                System.out.println("queue and shit");
+            }
+        } catch (InterruptedException e) {
+            log.error("This happened: " + e.getMessage());
+        }
     }
 
     @Override
@@ -285,7 +295,7 @@ public class AMQPServer extends BaseHandler {
                     AMQProtocolServer.getInstance().incrementTotalMessages();
                     log.debug(String.format("Got and distributed message(%s): %s from %s", address, message, rcv.toString()));
 
-                    addMessageToQueue(message);
+                    //addMessageToQueue(message);
                 }
 
 
