@@ -44,11 +44,13 @@ import java.util.logging.Logger;
  * @author mberkowitz@sf.org
  * @since 8/4/2013
  */
-public class AMQPSend {
+public class AMQPSendMassive {
 
     private static Logger tracer = Logger.getLogger("proton.example");
     private String address = "amqp://127.0.0.1";
     private String subject;
+    private int runs;
+    private String body;
     private String[] bodies = new String[]{"Hello World!"};
 
     private static void usage() {
@@ -56,7 +58,7 @@ public class AMQPSend {
         System.exit(2);
     }
 
-    private AMQPSend(String args[]) {
+    private AMQPSendMassive(String args[]) {
         int i = 0;
         while (i < args.length) {
             String arg = args[i++];
@@ -65,6 +67,10 @@ public class AMQPSend {
                     address = args[i++];
                 } else if ("-s".equals(arg)) {
                     subject = args[i++];
+                } else if ("-r".equals(arg)) {
+                    runs = Integer.parseInt(args[i++]);
+                } else if ("-b".equals(arg)) {
+                    body = args[i++];
                 } else {
                     System.err.println("unknown option " + arg);
                     usage();
@@ -83,20 +89,24 @@ public class AMQPSend {
 
     private void run() {
         try {
-            Messenger mng = new MessengerImpl();
+            Messenger mng = Messenger.Factory.create();
             mng.start();
-            Message msg = new MessageImpl();
+            Message msg = Message.Factory.create();
+
             msg.setAddress(address);
             System.out.println(msg.getAddress());
             if (subject != null) msg.setSubject(subject);
             System.out.println(msg.getSubject());
-            for (String body : bodies) {
-                System.out.println(body);
-                msg.setBody(new AmqpValue(body));
-                System.out.println(msg.getBody());
+            System.out.println(body);
+            msg.setBody(new AmqpValue(body));
+            System.out.println(msg.getBody());
+            int c = 0;
+            while (c < runs) {
+                Thread.sleep(50);
                 mng.put(msg);
+                mng.send();
+                c++;
             }
-            mng.send();
             mng.stop();
         } catch (Exception e) {
             tracer.log(Level.SEVERE, "proton error", e);
@@ -104,7 +114,7 @@ public class AMQPSend {
     }
 
     public static void main(String args[]) {
-        AMQPSend o = new AMQPSend(args);
+        AMQPSendMassive o = new AMQPSendMassive(args);
         o.run();
     }
 }
