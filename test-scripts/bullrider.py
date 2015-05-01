@@ -47,7 +47,7 @@ NOTIFY = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <wsnt:Notify>
 <wsnt:NotificationMessage>
 <wsnt:Topic Dialect="http://docs.oasis-open.org/wsn/t-1/TopicExpression/Concrete">%s</wsnt:Topic>
-<wsnt:Message><NotifyContent>%s</NotifyContent></wsnt:Message>
+<wsnt:Message><notifyContent>%s</notifyContent></wsnt:Message>
 </wsnt:NotificationMessage>
 </wsnt:Notify>
 </s:Body>
@@ -62,12 +62,12 @@ NOTIFY_MULTIPLE = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <wsnt:Notify>
 <wsnt:NotificationMessage>
 <wsnt:Topic Dialect="http://docs.oasis-open.org/wsn/t-1/TopicExpression/Concrete">%s</wsnt:Topic>
-<wsnt:Message><NotifyContent>%s</NotifyContent></wsnt:Message>
+<wsnt:Message><notifyContent>%s</notifyContent></wsnt:Message>
 </wsnt:NotificationMessage>
 <wsnt:NotificationMessage>
 <wsnt:Topic Dialect="http://docs.oasis-open.org/wsn/t-1/TopicExpression/Simple">%s</wsnt:Topic>
-<wsnt:Message><NotifyContent>%s</NotifyContent></wsnt:Message>
-</wsnt:NotificationMessage>
+<wsnt:Message><notifyContent>%s</notifyContent></wsnt:Message>
+</wsnt:NotificaionMessage>
 </wsnt:Notify>
 </s:Body>
 </s:Envelope>"""
@@ -121,7 +121,7 @@ xmlns:ns6="http://schemas.xmlsoap.org/soap/envelope/">
 <ns3:Subscribe>
 <ns3:ConsumerReference><ns2:Address>%s</ns2:Address></ns3:ConsumerReference>
 <ns3:Filter><ns3:TopicExpression Dialect="http://docs.oasis-open.org/wsn/t-1/TopicExpression/Concrete">%s</ns3:TopicExpression>
-<ns3:MessageContent Dialect="http://www.w3.org/TR/1999/REC-xpath-19991116">/NotifyContent[text()="derp"]</ns3:MessageContent>
+<ns3:MessageContent Dialect="http://www.w3.org/TR/1999/REC-xpath-19991116">/notifyContent[text()="derp"]</ns3:MessageContent>
 </ns3:Filter>
 </ns3:Subscribe>
 </ns6:Body>

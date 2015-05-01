@@ -49,6 +49,7 @@ import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.xml.XmlConfiguration;
 import org.ntnunotif.wsnu.base.internal.ServiceConnection;
 import org.ntnunotif.wsnu.base.net.NuNamespaceContextResolver;
+import org.ntnunotif.wsnu.base.net.XMLParser;
 import org.ntnunotif.wsnu.base.util.InternalMessage;
 import org.ntnunotif.wsnu.base.util.RequestInformation;
 import org.ntnunotif.wsnu.services.general.WsnUtilities;
@@ -58,12 +59,14 @@ import org.ntnunotif.wsnu.services.implementations.subscriptionmanager.SimpleSub
 import org.oasis_open.docs.wsn.b_2.NotificationMessageHolderType;
 import org.oasis_open.docs.wsn.b_2.Notify;
 import org.oasis_open.docs.wsn.b_2.TopicExpressionType;
+import org.xmlsoap.schemas.soap.envelope.Envelope;
 import sun.corba.OutputStreamFactory;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.XMLConstants;
+import javax.xml.bind.JAXBElement;
 import javax.xml.namespace.QName;
 
 /**
@@ -155,6 +158,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
     protected void init(Integer port) {
 
         log = Logger.getLogger(WSNotificationServer.class.getName());
+        //XMLParser.registerReturnObjectPackageWithObjectFactory("no.ntnu.okse.protocol.wsn.dto");
 
         // Set the servertype
         protocolServerType = "WSNotification";
@@ -325,19 +329,26 @@ public class WSNotificationServer extends AbstractProtocolServer {
         if (!message.getOriginProtocol().equals(protocolServerType)) {
             log.debug("The message originated from other protocol than WSNotification");
 
-            // Create wrapper provided the message, subscriptionref, publisherref and dialect
-            Notify notify = WSNTools.generateNotificationMessage(
-                    message,    // OKSE Message object
-                    message.getAttribute(WSNSubscriptionManager.WSN_ENDPOINT_TOKEN), // Returns publisherKey found
-                    null, // We do not yet know the recipient endpoints
-                    WSNTools._ConcreteTopicExpression
-            );
+            String rawXml = WSNTools.generateRawSoapEnvelopedNotifyString(message.getTopic().getFullTopicString(), WSNTools._ConcreteTopicExpression, message.getMessage());
+            InternalMessage returnMessage = WSNTools.parseRawXmlString(rawXml);
+            JAXBElement msg = (JAXBElement) returnMessage.getMessage();
+            log.debug(msg.getValue().getClass());
+            Envelope env = (Envelope) msg.getValue();
+            Notify notify = (Notify) env.getBody().getAny().get(0);
 
             /*
                 Start to resolve recipients. The reason we cannot re-use the WSNCommandProxy's
                 sendNotification method is that it will inject the message to the MessageService for relay
                 thus creating duplicate messages.
              */
+
+            /*// Create wrapper provided the message, subscriptionref, publisherref and dialect
+            Notify notify = WSNTools.generateNotificationMessage(
+                    message,    // OKSE Message object
+                    message.getAttribute(WSNSubscriptionManager.WSN_ENDPOINT_TOKEN), // Returns publisherKey found
+                    null, // We do not yet know the recipient endpoints
+                    WSNTools._ConcreteTopicExpression
+            );*/
 
             NuNamespaceContextResolver namespaceContextResolver = new NuNamespaceContextResolver();
 

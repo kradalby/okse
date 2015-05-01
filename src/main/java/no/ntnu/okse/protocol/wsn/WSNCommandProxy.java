@@ -24,6 +24,7 @@
 
 package no.ntnu.okse.protocol.wsn;
 
+import com.sun.org.apache.xerces.internal.dom.ElementNSImpl;
 import no.ntnu.okse.Application;
 import no.ntnu.okse.core.messaging.Message;
 import no.ntnu.okse.core.messaging.MessageService;
@@ -57,6 +58,7 @@ import org.oasis_open.docs.wsrf.rw_2.ResourceUnknownFault;
 
 import javax.jws.*;
 import javax.jws.soap.SOAPBinding;
+import javax.lang.model.element.Element;
 import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.annotation.XmlSeeAlso;
@@ -65,8 +67,12 @@ import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.namespace.QName;
+import javax.xml.transform.*;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import javax.xml.ws.wsaddressing.W3CEndpointReference;
 import javax.xml.ws.wsaddressing.W3CEndpointReferenceBuilder;
+import java.io.StringWriter;
 import java.util.*;
 
 /**
@@ -254,6 +260,14 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
             return;
         }
 
+
+        log.debug("------- SUPERDEBUG ------------------");
+        log.debug(notify.getNotificationMessage().get(0).getMessage().getAny().getClass());
+        log.debug("Raw xml content: " + WSNTools.extractRawXmlContentFromDomNode(
+                (ElementNSImpl) notify.getNotificationMessage().get(0).getMessage().getAny())
+        );
+        log.debug("------- SUPERDEBUG ------------------");
+
         MessageService messageService = MessageService.getInstance();
         TopicService topicService = TopicService.getInstance();
         Message message;
@@ -274,7 +288,9 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
                     if (topicService.topicExists(topicName)) {
                         log.debug("Topic existed, generating OKSE Message for distribution");
                         // Extract the content
-                        String content = messageHolderType.getMessage().getAny().toString();
+                        String content = WSNTools.extractRawXmlContentFromDomNode((ElementNSImpl)messageHolderType.getMessage().getAny());
+                        log.debug("Messace object: " + messageHolderType.getMessage().toString());
+                        log.debug("Message content: " + content);
                         // Fetch the topic object
                         Topic okseTopic = topicService.getTopic(topicName);
                         // Generate the message
@@ -468,7 +484,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
                             // List and add the dialect of the expression type
                             log.debug("Dialect: " + type.getDialect());
                             requestDialect = type.getDialect();
-                        // Do we have a MessageContent filter (XPATH)
+                            // Do we have a MessageContent filter (XPATH)
                         } else if (filter.getValue() instanceof org.oasis_open.docs.wsn.b_2.QueryExpressionType) {
                             // Cast to proper type
                             QueryExpressionType type = (QueryExpressionType) filter.getValue();

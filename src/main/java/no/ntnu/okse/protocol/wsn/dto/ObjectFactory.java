@@ -22,32 +22,23 @@
  * THE SOFTWARE.
  */
 
-package no.ntnu.okse.protocol.dto;
+package no.ntnu.okse.protocol.wsn.dto;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.JAXBElement;
+import javax.xml.bind.annotation.XmlRegistry;
+import javax.xml.namespace.QName;
 
 /**
  * Created by Aleksander Skraastad (myth) on 5/1/15.
  * <p>
  * okse is licenced under the MIT licence.
  */
-
-@XmlRootElement
-public class NotifyContent {
-
-    public NotifyContent(String message) {
-        this.message = message;
+@XmlRegistry
+public class ObjectFactory {
+    public NotifyContent createNotifyContent() {
+        return new NotifyContent();
     }
-
-    @XmlElement
-    private String message;
-
-    public void setMessage(String message) {
-        this.message = message;
-    }
-
-    public String getMessage() {
-        return this.message;
+    public JAXBElement<String> createMessageNotifyContent(String msg) {
+        return new JAXBElement<String>(new QName("NotifyContent"), String.class, NotifyContent.class, msg);
     }
 }
