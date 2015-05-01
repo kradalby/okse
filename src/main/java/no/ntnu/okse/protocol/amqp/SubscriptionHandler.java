@@ -24,28 +24,32 @@
 
 package no.ntnu.okse.protocol.amqp;
 
+import no.ntnu.okse.core.event.SubscriptionChangeEvent;
+import no.ntnu.okse.core.event.listeners.SubscriptionChangeListener;
 import no.ntnu.okse.core.subscription.Subscriber;
 import no.ntnu.okse.core.subscription.SubscriptionService;
 import no.ntnu.okse.core.topic.Topic;
 import no.ntnu.okse.core.topic.TopicService;
+import no.ntnu.okse.protocol.wsn.WSNotificationServer;
 import org.apache.log4j.Logger;
 import org.apache.qpid.proton.amqp.transport.Source;
 import org.apache.qpid.proton.amqp.transport.Target;
 import org.apache.qpid.proton.engine.*;
 import org.apache.qpid.proton.engine.impl.SenderImpl;
+import org.ntnunotif.wsnu.services.implementations.notificationproducer.AbstractNotificationProducer;
 
+import javax.jws.WebMethod;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
-
 /**
  * Most of this code is from the qpid-proton-demo (https://github.com/rhs/qpid-proton-demo) by Rafael Schloming
  * Created by kradalby on 24/04/15.
  */
-public class SubscriptionHandler extends BaseHandler {
+public class SubscriptionHandler extends BaseHandler implements SubscriptionChangeListener{
 
     public static class Routes<T extends Link> {
 
@@ -85,6 +89,9 @@ public class SubscriptionHandler extends BaseHandler {
     private static final Routes<Sender> EMPTY_OUT = new Routes<Sender>();
     private static final Routes<Receiver> EMPTY_IN = new Routes<Receiver>();
     private static Logger log = Logger.getLogger(SubscriptionHandler.class.getName());
+
+    private HashMap<Sender, Subscriber> localSubscriberMap = new HashMap<Sender, Subscriber>();
+    private HashMap<Sender, AbstractNotificationProducer.SubscriptionHandle> localSubscriberHandle = new HashMap<>();
 
     final private Map<String,Routes<Sender>> outgoing = new HashMap<String,Routes<Sender>>();
     final private Map<String,Routes<Receiver>> incoming = new HashMap<String,Routes<Receiver>>();
@@ -132,8 +139,8 @@ public class SubscriptionHandler extends BaseHandler {
     private void add(Sender sender) {
         Subscriber subscriber = new Subscriber(sender.getSource().getAddress(), 1337, getAddress(sender), AMQProtocolServer.getInstance().getProtocolServerType());
         SubscriptionService.getInstance().addSubscriber(subscriber);
+        localSubscriberMap.put(sender, subscriber);
         TopicService.getInstance().addTopic(getAddress(sender));
-
 
         String address = getAddress(sender);
         Routes<Sender> routes = outgoing.get(address);
@@ -149,6 +156,9 @@ public class SubscriptionHandler extends BaseHandler {
     }
 
     private void remove(Sender sender) {
+        Subscriber subscriber = localSubscriberMap.get(sender);
+        SubscriptionService.getInstance().removeSubscriber(subscriber);
+
         String address = getAddress(sender);
         Routes<Sender> routes = outgoing.get(address);
         if (routes != null) {
@@ -221,4 +231,23 @@ public class SubscriptionHandler extends BaseHandler {
         remove(event.getLink());
     }
 
+
+    @Override
+    @WebMethod(exclude = true)
+    public void subscriptionChanged(SubscriptionChangeEvent e) {
+        // If it is AMQP subscriber
+        if (e.getData().getOriginProtocol().equals(WSNotificationServer.getInstance().getProtocolServerType())) {
+            // If we are dealing with an Unsubscribe
+            if (e.getType().equals(SubscriptionChangeEvent.Type.UNSUBSCRIBE)) {
+                log.debug("Ubsubscribing " + localSubscriberHandle.get(e.getData().getSubscriberID()));
+                // Remove the local mappings from AMQP subscriptionKey to OKSE Subscriber object and AMQP subscriptionHandle
+                localSubscriberMap.remove(e.getData());
+                localSubscriberHandle.remove(e.getData());
+            } else if (e.getType().equals(SubscriptionChangeEvent.Type.SUBSCRIBE)) {
+                log.debug("Recieved a SUBSCRIBE event");
+                // TODO: Investigate if we really need to do anything here since it will function as a callback
+                // TODO: after addSubscriber
+            }
+        }
+    }
 }

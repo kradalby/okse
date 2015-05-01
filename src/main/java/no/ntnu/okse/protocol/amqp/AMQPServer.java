@@ -39,7 +39,11 @@ import org.apache.qpid.proton.engine.Receiver;
 import org.apache.qpid.proton.engine.Sender;
 import org.apache.qpid.proton.message.Message;
 import org.apache.qpid.proton.messenger.impl.Address;
-
+import java.io.*;
+import java.lang.instrument.Instrumentation;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -180,11 +184,63 @@ public class AMQPServer extends BaseHandler {
 
     }
 
-    public static MessageBytes convertAMQPMessageToMessageBytes(Message msg) {
+    public MessageBytes convertAMQPMessageToMessageBytes(Message msg) {
+
+        /*int bytes = 0;
+        for (Method m : msg.getClass().getMethods()) {
+            if (m.getName().startsWith("get") && m.getParameterTypes().length == 0) {
+                Object r = null;
+                try {
+                    r = m.invoke(msg);
+                    bytes += r.toString().getBytes().length;
+                } catch (IllegalAccessException e) {
+                    //e.printStackTrace();
+                } catch (InvocationTargetException e) {
+                    //e.printStackTrace();
+                } catch (NullPointerException e) {
+                    //e.printStackTrace();
+                }
+            }
+        }*/
+        /*ByteArrayOutputStream out = new ByteArrayOutputStream();
+        DataOutputStream dout = new DataOutputStream(out);
+        try {
+            dout.writeChars(msg.getBody().toString());
+            dout.close();
+            out.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        byte[] storingData = out.toByteArray();*/
+
+
+        //System.out.println("Totalt antall bytes: " + storingData.length);
+        int guestimateByteSize = 0;
+        if(msg.getBody().toString().length() != 0){
+            guestimateByteSize += msg.getBody().toString().getBytes().length;
+        }
+        if(msg.getAddress().getBytes().length != 0){
+            guestimateByteSize += msg.getAddress().getBytes().length;
+        }
+        if(msg.getSubject().getBytes().length != 0){
+            guestimateByteSize += msg.getSubject().getBytes().length;
+        }
+        System.out.println("Totalt antall bytes from guestimate int: " + guestimateByteSize);
         int encoded;
-        byte[] buffer = new byte[1];
+
+       /* if(msg.getAddress().getBytes() != null && msg.getSubject().getBytes() != null ){
+            test = msg.getAddress().getBytes().length + msg.getSubject().getBytes().length + body.getBytes().length;
+        }
+
+        System.out.println("Dette er test: " + test);
+        System.out.println(msg.getBody().toString());*/
+
+        byte[] buffer = new byte[guestimateByteSize];
+        System.out.println("This is buffer.length: " + buffer.length);
         while (true) {
             try {
+                log.debug("While loop: encode block, buffer length: " + buffer.length);
                 encoded = msg.encode(buffer, 0, buffer.length);
                 break;
             } catch (java.nio.BufferOverflowException e) {
@@ -192,10 +248,11 @@ public class AMQPServer extends BaseHandler {
             }
         }
         MessageBytes mb = new MessageBytes(buffer);
+        System.out.println("This is mb.length: " + mb.getBytes().length);
         return mb;
     }
 
-    public static Message convertOkseMessageToAMQP(no.ntnu.okse.core.messaging.Message message) {
+    public Message convertOkseMessageToAMQP(no.ntnu.okse.core.messaging.Message message) {
         Message msg = Message.Factory.create();
 
         Section body = new AmqpValue(message.getMessage());
@@ -246,16 +303,17 @@ public class AMQPServer extends BaseHandler {
                 dlv.disposition(Accepted.getInstance());
                 dlv.settle();
 
-
                 Message msg = Message.Factory.create();
                 msg.decode(bytes, 0, bytes.length);
                 Address address = new Address(msg.getAddress());
 
                 Topic t = TopicService.getInstance().getTopic(address.getName());
 
+                AmqpValue amqpMessageBodyString = (AmqpValue)msg.getBody();
+
                 if (t != null) {
                     no.ntnu.okse.core.messaging.Message message =
-                            new no.ntnu.okse.core.messaging.Message(msg.getBody().toString(), t, null, AMQProtocolServer.getInstance().getProtocolServerType());
+                            new no.ntnu.okse.core.messaging.Message((String)amqpMessageBodyString.getValue(), t, null, AMQProtocolServer.getInstance().getProtocolServerType());
                     message.setOriginProtocol(AMQProtocolServer.getInstance().getProtocolServerType());
 
                     MessageService.getInstance().distributeMessage(message);
