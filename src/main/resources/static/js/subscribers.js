@@ -24,7 +24,7 @@ var Subscribers = (function($) {
                 var toIndex = (_PAGESIZE * decrementedPage) + _PAGESIZE
                 var subscribersToPopulate = subscribers.slice(fromIndex, toIndex)
                 console.log("Clicked page: " + page + " and trying to populate it with [" + fromIndex + "," + toIndex + "]")
-                $('#subscribers-table').html(createTableForSubscribers(subscribersToPopulate))
+                fillTable(subscribersToPopulate)
             }
         })
     }
@@ -34,14 +34,19 @@ var Subscribers = (function($) {
     }
 
     var checkIfPaginationIsNeeded = function() {
+        var pageData = $('#pagination-selector').data();
+
         // Need to populate without paginator
         if (numberOfPages() < 2) {
             console.log("No need for paginator, filling table without paginator")
-            $('#subscribers-table').html(createTableForSubscribers(subscribers))
+            if ( typeof pageData.twbsPagination != 'undefined') {
+                console.log("Paginator exists, but we don't need it, so we destroy it")
+                $('#pagination-selector').twbsPagination('destroy')
+            }
+            fillTable(subscribers)
             return;
         }
 
-        var pageData = $('#pagination-selector').data();
 
         if ( typeof pageData.twbsPagination == 'undefined' ) {
             console.log("Creating new paginator!")
@@ -52,6 +57,12 @@ var Subscribers = (function($) {
             $('#pagination-selector').twbsPagination('destroy')
             setupPagination()
         }
+    }
+
+    var fillTable = function(subscribers) {
+        unBindButtons()
+        $('#subscribers-table').html(createTableForSubscribers(subscribers))
+        bindButtons()
     }
 
     /*
@@ -74,33 +85,37 @@ var Subscribers = (function($) {
         });
         return trHTML
     }
-    
-    /*
-     $('.delete-subscriber').on('click', function(e) {
-        e.preventDefault()
 
-         if (confirm("Are you sure you want to delete this subscriber?")) {
+    var unBindButtons = function() {
+        $('.delete-subscriber').off('click')
+    }
 
-             var subscriberID = $(e.target).closest('tr').attr('id')
-               $(e.target).closest("tr").addClass("deleted")
-             $(e.target).addClass("disabled")
+    var bindButtons = function() {
+         $('.delete-subscriber').on('click', function(e) {
+            e.preventDefault()
 
-             Main.ajax({
-                url: 'topics/delete/subscriber/' + subscriberID,
-                type: 'DELETE',
-                success: function(subscriber) {
-                    console.log("[Debug][Topics] Callback from server; subscriber deleted")
-                },
-                error: function(xhr, status, error) {
-                    console.log("[Debug][Topics] Unable to remove subscriber with id: " + e.target.id)
-                    $(e.target).closest("tr").removeClass("deleted")
-                    $(e.target).removeClass("disabled")
-                    Main.error(xhr, status, error)
-                }
-            });
-        }
-     });
-     */
+             if (confirm("Are you sure you want to delete this subscriber?")) {
+
+                 var subscriberID = $(e.target).closest('tr').attr('id')
+                 $(e.target).closest("tr").addClass("deleted")
+                 $(e.target).addClass("disabled")
+
+                 Main.ajax({
+                    url: 'subscriber/delete/' + subscriberID,
+                    type: 'DELETE',
+                    success: function(subscriber) {
+                        console.log("[Debug][Subscriber] Callback from server; subscriber deleted")
+                    },
+                    error: function(xhr, status, error) {
+                        console.log("[Debug][Subscriber] Unable to remove subscriber with id: " + e.target.id)
+                        $(e.target).closest("tr").removeClass("deleted")
+                        $(e.target).removeClass("disabled")
+                        Main.error(xhr, status, error)
+                    }
+                });
+            }
+         });
+    }
 
     return {
         init: function() {
