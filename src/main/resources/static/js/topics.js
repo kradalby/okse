@@ -44,6 +44,7 @@ var Topics = (function($) {
                     '<td>' + topic.fullTopicString + '</td>' +
                     '<td>' + topic.root + '</td>' +
                     '<td>' + topic.leaf + '</td>' +
+                    '<td>' + 'Unknown' + '</td>' + // TODO: Add the XPath/Dialect here when it becomes available
                     '<td>' + '<a class="btn btn-xs btn-block btn-warning show-subscribers" data-id="' + topic.topicID + '">Subscribers <span class="badge">' + subscribers +'</span></a></td>' +
                     '<td>' + '<a class="btn btn-xs btn-block btn-danger delete-topic">Delete</a></td>' +
                 '</tr>'
@@ -81,7 +82,7 @@ var Topics = (function($) {
     }
 
     /*
-        Binds the buttons after
+        Binds the buttons after the AJAX-request success function has completed
      */
     var bindButtons = function() {
 
@@ -93,12 +94,20 @@ var Topics = (function($) {
                 var topicID = $(e.target).closest("tr").attr("id")
                 $(e.target).closest('tr').addClass('deleted')
                 $(e.target).addClass("disabled")
+                $(e.target).parent().prev('td').find('a').addClass('disabled')
 
                 Main.ajax({
                     url: 'topics/delete/' + topicID,
                     type: 'DELETE',
-                    success: function(topic) {
+                    success: function(data) {
                         console.log("[Debug][Topics] Callback from server; topic and subscribers deleted")
+                        // Disabling all children topics also
+                        $.each(data.children, function(i, topic) {
+                            $('#' + topic.topicID).addClass('deleted')
+                            $('#' + topic.topicID).find('a').each(function() {
+                                $(this).addClass('disabled')
+                            });
+                        });
                     },
                     error: function(xhr, status, error) {
                         console.log("[Debug][Topics] Unable to remove topic with id: " + e.target.id)
@@ -145,12 +154,13 @@ var Topics = (function($) {
                 type: 'GET',
                 success: function(data) {
                     console.log("[Debug][Topics] Callback from server; showing subscribers modal")
-                    if (!(data.length == 0)) {
-                        var table = createTableForSubscribers(data)
+                    if (!(data.subscribers.length == 0)) {
+                        var table = createTableForSubscribers(data.subscribers)
                         $('#subscribers-table').html(table)
                     } else {
                         $('#subscribers-table').html('<tr class="danger"><td colspan="4"><h4 class="text-center">No subscribers returned from SubscriptionService</h4></td></tr>')
                     }
+                    $('#subscribers-topic').html(data.topic)
                     $('#subscribers-modal').modal('show')
                 },
                 error: function(xhr, status, error) {
@@ -177,6 +187,9 @@ var Topics = (function($) {
                             console.log("[Debug][Topics] Callback from server; deleted all topics");
                             if (data.deleted == true) {
                                 $('#topics-table').addClass('deleted')
+                                $('#topics-table').find('a').each(function() {
+                                    $(this).addClass('disabled')
+                                });
                             }
                         },
                         error: function(xhr, status, error) {
