@@ -7,7 +7,7 @@ var Subscribers = (function($) {
     // Private variable holding the subscribers array returned upon the ajax-request
     var subscribers;
 
-    var _PAGESIZE = 3;
+    var _PAGESIZE = 5;
     var _CURRENTPAGE = 1;
     var _TOTALPAGES = 10;
 
@@ -60,6 +60,11 @@ var Subscribers = (function($) {
             console.log("Creating new paginator!")
             setupPagination()
         } else {
+            // If _CURRENTPAGE is greater than needed pages, we decrement it to the needed numbers
+            if (_CURRENTPAGE > numberOfPages()) {
+                console.log("Decrementing the current page to needed number")
+                _CURRENTPAGE = numberOfPages()
+            }
             console.log("Paginator were defined and destroyed, initiating new with values: {" +
             "startPage:" + _CURRENTPAGE + " totalPages: " + numberOfPages() + "}");
             $('#pagination-selector').twbsPagination('destroy')
