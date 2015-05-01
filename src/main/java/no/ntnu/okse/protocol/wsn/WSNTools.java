@@ -25,13 +25,14 @@
 package no.ntnu.okse.protocol.wsn;
 
 import no.ntnu.okse.core.messaging.Message;
-import org.ntnunotif.wsnu.services.general.WsnUtilities;
+import org.apache.log4j.Logger;
 import org.oasis_open.docs.wsn.b_2.*;
 import org.oasis_open.docs.wsn.t_1.*;
+import org.w3c.dom.Node;
 
-import javax.xml.bind.JAXBElement;
+import javax.xml.bind.*;
 import javax.xml.namespace.QName;
-import javax.xml.ws.wsaddressing.W3CEndpointReference;
+import javax.xml.transform.dom.DOMResult;
 import javax.xml.ws.wsaddressing.W3CEndpointReferenceBuilder;
 
 /**
@@ -40,6 +41,8 @@ import javax.xml.ws.wsaddressing.W3CEndpointReferenceBuilder;
  * okse is licenced under the MIT licence.
  */
 public class WSNTools {
+
+    private static Logger log = Logger.getLogger(WSNTools.class.getName());
 
     // Initialize the WSN XML Object factories
     public static org.oasis_open.docs.wsn.b_2.ObjectFactory b2_factory = new org.oasis_open.docs.wsn.b_2.ObjectFactory();
@@ -101,5 +104,22 @@ public class WSNTools {
         notify.getNotificationMessage().add(holderType);
 
         return notify;
+    }
+
+    public static Node createNodeFromJAXBContext(JAXBElement msg) {
+        DOMResult result = new DOMResult();
+
+        try {
+            // Initialize the context
+            JAXBContext context = JAXBContext.newInstance(msg.getClass());
+            // Marshal it
+            context.createMarshaller().marshal(msg, result);
+            // Return the node
+            return result.getNode();
+        } catch (JAXBException e) {
+            log.error("Failed to initialize JAXBContext: " + e.getMessage());
+        }
+
+        return null;
     }
 }
