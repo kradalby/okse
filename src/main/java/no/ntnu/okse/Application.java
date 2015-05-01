@@ -72,7 +72,7 @@ public class Application {
     public static void main(String[] args) {
         PropertyConfigurator.configure("config/log4j.properties");
         // Turn off WS-Nu debug output
-        Log.setEnableDebug(false);
+        //Log.setEnableDebug(false);
         log = Logger.getLogger(Application.class.getName());
 
         File dbFile = new File("okse.db");

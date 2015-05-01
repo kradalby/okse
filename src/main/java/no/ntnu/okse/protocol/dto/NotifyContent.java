@@ -24,13 +24,30 @@
 
 package no.ntnu.okse.protocol.dto;
 
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+
 /**
- * Created by Aleksander Skraastad (myth) on 3/2/15.
+ * Created by Aleksander Skraastad (myth) on 5/1/15.
  * <p>
  * okse is licenced under the MIT licence.
  */
-public class WsnDTO extends AbstractDTO {
 
+@XmlRootElement
+public class NotifyContent {
 
+    public NotifyContent(String message) {
+        this.message = message;
+    }
 
+    @XmlElement
+    private String message;
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public String getMessage() {
+        return this.message;
+    }
 }
