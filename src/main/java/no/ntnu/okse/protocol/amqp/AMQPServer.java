@@ -305,11 +305,22 @@ public class AMQPServer extends BaseHandler {
 
                 Message msg = Message.Factory.create();
                 msg.decode(bytes, 0, bytes.length);
+                MessageBytes mb = new MessageBytes(bytes);
                 Address address = new Address(msg.getAddress());
 
                 Topic t = TopicService.getInstance().getTopic(address.getName());
 
                 AmqpValue amqpMessageBodyString = (AmqpValue)msg.getBody();
+
+                // Add straight to AMQP queue
+                try {
+                    messages.put(address.getName(), mb);
+                    queue.put(address.getName());
+                } catch (InterruptedException e) {
+                    AMQProtocolServer.getInstance().incrementTotalErrors();
+                    log.error("Got interrupted: " + e.getMessage());
+                }
+
 
                 if (t != null) {
                     no.ntnu.okse.core.messaging.Message message =
