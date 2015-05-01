@@ -29,6 +29,7 @@ import no.ntnu.okse.core.topic.Topic;
 import org.apache.log4j.Logger;
 import org.springframework.security.crypto.codec.Hex;
 
+import javax.annotation.Nonnull;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
@@ -47,15 +48,23 @@ public class Message {
     private final Topic topic;
     private final String message;
     private final String messageID;
+
+    // Mutable fields
     private String originProtocol;
     private static Logger log;
     private HashMap<String, String> attributes;
-
-    // Mutable fields
     private LocalDateTime processed;
     private boolean systemMessage;
 
-    public Message(String message, Topic topic, Publisher publisher) {
+    /**
+     * Constructor that takes in a message, topic, publisher and originProtocol to produce a single OKSE Message
+     *
+     * @param message The message content, represented as a string (Cannot be null)
+     * @param topic An instance of OKSE Topic object
+     * @param publisher An instance of OKSE Publisher object
+     * @param originProtocol The originating protocol name of this message (Cannot be null)
+     */
+    public Message(@Nonnull String message, Topic topic, Publisher publisher, @Nonnull String originProtocol) {
         log = Logger.getLogger(Message.class.getName());
         this.publisher = publisher;
         this.topic = topic;
@@ -65,9 +74,7 @@ public class Message {
         this.systemMessage = false;
         this.messageID = generateMessageID();
         this.attributes = new HashMap<>();
-        if (publisher != null) {
-            this.originProtocol = publisher.getOriginProtocol();
-        } else originProtocol = null;
+        this.originProtocol = originProtocol;
     }
 
     /**
@@ -221,7 +228,8 @@ public class Message {
 
     @Override
     public String toString() {
-        return "Message (" + messageID + ") [systemMessage: " + systemMessage + ", created: " + created + ", " +
+        return "Message (" + messageID.substring(0,4) + "..." + messageID.substring(28,32) +
+                ") [systemMessage: " + systemMessage + ", created: " + created + ", " +
                "topic: " + topic.getFullTopicStringIgnoreCase() + "]";
     }
 }

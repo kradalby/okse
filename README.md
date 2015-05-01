@@ -14,9 +14,9 @@ Extending with additional protocols is also possible, by extending the appropria
 
 # Development Team
 
-* Aleksander Skraastad
-* Håkon Ødegård Løvdal
-* Fredrik Christoffer Berg
-* Trond Walleraunet
-* Fredrik Tørnvall
-* Kristoffer Dalby
+* [Aleksander Skraastad](https://github.com/mythern)
+* [Håkon Ødegård Løvdal](https://github.com/hakloev)
+* [Fredrik Christoffer Berg](https://github.com/Bergalerga)
+* [Trond Walleraunet](https://github.com/trondwalleraunet)
+* [Fredrik Borgen Tørnvall](https://github.com/freboto)
+* [Kristoffer Andreas Breiland Dalby](https://github.com/kradalby)

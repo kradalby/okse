@@ -71,7 +71,7 @@ public class WSNTools {
         NotificationMessageHolderType.Message innerMessage = b2_factory.createNotificationMessageHolderTypeMessage();
 
         @SuppressWarnings("unchecked")
-        JAXBElement msg = new JAXBElement(new QName("npex:NotifyContent"), String.class, message.getMessage());
+        JAXBElement msg = new JAXBElement(new QName("NotifyContent"), String.class, message.getMessage());
 
         // Figure out what createNofity method to call
         if (subscriptionReference != null) {

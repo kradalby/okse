@@ -29,31 +29,44 @@ package no.ntnu.okse.web.model;
  */
 public class ProtocolStats {
 
-    private final String protocolServerType;
+    private final String protocolServer;
+    private final int totalMessagesSent;
+    private final int totalMessagesRecieved;
     private final int totalRequests;
-    private final int totalMessages;
+    private final int totalBadRequests;
+    private final int totalErrors;
 
 
-    public ProtocolStats(String protocolServerType, int totalRequests, int totalMessages) {
-        this.protocolServerType = protocolServerType;
+    public ProtocolStats(String protocolServer, int totalMessagesSent, int totalMessagesRecieved, int totalRequests, int totalBadRequests, int totalErrors) {
+        this.protocolServer = protocolServer;
+        this.totalMessagesSent = totalMessagesSent;
+        this.totalMessagesRecieved = totalMessagesRecieved;
         this.totalRequests = totalRequests;
-        this.totalMessages = totalMessages;
+        this.totalBadRequests = totalBadRequests;
+        this.totalErrors = totalErrors;
     }
 
+    public String getProtocolServer() {
+        return protocolServer;
+    }
 
+    public int getTotalMessagesSent() {
+        return totalMessagesSent;
+    }
 
-    public int getTotalMessages() {
-        return totalMessages;
+    public int getTotalMessagesRecieved() {
+        return totalMessagesRecieved;
     }
 
     public int getTotalRequests() {
         return totalRequests;
     }
 
-    public String getProtocolServerType() {
-        return protocolServerType;
+    public int getTotalBadRequests() {
+        return totalBadRequests;
     }
 
-
-
+    public int getTotalErrors() {
+        return totalErrors;
+    }
 }

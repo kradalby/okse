@@ -27,7 +27,16 @@
  */
 var Main = (function($) {
 
-    // Global variable for holding the interval used to update the panes
+    // Private variable for error messages
+    var statusErrorMap = {
+        '400' : "Server understood the request, but request content was invalid.",
+        '401' : "Unauthorized access.",
+        '403' : "Forbidden resource can't be accessed.",
+        '500' : "Internal server error.",
+        '503' : "Service unavailable."
+    };
+
+    //  Private variable for holding the interval used to update the panes
     var clickInterval
 
     // The base url, that appends to all ajax-requests
@@ -82,31 +91,40 @@ var Main = (function($) {
         }, $('#settings-update-interval').val() * 1000);
     }
 
-    // TODO: For now, it only updates when in main-pane. Needs to change in stats pane later on
-    // Updates all the subscriber counters on the page (both the main-pane and the stats-pane
-    var updateSubscribers = function(subscribers) {
-        $('.total-subscribers').each(function() {
-            if ($(this).val() != subscribers) {
-                $(this).text(subscribers)
-            }
-        });
-    }
-
     /*
         Global error function that shows the Ajax callback and request url.
      */
     var error = function(xhr, status, error)    {
-        console.error("[Error][" + xhr.url + "] in Ajax with the following callback [status: " + xhr.status +  " readyState: " + xhr.readyState + " responseText: " + xhr.responseText + "]")
+        if (xhr.status != 200) {
+            var errorMessage = statusErrorMap[xhr.status]
+            if (!errorMessage) { errorMessage = "Unknown error" }
+            console.error("[Error][" + xhr.url + "] in Ajax with the following callback {" +
+                "status: " + xhr.status +  " " +
+                "errorMessage: " + errorMessage+ " " +
+                "readyState: " + xhr.readyState + " " +
+                "responseText: " + xhr.responseText + "}")
+        }
     }
 
     var refresh = function(response) {
-        console.log("[Debug][Main]" + JSON.stringify(response))
-        updateSubscribers(response.subscribers)
+        Stats.refreshSubscribersAndPublishers(response.subscribers, response.publishers)
+        $('#runtime').html(response.runtime)
     }
 
     return {
         ajax: ajax,
         error: error,
+        setIntervalForLogTab: setIntervalForLogTab,
+        clearIntervalForTab: function() {
+            clearInterval(clickInterval)
+        },
+        displayMessage: function(message) {
+            $('#messages').append(
+                '<div class="alert alert-danger">' +
+                    '<a class="close" data-dismiss="alert">&times;</a>' +
+                    '<strong>Error: </strong>' + message +
+                '</div>');
+        },
         init: function() {
             setupAjax()
 
@@ -129,6 +147,7 @@ var Main = (function($) {
                         ajaxSettings.success = Topics.refresh
                         break;
                     case "stats":
+                        ajaxSettings.url = clickedElement + '/get/all'
                         ajaxSettings.success = Stats.refresh
                         break;
                     case "log":
@@ -156,19 +175,16 @@ var Main = (function($) {
                         type: 'GET',
                         success: refresh
                     })}, 2000);
+                Logs.init()
             }
-        },
-        clearIntervalForTab: function() {
-            clearInterval(clickInterval)
-        },
-        setIntervalForLogTab: setIntervalForLogTab
+        }
     }
 
 })(jQuery);
 
 $(document).ready(function(){
     Main.init()
+    Topics.init()
     Config.init()
-    Logs.init()
 });
 
