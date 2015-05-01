@@ -302,8 +302,8 @@ public class AMQPServer extends BaseHandler {
                 dlv.disposition(Accepted.getInstance());
                 dlv.settle();
 
-                System.out.println(bytes.toString());
-                System.out.println(bytes.length);
+                //System.out.println(bytes.toString());
+                //System.out.println(bytes.length);
 
                 //System.out.println(rcv.getRemoteSource().getAddress());
                 //System.out.println(rcv.getRemoteTarget().getAddress());
@@ -329,9 +329,11 @@ public class AMQPServer extends BaseHandler {
 
                 Topic t = TopicService.getInstance().getTopic(address.getName());
 
+                AmqpValue amqpMessageBodyString = (AmqpValue)msg.getBody();
+
                 if (t != null) {
                     no.ntnu.okse.core.messaging.Message message =
-                            new no.ntnu.okse.core.messaging.Message(msg.getBody().toString(), t, null);
+                            new no.ntnu.okse.core.messaging.Message((String)amqpMessageBodyString.getValue(), t, null);
                     message.setOriginProtocol(AMQProtocolServer.getInstance().getProtocolServerType());
 
                     MessageService.getInstance().distributeMessage(message);
