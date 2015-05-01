@@ -24,11 +24,14 @@
 
 package no.ntnu.okse.web.controller;
 
+import no.ntnu.okse.Application;
+import no.ntnu.okse.core.Utilities;
 import no.ntnu.okse.core.subscription.SubscriptionService;
 import org.apache.log4j.Logger;
 import org.springframework.web.bind.annotation.*;
 
 import java.lang.String;
+import java.time.Duration;
 import java.util.HashMap;
 
 /**
@@ -42,9 +45,15 @@ public class ApiController {
     private static Logger log = Logger.getLogger(ApiController.class.getName());
 
     @RequestMapping(value = "/api/main", method = RequestMethod.GET)
-    public HashMap<String, String> main() {
-        HashMap<String, String> mainApi = new HashMap<>();
-        mainApi.put("subscribers", String.valueOf(SubscriptionService.getInstance().getAllSubscribers().size()));
+    public @ResponseBody HashMap<String, Object> main() {
+        SubscriptionService ss = SubscriptionService.getInstance();
+
+        HashMap<String, Object> mainApi = new HashMap<String, Object>(){{
+            put("subscribers", ss.getNumberOfSubscribers());
+            put("publishers", ss.getNumberOfPublishers());
+            put("runtime", Utilities.getDurationAsISO8601(Application.getRunningTime()));
+        }};
+
         return mainApi;
     }
 

@@ -42,9 +42,15 @@ public interface ProtocolServer {
     /**
      * This interface method must return the total amount of messages that has been processed by the
      * protocol server.
-     * @return An integer representing the total amount of processed messages.
+     * @return An integer representing the total amount of sent messages.
      */
-    public int getTotalMessages();
+    public int getTotalMessagesSent();
+
+    /**
+     * This interface method must return the total amount of messages that has been recieved by the protocol server.
+     * @return An integer representing the total amount of recieved messages.
+     */
+    public int getTotalMessagesRecieved();
 
     /**
      * This interface method must return the total amount of bad requests recieved by the protocol server.

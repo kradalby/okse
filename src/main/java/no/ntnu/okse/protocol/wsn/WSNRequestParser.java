@@ -205,6 +205,8 @@ public class WSNRequestParser implements Hub {
                         }
 
                         if (e.getLinkedException() != null) {
+                            // For DEBUG purposes
+                            e.printStackTrace();
                             faultMessage += "\n\tWith linked exception:" + e.getLinkedException().getClass().getName();
                             faultMessage += e.getLinkedException().getMessage() == null ? "" : e.getLinkedException().getMessage();
                         }
@@ -226,7 +228,7 @@ public class WSNRequestParser implements Hub {
             /* THere is an exception that should be handled */
             if ((returnMessage.statusCode & InternalMessage.STATUS_EXCEPTION_SHOULD_BE_HANDLED) > 0) {
 
-                log.info("Exception thrown up the stack");
+                log.error("Exception thrown up the stack");
 
                 try {
 
@@ -235,7 +237,6 @@ public class WSNRequestParser implements Hub {
                     return new InternalMessage(InternalMessage.STATUS_FAULT, null);
 
                 } catch (IllegalArgumentException e) {
-
                     log.error("parseMessage(): Error not parseable, the error can not be a wsdl-specified one.");
                     return new InternalMessage(InternalMessage.STATUS_FAULT | InternalMessage.STATUS_FAULT_INVALID_PAYLOAD, null);
 
@@ -407,7 +408,7 @@ public class WSNRequestParser implements Hub {
             }
 
         }
-        log.info("Found no matching connection for URL: " + endpointReference);
+        log.debug("Found no matching connection for URL: " + endpointReference);
         return null;
     }
 

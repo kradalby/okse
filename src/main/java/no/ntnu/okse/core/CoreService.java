@@ -24,6 +24,7 @@
 
 package no.ntnu.okse.core;
 
+import no.ntnu.okse.Application;
 import no.ntnu.okse.core.event.Event;
 
 import no.ntnu.okse.core.event.SystemEvent;
@@ -43,10 +44,12 @@ import java.util.concurrent.LinkedBlockingQueue;
  */
 public class CoreService extends AbstractCoreService {
 
+    // Common service fields
     private static CoreService _singleton;
     private static Thread _serviceThread;
     private static boolean _invoked = false;
 
+    // Service specific fields
     private LinkedBlockingQueue<Event> eventQueue;
     private ExecutorService executor;
     private HashSet<AbstractCoreService> services;
@@ -118,13 +121,14 @@ public class CoreService extends AbstractCoreService {
     public void run() {
         _running = true;
         log.info("CoreService booted successfully");
-        log.info("Attempting to boot ProtocolServers");
 
         // Call the boot() method on all registered Core Services
+        log.info("Booting core services");
         this.bootCoreServices();
-        log.info("Completed booting CoreServices");
+        log.info("Completed core services");
 
         // Call the boot() method on all registered ProtocolServers
+        log.info("Booting ProtocolServers");
         this.bootProtocolServers();
         log.info("Completed booting ProtocolServers");
 
@@ -132,6 +136,8 @@ public class CoreService extends AbstractCoreService {
         log.info("Setting up listener support for all core services");
         this.registerListenerSupportForAllCoreServices();
         log.info("Completed setting up listener support for all core services");
+
+        log.info("OKSE " + Application.VERSION + " booted in " + Application.getRunningTime().toString());
 
         // Initiate main run loop, which awaits Events to be committed to the eventQueue
         while (_running) {
@@ -243,11 +249,19 @@ public class CoreService extends AbstractCoreService {
     }
 
     /**
-     * Statistics for total number of messages that has passed through all protocol servers
-     * @return: An integer representing the total amount of messages.
+     * Statistics for total number of messages that has been recieved through all protocol servers
+     * @return: An integer representing the total amount of messages recieved.
      */
-    public int getTotalMessagesFromProtocolServers() {
-        return protocolServers.stream().map(ProtocolServer::getTotalMessages).reduce(0, (a, b) -> a + b);
+    public int getTotalMessagesRecievedFromProtocolServers() {
+        return protocolServers.stream().map(ProtocolServer::getTotalMessagesRecieved).reduce(0, (a, b) -> a + b);
+    }
+
+    /**
+     * Statistics for total number of messages that has been sent through all protocol servers
+     * @return An integer representing the total number of messages sent
+     */
+    public int getTotalMessagesSentFromProtocolServers() {
+        return protocolServers.stream().map(ProtocolServer::getTotalMessagesSent).reduce(0, (a, b) -> a + b);
     }
 
     /**
@@ -295,7 +309,7 @@ public class CoreService extends AbstractCoreService {
         log.info("Stopping all ProtocolServers...");
 
         // Create a system message
-        Message m = new Message("The broker is shutting down", null, null);
+        Message m = new Message("The broker is shutting down", null, null, Application.OKSE_SYSTEM_NAME);
         // Wait until message is processed
         while (!m.isProcessed()) {
             try {

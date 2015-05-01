@@ -35,8 +35,10 @@ import no.ntnu.okse.protocol.wsn.WSNotificationServer;
 import no.ntnu.okse.web.Server;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
+import org.ntnunotif.wsnu.base.util.Log;
 
 import java.io.File;
+import java.time.Duration;
 
 
 /**
@@ -49,7 +51,11 @@ public class Application {
     // Version
     public static final String VERSION = "0.0.1a";
 
-    /* Default global variables */
+    // Initialization time
+    public static long startedAt = System.currentTimeMillis();
+
+    /* Default global fields */
+    public static String OKSE_SYSTEM_NAME = "OKSE System";
     public static boolean BROADCAST_SYSTEM_MESSAGES_TO_SUBSCRIBERS = false;
     public static boolean CACHE_MESSAGES = true;
     public static long DEFAULT_SUBSCRIPTION_TERMINATION_TIME = 15552000000L; // Half a year
@@ -66,6 +72,8 @@ public class Application {
      */
     public static void main(String[] args) {
         PropertyConfigurator.configure("config/log4j.properties");
+        // Turn off WS-Nu debug output
+        Log.setEnableDebug(false);
         log = Logger.getLogger(Application.class.getName());
 
         File dbFile = new File("okse.db");
@@ -95,6 +103,23 @@ public class Application {
         webserver.run();
 
         // Start the CoreService
+        log.info("Starting OKSE " + VERSION);
         cs.boot();
+    }
+
+    /**
+     * Returns a Duration instance of the time the Application has been running
+     * @return The amount of time the application has been running
+     */
+    public static Duration getRunningTime() {
+        return Duration.ofMillis(System.currentTimeMillis() - startedAt);
+    }
+
+    /**
+     * Resets the time at which the system was initialized. This method
+     * can be used during a system restart from
+     */
+    public static void resetStartTime() {
+        startedAt = System.currentTimeMillis();
     }
 }

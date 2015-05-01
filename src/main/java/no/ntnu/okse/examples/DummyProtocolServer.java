@@ -252,6 +252,7 @@ public class DummyProtocolServer extends AbstractProtocolServer {
     @Override
     public void stopServer() {
         _running = false;
+        _serverThread.notify();
     }
 
     /**
@@ -307,10 +308,9 @@ public class DummyProtocolServer extends AbstractProtocolServer {
                         builder.append(args[i] + " ");
                     }
                     String msg = builder.toString().trim();
-                    Message message = new Message(msg, t, null);
-                    message.setOriginProtocol(protocolServerType);
+                    Message message = new Message(msg, t, null, protocolServerType);
                     MessageService.getInstance().distributeMessage(message);
-                    totalMessages++;
+                    totalMessagesRecieved++;
 
                     return true;
                 }

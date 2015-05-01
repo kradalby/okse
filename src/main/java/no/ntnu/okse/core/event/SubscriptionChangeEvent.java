@@ -38,7 +38,8 @@ public class SubscriptionChangeEvent extends Event {
         SUBSCRIBE,
         UNSUBSCRIBE,
         RENEW,
-        PAUSE
+        PAUSE,
+        RESUME
     }
 
     private Type eventType;

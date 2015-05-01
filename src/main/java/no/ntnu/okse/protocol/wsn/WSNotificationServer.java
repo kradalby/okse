@@ -24,10 +24,7 @@
 
 package no.ntnu.okse.protocol.wsn;
 
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashSet;
@@ -61,6 +58,7 @@ import org.ntnunotif.wsnu.services.implementations.subscriptionmanager.SimpleSub
 import org.oasis_open.docs.wsn.b_2.NotificationMessageHolderType;
 import org.oasis_open.docs.wsn.b_2.Notify;
 import org.oasis_open.docs.wsn.b_2.TopicExpressionType;
+import sun.corba.OutputStreamFactory;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -219,18 +217,26 @@ public class WSNotificationServer extends AbstractProtocolServer {
                 this._connectors.stream().forEach(c -> this._server.addConnector(c));
 
                 /* OKSE custom WS-Nu web services */
+
+                // Initialize the CommandProxy
                 WSNCommandProxy broker = new WSNCommandProxy();
                 _commandProxy = broker;
+                // Initialize the WSN SubscriptionManager and PublisherRegistrationManager
                 WSNSubscriptionManager subscriptionManager = new WSNSubscriptionManager();
                 WSNRegistrationManager registrationManager = new WSNRegistrationManager();
+                // Add listener support from the OKSE SubscriptionService
                 SubscriptionService.getInstance().addSubscriptionChangeListener(subscriptionManager);
                 SubscriptionService.getInstance().addPublisherChangeListener(registrationManager);
 
+                // QuickBuild the broker
                 broker.quickBuild("broker", this._requestParser);
+                // QuickBuild the WSN SubManager
                 subscriptionManager.quickBuild("subscriptionManager", this._requestParser);
                 subscriptionManager.initCoreSubscriptionService(SubscriptionService.getInstance());
+                // QuickBuild the WSN PubRegManager
                 registrationManager.quickBuild("registrationManager", this._requestParser);
                 registrationManager.initCoreSubscriptionService(SubscriptionService.getInstance());
+                // Register the WSN managers to the command proxy (proxied broker)
                 broker.setSubscriptionManager(subscriptionManager);
                 broker.setRegistrationManager(registrationManager);
 
@@ -299,6 +305,13 @@ public class WSNotificationServer extends AbstractProtocolServer {
     }
 
     /**
+     * Support method to allow other classes in the wsn package to increment total messages recieved
+     */
+    protected void incrementTotalMessagesRecieved() {
+        totalMessagesRecieved++;
+    }
+
+    /**
      * This interface method must take in an instance of Message, which contains the appropriate references
      * and flags needed to distribute the message to consumers. Implementation specific details can vary from
      * protocol to protocol, but the end result of a method call to sendMessage is that the message is delivered,
@@ -350,10 +363,6 @@ public class WSNotificationServer extends AbstractProtocolServer {
                 }
             }
 
-            // Remember current message with context
-            Notify currentMessage = notify;
-            NuNamespaceContextResolver currentMessageNamespaceContextResolver = namespaceContextResolver;
-
             // For all valid recipients
             for (String recipient : _commandProxy.getAllRecipients()) {
 
@@ -374,6 +383,8 @@ public class WSNotificationServer extends AbstractProtocolServer {
                     _requestParser.acceptLocalMessage(outMessage);
                 }
             }
+        } else {
+            log.debug("Message originated from WSN protocol, already processed");
         }
     }
 
@@ -494,7 +505,13 @@ public class WSNotificationServer extends AbstractProtocolServer {
 
             // Push the outgoingMessage to the request parser. Based on the status flags of the return message
             // we should know what has happened, and which response we should send.
-            InternalMessage returnMessage = WSNotificationServer.this._requestParser.parseMessage(outgoingMessage, response.getOutputStream());
+            InternalMessage returnMessage = null;
+            try {
+                returnMessage = WSNotificationServer.this._requestParser.parseMessage(outgoingMessage, response.getOutputStream());
+            } catch (Exception e) {
+                log.error("Uncaught exception: " + e.getMessage());
+                log.trace(e.getStackTrace());
+            }
 
             // Improper response from WSNRequestParser! FC WHAT DO?
             if (returnMessage == null) {
@@ -671,7 +688,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
                     log.info("Sending message with content to " + requestInformation.getEndpointReference());
                     request.content(new InputStreamContentProvider((InputStream) message.getMessage()), "application/soap+xml;charset/utf-8");
                     ContentResponse response = request.send();
-                    totalMessages++;
+                    totalMessagesSent++;
 
                     // Check what HTTP status we recieved, if is not A-OK, flag the internalmessage as fault
                     // and make the response content the message of the InternalMessage returned

@@ -128,29 +128,74 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         return this._registrationManager;
     }
 
+    /**
+     * Check if a subscription / registration -key exists
+     * @param s The key to check existance for
+     * @return True if the key exists, false otherwise
+     */
     @Override
     @WebMethod(exclude = true)
     public boolean keyExists(String s) {
-        return _subscriptionManager.keyExists(s);
+        return _subscriptionManager.keyExists(s) || _registrationManager.keyExists(s);
     }
 
+    /**
+     * Fetch the collection of recipient subscriptionKeys
+     * @return A collection containing the subscriptionKeys as strings
+     */
     @Override
     @WebMethod(exclude = true)
     protected Collection<String> getAllRecipients() {
         return _subscriptionManager.getAllRecipients();
     }
 
+    /**
+     * Retrieves the endpointReference of a subscriber from its subscription key
+     * @param subscriptionKey The subscription key representing the subscriber
+     * @return A string containing the endpointReference of the subscriber
+     */
     @Override
     protected String getEndpointReferenceOfRecipient(String subscriptionKey) {
         return this._subscriptionManager.getSubscriptionHandle(subscriptionKey).endpointTerminationTuple.endpoint;
     }
 
+    /**
+     * Override of the superclass method, this is to ensure that we reference the correct manager endpoint,
+     * as WS-Nu only references the SUBSCRIPTION manager, not the publisherRegistrationManager
+     * @param prefix The prefix-token to be used as URL param KEY
+     * @param key The SubscriptionKey or PublisherRegistrationKey used as URL param VALUE
+     * @return A concatenated full URL of the appropriate endpoint, param key and param value
+     */
+    @Override
+    @WebMethod(exclude = true)
+    public String generateHashedURLFromKey(String prefix, String key) {
+        String endpointReference = "";
+        // Check the prefix, and add the appropriate endpoint
+        if (prefix.equals(_subscriptionManager.WSN_SUBSCRIBER_TOKEN)) {
+            endpointReference = _subscriptionManager.getEndpointReference();
+        } else if (prefix.equals(_registrationManager.WSN_PUBLISHER_TOKEN)) {
+            endpointReference = _registrationManager.getEndpointReference();
+        }
+        // Return the endpointReference with the appended prefix and associated subscription/registration key
+        return endpointReference + "/?" + prefix + "=" + key;
+    }
+
+    /**
+     * Filters the recipients eligible for a notify
+     * @param s The subscriptionKey of the subscriber
+     * @param notify The Notify object to be checked
+     * @param nuNamespaceContextResolver An instance of NuNameSpaceContextResolver
+     * @return The Notify object if it passed validation, false otherwise
+     */
     @Override
     @WebMethod(exclude = true)
     protected Notify getRecipientFilteredNotify(String s, Notify notify, NuNamespaceContextResolver nuNamespaceContextResolver) {
         // Check if we have the current recipient registered
         if (!this._subscriptionManager.hasSubscription(s)) {
             return null;
+        } else {
+            // Check if the subscription is paused
+            if (_subscriptionManager.subscriptionIsPaused(s)) return null;
         }
 
         // If we dont have filter support, nothing more to do.
@@ -170,7 +215,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
      *
      * @param notify               the {@link org.oasis_open.docs.wsn.b_2.Notify} to send
      * @param w3CEndpointReference the reference of the receiving endpoint
-     * @throws IllegalAccessException
+     * @throws IllegalAccessException If not permitted
      */
     @WebMethod(exclude = true)
     public void sendSingleNotify(Notify notify, W3CEndpointReference w3CEndpointReference) {
@@ -195,6 +240,11 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         hub.acceptLocalMessage(outMessage);
     }
 
+    /**
+     * Sends a Notification message
+     * @param notify The Notify object containing the message(s)
+     * @param namespaceContextResolver An instance of NuNameSpaceContextResolver
+     */
     @Override
     public void sendNotification(Notify notify, NuNamespaceContextResolver namespaceContextResolver) {
         // If this somehow is called without WSNRequestParser set as hub, terminate
@@ -218,22 +268,25 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
                     List<QName> topicQNames = TopicValidator.evaluateTopicExpressionToQName(topic, namespaceContextResolver.resolveNamespaceContext(topic));
                     String topicName = TopicUtils.topicToString(topicQNames);
 
+                    log.debug("Message topic extracted: " + topicName);
+
                     // If the topic exists in the OKSE TopicService
                     if (topicService.topicExists(topicName)) {
+                        log.debug("Topic existed, generating OKSE Message for distribution");
                         // Extract the content
                         String content = messageHolderType.getMessage().getAny().toString();
                         // Fetch the topic object
                         Topic okseTopic = topicService.getTopic(topicName);
                         // Generate the message
-                        message = new Message(content, okseTopic, null);
+                        message = new Message(content, okseTopic, null, WSNotificationServer.getInstance().getProtocolServerType());
+                        log.debug("OKSE Message generated");
                         // Extract the endpoint reference from publisher
                         W3CEndpointReference publisherReference = messageHolderType.getProducerReference();
                         // If we have a publisherReference, add it to the message
                         if (publisherReference != null) {
+                            log.debug("We had a publisher-reference, updating OKSE Message");
                             message.setAttribute(WSNSubscriptionManager.WSN_ENDPOINT_TOKEN, ServiceUtilities.getAddress(publisherReference));
                         }
-                        // Update the originating protocol
-                        message.setOriginProtocol(WSNotificationServer.getInstance().getProtocolServerType());
 
                         // Add the message to the message queue for dispatch
                         messageService.distributeMessage(message);
@@ -253,7 +306,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         }
 
         /* Start Message Parsing */
-
+        log.debug("Start message parsing and namespace binding");
         // bind namespaces to topics
         for (NotificationMessageHolderType holderType : notify.getNotificationMessage()) {
 
@@ -275,6 +328,10 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
                 });
             }
         }
+        log.debug("Processing valid recipients...");
+
+        // Update statistics
+        WSNotificationServer.getInstance().incrementTotalMessagesRecieved();
 
         // Remember current message with context
         currentMessage = notify;
@@ -298,8 +355,10 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
                 outMessage.getRequestInformation().setEndpointReference(getEndpointReferenceOfRecipient(recipient));
                 // Pass it along to the requestparser
                 hub.acceptLocalMessage(outMessage);
+
             }
         }
+        log.debug("Finished sending message to valid WS-Notification recipients");
     }
 
     /**
@@ -369,6 +428,9 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
 
         FilterType filters = subscribeRequest.getFilter();
         Map<QName, Object> filtersPresent = null;
+
+        // TODO: Investigate effects of multiple topicexpression.
+        // TODO: Investigate how X-Path expressions are evaluated and how we should store them
 
         if (filters != null) {
             log.debug("Filters present. Attempting to iterate over filters...");
@@ -446,7 +508,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         String newSubscriptionKey = generateSubscriptionKey();
         log.debug("Generating WS-Nu endpoint reference url to subscriptionManager using key: " + newSubscriptionKey + " and prefix: " + WsnUtilities.subscriptionString);
 
-        String subscriptionEndpoint = this.generateHashedURLFromKey(WsnUtilities.subscriptionString, newSubscriptionKey);
+        String subscriptionEndpoint = this.generateHashedURLFromKey(_subscriptionManager.WSN_SUBSCRIBER_TOKEN, newSubscriptionKey);
 
         log.debug("Setting up W3C endpoint reference builder");
         /* Build endpoint reference */
@@ -492,6 +554,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
 
         // Register the OKSE subscriber to the SubscriptionService, via the WSNSubscriptionManager
         log.debug("Passing the subscriber to the SubscriptionService...");
+
         _subscriptionManager.addSubscriber(subscriber, subscriptionHandle);
 
         return response;
@@ -544,6 +607,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         String rawTopicString = "";
         String rawDialect = "";
 
+        // Validate Topic Expressions
         for (TopicExpressionType topic : topics) {
             try {
                 if (!TopicValidator.isLegalExpression(topic, namespaceContextResolver.resolveNamespaceContext(topic))) {
@@ -564,15 +628,16 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         // Fetch the termination time
         long terminationTime = registerPublisherRequest.getInitialTerminationTime().toGregorianCalendar().getTimeInMillis();
 
+        // Validate the termination time
         if (terminationTime < System.currentTimeMillis()) {
             log.error("Caught an invalid termination time, must be in the future");
             ExceptionUtilities.throwUnacceptableInitialTerminationTimeFault("en", "Invalid termination time. Can't be before current time");
         }
 
         // Generate a new subkey
-        String newSubscriptionKey = generateSubscriptionKey();
+        String newPublisherKey = generateSubscriptionKey();
         // Generate the publisherRegistrationEndpoint
-        String subscriptionEndpoint = generateHashedURLFromKey(WsnUtilities.publisherRegistrationString, newSubscriptionKey);
+        String registrationEndpoint = generateHashedURLFromKey(WSNRegistrationManager.WSN_PUBLISHER_TOKEN, newPublisherKey);
 
         // Send subscriptionRequest back if isDemand isRequested
         if (registerPublisherRequest.isDemand()) {
@@ -581,12 +646,12 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         }
 
         // Create the necessary WS-Nu components needed for the RegisterPublisherResponse
-        HelperClasses.EndpointTerminationTuple endpointTerminationTuple = new HelperClasses.EndpointTerminationTuple(newSubscriptionKey, terminationTime);
+        HelperClasses.EndpointTerminationTuple endpointTerminationTuple = new HelperClasses.EndpointTerminationTuple(newPublisherKey, terminationTime);
         PublisherHandle pubHandle = new PublisherHandle(endpointTerminationTuple, topics, registerPublisherRequest.isDemand());
 
         // Set up OKSE publisher object
         Publisher publisher = new Publisher(rawTopicString, requestAddress, port, WSNotificationServer.getInstance().getProtocolServerType());
-        publisher.setAttribute(WSNRegistrationManager.WSN_PUBLISHER_TOKEN, newSubscriptionKey);
+        publisher.setAttribute(WSNRegistrationManager.WSN_PUBLISHER_TOKEN, newPublisherKey);
         publisher.setAttribute(WSNSubscriptionManager.WSN_DIALECT_TOKEN, rawDialect);
 
         // Create the topic
@@ -600,7 +665,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
 
         // Build the endpoint reference
         W3CEndpointReferenceBuilder builder = new W3CEndpointReferenceBuilder();
-        builder.address(subscriptionEndpoint);
+        builder.address(registrationEndpoint);
 
         // Update the response with endpointreference
         response.setConsumerReference(builder.build());
@@ -664,23 +729,11 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
             // Initialize the response object
             GetCurrentMessageResponse response = new GetCurrentMessageResponse();
 
-            // Initialize our publisherReference
-            String pubRef = null;
-
-            // Attempt to fetch an associated PublisherHandle
-            PublisherHandle pubHandle = _registrationManager.getPublisherHandle(currentMessage.getPublisher());
-            if (pubHandle != null) {
-                // Extract the endpoint
-                pubRef = pubHandle.endpointTerminationTuple.endpoint;
-            }
-
             // Generate the NotificationMessage
-            Notify notify = WSNTools.generateNotificationMessage(
-                    currentMessage, null, pubRef, getCurrentMessageRequest.getTopic().getDialect()
-            );
+            log.debug("Generated Notify wrapper");
 
-            // Add the HolderType to the response
-            response.getAny().add(notify.getNotificationMessage().get(0));
+            /* Add the HolderType to the response */
+            response.getAny().add(new JAXBElement(new QName("NotifyContent"), String.class, currentMessage.getMessage()));
 
             // Return the response
             return response;

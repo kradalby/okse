@@ -60,7 +60,7 @@ var Logs = (function($) {
                     console.log("[Debug][Logs] Adding log level buttons")
                     var buttons = ""
                     $.each(data, function(i, level) {
-                        if (i == 0) {
+                        if (level == 'DEBUG') {
                             buttons += '<button type="button" class="btn btn-info active" id="button-' + level + '">' + level + '</button>'
                         } else {
                             buttons += '<button type="button" class="btn btn-info" id="button-' + level + '">' + level + '</button>'
