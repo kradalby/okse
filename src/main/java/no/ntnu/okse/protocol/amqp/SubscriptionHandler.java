@@ -236,7 +236,7 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
     @WebMethod(exclude = true)
     public void subscriptionChanged(SubscriptionChangeEvent e) {
         // If it is AMQP subscriber
-        if (e.getData().getOriginProtocol().equals(WSNotificationServer.getInstance().getProtocolServerType())) {
+        if (e.getData().getOriginProtocol().equals(AMQProtocolServer.getInstance().getProtocolServerType())) {
             // If we are dealing with an Unsubscribe
             if (e.getType().equals(SubscriptionChangeEvent.Type.UNSUBSCRIBE)) {
                 log.debug("Ubsubscribing " + localSubscriberHandle.get(e.getData().getSubscriberID()));
