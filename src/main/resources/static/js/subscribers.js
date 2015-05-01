@@ -7,9 +7,51 @@ var Subscribers = (function($) {
     // Private variable holding the subscribers array returned upon the ajax-request
     var subscribers;
 
-    var populateTableBasedOnPage = function(e, page) {
-        console.log('[Debug][Subscribers] Trying to populate table for page: ' + page)
-        $('#subscribers-table').html(createTableForSubscribers(subscribers));
+    var _PAGESIZE = 3;
+    var _CURRENTPAGE = 1;
+    var _TOTALPAGES = 10;
+
+    var setupPagination = function() {
+        $('#pagination-selector').twbsPagination({
+            totalPages: numberOfPages(),
+            startPage: _CURRENTPAGE,
+            visiblePages: 5,
+            onPageClick: function(e, page) {
+                _CURRENTPAGE = page
+                _TOTALPAGES = numberOfPages();
+                var decrementedPage = page - 1
+                var fromIndex = (_PAGESIZE * decrementedPage)
+                var toIndex = (_PAGESIZE * decrementedPage) + _PAGESIZE
+                var subscribersToPopulate = subscribers.slice(fromIndex, toIndex)
+                console.log("Clicked page: " + page + " and trying to populate it with [" + fromIndex + "," + toIndex + "]")
+                $('#subscribers-table').html(createTableForSubscribers(subscribersToPopulate))
+            }
+        })
+    }
+
+    var numberOfPages = function() {
+        return Math.ceil(subscribers.length / _PAGESIZE);
+    }
+
+    var checkIfPaginationIsNeeded = function() {
+        // Need to populate without paginator
+        if (numberOfPages() < 2) {
+            console.log("No need for paginator, filling table without paginator")
+            $('#subscribers-table').html(createTableForSubscribers(subscribers))
+            return;
+        }
+
+        var pageData = $('#pagination-selector').data();
+
+        if ( typeof pageData.twbsPagination == 'undefined' ) {
+            console.log("Creating new paginator!")
+            setupPagination()
+        } else {
+            console.log("Paginator were defined and destroyed, initiating new with values: {" +
+            "startPage:" + _CURRENTPAGE + " totalPages: " + numberOfPages() + "}");
+            $('#pagination-selector').twbsPagination('destroy')
+            setupPagination()
+        }
     }
 
     /*
@@ -22,17 +64,17 @@ var Subscribers = (function($) {
         $.each(subscribers, function (i, subscriber) {
             trHTML +=
                 '<tr id="'+ subscriber.subscriberID +' ">' +
-                    '<td>' + subscriber.topic + '</td>' +
-                    '<td>' + subscriber.originProtocol + '</td>' + // TODO: Add support for no protocol here when available
-                    '<td>' + subscriber.host + '</td>' +
-                    '<td>' + subscriber.port + '</td>' +
-                    '<td>' + 'All' + '</td>' + // TODO: Add support for filter here when available
-                    '<td><a class="btn btn-xs btn-block btn-danger delete-subscriber">Delete</a></td>' +
+                '<td>' + subscriber.topic + '</td>' +
+                '<td>' + subscriber.originProtocol + '</td>' + // TODO: Add support for no protocol here when available
+                '<td>' + subscriber.host + '</td>' +
+                '<td>' + subscriber.port + '</td>' +
+                '<td>' + 'All' + '</td>' + // TODO: Add support for filter here when available
+                '<td><a class="btn btn-xs btn-block btn-danger delete-subscriber">Delete</a></td>' +
                 '</tr>';
         });
         return trHTML
     }
-
+    
     /*
      $('.delete-subscriber').on('click', function(e) {
         e.preventDefault()
@@ -61,7 +103,6 @@ var Subscribers = (function($) {
      */
 
     return {
-        populateTableBasedOnPage: populateTableBasedOnPage,
         init: function() {
             /*
              * Add a listener to clear interval
@@ -82,10 +123,10 @@ var Subscribers = (function($) {
                     Main.clearIntervalForTab()
                 }
             })
-
         },
         refresh: function(data) {
             subscribers = data;
+            checkIfPaginationIsNeeded()
         }
     }
 

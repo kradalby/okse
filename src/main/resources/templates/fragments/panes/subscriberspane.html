@@ -45,7 +45,7 @@
                             <th>Protocol</th>
                             <th>Host</th>
                             <th>Port</th>
-                            <th>Filter</th>
+                            <th>Filters</th>
                             <th>Actions</th>
                         </tr>
                         </thead>
@@ -58,16 +58,6 @@
         </div>
     </div>
 </div>
-</th:block>
-<th:block layout:fragment="initiatejs">
-<script>
-    // Initiate twbsPagionation
-    $('#pagination-selector').twbsPagination({
-        totalPages: 10,
-        visiblePages: 5,
-        onPageClick: Subscribers.populateTableBasedOnPage
-    });
-</script>
 </th:block>
 </body>
 </html>
