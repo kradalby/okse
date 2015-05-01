@@ -33,6 +33,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.stream.Collectors;
 
 /**
  * Created by Håkon Ødegård Løvdal (hakloev) on 30/04/15.

@@ -27,6 +27,14 @@ var Subscribers = (function($) {
                 fillTable(subscribersToPopulate)
             }
         })
+        if (subscribers.length > 0) {
+            console.log("Append the correct table to the table")
+            var decrementedPage = _CURRENTPAGE - 1
+            var fromIndex = (_PAGESIZE * decrementedPage)
+            var toIndex = (_PAGESIZE * decrementedPage) + _PAGESIZE
+            var subscribersToPopulate = subscribers.slice(fromIndex, toIndex)
+            fillTable(subscribersToPopulate)
+        }
     }
 
     var numberOfPages = function() {
@@ -65,6 +73,18 @@ var Subscribers = (function($) {
         bindButtons()
     }
 
+    var createFilterSetString = function(filterSet) {
+        if (filterSet.length == 0) {
+            return "All"
+        } else {
+            var returnString = ""
+            $.each(filterSet, function(i, filter) {
+               returnString += filter + "\n"
+            });
+            return returnString;
+        }
+    }
+
     /*
      Creates, fills and returns a <tr>-element. The <tr>-element is generated based on the subscribers
      list from the OKSE-RestAPI. It also adds all the buttons needed for deleting subscribers. It uses the id for
@@ -79,7 +99,7 @@ var Subscribers = (function($) {
                 '<td>' + subscriber.originProtocol + '</td>' + // TODO: Add support for no protocol here when available
                 '<td>' + subscriber.host + '</td>' +
                 '<td>' + subscriber.port + '</td>' +
-                '<td>' + 'All' + '</td>' + // TODO: Add support for filter here when available
+                '<td>' + createFilterSetString(subscriber.filterSet) + '</td>' +
                 '<td><a class="btn btn-xs btn-block btn-danger delete-subscriber">Delete</a></td>' +
                 '</tr>';
         });
