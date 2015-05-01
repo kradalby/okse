@@ -65,6 +65,7 @@ public class Subscriber {
         this.attributes = new HashMap<>();
         this.topic = topic;
         this.originProtocol = originProtocol;
+        this.filters = new HashSet<>();
         if (checkPort(port)) {
             this.port = port;
         } else throw new IllegalArgumentException("Port must be in range 1-65535");
