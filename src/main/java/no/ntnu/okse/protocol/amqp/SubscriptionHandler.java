@@ -28,14 +28,11 @@ import no.ntnu.okse.core.event.SubscriptionChangeEvent;
 import no.ntnu.okse.core.event.listeners.SubscriptionChangeListener;
 import no.ntnu.okse.core.subscription.Subscriber;
 import no.ntnu.okse.core.subscription.SubscriptionService;
-import no.ntnu.okse.core.topic.Topic;
 import no.ntnu.okse.core.topic.TopicService;
-import no.ntnu.okse.protocol.wsn.WSNotificationServer;
 import org.apache.log4j.Logger;
 import org.apache.qpid.proton.amqp.transport.Source;
 import org.apache.qpid.proton.amqp.transport.Target;
 import org.apache.qpid.proton.engine.*;
-import org.apache.qpid.proton.engine.impl.SenderImpl;
 import org.ntnunotif.wsnu.services.implementations.notificationproducer.AbstractNotificationProducer;
 
 import javax.jws.WebMethod;
@@ -90,7 +87,8 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
     private static final Routes<Receiver> EMPTY_IN = new Routes<Receiver>();
     private static Logger log = Logger.getLogger(SubscriptionHandler.class.getName());
 
-    private HashMap<Sender, Subscriber> localSubscriberMap = new HashMap<Sender, Subscriber>();
+    private HashMap<Sender, Subscriber> localSenderSubscriberMap = new HashMap<>();
+    private HashMap<Subscriber, Sender> localSubscriberSenderMap = new HashMap<>();
     private HashMap<Sender, AbstractNotificationProducer.SubscriptionHandle> localSubscriberHandle = new HashMap<>();
 
     final private Map<String,Routes<Sender>> outgoing = new HashMap<String,Routes<Sender>>();
@@ -139,7 +137,8 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
     private void add(Sender sender) {
         Subscriber subscriber = new Subscriber(sender.getSource().getAddress(), 1337, getAddress(sender), AMQProtocolServer.getInstance().getProtocolServerType());
         SubscriptionService.getInstance().addSubscriber(subscriber);
-        localSubscriberMap.put(sender, subscriber);
+        localSenderSubscriberMap.put(sender, subscriber);
+        localSubscriberSenderMap.put(subscriber, sender);
         TopicService.getInstance().addTopic(getAddress(sender));
 
         String address = getAddress(sender);
@@ -156,7 +155,9 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
     }
 
     private void remove(Sender sender) {
-        Subscriber subscriber = localSubscriberMap.get(sender);
+        Subscriber subscriber = localSenderSubscriberMap.get(sender);
+        localSenderSubscriberMap.remove(sender);
+        localSubscriberSenderMap.remove(subscriber);
         SubscriptionService.getInstance().removeSubscriber(subscriber);
 
         String address = getAddress(sender);
@@ -229,7 +230,16 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
     public void onLinkFinal(Event event) {
         log.debug("Local link final");
         remove(event.getLink());
+
     }
+    @Override
+    public void onConnectionRemoteClose(Event event) {
+        log.debug("Remote connection closed, calling remove...");
+        if (event.getLink() instanceof Sender) {
+            remove(event.getLink());
+        }
+    }
+
 
 
     @Override
@@ -239,10 +249,9 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
         if (e.getData().getOriginProtocol().equals(AMQProtocolServer.getInstance().getProtocolServerType())) {
             // If we are dealing with an Unsubscribe
             if (e.getType().equals(SubscriptionChangeEvent.Type.UNSUBSCRIBE)) {
-                log.debug("Ubsubscribing " + localSubscriberHandle.get(e.getData().getSubscriberID()));
+                log.debug("Unsubscribing " + localSubscriberHandle.get(e.getData().getSubscriberID()));
                 // Remove the local mappings from AMQP subscriptionKey to OKSE Subscriber object and AMQP subscriptionHandle
-                localSubscriberMap.remove(e.getData());
-                localSubscriberHandle.remove(e.getData());
+                remove(localSubscriberSenderMap.get(e.getData()));
             } else if (e.getType().equals(SubscriptionChangeEvent.Type.SUBSCRIBE)) {
                 log.debug("Recieved a SUBSCRIBE event");
                 // TODO: Investigate if we really need to do anything here since it will function as a callback

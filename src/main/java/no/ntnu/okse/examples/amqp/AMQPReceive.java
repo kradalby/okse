@@ -42,7 +42,7 @@ import java.util.logging.Logger;
 public class AMQPReceive {
     private static Logger tracer = Logger.getLogger("proton.example");
     private boolean verbose = false;
-    private int maxct = 999999999;
+    private int maxct = 5;
     private List<String> addrs = new ArrayList<String>();
 
     private static void usage() {
