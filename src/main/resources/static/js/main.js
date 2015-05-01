@@ -190,11 +190,16 @@ var Main = (function($) {
 
 })(jQuery);
 
-$(document).ready(function(){
+$(document).ready(function() {
+    // Register okseDebug-plugin
+    $.okseDebug({
+       debugFlag: true
+    });
     // Initiating all JS-modules except Logs, that is initiated only on log in
     Main.init()
     Topics.init()
     Subscribers.init()
     Config.init()
+
 });
 

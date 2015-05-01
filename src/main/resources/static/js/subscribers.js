@@ -23,12 +23,12 @@ var Subscribers = (function($) {
                 var fromIndex = (_PAGESIZE * decrementedPage)
                 var toIndex = (_PAGESIZE * decrementedPage) + _PAGESIZE
                 var subscribersToPopulate = subscribers.slice(fromIndex, toIndex)
-                console.log("Clicked page: " + page + " and trying to populate it with [" + fromIndex + "," + toIndex + "]")
+                $.okseDebug.logPrint("[Debug][Subscriber] Clicked page: " + page + " and trying to populate it with [" + fromIndex + "," + toIndex + "]")
                 fillTable(subscribersToPopulate)
             }
         })
         if (subscribers.length > 0) {
-            console.log("Append the correct table to the table")
+            $.okseDebug.logPrint("[Debug][Subscriber] Append the correct table to the table")
             var decrementedPage = _CURRENTPAGE - 1
             var fromIndex = (_PAGESIZE * decrementedPage)
             var toIndex = (_PAGESIZE * decrementedPage) + _PAGESIZE
@@ -46,9 +46,9 @@ var Subscribers = (function($) {
 
         // Need to populate without paginator
         if (numberOfPages() < 2) {
-            console.log("No need for paginator, filling table without paginator")
+            $.okseDebug.logPrint("[Debug][Subscriber] No need for paginator, filling table without paginator")
             if ( typeof pageData.twbsPagination != 'undefined') {
-                console.log("Paginator exists, but we don't need it, so we destroy it")
+                $.okseDebug.logPrint("[Debug][Subscriber] Paginator exists, but we don't need it, so we destroy it")
                 $('#pagination-selector').twbsPagination('destroy')
             }
             fillTable(subscribers)
@@ -57,15 +57,15 @@ var Subscribers = (function($) {
 
 
         if ( typeof pageData.twbsPagination == 'undefined' ) {
-            console.log("Creating new paginator!")
+            $.okseDebug.logPrint("[Debug][Subscriber] Creating new paginator!")
             setupPagination()
         } else {
             // If _CURRENTPAGE is greater than needed pages, we decrement it to the needed numbers
             if (_CURRENTPAGE > numberOfPages()) {
-                console.log("Decrementing the current page to needed number")
+                $.okseDebug.logPrint("[Debug][Subscriber] Decrementing the current page to needed number")
                 _CURRENTPAGE = numberOfPages()
             }
-            console.log("Paginator were defined and destroyed, initiating new with values: {" +
+            $.okseDebug.logPrint("[Debug][Subscriber] Paginator were defined and destroyed, initiating new with values: {" +
             "startPage:" + _CURRENTPAGE + " totalPages: " + numberOfPages() + "}");
             $('#pagination-selector').twbsPagination('destroy')
             setupPagination()
@@ -129,10 +129,10 @@ var Subscribers = (function($) {
                     url: 'subscriber/delete/' + subscriberID,
                     type: 'DELETE',
                     success: function(subscriber) {
-                        console.log("[Debug][Subscriber] Callback from server; subscriber deleted")
+                        $.okseDebug.logPrint("[Debug][Subscriber] Callback from server; subscriber deleted")
                     },
                     error: function(xhr, status, error) {
-                        console.log("[Debug][Subscriber] Unable to remove subscriber with id: " + e.target.id)
+                        $.okseDebug.logPrint("[Debug][Subscriber] Unable to remove subscriber with id: " + e.target.id)
                         $(e.target).closest("tr").removeClass("deleted")
                         $(e.target).removeClass("disabled")
                         Main.error(xhr, status, error)
