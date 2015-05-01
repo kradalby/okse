@@ -48,17 +48,17 @@ public class AMQProtocolServer extends AbstractProtocolServer {
     private static AMQProtocolServer _singleton;
     private static String hostname = "127.0.0.1";
 
+
     private Driver driver;
-    private AMQPServer server;
 
-    private AMQProtocolServer(Integer port) {this.init(port);}
-
+    private AMQProtocolServer(Integer port) {
+        this.init(port);
+    }
 
     public static AMQProtocolServer getInstance() {
         if (!_invoked) _singleton = new AMQProtocolServer(5672);
         return _singleton;
     }
-
 
 
     @Override
@@ -70,6 +70,8 @@ public class AMQProtocolServer extends AbstractProtocolServer {
 
 
     }
+
+
 
     @Override
     public void boot() {
@@ -116,31 +118,35 @@ public class AMQProtocolServer extends AbstractProtocolServer {
     @Override
     public void sendMessage(Message message) {
         server.addMessageToQueue(message);
-        Pipe pipe = null;
-        try {
-            pipe = Pipe.open();
-            Pipe.SinkChannel sinkChannel = pipe.sink();
-            sinkChannel.configureBlocking(false);
-            ByteBuffer buf = ByteBuffer.allocate(48);
-            buf.clear();
-            buf.put("derp".getBytes());
-
-            buf.flip();
-
-            while(buf.hasRemaining()) {
-                sinkChannel.write(buf);
-            }
-
-
-        } catch (IOException e) {
-            incrementTotalErrors();
-            log.error("Got exception: " + e.getMessage());
-        }
+//        Pipe pipe = null;
+//        try {
+//            pipe = Pipe.open();
+//            Pipe.SinkChannel sinkChannel = pipe.sink();
+//            sinkChannel.configureBlocking(false);
+//            ByteBuffer buf = ByteBuffer.allocate(48);
+//            buf.clear();
+//            buf.put("derp".getBytes());
+//
+//            buf.flip();
+//
+//            while(buf.hasRemaining()) {
+//                sinkChannel.write(buf);
+//            }
+//
+//
+//        } catch (IOException e) {
+//            incrementTotalErrors();
+//            log.error("Got exception: " + e.getMessage());
+//        }
 
     }
 
-    public void incrementTotalMessages() {
-        totalMessages++;
+    public void incrementTotalMessagesSent() {
+        totalMessagesSent++;
+    }
+
+    public void incrementTotalMessagesRecieved() {
+        totalMessagesRecieved++;
     }
 
     public void incrementTotalRequests() {
@@ -153,5 +159,11 @@ public class AMQProtocolServer extends AbstractProtocolServer {
 
     public void incrementTotalErrors() {
         totalErrors++;
+    }
+
+    private AMQPServer server;
+
+    public Driver getDriver() {
+        return driver;
     }
 }

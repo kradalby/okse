@@ -40,11 +40,6 @@ import org.apache.qpid.proton.engine.Sender;
 import org.apache.qpid.proton.message.Message;
 import org.apache.qpid.proton.messenger.impl.Address;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
-import java.lang.instrument.Instrumentation;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -151,20 +146,9 @@ public class AMQPServer extends BaseHandler {
             log.debug(String.format("Preparing to send: %s", mb.toString()));
             Delivery dlv = snd.delivery(nextTag());
 
-            System.out.println(dlv.getLink().getRemoteSource().getAddress());
-            System.out.println(dlv.getLink().getRemoteTarget().getAddress());
-
             byte[] bytes = mb.getBytes();
             snd.send(bytes, 0, bytes.length);
-
-            System.out.println(bytes.length);
-            System.out.println(snd.current());
-            System.out.println(snd.current() == dlv);
-
-            System.out.println(snd.getSession().getConnection().getHostname());
-            System.out.println(snd.getSession().getConnection().getRemoteHostname());
-            System.out.println(snd.getSession().getConnection().getRemoteProperties());
-
+            AMQProtocolServer.getInstance().incrementTotalMessagesSent();
 
             dlv.disposition(Accepted.getInstance());
             dlv.settle();
@@ -191,6 +175,9 @@ public class AMQPServer extends BaseHandler {
         log.debug("Added message on topic: " + address + " to queue");
 
         log.debug("The first message in the queue is currently: " + queue.peek());
+
+        AMQProtocolServer.getInstance().getDriver().wakeUp();
+
     }
 
     public static MessageBytes convertAMQPMessageToMessageBytes(Message msg) {
@@ -222,7 +209,6 @@ public class AMQPServer extends BaseHandler {
     public void sendNextMessagesInQueue() {
         try {
             if (queue.size() > 0) {
-                System.out.println(queue.size() > 0);
                 while (queue.size() > 0) {
                     String messageTopic = queue.take();
                     send(messageTopic);
@@ -231,7 +217,7 @@ public class AMQPServer extends BaseHandler {
             }
         } catch (InterruptedException e) {
             AMQProtocolServer.getInstance().incrementTotalErrors();
-            log.error("This happened: " + e.getMessage());
+            log.error("Got interrupted: " + e.getMessage());
         }
     }
 
@@ -241,13 +227,13 @@ public class AMQPServer extends BaseHandler {
         if (link instanceof Sender) {
             Sender snd = (Sender) link;
             send(subscriptionHandler.getAddress(snd), snd);
-            AMQProtocolServer.getInstance().getTotalRequests();
+            //AMQProtocolServer.getInstance().incrementTotalRequests();
         }
     }
 
     @Override
     public void onDelivery(Event event) {
-        log.debug("I got a delivery");
+        log.debug("Received AMQP message");
         Delivery dlv = event.getDelivery();
         Link link = dlv.getLink();
         if (link instanceof Sender) {
@@ -260,43 +246,22 @@ public class AMQPServer extends BaseHandler {
                 dlv.disposition(Accepted.getInstance());
                 dlv.settle();
 
-                System.out.println(bytes.toString());
-                System.out.println(bytes.length);
-
-                //System.out.println(rcv.getRemoteSource().getAddress());
-                //System.out.println(rcv.getRemoteTarget().getAddress());
-                //System.out.println(rcv.getSource().getAddress());
-                //System.out.println(rcv.getTarget().getAddress());
 
                 Message msg = Message.Factory.create();
                 msg.decode(bytes, 0, bytes.length);
                 Address address = new Address(msg.getAddress());
 
-                MessageBytes mb = convertAMQPMessageToMessageBytes(msg);
-                MessageBytes mb2 = new MessageBytes(bytes);
-
-                System.out.println(msg.getAddress());
-
-                System.out.println("This shit: " + mb.toString());
-                System.out.println("This shit: " + mb2.toString());
-
-
-                System.out.println(msg.getAddress());
-                System.out.println(msg.getBody());
-                System.out.println(msg.getSubject());
-
                 Topic t = TopicService.getInstance().getTopic(address.getName());
 
                 if (t != null) {
                     no.ntnu.okse.core.messaging.Message message =
-                            new no.ntnu.okse.core.messaging.Message(msg.getBody().toString(), t, null);
+                            new no.ntnu.okse.core.messaging.Message(msg.getBody().toString(), t, null, AMQProtocolServer.getInstance().getProtocolServerType());
                     message.setOriginProtocol(AMQProtocolServer.getInstance().getProtocolServerType());
 
                     MessageService.getInstance().distributeMessage(message);
-                    AMQProtocolServer.getInstance().incrementTotalMessages();
+                    AMQProtocolServer.getInstance().incrementTotalMessagesRecieved();
                     log.debug(String.format("Got and distributed message(%s): %s from %s", address, message, rcv.toString()));
 
-                    //addMessageToQueue(message);
                 }
 
 

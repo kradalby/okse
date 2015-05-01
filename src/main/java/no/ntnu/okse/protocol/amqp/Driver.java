@@ -276,4 +276,9 @@ public class Driver extends BaseHandler {
         }
     }
 
+    public void wakeUp() {
+        log.debug("Waking up the selector to get out the next messages from the queue");
+        selector.wakeup();
+    }
+
 }

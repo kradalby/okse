@@ -130,7 +130,7 @@ public class SubscriptionHandler extends BaseHandler {
     }
 
     private void add(Sender sender) {
-        Subscriber subscriber = new Subscriber(sender.getSource().getAddress(), 1337, getAddress(sender), "AMQP");
+        Subscriber subscriber = new Subscriber(sender.getSource().getAddress(), 1337, getAddress(sender), AMQProtocolServer.getInstance().getProtocolServerType());
         SubscriptionService.getInstance().addSubscriber(subscriber);
         TopicService.getInstance().addTopic(getAddress(sender));
 
