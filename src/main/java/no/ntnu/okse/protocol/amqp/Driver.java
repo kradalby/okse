@@ -39,10 +39,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
-import java.nio.channels.Selector;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.SocketChannel;
+import java.nio.channels.*;
 
 /**
  * Most of this code is from the qpid-proton-demo (https://github.com/rhs/qpid-proton-demo) by Rafael Schloming
@@ -68,7 +65,17 @@ public class Driver extends BaseHandler {
 
     public void run() throws IOException {
         while (true) {
+
+            for (Handler h : handlers) {
+                if (h instanceof AMQPServer) {
+                    log.debug("Executing sendNextMessagesInQueue");
+                    ((AMQPServer) h).sendNextMessagesInQueue();
+                }
+            }
+
+            log.debug(collector.toString());
             processEvents();
+
 
             // I don't know if there is a better way to do this, but
             // the only way canceled selection keys are removed from
@@ -96,10 +103,14 @@ public class Driver extends BaseHandler {
         while (true) {
             Event ev = collector.peek();
             if (ev == null) break;
+            log.debug("Dispatching event of type: " + ev.getType().name());
             ev.dispatch(this);
-            log.debug("Dispatching new event in AMQP");
             for (Handler h : handlers) {
                 ev.dispatch(h);
+                if (h instanceof AMQPServer) {
+                    log.debug("Executing sendNextMessagesInQueue in processEvents");
+                    ((AMQPServer) h).sendNextMessagesInQueue();
+                }
             }
             collector.pop();
         }
@@ -156,18 +167,6 @@ public class Driver extends BaseHandler {
         }
     }
 
-
-    private class IncommingOkseMessageHandler implements Selectable {
-
-        @Override
-        public void selected() throws IOException {
-            for (Handler h : handlers) {
-                if (h instanceof AMQPServer) {
-                    ((AMQPServer) h).sendNextMessageInQueue();
-                }
-            }
-        }
-    }
 
     private class ChannelHandler implements Selectable {
 

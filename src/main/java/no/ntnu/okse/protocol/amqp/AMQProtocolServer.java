@@ -31,6 +31,8 @@ import org.apache.log4j.Logger;
 import org.apache.qpid.proton.engine.Collector;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.Pipe;
 
 /**
  * Created by kradalby on 21/04/15.
@@ -114,6 +116,27 @@ public class AMQProtocolServer extends AbstractProtocolServer {
     @Override
     public void sendMessage(Message message) {
         server.addMessageToQueue(message);
+        Pipe pipe = null;
+        try {
+            pipe = Pipe.open();
+            Pipe.SinkChannel sinkChannel = pipe.sink();
+            sinkChannel.configureBlocking(false);
+            ByteBuffer buf = ByteBuffer.allocate(48);
+            buf.clear();
+            buf.put("derp".getBytes());
+
+            buf.flip();
+
+            while(buf.hasRemaining()) {
+                sinkChannel.write(buf);
+            }
+
+
+        } catch (IOException e) {
+            incrementTotalErrors();
+            log.error("Got exception: " + e.getMessage());
+        }
+
     }
 
     public void incrementTotalMessages() {

@@ -190,9 +190,7 @@ public class AMQPServer extends BaseHandler {
 
         log.debug("Added message on topic: " + address + " to queue");
 
-        //send(address);
-
-        System.out.println(message.getMessage());
+        log.debug("The first message in the queue is currently: " + queue.peek());
     }
 
     public static MessageBytes convertAMQPMessageToMessageBytes(Message msg) {
@@ -218,17 +216,18 @@ public class AMQPServer extends BaseHandler {
         msg.setAddress("127.0.0.1/" + message.getTopic().getFullTopicString());
         msg.setSubject("bang");
         msg.setBody(body);
-        System.out.println(msg.getAddress());
-        System.out.println(msg.getSubject());
-        System.out.println(msg.getBody());
         return msg;
     }
 
-    public void sendNextMessageInQueue() {
+    public void sendNextMessagesInQueue() {
         try {
             if (queue.size() > 0) {
-                send(queue.take());
-                System.out.println("queue and shit");
+                System.out.println(queue.size() > 0);
+                while (queue.size() > 0) {
+                    String messageTopic = queue.take();
+                    send(messageTopic);
+                    log.debug("Distributed messages with topic: " + messageTopic);
+                }
             }
         } catch (InterruptedException e) {
             AMQProtocolServer.getInstance().incrementTotalErrors();
