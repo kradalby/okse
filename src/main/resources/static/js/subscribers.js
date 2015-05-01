@@ -52,9 +52,27 @@ var Subscribers = (function($) {
      });
      */
 
-
     return {
         init: function() {
+            /*
+             * Add a listener to clear interval
+             * */
+            $("#subscribers-button-refresh").on("click", function(e) {
+                e.preventDefault()
+                if (!$(this).hasClass("active")) {
+                    $(this).addClass("active")
+                    $(this).text("Stop refresh")
+                    Main.setIntervalForTab({
+                        url: 'subscriber/get/all',
+                        type: 'GET',
+                        success: Subscribers.refresh
+                    })
+                } else {
+                    $(this).removeClass("active")
+                    $(this).text("Start refresh")
+                    Main.clearIntervalForTab()
+                }
+            })
 
         },
         refresh: function(data) {

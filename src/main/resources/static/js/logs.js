@@ -129,26 +129,23 @@ var Logs = (function($) {
                 logLength = $(this).val()
                 updateUrl()
                 Main.setIntervalForLogTab()
-                /*
-                Main.ajax({
-                    url: Logs.url(),
-                    type: 'GET',
-                    success: Logs.refresh
-                });
-                */
             });
 
             /*
              * Add a listener to clear interval
              * */
-            $("#button-refresh").on("click", function(e) {
+            $("#logs-button-refresh").on("click", function(e) {
                 e.preventDefault()
                 if (!$(this).hasClass("active")) {
                     $(this).addClass("active")
                     $(this).text("Stop refresh")
-                    Main.setIntervalForLogTab()
+                    Main.setIntervalForTab({
+                        url: Logs.url(),
+                        type: 'GET',
+                        success: Logs.refresh
+                    });
                 } else {
-                    $(this).removeClass("active");
+                    $(this).removeClass("active")
                     $(this).text("Start refresh")
                     Main.clearIntervalForTab()
                 }

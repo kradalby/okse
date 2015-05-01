@@ -77,17 +77,13 @@ var Main = (function($) {
     }
 
     /*
-        Global function that sets the click interval for the log-tab after the user wants to activate it again.
+        Global function that sets the click interval for a tab after the user wants to activate it again.
      */
-    var setIntervalForLogTab = function() {
+    var setIntervalForTab = function(settings) {
         clearInterval(clickInterval)
-        ajax({url: Logs.url(), type: 'GET', success: Logs.refresh})
+        ajax(settings)
         clickInterval = setInterval(function () {
-            ajax({
-                url: Logs.url(),
-                type: 'GET',
-                success: Logs.refresh
-            });
+            ajax(settings);
         }, $('#settings-update-interval').val() * 1000);
     }
 
@@ -122,7 +118,7 @@ var Main = (function($) {
     return {
         ajax: ajax,
         error: error,
-        setIntervalForLogTab: setIntervalForLogTab,
+        setIntervalForTab: setIntervalForTab,
         clearIntervalForTab: function() {
             clearInterval(clickInterval)
         },
@@ -194,8 +190,10 @@ var Main = (function($) {
 })(jQuery);
 
 $(document).ready(function(){
+    // Initiating all JS-modules except Logs, that is initiated only on log in
     Main.init()
     Topics.init()
+    Subscribers.init()
     Config.init()
 });
 
