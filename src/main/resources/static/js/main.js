@@ -163,6 +163,7 @@ var Main = (function($) {
                         break;
                     case "subscribers":
                         ajaxSettings.url = 'subscriber/get/all'
+                        ajaxSettings.success = Subscribers.refresh
                         break;
                     default:
                         console.error("[Error][Main] Unknown nav-tab clicked, this should not happen!")

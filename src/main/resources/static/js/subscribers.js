@@ -4,26 +4,34 @@
 
 var Subscribers = (function($) {
 
+    // Private variable holding the subscribers array returned upon the ajax-request
+    var subscribers;
+
+    var populateTableBasedOnPage = function(e, page) {
+        console.log('[Debug][Subscribers] Trying to populate table for page: ' + page)
+        $('#subscribers-table').html(createTableForSubscribers(subscribers));
+    }
+
     /*
      Creates, fills and returns a <tr>-element. The <tr>-element is generated based on the subscribers
      list from the OKSE-RestAPI. It also adds all the buttons needed for deleting subscribers. It uses the id for
      this purpose. This function does not manipulate the DOM by checking if an element exists. It overwrites everything.
      */
-    /*
     var createTableForSubscribers = function(subscribers) {
         var trHTML = '';
         $.each(subscribers, function (i, subscriber) {
             trHTML +=
                 '<tr id="'+ subscriber.subscriberID +' ">' +
-                '<td>' + subscriber.originProtocol + '</td>' +
-                '<td>' + subscriber.host + '</td>' +
-                '<td>' + subscriber.port + '</td>' +
-                '<td><a class="btn btn-xs btn-block btn-warning delete-subscriber">Delete</a></td>' +
+                    '<td>' + subscriber.topic + '</td>' +
+                    '<td>' + subscriber.originProtocol + '</td>' + // TODO: Add support for no protocol here when available
+                    '<td>' + subscriber.host + '</td>' +
+                    '<td>' + subscriber.port + '</td>' +
+                    '<td>' + 'All' + '</td>' + // TODO: Add support for filter here when available
+                    '<td><a class="btn btn-xs btn-block btn-danger delete-subscriber">Delete</a></td>' +
                 '</tr>';
         });
         return trHTML
     }
-    */
 
     /*
      $('.delete-subscriber').on('click', function(e) {
@@ -53,6 +61,7 @@ var Subscribers = (function($) {
      */
 
     return {
+        populateTableBasedOnPage: populateTableBasedOnPage,
         init: function() {
             /*
              * Add a listener to clear interval
@@ -76,7 +85,7 @@ var Subscribers = (function($) {
 
         },
         refresh: function(data) {
-
+            subscribers = data;
         }
     }
 
