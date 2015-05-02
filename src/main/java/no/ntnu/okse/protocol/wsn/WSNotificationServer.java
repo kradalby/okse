@@ -329,12 +329,13 @@ public class WSNotificationServer extends AbstractProtocolServer {
         if (!message.getOriginProtocol().equals(protocolServerType)) {
             log.debug("The message originated from other protocol than WSNotification");
 
-            String rawXml = WSNTools.generateRawSoapEnvelopedNotifyString(message.getTopic().getFullTopicString(), WSNTools._ConcreteTopicExpression, message.getMessage());
-            InternalMessage returnMessage = WSNTools.parseRawXmlString(rawXml);
-            JAXBElement msg = (JAXBElement) returnMessage.getMessage();
-            log.debug(msg.getValue().getClass());
-            Envelope env = (Envelope) msg.getValue();
-            Notify notify = (Notify) env.getBody().getAny().get(0);
+            // Create the Notify wrapper
+            Notify notify = WSNTools.createNotify(message);
+
+            if (notify == null) {
+                totalErrors++;
+                log.error("Aborting sendMessage as content failed parsing");
+            }
 
             /*
                 Start to resolve recipients. The reason we cannot re-use the WSNCommandProxy's
@@ -342,19 +343,12 @@ public class WSNotificationServer extends AbstractProtocolServer {
                 thus creating duplicate messages.
              */
 
-            /*// Create wrapper provided the message, subscriptionref, publisherref and dialect
-            Notify notify = WSNTools.generateNotificationMessage(
-                    message,    // OKSE Message object
-                    message.getAttribute(WSNSubscriptionManager.WSN_ENDPOINT_TOKEN), // Returns publisherKey found
-                    null, // We do not yet know the recipient endpoints
-                    WSNTools._ConcreteTopicExpression
-            );*/
-
             NuNamespaceContextResolver namespaceContextResolver = new NuNamespaceContextResolver();
 
             // bind namespaces to topics
             for (NotificationMessageHolderType holderType : notify.getNotificationMessage()) {
 
+                // Extract the topic
                 TopicExpressionType topic = holderType.getTopic();
 
                 if (holderType.getTopic() != null) {
@@ -404,7 +398,8 @@ public class WSNotificationServer extends AbstractProtocolServer {
      * @return A string representing the complete URI of this ProtocolServer
      */
     public static String getURI(){
-        if(_singleton._server.getURI() == null){
+        if (_singleton._server.getURI() == null) {
+            _singleton.log.warn("Failed to fetch URI of server");
             return "http://0.0.0.0:8080";
         }
         return "http://" + _singleton._server.getURI().getHost()+ ":" + (_singleton._server.getURI().getPort() > -1 ? _singleton._server.getURI().getPort() : 8080);

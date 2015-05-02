@@ -28,21 +28,19 @@ import no.ntnu.okse.core.messaging.Message;
 import org.apache.log4j.Logger;
 import org.ntnunotif.wsnu.base.net.XMLParser;
 import org.ntnunotif.wsnu.base.util.InternalMessage;
-import org.ntnunotif.wsnu.services.general.WsnUtilities;
-import org.oasis_open.docs.wsn.b_2.*;
-import org.oasis_open.docs.wsn.b_2.ObjectFactory;
+import org.oasis_open.docs.wsn.b_2.Notify;
 import org.w3c.dom.Node;
+import org.xmlsoap.schemas.soap.envelope.Envelope;
 
+import javax.validation.constraints.NotNull;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.transform.*;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-import javax.xml.ws.wsaddressing.W3CEndpointReferenceBuilder;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.StringWriter;
-import java.text.Format;
 
 
 /**
@@ -52,6 +50,7 @@ import java.text.Format;
  */
 public class WSNTools {
 
+    // Intialize the logger
     private static Logger log = Logger.getLogger(WSNTools.class.getName());
 
     // Initialize the WSN XML Object factories
@@ -62,7 +61,26 @@ public class WSNTools {
     public static final String _ConcreteTopicExpression = "http://docs.oasis-open.org/wsn/t-1/TopicExpression/Concrete";
     public static final String _SimpleTopicExpression = "http://docs.oasis-open.org/wsn/t-1/TopicExpression/Simple";
 
-    public static String generateRawSoapEnvelopedNotifyString(String topic, String dialect, String messageContent) {
+    /**
+     * Generate a valid XML SOAP envelope containing a WS-Notification Notify
+     * @param topic The full raw topic path.
+     * @param dialect The namespace URI of the dialect used
+     * @param messageContent The full raw content of the message.
+     * @return A complete WS-Notification Notify XML structure as a string
+     */
+    public static String generateRawSoapEnvelopedNotifyString(String topic, String dialect, @NotNull String messageContent) {
+
+        // Set topic to an empty string if null, this will cause notify to be sent to all topics
+        if (topic == null) topic = "";
+        // If dialect is null, check if it contains node path slash, which is not allowed in simpletopic
+        if (dialect == null) {
+            if (dialect.contains("/")) {
+                dialect = _ConcreteTopicExpression;
+            } else {
+                dialect = _SimpleTopicExpression;
+            }
+        }
+
         return "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" +
                 "<s:Envelope xmlns:ns2=\"http://www.w3.org/2001/12/soap-envelope\"\n" +
                 "            xmlns:ns3=\"http://docs.oasis-open.org/wsrf/bf-2\"\n" +
@@ -86,6 +104,23 @@ public class WSNTools {
                 "        </s:Envelope>";
     }
 
+    /**
+     * Generate a valid XML SOAP envelope containing a WS-Notification Notify
+     * @param m An OKSE Message object containing topic, dialect and message
+     * @return A complete WS-Notification Notify XML structure as a string
+     */
+    public static String generateRawSoapEnvelopedNotifyString(Message m) {
+        return generateRawSoapEnvelopedNotifyString(
+                m.getTopic().getFullTopicString(),
+                m.getAttribute(WSNSubscriptionManager.WSN_DIALECT_TOKEN),
+                m.getMessage());
+    }
+
+    /**
+     * Extract the raw XML starting from a specific node, omitting XML declaration
+     * @param node The XML Node to start discovery
+     * @return A raw XML string representing the XML structure from the specified node
+     */
     public static String extractRawXmlContentFromDomNode(Node node) {
         try {
             // Create transformer
@@ -102,13 +137,20 @@ public class WSNTools {
             // Return results
             return str;
         } catch (TransformerConfigurationException e) {
+            log.error(e.getMessage());
             e.printStackTrace();
         } catch (TransformerException e) {
+            log.error(e.getMessage());
             e.printStackTrace();
         }
         return null;
     }
 
+    /**
+     * Takes in a raw XML string, and uses the WS-Nu XMLParser to unmarshal and link the XML nodes
+     * @param rawXmlString The raw XML String to be parsed
+     * @return A WS-Nu InternalMessage instance with the message attribute containing the parsed XML Structure
+     */
     public static InternalMessage parseRawXmlString(String rawXmlString) {
         InputStream inputStream = new ByteArrayInputStream(rawXmlString.getBytes());
         try {
@@ -118,5 +160,38 @@ public class WSNTools {
             log.error("Failed to parse raw xml string");
         }
         return new InternalMessage(InternalMessage.STATUS_FAULT | InternalMessage.STATUS_FAULT_INVALID_PAYLOAD, null);
+    }
+
+    /**
+     * Create a WS-Notification Notify wrapper from OKSE Message object
+     * @param m The OKSE Message object to transform
+     * @return A WS-Notification Notify wrapper containing topic, dialect and message
+     */
+    public static Notify createNotify(Message m) {
+        String rawXml = generateRawSoapEnvelopedNotifyString(m);
+        InternalMessage result = parseRawXmlString(rawXml);
+        if ((result.statusCode & InternalMessage.STATUS_FAULT) > 0) {
+            log.error("There was an error during parsing of raw xml string");
+            return null;
+        }
+        // Extract message object as a JAXB element
+        JAXBElement msg = (JAXBElement) result.getMessage();
+        // Cast it to a SOAP envelope
+        Envelope env = (Envelope) msg.getValue();
+        // Extract the Notify wrapper
+        Notify notify = (Notify) env.getBody().getAny().get(0);
+
+        return notify;
+    }
+
+    /**
+     * Extract the Message element from a WS-Notification Notify wrapper
+     * This method does not support multiple notificationmessages bundled in a single Notify
+     *
+     * @param notify The Notify object to extract message content from
+     * @return The Message object contained within the notificationmessage
+     */
+    public static Object extractMessageObjectFromNotify(Notify notify) {
+        return notify.getNotificationMessage().get(0).getMessage();
     }
 }
