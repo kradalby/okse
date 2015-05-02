@@ -382,7 +382,7 @@ class WSNRequest(object):
         print "[i] Sending a Subscribe request"
 
         # Generate the payload
-        payload = SUBSCRIBE % (self.WAN_IP, self.TOPIC)
+        payload = SUBSCRIBE % ('http://' + self.WAN_IP, self.TOPIC)
 
         # Send the request
         self.send_request(payload)
@@ -395,7 +395,7 @@ class WSNRequest(object):
         print "[i] Sending a Subscribe request using SimpleTopic expression"
 
         # Generate the payload
-        payload = SUBSCRIBE_SIMPLETOPIC % (self.WAN_IP, self.TOPIC)
+        payload = SUBSCRIBE_SIMPLETOPIC % ('http://' + self.WAN_IP, self.TOPIC)
 
         self.send_request(payload)
 
@@ -407,7 +407,7 @@ class WSNRequest(object):
         print "[i] Sending a Subscribe without Topic"
 
         # Generate payload
-        payload = SUBSCRIBE_NOTOPIC % (self.WAN_IP)
+        payload = SUBSCRIBE_NOTOPIC % ('http://' + self.WAN_IP)
 
         # Send the request
         self.send_request(payload)
@@ -420,7 +420,7 @@ class WSNRequest(object):
         print "[i] Sending a Subscribe with XPATH content filter"
 
         # Generate payload
-        payload = SUBSCRIBE_XPATH % (self.WAN_IP, self.TOPIC)
+        payload = SUBSCRIBE_XPATH % ('http://' + self.WAN_IP, self.TOPIC)
 
         # Send the request
         self.send_request(payload)
