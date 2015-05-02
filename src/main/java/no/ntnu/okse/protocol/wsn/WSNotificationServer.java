@@ -158,7 +158,6 @@ public class WSNotificationServer extends AbstractProtocolServer {
     protected void init(Integer port) {
 
         log = Logger.getLogger(WSNotificationServer.class.getName());
-        //XMLParser.registerReturnObjectPackageWithObjectFactory("no.ntnu.okse.protocol.wsn.dto");
 
         // Set the servertype
         protocolServerType = "WSNotification";

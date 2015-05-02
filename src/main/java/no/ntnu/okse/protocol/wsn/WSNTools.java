@@ -74,7 +74,7 @@ public class WSNTools {
         if (topic == null) topic = "";
         // If dialect is null, check if it contains node path slash, which is not allowed in simpletopic
         if (dialect == null) {
-            if (dialect.contains("/")) {
+            if (topic.contains("/")) {
                 dialect = _ConcreteTopicExpression;
             } else {
                 dialect = _SimpleTopicExpression;
