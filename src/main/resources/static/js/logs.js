@@ -73,7 +73,11 @@ var Logs = (function($) {
                             $('#button-' + level).addClass('active').siblings().removeClass('active');
                             logLevel = level
                             updateUrl()
-                            Main.setIntervalForLogTab()
+                            Main.setIntervalForTab({
+                                url: Logs.url(),
+                                type: 'GET',
+                                success: Logs.refresh
+                            })
                             /*
                             Main.ajax({
                                 url: Logs.url(),
@@ -112,7 +116,11 @@ var Logs = (function($) {
                             $('#button-logID-' + i).addClass('active').siblings().removeClass('active');
                             logID = i
                             updateUrl()
-                            Main.setIntervalForLogTab()
+                            Main.setIntervalForTab({
+                                url: Logs.url(),
+                                type: 'GET',
+                                success: Logs.refresh
+                            })
                             /*
                             Main.ajax({
                                 url: Logs.url(),
@@ -128,7 +136,11 @@ var Logs = (function($) {
             $("#log-length").keyup(function(){
                 logLength = $(this).val()
                 updateUrl()
-                Main.setIntervalForLogTab()
+                Main.setIntervalForTab({
+                    url: Logs.url(),
+                    type: 'GET',
+                    success: Logs.refresh
+                })
             });
 
             /*
