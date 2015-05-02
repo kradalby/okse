@@ -47,6 +47,7 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
     public static final String WSN_SUBSCRIBER_TOKEN = "wsn-subscriberkey";
     public static final String WSN_DIALECT_TOKEN = "wsn-dialect";
     public static final String WSN_ENDPOINT_TOKEN = "wsn-endpoint";
+    public static final String WSN_USERAW_TOKEN = "wsn-useraw";
 
     private static Logger log;
     private SubscriptionService _subscriptionService = null;
@@ -169,6 +170,16 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
      */
     public AbstractNotificationProducer.SubscriptionHandle getSubscriptionHandle(Subscriber subscriber) {
         return getSubscriptionHandle(subscriber.getAttribute(WSN_SUBSCRIBER_TOKEN));
+    }
+
+    /**
+     * Retrieve a OKSE Subscriber object based on the WS-Nu subscriptionReference
+     * @param subscriptionReference The subscriptionReference to fetch related OKSE Subscriber object from
+     * @return An OKSE Subscriber object if found, <code>null</code> otherwise
+     */
+    public Subscriber getSubscriber(String subscriptionReference) {
+        if (localSubscriberMap.containsKey(subscriptionReference)) return localSubscriberMap.get(subscriptionReference);
+        return null;
     }
 
     /**

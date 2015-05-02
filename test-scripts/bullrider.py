@@ -18,6 +18,7 @@ MODES = {
     "subscribe-xpath": "Subscribe (XPATH)",
     "subscribe-notopic": "Subscribe (No Topic)",
     "subscribe-simpletopic": "Subscribe (SimpleTopic)",
+    "subscribe-useraw": "Subscribe (UseRaw=true)",
     "unsubscribe": "Unsubscribe",
     "register": "PublisherRegistration",
     "getcurrent": "GetCurrentMessage",
@@ -85,6 +86,25 @@ xmlns:ns6="http://schemas.xmlsoap.org/soap/envelope/">
 <ns6:Body>
 <ns3:Subscribe>
 <ns3:ConsumerReference><ns2:Address>%s</ns2:Address></ns3:ConsumerReference>
+<ns3:Filter><ns3:TopicExpression Dialect="http://docs.oasis-open.org/wsn/t-1/TopicExpression/Concrete">%s</ns3:TopicExpression></ns3:Filter>
+</ns3:Subscribe>
+</ns6:Body>
+</ns6:Envelope>
+"""
+
+SUBSCRIBE_USERAW = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns6:Envelope xmlns:ns2="http://www.w3.org/2005/08/addressing"
+xmlns:ns3="http://docs.oasis-open.org/wsn/b-2"
+xmlns:ns4="http://docs.oasis-open.org/wsn/t-1"
+xmlns:ns5="http://docs.oasis-open.org/wsrf/bf-2"
+xmlns:ns6="http://schemas.xmlsoap.org/soap/envelope/">
+<ns6:Header>
+<ns2:Action>http://docs.oasis-open.org/wsn/bw-2/NotificationProducer/SubscribeRequest</ns2:Action>
+</ns6:Header>
+<ns6:Body>
+<ns3:Subscribe>
+<ns3:ConsumerReference><ns2:Address>%s</ns2:Address></ns3:ConsumerReference>
+<ns3:SubscriptionPolicy><ns3:UseRaw/></ns3:SubscriptionPolicy>
 <ns3:Filter><ns3:TopicExpression Dialect="http://docs.oasis-open.org/wsn/t-1/TopicExpression/Concrete">%s</ns3:TopicExpression></ns3:Filter>
 </ns3:Subscribe>
 </ns6:Body>
@@ -425,6 +445,19 @@ class WSNRequest(object):
         # Send the request
         self.send_request(payload)
 
+    def send_subscription_useraw(self):
+        """
+        Sends a subscription with a UseRaw element
+        """
+
+        print "[i] Sending a Subscribe with UseRaw element"
+
+        # Generate the payload
+        payload = SUBSCRIBE_USERAW % ('http://' + self.WAN_IP, self.TOPIC)
+
+        # Send the request
+        self.send_request(payload)
+
     def send_registration(self):
         """
         Sends a publisher registration request
@@ -562,6 +595,9 @@ if __name__ == "__main__":
     elif mode == 'subscribe-simpletopic':
         wsn_request.send_subscription_simpletopic()
 
+    elif mode == 'subscribe-useraw':
+        wsn_request.send_subscription_useraw()
+
     elif mode == 'register':
         wsn_request.send_registration()
 
@@ -613,6 +649,8 @@ if __name__ == "__main__":
         wsn_request.send_subscription_xpath()
         time.sleep(2)
         wsn_request.send_subscription_simpletopic()
+        time.sleep(2)
+        wsn_request.send_subscription_useraw()
         time.sleep(2)
         wsn_request.send_renew_subscription(subscription_reference)
         time.sleep(2)
