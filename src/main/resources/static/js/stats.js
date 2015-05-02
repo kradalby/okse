@@ -59,13 +59,6 @@ var Stats = (function($) {
         });
     }
 
-    var refreshRuntimeStatistics = function(statistics) {
-        $('#totalRam').html(statistics.totalRam)
-        $('#freeRam').html(statistics.freeRam)
-        $('#usedRam').html(statistics.usedRam)
-        $('#cpuCores').html(statistics.cpuAvailable)
-    }
-
     var refreshCoreServiceStatistics = function(statistics) {
         $('#messagesSent').html(statistics.totalMessagesSent)
         $('#messagesReceived').html(statistics.totalMessagesReceived)
@@ -81,7 +74,6 @@ var Stats = (function($) {
             var table = createTableForAllProtocols(data.protocolServerStatistics)
             $('#protocol-table').html(table)
 
-            refreshRuntimeStatistics(data.runtimeStatistics)
             refreshCoreServiceStatistics(data.coreServiceStatistics)
         }
     }

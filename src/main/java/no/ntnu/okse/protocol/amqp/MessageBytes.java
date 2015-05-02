@@ -10,39 +10,41 @@
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
+
+package no.ntnu.okse.protocol.amqp;
 
 /**
- * Created by Fredrik Tørnvall (freboto) and Håkon Ødegård Løvdal (hakloev) on 02/03/15.
+ * Most of this code is from the qpid-proton-demo (https://github.com/rhs/qpid-proton-demo) by Rafael Schloming
+ * Created by kradalby on 24/04/15.
  */
+public class MessageBytes {
 
+    private final byte[] bytes;
 
-var Config = (function($) {
-
-    var bindButtons = function() {
-        $("#add-predefined-mapping").on('click', function(e) {
-            $.okseDebug.logPrint('[Debug][Config] Add predefined mapping between ' + $('#from-topic').val() + ' --> ' + $('#to-topic').val())
-        });
+    public MessageBytes(byte[] bytes) {
+        this.bytes = bytes;
     }
 
-    return {
-        refresh: function(response) {
-            $.okseDebug.logPrint("[Debug][Config]" + JSON.stringify(response))
-        },
-        init: function() {
-            bindButtons()
-        }
+    public MessageBytes(String string) {
+        this.bytes = string.getBytes();
     }
 
+    public byte[] getBytes() {
+        return bytes;
+    }
 
-})(jQuery)
+    public String toString() {
+        return new String(bytes);
+    }
+}
