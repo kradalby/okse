@@ -29,6 +29,7 @@ import no.ntnu.okse.core.event.Event;
 
 import no.ntnu.okse.core.event.SystemEvent;
 import no.ntnu.okse.core.messaging.Message;
+import no.ntnu.okse.core.messaging.MessageService;
 import no.ntnu.okse.protocol.ProtocolServer;
 
 import java.util.ArrayList;
@@ -310,6 +311,10 @@ public class CoreService extends AbstractCoreService {
 
         // Create a system message
         Message m = new Message("The broker is shutting down", null, null, Application.OKSE_SYSTEM_NAME);
+
+        // Distribute the message to the Message Service
+        MessageService.getInstance().distributeMessage(m);
+
         // Wait until message is processed
         while (!m.isProcessed()) {
             try {
