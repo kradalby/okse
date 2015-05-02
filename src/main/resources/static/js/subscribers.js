@@ -86,6 +86,10 @@ var Subscribers = (function($) {
      */
     var fillTable = function(from, to) {
         unBindButtons()
+        if (subscribers.length == 0) {
+            $('#subscribers-table').html('<tr class="danger"><td colspan="6"><h4 class="text-center">No subscribers returned from SubscriptionsService</h4></td></tr>')
+            return;
+        }
         if (from === undefined || to === undefined) {
             $.okseDebug.logPrint("[Debug][Subscriber] Filling table with the complete list")
             $('#subscribers-table').html(createTableForSubscribers(subscribers))
@@ -99,14 +103,14 @@ var Subscribers = (function($) {
 
     // Create a string of all filters to fill the table cell with
     var createFilterSetString = function(filterSet) {
-        if (filterSet.length == 0) {
-            return "All"
-        } else {
+        if ( ! filterSet.length == 0) {
             var returnString = ""
             $.each(filterSet, function(i, filter) {
                returnString += filter + "\n"
             });
             return returnString;
+        } else {
+            return "";
         }
     }
 
@@ -211,11 +215,7 @@ var Subscribers = (function($) {
         },
         refresh: function(data) {
             subscribers = data;
-            if (!subscribers.length == 0) {
-                checkIfPaginationIsNeeded()
-            } else {
-                $('#subscribers-table').html('<tr class="danger"><td colspan="6"><h4 class="text-center">No subscribers returned from SubscriptionsService</h4></td></tr>')
-            }
+            checkIfPaginationIsNeeded()
             // Remove 'deleted class' if it exists
             if ($('#subscribers-table').hasClass('deleted')) { $('#subscribers-table').removeClass('deleted'); }
         }
