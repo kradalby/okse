@@ -2,10 +2,8 @@ package no.ntnu.okse.core;
 
 import org.apache.log4j.Logger;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
+import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.util.Date;
@@ -54,5 +52,41 @@ public class Utilities {
         }
 
         return null;
+    }
+
+    /**
+     * Helper method that creates a config file directory and checks for presence of the default properties files
+     * If directory does not exist, it creates it, and then proceeds to copy the default properties files
+     * from the classpath resources folder.
+     */
+    public static void createConfigDirectoryAndFilesIfNotExists() {
+        // If the config directory does not exist, create it
+        File configDir = new File("config");
+        if (!configDir.exists()) configDir.mkdirs();
+
+        // Declare the config files
+        File okseConfig = new File("config/okse.properties");
+        File log4jConfig = new File("config/log4j.properties");
+        File topicConfig = new File("config/topicmapping.properties");
+
+        try {
+            // If okse.properties does not exist, copy it from the classpath resources folder
+            if (!okseConfig.exists()) {
+                InputStream baseOkseConfig = Utilities.class.getResourceAsStream("/config/okse.properties");
+                Files.copy(baseOkseConfig, okseConfig.toPath());
+            }
+            // If log4j.properties does not exist, copy it from the classpath resources folder
+            if (!log4jConfig.exists()) {
+                InputStream baseLog4jConfig = Utilities.class.getResourceAsStream("/config/log4j.properties");
+                Files.copy(baseLog4jConfig, log4jConfig.toPath());
+            }
+            // If topicmapping.properties does not exist, copy it from the classpath resources folder
+            if (!topicConfig.exists()) {
+                InputStream baseTopicConfig = Utilities.class.getResourceAsStream("/config/topicmapping.properties");
+                Files.copy(baseTopicConfig, topicConfig.toPath());
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

@@ -77,6 +77,10 @@ public class Application {
      */
     public static void main(String[] args) {
 
+        // Check for presence of the needed config files, if they do not exist, they must be created
+        Utilities.createConfigDirectoryAndFilesIfNotExists();
+
+        // Configure the log4j logger
         PropertyConfigurator.configure("config/log4j.properties");
 
         // Init the logger
