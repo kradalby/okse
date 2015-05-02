@@ -286,6 +286,10 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
      * @param s The subscriber to be added
      */
     public void addSubscriber(Subscriber s) {
+        if (s == null) {
+            log.warn("Recieved null argument!");
+            return;
+        }
         if (!_subscribers.contains(s)) {
             // Create the job
             Runnable job = () -> addSubscriberLocal(s);
@@ -303,6 +307,10 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
      * @param s A subscriber that exists in the subscribers set
      */
     public void removeSubscriber(Subscriber s) {
+        if (s == null) {
+            log.warn("Recieved null argument!");
+            return;
+        }
         if (_subscribers.contains(s)) {
             // Create the job
             Runnable job = () -> removeSubscriberLocal(s);
@@ -321,6 +329,10 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
      * @param timeout The new timeout of the subscription represented as seconds since unix epoch
      */
     public void renewSubscriber(Subscriber s, Long timeout) {
+        if (s == null) {
+            log.warn("Recieved null argument!");
+            return;
+        }
         if (_subscribers.contains(s)) {
             // Create the job
             Runnable job = () -> renewSubscriberLocal(s, timeout);
@@ -338,6 +350,10 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
      * @param s The subciber object that is to be paused
      */
     public void pauseSubscriber(Subscriber s) {
+        if (s == null) {
+            log.warn("Recieved null argument!");
+            return;
+        }
         if (_subscribers.contains(s)) {
             // Create the job
             Runnable job = () -> pauseSubscriberLocal(s);
@@ -355,6 +371,10 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
      * @param s The subscriber object that is to be resumed
      */
     public void resumeSubscriber(Subscriber s) {
+        if (s == null) {
+            log.warn("Recieved null argument!");
+            return;
+        }
         if (_subscribers.contains(s)) {
             // Create the job
             Runnable job = () -> resumeSubscriberLocal(s);
@@ -375,6 +395,10 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
      * @param p The publisher object that is to be registered
      */
     public void addPublisher(Publisher p) {
+        if (p == null) {
+            log.warn("Recieved null argument!");
+            return;
+        }
         if (!_publishers.contains(p)) {
             // Create the job
             Runnable job = () -> addPublisherLocal(p);
@@ -392,6 +416,10 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
      * @param p A publisher object that exists in the publishers set
      */
     public void removePublisher(Publisher p) {
+        if (p == null) {
+            log.warn("Recieved null argument!");
+            return;
+        }
         if (_publishers.contains(p)) {
             // Create the job
             Runnable job = () -> removePublisherLocal(p);
