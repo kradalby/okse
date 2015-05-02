@@ -42,10 +42,8 @@ import java.util.HashMap;
  */
 
 @RestController
-@RequestMapping(value = "/api/stats")
+@RequestMapping(value = "/api/statistics")
 public class StatsController {
-
-    private static int MB = 1024 * 1024;
 
     private static final String GET_STATS = "/get/all";
 
@@ -56,16 +54,6 @@ public class StatsController {
         SubscriptionService ss = SubscriptionService.getInstance();
 
         HashMap<String, Object> result = new HashMap<>();
-
-        long totalRam = Runtime.getRuntime().totalMemory();
-        long freeRam = Runtime.getRuntime().freeMemory();
-        // Runtime statistics
-        result.put("runtimeStatistics", new HashMap<String, Object>(){{
-            put("cpuAvailable", Runtime.getRuntime().availableProcessors());
-            put("totalRam", totalRam / MB);
-            put("freeRam", freeRam / MB);
-            put("usedRam", (totalRam - freeRam) / MB);
-        }});
 
         // CoreService statistics
         result.put("coreServiceStatistics", new HashMap<String, Object>(){{

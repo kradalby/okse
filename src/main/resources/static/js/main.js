@@ -50,7 +50,7 @@ var Main = (function($) {
             error: error,
             dataType: 'json'
         });
-        console.log("[Debug][Main] Successfully set up AJAX")
+        $.okseDebug.logPrint("[Debug][Main] Successfully set up AJAX")
     }
 
     /*
@@ -77,17 +77,13 @@ var Main = (function($) {
     }
 
     /*
-        Global function that sets the click interval for the log-tab after the user wants to activate it again.
+        Global function that sets the click interval for a tab after the user wants to activate it again.
      */
-    var setIntervalForLogTab = function() {
+    var setIntervalForTab = function(settings) {
         clearInterval(clickInterval)
-        ajax({url: Logs.url(), type: 'GET', success: Logs.refresh})
+        ajax(settings)
         clickInterval = setInterval(function () {
-            ajax({
-                url: Logs.url(),
-                type: 'GET',
-                success: Logs.refresh
-            });
+            ajax(settings);
         }, $('#settings-update-interval').val() * 1000);
     }
 
@@ -98,23 +94,31 @@ var Main = (function($) {
         if (xhr.status != 200) {
             var errorMessage = statusErrorMap[xhr.status]
             if (!errorMessage) { errorMessage = "Unknown error" }
-            console.error("[Error][" + xhr.url + "] in Ajax with the following callback {" +
-                "status: " + xhr.status +  " " +
-                "errorMessage: " + errorMessage+ " " +
-                "readyState: " + xhr.readyState + " " +
-                "responseText: " + xhr.responseText + "}")
+            $.okseDebug.errorPrint("[Error][" + xhr.url + "] in Ajax with the following callback {" +
+            "status: " + xhr.status +  " " +
+            "errorMessage: " + errorMessage+ " " +
+            "readyState: " + xhr.readyState + " " +
+            "responseText: " + xhr.responseText + "}")
         }
+    }
+
+    var refreshRuntimeStatistics = function(statistics) {
+        $('#totalRam').html(statistics.totalRam)
+        $('#freeRam').html(statistics.freeRam)
+        $('#usedRam').html(statistics.usedRam)
+        $('#cpuCores').html(statistics.cpuAvailable)
     }
 
     var refresh = function(response) {
         Stats.refreshSubscribersAndPublishers(response.subscribers, response.publishers)
-        $('#runtime').html(response.runtime)
+        $('#uptime').html(response.uptime)
+        refreshRuntimeStatistics(response.runtimeStatistics)
     }
 
     return {
         ajax: ajax,
         error: error,
-        setIntervalForLogTab: setIntervalForLogTab,
+        setIntervalForTab: setIntervalForTab,
         clearIntervalForTab: function() {
             clearInterval(clickInterval)
         },
@@ -143,10 +147,10 @@ var Main = (function($) {
                         ajaxSettings.success = refresh
                         break;
                     case "topics":
-                        ajaxSettings.url = clickedElement + '/get/all'
+                        ajaxSettings.url = 'topic/get/all'
                         ajaxSettings.success = Topics.refresh
                         break;
-                    case "stats":
+                    case "statistics":
                         ajaxSettings.url = clickedElement + '/get/all'
                         ajaxSettings.success = Stats.refresh
                         break;
@@ -157,8 +161,12 @@ var Main = (function($) {
                     case "config":
                         ajaxSettings.success = Config.refresh
                         break;
+                    case "subscribers":
+                        ajaxSettings.url = 'subscriber/get/all'
+                        ajaxSettings.success = Subscribers.refresh
+                        break;
                     default:
-                        console.error("[Error][Main] Unknown nav-tab clicked, this should not happen!")
+                        $.okseDebug.errorPrint("[Error][Main] Unknown nav-tab clicked, this should not happen!")
                 }
 
                 ajax(ajaxSettings)
@@ -182,9 +190,16 @@ var Main = (function($) {
 
 })(jQuery);
 
-$(document).ready(function(){
+$(document).ready(function() {
+    // Register okseDebug-plugin
+    $.okseDebug({
+       debugFlag: false
+    });
+    // Initiating all JS-modules except Logs, that is initiated only on log in
     Main.init()
     Topics.init()
+    Subscribers.init()
     Config.init()
+
 });
 
