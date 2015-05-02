@@ -193,7 +193,7 @@ var Main = (function($) {
 $(document).ready(function() {
     // Register okseDebug-plugin
     $.okseDebug({
-       debugFlag: true
+       debugFlag: false
     });
     // Initiating all JS-modules except Logs, that is initiated only on log in
     Main.init()

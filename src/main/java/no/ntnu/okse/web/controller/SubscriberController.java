@@ -31,8 +31,7 @@ import no.ntnu.okse.core.topic.TopicService;
 import org.apache.log4j.Logger;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -46,14 +45,18 @@ public class SubscriberController {
 
     private static final String GET_ALL_SUBSCRIBERS = "/get/all";
     private static final String DELETE_SINGLE_SUBSCRIBER = "/delete/{id}";
+    private static final String DELETE_ALL_SUBSCRIBERS = "/delete/all";
 
     private static Logger log = Logger.getLogger(SubscriberController.class.getName());
 
     @RequestMapping(method = RequestMethod.GET, value = GET_ALL_SUBSCRIBERS)
-    public @ResponseBody HashSet<Subscriber> getAllSubscribers() {
+    public @ResponseBody List<Subscriber> getAllSubscribers() {
         SubscriptionService ss = SubscriptionService.getInstance();
         HashSet<Subscriber> allSubscribers = ss.getAllSubscribers(); // TODO: Sort this lexicographically on topic
-        return allSubscribers;
+        List<Subscriber> listToSort = new ArrayList<>(allSubscribers).stream()
+                .sorted((s1, s2) -> s1.getTopic().compareTo(s2.getTopic()))
+                .collect(Collectors.toList());
+        return listToSort;
     }
 
     @RequestMapping(method = RequestMethod.DELETE, value= DELETE_SINGLE_SUBSCRIBER)
@@ -65,6 +68,12 @@ public class SubscriberController {
         return s;
     }
 
-
+    @RequestMapping(method = RequestMethod.DELETE, value = DELETE_ALL_SUBSCRIBERS)
+    public @ResponseBody String deleteAllSubscribers() {
+        SubscriptionService ss = SubscriptionService.getInstance();
+        HashSet<Subscriber> allSubscribers = ss.getAllSubscribers();
+        allSubscribers.stream().forEach(s -> ss.removeSubscriber(s));
+        return "{ \"deleted\" :true }";
+    }
 
 }

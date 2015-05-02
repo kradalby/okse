@@ -4,80 +4,100 @@
 
 var Subscribers = (function($) {
 
-    // Private variable holding the subscribers array returned upon the ajax-request
+    // Private variable holding the subscribers array returned upon the ajax-request.
     var subscribers;
 
-    var _PAGESIZE = 5;
-    var _CURRENTPAGE = 1;
-    var _TOTALPAGES = 10;
+    var _PAGESIZE = 25; // Variable holding the size of each paginator page.
+    var _CURRENTPAGE = 1; // Variable holding the last page showed in the paginator.
 
+    /*
+        This function sets up the pagination with the correct values.
+        It also fills the new paginator with the correct table.
+     */
     var setupPagination = function() {
         $('#pagination-selector').twbsPagination({
             totalPages: numberOfPages(),
             startPage: _CURRENTPAGE,
-            visiblePages: 5,
+            visiblePages: 10,
             onPageClick: function(e, page) {
                 _CURRENTPAGE = page
-                _TOTALPAGES = numberOfPages();
-                var decrementedPage = page - 1
-                var fromIndex = (_PAGESIZE * decrementedPage)
-                var toIndex = (_PAGESIZE * decrementedPage) + _PAGESIZE
-                var subscribersToPopulate = subscribers.slice(fromIndex, toIndex)
+                var decrementedPage = (page - 1),
+                    fromIndex = (_PAGESIZE * decrementedPage),
+                    toIndex = (_PAGESIZE * decrementedPage) + _PAGESIZE
                 $.okseDebug.logPrint("[Debug][Subscriber] Clicked page: " + page + " and trying to populate it with [" + fromIndex + "," + toIndex + "]")
-                fillTable(subscribersToPopulate)
+                fillTable(fromIndex, toIndex)
             }
         })
         if (subscribers.length > 0) {
-            $.okseDebug.logPrint("[Debug][Subscriber] Append the correct table to the table")
-            var decrementedPage = _CURRENTPAGE - 1
-            var fromIndex = (_PAGESIZE * decrementedPage)
-            var toIndex = (_PAGESIZE * decrementedPage) + _PAGESIZE
-            var subscribersToPopulate = subscribers.slice(fromIndex, toIndex)
-            fillTable(subscribersToPopulate)
+            var decrementedPage = (_CURRENTPAGE - 1),
+                fromIndex = (_PAGESIZE * decrementedPage),
+                toIndex = (_PAGESIZE * decrementedPage) + _PAGESIZE
+            fillTable(fromIndex, toIndex)
         }
     }
 
+    /*
+        This function calculates the pages needed for the correct subscribers list.
+     */
     var numberOfPages = function() {
         return Math.ceil(subscribers.length / _PAGESIZE);
     }
 
+    /*
+        This function does all checks required to find out the correct paginator to append (or remove)
+        from the DOM. See each check to see what they do.
+     */
     var checkIfPaginationIsNeeded = function() {
-        var pageData = $('#pagination-selector').data();
+        var pageData = $('#pagination-selector').data(); // This variable holds the data-object for the paginator-element.
 
-        // Need to populate without paginator
+        // Do we need a paginator to populate the table?
         if (numberOfPages() < 2) {
-            $.okseDebug.logPrint("[Debug][Subscriber] No need for paginator, filling table without paginator")
+            $.okseDebug.logPrint("[Debug][Subscriber] There is no need for the paginator; filling table without it")
             if ( typeof pageData.twbsPagination != 'undefined') {
-                $.okseDebug.logPrint("[Debug][Subscriber] Paginator exists, but we don't need it, so we destroy it")
+                $.okseDebug.logPrint("[Debug][Subscriber] Paginator already exists, but we don't need it, so we destroy it")
                 $('#pagination-selector').twbsPagination('destroy')
             }
-            fillTable(subscribers)
+            fillTable()
             return;
         }
 
 
+        // If the data-object for twbsPagination is undefined, we create a new one; else we create one
+        // based on the needed pages.
         if ( typeof pageData.twbsPagination == 'undefined' ) {
-            $.okseDebug.logPrint("[Debug][Subscriber] Creating new paginator!")
+            $.okseDebug.logPrint("[Debug][Subscriber] Creating a new paginator!")
+            _CURRENTPAGE = 1; // Need to reset the _CURRENTPAGE
             setupPagination()
         } else {
             // If _CURRENTPAGE is greater than needed pages, we decrement it to the needed numbers
             if (_CURRENTPAGE > numberOfPages()) {
-                $.okseDebug.logPrint("[Debug][Subscriber] Decrementing the current page to needed number")
+                $.okseDebug.logPrint("[Debug][Subscriber] Decrementing the current page to needed number since _CURRENTPAGE > numberOfPages()")
                 _CURRENTPAGE = numberOfPages()
             }
-            $.okseDebug.logPrint("[Debug][Subscriber] Paginator were defined and destroyed, initiating new with values: {" +
-            "startPage:" + _CURRENTPAGE + " totalPages: " + numberOfPages() + "}");
+            $.okseDebug.logPrint("[Debug][Subscriber] Paginator were defined but destroyed to initiate with new values: {" +
+                "startPage:" + _CURRENTPAGE + " totalPages: " + numberOfPages() + "}");
             $('#pagination-selector').twbsPagination('destroy')
             setupPagination()
         }
     }
 
-    var fillTable = function(subscribers) {
+    /*
+        This function fills the #subscribers-table with the given input list
+     */
+    var fillTable = function(from, to) {
         unBindButtons()
-        $('#subscribers-table').html(createTableForSubscribers(subscribers))
+        if (from === undefined || to === undefined) {
+            $.okseDebug.logPrint("[Debug][Subscriber] Filling table with the complete list")
+            $('#subscribers-table').html(createTableForSubscribers(subscribers))
+        } else {
+            $.okseDebug.logPrint("[Debug][Subscriber] Filling table with [" + from + "," + to + "]")
+            var subscribersToPopulate = subscribers.slice(from, to)
+            $('#subscribers-table').html(createTableForSubscribers(subscribersToPopulate))
+        }
         bindButtons()
     }
 
+    // Create a string of all filters to fill the table cell with
     var createFilterSetString = function(filterSet) {
         if (filterSet.length == 0) {
             return "All"
@@ -144,6 +164,31 @@ var Subscribers = (function($) {
 
     return {
         init: function() {
+            $('#delete-all-subscribers').on('click', function(e) {
+                e.preventDefault()
+
+                if (confirm("Are you sure you want to delete all subscribers?")) {
+
+                    Main.ajax({
+                        url: 'subscriber/delete/all',
+                        type: 'DELETE',
+                        success: function(data) {
+                            $.okseDebug.logPrint("[Debug][Topics] Callback from server; deleted all subscribers")
+                            // Disable all subscribers and buttons
+                            if (data.deleted == true) {
+                                $('#subscribers-table').addClass('deleted')
+                                $('#subscribers-table').find('a').each(function() {
+                                    $(this).addClass('disabled')
+                                });
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            Main.displayMessage('Unable to remove all subscribers!')
+                            Main.error(xhr, status, error)
+                        }
+                    });
+                }
+            });
             /*
              * Add a listener to clear interval
              * */
@@ -166,7 +211,13 @@ var Subscribers = (function($) {
         },
         refresh: function(data) {
             subscribers = data;
-            checkIfPaginationIsNeeded()
+            if (!subscribers.length == 0) {
+                checkIfPaginationIsNeeded()
+            } else {
+                $('#subscribers-table').html('<tr class="danger"><td colspan="6"><h4 class="text-center">No subscribers returned from SubscriptionsService</h4></td></tr>')
+            }
+            // Remove 'deleted class' if it exists
+            if ($('#subscribers-table').hasClass('deleted')) { $('#subscribers-table').removeClass('deleted'); }
         }
     }
 

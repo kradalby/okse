@@ -95,35 +95,6 @@ var Topics = (function($) {
                 });
             }
         });
-
-        /*
-        $('.show-subscribers').on('click', function(e) {
-            e.preventDefault()
-
-            console.log("[Debug][Topics] Showing subscribers modal for topic with id: " + $(this).data('id'))
-            Main.ajax({
-                url: 'topics/get/' + $(this).data('id') + '/subscriber/all',
-                type: 'GET',
-                success: function(data) {
-                    console.log("[Debug][Topics] Callback from server; showing subscribers modal")
-                    if (!(data.subscribers.length == 0)) {
-                        var table = createTableForSubscribers(data.subscribers)
-                        $('#subscribers-table').html(table)
-                    } else {
-                        $('#subscribers-table').html('<tr class="danger"><td colspan="4"><h4 class="text-center">No subscribers returned from SubscriptionService</h4></td></tr>')
-                    }
-                    $('#subscribers-topic').html(data.topic)
-                    $('#subscribers-modal').modal('show')
-                },
-                error: function(xhr, status, error) {
-                    Main.displayMessage('Unable to show subscribers!')
-                    Main.error(xhr, status, error)
-                }
-            });
-
-            return false;
-        });
-        */
     }
 
     return {
