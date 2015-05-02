@@ -17,6 +17,7 @@ MODES = {
     "subscribe": "Subscribe",
     "subscribe-xpath": "Subscribe (XPATH)",
     "subscribe-notopic": "Subscribe (No Topic)",
+    "subscribe-simpletopic": "Subscribe (SimpleTopic)",
     "unsubscribe": "Unsubscribe",
     "register": "PublisherRegistration",
     "getcurrent": "GetCurrentMessage",
@@ -85,6 +86,24 @@ xmlns:ns6="http://schemas.xmlsoap.org/soap/envelope/">
 <ns3:Subscribe>
 <ns3:ConsumerReference><ns2:Address>%s</ns2:Address></ns3:ConsumerReference>
 <ns3:Filter><ns3:TopicExpression Dialect="http://docs.oasis-open.org/wsn/t-1/TopicExpression/Concrete">%s</ns3:TopicExpression></ns3:Filter>
+</ns3:Subscribe>
+</ns6:Body>
+</ns6:Envelope>
+"""
+
+SUBSCRIBE_SIMPLETOPIC = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns6:Envelope xmlns:ns2="http://www.w3.org/2005/08/addressing"
+xmlns:ns3="http://docs.oasis-open.org/wsn/b-2"
+xmlns:ns4="http://docs.oasis-open.org/wsn/t-1"
+xmlns:ns5="http://docs.oasis-open.org/wsrf/bf-2"
+xmlns:ns6="http://schemas.xmlsoap.org/soap/envelope/">
+<ns6:Header>
+<ns2:Action>http://docs.oasis-open.org/wsn/bw-2/NotificationProducer/SubscribeRequest</ns2:Action>
+</ns6:Header>
+<ns6:Body>
+<ns3:Subscribe>
+<ns3:ConsumerReference><ns2:Address>%s</ns2:Address></ns3:ConsumerReference>
+<ns3:Filter><ns3:TopicExpression Dialect="http://docs.oasis-open.org/wsn/t-1/TopicExpression/Simple">%s</ns3:TopicExpression></ns3:Filter>
 </ns3:Subscribe>
 </ns6:Body>
 </ns6:Envelope>
@@ -255,8 +274,6 @@ xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
 </s:Envelope>
 """
 
-
-
 class WSNRequest(object):
     """
     The Notify class extracts info from command line during startup
@@ -266,6 +283,7 @@ class WSNRequest(object):
     HOST = None
     PORT = None
     TOPIC = None
+    WAN_IP = None
 
     ### BEGIN Initialization / Constructor
 
@@ -274,6 +292,7 @@ class WSNRequest(object):
         Call the arg_parse to extract needed input from commandline
         """
         self.arg_parse()
+        self.WAN_IP = raw_input("Which IP:Port should be used as host of this machine? (0.0.0.0:8000) ")
 
     ### BEGIN Helper methods
 
@@ -363,9 +382,21 @@ class WSNRequest(object):
         print "[i] Sending a Subscribe request"
 
         # Generate the payload
-        payload = SUBSCRIBE % ('http://localhost:8081', self.TOPIC)
+        payload = SUBSCRIBE % ('http://' + self.WAN_IP, self.TOPIC)
 
         # Send the request
+        self.send_request(payload)
+
+    def send_subscription_simpletopic(self):
+        """
+        Sends a subscription request using SimpleTopic (no slashes or subpaths)
+        """
+
+        print "[i] Sending a Subscribe request using SimpleTopic expression"
+
+        # Generate the payload
+        payload = SUBSCRIBE_SIMPLETOPIC % ('http://' + self.WAN_IP, self.TOPIC)
+
         self.send_request(payload)
 
     def send_subscription_notopic(self):
@@ -376,7 +407,7 @@ class WSNRequest(object):
         print "[i] Sending a Subscribe without Topic"
 
         # Generate payload
-        payload = SUBSCRIBE_NOTOPIC % ('http://localhost:8081')
+        payload = SUBSCRIBE_NOTOPIC % ('http://' + self.WAN_IP)
 
         # Send the request
         self.send_request(payload)
@@ -389,7 +420,7 @@ class WSNRequest(object):
         print "[i] Sending a Subscribe with XPATH content filter"
 
         # Generate payload
-        payload = SUBSCRIBE_XPATH % ('http://localhost:8081', self.TOPIC)
+        payload = SUBSCRIBE_XPATH % ('http://' + self.WAN_IP, self.TOPIC)
 
         # Send the request
         self.send_request(payload)
@@ -528,6 +559,9 @@ if __name__ == "__main__":
     elif mode == 'subscribe-xpath':
         wsn_request.send_subscription_xpath()
 
+    elif mode == 'subscribe-simpletopic':
+        wsn_request.send_subscription_simpletopic()
+
     elif mode == 'register':
         wsn_request.send_registration()
 
@@ -577,6 +611,8 @@ if __name__ == "__main__":
         wsn_request.send_subscription_notopic()
         time.sleep(2)
         wsn_request.send_subscription_xpath()
+        time.sleep(2)
+        wsn_request.send_subscription_simpletopic()
         time.sleep(2)
         wsn_request.send_renew_subscription(subscription_reference)
         time.sleep(2)
