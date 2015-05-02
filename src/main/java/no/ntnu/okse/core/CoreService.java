@@ -82,8 +82,17 @@ public class CoreService extends AbstractCoreService {
     protected void init() {
         eventQueue = new LinkedBlockingQueue();
         services = new HashSet<>();
-        executor = Executors.newFixedThreadPool(10);
         protocolServers = new ArrayList<>();
+        int execServicePoolSize = 10;
+        // Check if default has been overridden in the config file
+        if (Application.config.containsKey("CORE_SERVICE_THREAD_POOL_SIZE")) {
+            try {
+                execServicePoolSize = Integer.parseInt(Application.config.getProperty("CORE_SERVICE_THREAD_POOL_SIZE"));
+            } catch (NumberFormatException e) {
+                log.error("Failed to parse CoreService executor service thread pool size, using default (10)");
+            }
+        }
+        executor = Executors.newFixedThreadPool(execServicePoolSize);
         // Set the invoked flag
         _invoked = true;
     }
