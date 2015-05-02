@@ -191,7 +191,7 @@ public class WSNTools {
      * @param notify The Notify object to extract message content from
      * @return The Message object contained within the notificationmessage
      */
-    public static Object extractMessageObjectFromNotify(Notify notify) {
-        return notify.getNotificationMessage().get(0).getMessage();
+    public static Object extractMessageContentFromNotify(Notify notify) {
+        return notify.getNotificationMessage().get(0).getMessage().getAny();
     }
 }

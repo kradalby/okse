@@ -288,7 +288,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
                     if (topicService.topicExists(topicName)) {
                         log.debug("Topic existed, generating OKSE Message for distribution");
                         // Extract the content
-                        String content = WSNTools.extractRawXmlContentFromDomNode((ElementNSImpl)messageHolderType.getMessage().getAny());
+                        String content = WSNTools.extractRawXmlContentFromDomNode((ElementNSImpl) messageHolderType.getMessage().getAny());
                         log.debug("Messace object: " + messageHolderType.getMessage().toString());
                         log.debug("Message content: " + content);
                         // Fetch the topic object
@@ -769,8 +769,9 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
             // Generate the NotificationMessage
             log.debug("Generated Notify wrapper");
 
-            /* Add the HolderType to the response */
-            response.getAny().add(new JAXBElement(new QName("NotifyContent"), String.class, currentMessage.getMessage()));
+            // Create a unmarshalled and linked Notify and extract the Message content from it
+            Object messageObject = WSNTools.extractMessageContentFromNotify(WSNTools.createNotify(currentMessage));
+            response.getAny().add(messageObject);
 
             // Return the response
             return response;
