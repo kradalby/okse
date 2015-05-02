@@ -137,7 +137,7 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
     }
 
     private void add(Sender sender) {
-        Subscriber subscriber = new Subscriber(sender.getSource().getAddress(), 1337, getAddress(sender), AMQProtocolServer.getInstance().getProtocolServerType());
+        Subscriber subscriber = new Subscriber(sender.getSession().getConnection().getRemoteHostname(), 1337, getAddress(sender), AMQProtocolServer.getInstance().getProtocolServerType());
         SubscriptionService.getInstance().addSubscriber(subscriber);
         localSubscriberMap.put(sender, subscriber);
         TopicService.getInstance().addTopic(getAddress(sender));
