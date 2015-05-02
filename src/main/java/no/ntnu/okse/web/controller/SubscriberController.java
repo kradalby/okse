@@ -52,7 +52,7 @@ public class SubscriberController {
     @RequestMapping(method = RequestMethod.GET, value = GET_ALL_SUBSCRIBERS)
     public @ResponseBody HashSet<Subscriber> getAllSubscribers() {
         SubscriptionService ss = SubscriptionService.getInstance();
-        HashSet<Subscriber> allSubscribers = ss.getAllSubscribers();
+        HashSet<Subscriber> allSubscribers = ss.getAllSubscribers(); // TODO: Sort this lexicographically on topic
         return allSubscribers;
     }
 

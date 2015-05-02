@@ -50,7 +50,7 @@ var Main = (function($) {
             error: error,
             dataType: 'json'
         });
-        console.log("[Debug][Main] Successfully set up AJAX")
+        $.okseDebug.logPrint("[Debug][Main] Successfully set up AJAX")
     }
 
     /*
@@ -94,11 +94,11 @@ var Main = (function($) {
         if (xhr.status != 200) {
             var errorMessage = statusErrorMap[xhr.status]
             if (!errorMessage) { errorMessage = "Unknown error" }
-            console.error("[Error][" + xhr.url + "] in Ajax with the following callback {" +
-                "status: " + xhr.status +  " " +
-                "errorMessage: " + errorMessage+ " " +
-                "readyState: " + xhr.readyState + " " +
-                "responseText: " + xhr.responseText + "}")
+            $.okseDebug.errorPrint("[Error][" + xhr.url + "] in Ajax with the following callback {" +
+            "status: " + xhr.status +  " " +
+            "errorMessage: " + errorMessage+ " " +
+            "readyState: " + xhr.readyState + " " +
+            "responseText: " + xhr.responseText + "}")
         }
     }
 
@@ -166,7 +166,7 @@ var Main = (function($) {
                         ajaxSettings.success = Subscribers.refresh
                         break;
                     default:
-                        console.error("[Error][Main] Unknown nav-tab clicked, this should not happen!")
+                        $.okseDebug.errorPrint("[Error][Main] Unknown nav-tab clicked, this should not happen!")
                 }
 
                 ajax(ajaxSettings)

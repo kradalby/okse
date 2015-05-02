@@ -57,7 +57,7 @@ var Logs = (function($) {
                 url: 'log/levels',
                 type: 'GET',
                 success: function(data) {
-                    console.log("[Debug][Logs] Adding log level buttons")
+                    $.okseDebug.logPrint("[Debug][Logs] Adding log level buttons")
                     var buttons = ""
                     $.each(data, function(i, level) {
                         if (level == 'DEBUG') {
@@ -96,7 +96,7 @@ var Logs = (function($) {
                 url: 'log/files',
                 type: 'GET',
                 success: function(data) {
-                    console.log("[Debug][Logs] Adding log files buttons")
+                    $.okseDebug.logPrint("[Debug][Logs] Adding log files buttons")
                     var files = ""
                     $.each(data, function(i) {
                         if (i == 0) {

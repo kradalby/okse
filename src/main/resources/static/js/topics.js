@@ -74,7 +74,7 @@ var Topics = (function($) {
                     url: 'topic/delete/' + topicID,
                     type: 'DELETE',
                     success: function(data) {
-                        console.log("[Debug][Topics] Callback from server; topic and subscribers deleted")
+                        $.okseDebug.logPrint("[Debug][Topics] Callback from server; topic and subscribers deleted")
                         /*
                         // Disabling all children topics also
                         $.each(data.children, function(i, topic) {
@@ -86,7 +86,7 @@ var Topics = (function($) {
                         */
                     },
                     error: function(xhr, status, error) {
-                        console.log("[Debug][Topics] Unable to remove topic with id: " + e.target.id)
+                        $.okseDebug.logPrint("[Debug][Topics] Unable to remove topic with id: " + e.target.id)
                         $(e.target).closest('tr').removeClass('deleted')
                         $(e.target).removeClass("disabled")
                         Main.displayMessage('Unable to remove topic!')
@@ -137,7 +137,7 @@ var Topics = (function($) {
                         url: 'topic/delete/all',
                         type: 'DELETE',
                         success: function(data) {
-                            console.log("[Debug][Topics] Callback from server; deleted all topics");
+                            $.okseDebug.logPrint("[Debug][Topics] Callback from server; deleted all topics")
                             // Disable all topics and buttons
                             if (data.deleted == true) {
                                 $('#topics-table').addClass('deleted')
