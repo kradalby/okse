@@ -260,16 +260,10 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
             return;
         }
 
-
-        log.debug("------- SUPERDEBUG ------------------");
-        log.debug(notify.getNotificationMessage().get(0).getMessage().getAny().getClass());
-        log.debug("Raw xml content: " + WSNTools.extractRawXmlContentFromDomNode(
-                (ElementNSImpl) notify.getNotificationMessage().get(0).getMessage().getAny())
-        );
-        log.debug("------- SUPERDEBUG ------------------");
-
+        // Store the MessageService and CoreService instances
         MessageService messageService = MessageService.getInstance();
         TopicService topicService = TopicService.getInstance();
+        // Declare the message object
         Message message;
 
         for (NotificationMessageHolderType messageHolderType : notify.getNotificationMessage()) {
