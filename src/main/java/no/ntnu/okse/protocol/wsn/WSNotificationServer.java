@@ -494,7 +494,6 @@ public class WSNotificationServer extends AbstractProtocolServer {
 
                 while(returnMessage.hasMoreElements()) {
                     String inputStream = (String)returnMessage.nextElement();
-                    log.debug(outMessage + "=" + inputStream);
                     if(outMessage.equals("Transfer-Encoding") && inputStream.equals("chunked")) {
                         log.debug("Found Transfer-Encoding was chunked.");
                         isChunked = true;

@@ -454,7 +454,7 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
     }
 
     /**
-     * Attemt to locate a subscriber by the ID.
+     * Attempt to locate a subscriber by the ID.
      * @param id : The ID for the subscriber
      * @return The subscriber, if found, null otherwise.
      */
@@ -481,8 +481,6 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
         // Initialize a collector
         HashSet<Subscriber> results = new HashSet<>();
 
-        // TODO: Will this trigger concurrent modification exception if new subs are added during iteration?
-
         // Iterate over all subscribers
         getAllSubscribers().stream()
                     // Only pass on those who match topic argument
@@ -501,8 +499,6 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
     public HashSet<Publisher> getAllPublishersForTopic(String topic) {
         // Initialize a collector
         HashSet<Publisher> results = new HashSet<>();
-
-        // TODO: Will this trigger concurrent modification exception if new subs are added during iteration?
 
         // Iterate over all subscribers
         getAllPublishers().stream()
@@ -606,8 +602,8 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
      * @param type  : What type of action is associated with the publisher object.
      */
     private void firePublisherChangeEvent(Publisher reg, PublisherChangeEvent.Type type) {
-        PublisherChangeEvent rce = new PublisherChangeEvent(type, reg);
-        _registrationListeners.stream().forEach(l -> l.publisherChanged(rce));
+        PublisherChangeEvent pce = new PublisherChangeEvent(type, reg);
+        _registrationListeners.stream().forEach(l -> l.publisherChanged(pce));
     }
 
     /* End listener support */
