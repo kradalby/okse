@@ -137,7 +137,7 @@ public class CoreService extends AbstractCoreService {
         this.registerListenerSupportForAllCoreServices();
         log.info("Completed setting up listener support for all core services");
 
-        log.info("OKSE " + Application.VERSION + " booted in " + Application.getRunningTime().toString());
+        log.info("OKSE " + Application.VERSION + " booted in " + Utilities.getDurationAsISO8601(Application.getRunningTime()));
 
         // Initiate main run loop, which awaits Events to be committed to the eventQueue
         while (_running) {

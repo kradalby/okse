@@ -1,6 +1,6 @@
 # Okse
 [![Build Status](https://fap.no/jenkins/buildStatus/icon?job=okse)](https://fap.no/jenkins/job/okse/)
-## (Overordnet Kommunikasjons System for Etteretning)
+## (Overordnet KommunikasjonsSystem for Etteretning)
 
 Bachelors degree project for FFI (Norwegian Defence Research Establishment)
 

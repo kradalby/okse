@@ -12,8 +12,11 @@ SOAP_HEADER = "application/soap+xml;charset=utf-8"
 MODES = {
     "all": "All available",
     "notify": "Notification",
+    "massnotify": "Mass Notification",
     "multinotify": "MultiNotification",
     "subscribe": "Subscribe",
+    "subscribe-xpath": "Subscribe (XPATH)",
+    "subscribe-notopic": "Subscribe (No Topic)",
     "unsubscribe": "Unsubscribe",
     "register": "PublisherRegistration",
     "getcurrent": "GetCurrentMessage",
@@ -44,7 +47,7 @@ NOTIFY = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <wsnt:Notify>
 <wsnt:NotificationMessage>
 <wsnt:Topic Dialect="http://docs.oasis-open.org/wsn/t-1/TopicExpression/Concrete">%s</wsnt:Topic>
-<wsnt:Message><npex:NotifyContent xmlns:npex="http://brute.force/test/">%s</npex:NotifyContent></wsnt:Message>
+<wsnt:Message><notifyContent>%s</notifyContent></wsnt:Message>
 </wsnt:NotificationMessage>
 </wsnt:Notify>
 </s:Body>
@@ -59,12 +62,12 @@ NOTIFY_MULTIPLE = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <wsnt:Notify>
 <wsnt:NotificationMessage>
 <wsnt:Topic Dialect="http://docs.oasis-open.org/wsn/t-1/TopicExpression/Concrete">%s</wsnt:Topic>
-<wsnt:Message><npex:NotifyContent xmlns:npex="http://brute.force/test/">%s</npex:NotifyContent></wsnt:Message>
+<wsnt:Message><notifyContent>%s</notifyContent></wsnt:Message>
 </wsnt:NotificationMessage>
 <wsnt:NotificationMessage>
 <wsnt:Topic Dialect="http://docs.oasis-open.org/wsn/t-1/TopicExpression/Simple">%s</wsnt:Topic>
-<wsnt:Message><npex:NotifyContent xmlns:npex="http://brute.force/test/">%s</npex:NotifyContent></wsnt:Message>
-</wsnt:NotificationMessage>
+<wsnt:Message><notifyContent>%s</notifyContent></wsnt:Message>
+</wsnt:NotificaionMessage>
 </wsnt:Notify>
 </s:Body>
 </s:Envelope>"""
@@ -82,6 +85,44 @@ xmlns:ns6="http://schemas.xmlsoap.org/soap/envelope/">
 <ns3:Subscribe>
 <ns3:ConsumerReference><ns2:Address>%s</ns2:Address></ns3:ConsumerReference>
 <ns3:Filter><ns3:TopicExpression Dialect="http://docs.oasis-open.org/wsn/t-1/TopicExpression/Concrete">%s</ns3:TopicExpression></ns3:Filter>
+</ns3:Subscribe>
+</ns6:Body>
+</ns6:Envelope>
+"""
+
+SUBSCRIBE_NOTOPIC = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns6:Envelope xmlns:ns2="http://www.w3.org/2005/08/addressing"
+xmlns:ns3="http://docs.oasis-open.org/wsn/b-2"
+xmlns:ns4="http://docs.oasis-open.org/wsn/t-1"
+xmlns:ns5="http://docs.oasis-open.org/wsrf/bf-2"
+xmlns:ns6="http://schemas.xmlsoap.org/soap/envelope/">
+<ns6:Header>
+<ns2:Action>http://docs.oasis-open.org/wsn/bw-2/NotificationProducer/SubscribeRequest</ns2:Action>
+</ns6:Header>
+<ns6:Body>
+<ns3:Subscribe>
+<ns3:ConsumerReference><ns2:Address>%s</ns2:Address></ns3:ConsumerReference>
+<ns3:Filter></ns3:Filter>
+</ns3:Subscribe>
+</ns6:Body>
+</ns6:Envelope>
+"""
+
+SUBSCRIBE_XPATH = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns6:Envelope xmlns:ns2="http://www.w3.org/2005/08/addressing"
+xmlns:ns3="http://docs.oasis-open.org/wsn/b-2"
+xmlns:ns4="http://docs.oasis-open.org/wsn/t-1"
+xmlns:ns5="http://docs.oasis-open.org/wsrf/bf-2"
+xmlns:ns6="http://schemas.xmlsoap.org/soap/envelope/">
+<ns6:Header>
+<ns2:Action>http://docs.oasis-open.org/wsn/bw-2/NotificationProducer/SubscribeRequest</ns2:Action>
+</ns6:Header>
+<ns6:Body>
+<ns3:Subscribe>
+<ns3:ConsumerReference><ns2:Address>%s</ns2:Address></ns3:ConsumerReference>
+<ns3:Filter><ns3:TopicExpression Dialect="http://docs.oasis-open.org/wsn/t-1/TopicExpression/Concrete">%s</ns3:TopicExpression>
+<ns3:MessageContent Dialect="http://www.w3.org/TR/1999/REC-xpath-19991116">/notifyContent[text()="derp"]</ns3:MessageContent>
+</ns3:Filter>
 </ns3:Subscribe>
 </ns6:Body>
 </ns6:Envelope>
@@ -327,6 +368,32 @@ class WSNRequest(object):
         # Send the request
         self.send_request(payload)
 
+    def send_subscription_notopic(self):
+        """
+        Sends a subscription without topic expression
+        """
+
+        print "[i] Sending a Subscribe without Topic"
+
+        # Generate payload
+        payload = SUBSCRIBE_NOTOPIC % ('http://localhost:8081')
+
+        # Send the request
+        self.send_request(payload)
+
+    def send_subscription_xpath(self):
+        """
+        Sends a subscription with an XPATH expression
+        """
+
+        print "[i] Sending a Subscribe with XPATH content filter"
+
+        # Generate payload
+        payload = SUBSCRIBE_XPATH % ('http://localhost:8081', self.TOPIC)
+
+        # Send the request
+        self.send_request(payload)
+
     def send_registration(self):
         """
         Sends a publisher registration request
@@ -423,7 +490,7 @@ if __name__ == "__main__":
 
     i = 0
 
-    if mode == 'notify':
+    if mode == 'massnotify':
         while i < RUNS:
             print "[%d] Sending Notify..." % (i + 1)
             # Shuffle the random words
@@ -436,6 +503,9 @@ if __name__ == "__main__":
             i += 1
             # Sleep for INTERVAL
             time.sleep(INTERVAL)
+
+    elif mode == 'notify':
+        wsn_request.send_notify("derp")
 
     elif mode == 'multinotify':
         # Shuffle the words
@@ -451,6 +521,12 @@ if __name__ == "__main__":
 
     elif mode == 'subscribe':
         wsn_request.send_subscription()
+
+    elif mode == 'subscribe-notopic':
+        wsn_request.send_subscription_notopic()
+
+    elif mode == 'subscribe-xpath':
+        wsn_request.send_subscription_xpath()
 
     elif mode == 'register':
         wsn_request.send_registration()
@@ -497,6 +573,10 @@ if __name__ == "__main__":
         wsn_request.send_notify_multiple("Test message 1 (Concrete)", "Test message 2 (Simple)")
         time.sleep(2)
         wsn_request.send_get_current_message()
+        time.sleep(2)
+        wsn_request.send_subscription_notopic()
+        time.sleep(2)
+        wsn_request.send_subscription_xpath()
         time.sleep(2)
         wsn_request.send_renew_subscription(subscription_reference)
         time.sleep(2)

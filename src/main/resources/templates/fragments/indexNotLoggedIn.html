@@ -2,15 +2,15 @@
         xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout"
         xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity3"
         layout:decorator="layout">
-    <head>
-        <title>OKSE Admin Console</title>
-    </head>
-    <body>
-        <div layout:fragment="content">
-            <div class="jumbotron">
-                <h1>OKSE Admin Console</h1>
-                <p>Please log in!</p>
-            </div>
-        </div>
-    </body>
+<head>
+    <title>OKSE Admin Console</title>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <div class="jumbotron">
+        <h1>OKSE Admin Console</h1>
+        <p>Please log in!</p>
+    </div>
+</th:block>
+</body>
 </html>

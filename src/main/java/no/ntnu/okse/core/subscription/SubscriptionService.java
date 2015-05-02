@@ -53,10 +53,10 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
     private static boolean _invoked = false;
 
     private LinkedBlockingQueue<SubscriptionTask> queue;
-    private HashSet<SubscriptionChangeListener> _subscriptionListeners;
-    private HashSet<PublisherChangeListener> _registrationListeners;
-    private HashSet<Subscriber> _subscribers;
-    private HashSet<Publisher> _publishers;
+    private ConcurrentHashSet<SubscriptionChangeListener> _subscriptionListeners;
+    private ConcurrentHashSet<PublisherChangeListener> _registrationListeners;
+    private ConcurrentHashSet<Subscriber> _subscribers;
+    private ConcurrentHashSet<Publisher> _publishers;
 
     /**
      * Private constructor that passes classname to superclass log field and calls initialization method
@@ -83,10 +83,10 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
         _invoked = true;
         log.info("Initializing SubscriptionService...");
         queue = new LinkedBlockingQueue<>();
-        _subscribers = new HashSet<>();
-        _publishers = new HashSet<>();
-        _registrationListeners = new HashSet<>();
-        _subscriptionListeners = new HashSet<>();
+        _subscribers = new ConcurrentHashSet<>();
+        _publishers = new ConcurrentHashSet<>();
+        _registrationListeners = new ConcurrentHashSet<>();
+        _subscriptionListeners = new ConcurrentHashSet<>();
     }
 
     /**
@@ -493,7 +493,9 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
      * @return A HashSet of Subscriber objects that have subscribed on the broker
      */
     public HashSet<Subscriber> getAllSubscribers() {
-        return (HashSet<Subscriber>) _subscribers.clone();
+        HashSet<Subscriber> result = new HashSet<>();
+        _subscribers.iterator().forEachRemaining(s -> result.add(s));
+        return result;
     }
 
     /**
@@ -503,7 +505,9 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
      * @return A HashSet of Publisher objects that have registered on the broker
      */
     public HashSet<Publisher> getAllPublishers() {
-        return (HashSet<Publisher>) _publishers.clone();
+        HashSet<Publisher> result = new HashSet<>();
+        _publishers.iterator().forEachRemaining(p -> result.add(p));
+        return result;
     }
 
     /**

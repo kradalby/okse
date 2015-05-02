@@ -6,72 +6,43 @@
 </head>
 <body>
 <th:block layout:fragment="topicspane">
-    <div class="tab-pane" id="topics">
-        <div class="row">
-            <div class="col-md-12" id="topics-column">
-                <!-- All topics will be inserted here -->
-                <div class="panel panel-info">
-                    <!-- Default panel contents -->
-                    <div class="panel-heading">All topics</div>
-                    <div class="panel-body">
-                        <div class="alert alert-warning">
-                            <strong>Note: </strong>
-                            All the topics registered in the broker will be shown below. Any subscriber on the given topic will be shown when you click the 'Subscriber'-button.
-                            If you choose to delete a topic, all the child topics will be removed from the table on the next refresh. Furthermore, all subscriptions will also be removed in case of a topic being deleted.
-                        </div>
-                        <a class="btn btn-danger" id="delete-all-topics">Delete all topics</a>
+<div class="tab-pane" id="topics">
+    <div class="row">
+        <div class="col-md-12" id="topics-column">
+            <!-- All topics will be inserted here -->
+            <div class="panel panel-info">
+                <!-- Default panel contents -->
+                <div class="panel-heading">All topics</div>
+                <div class="panel-body">
+                    <div class="alert alert-warning">
+                        <strong>Note: </strong>
+                        All the topics registered in the broker will be shown below. If you choose to delete a topic,
+                        all the child topics will be removed from the table on the next refresh.
+                        Furthermore, all subscriptions will also be removed in case of a topic being deleted.
                     </div>
-                    <!-- Table -->
-                    <div class="table-responsive">
-                        <table class="table table-striped table-condensed">
-                            <thead>
-                                <tr>
-                                    <th>Topic</th>
-                                    <th>Full topic</th>
-                                    <th>Root</th>
-                                    <th>Leaf</th>
-                                    <th colspan="2">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="topics-table">
+                    <a class="btn btn-danger" id="delete-all-topics">Delete all topics</a>
+                </div>
+                <!-- Table -->
+                <div class="table-responsive">
+                    <table class="table table-striped table-condensed">
+                        <thead>
+                        <tr>
+                            <th>Topic</th>
+                            <th>Subscribers</th>
+                            <th>Root</th>
+                            <th>Leaf</th>
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody id="topics-table">
 
-                            </tbody>
-                        </table>
-                    </div>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
-        <div class="modal fade" id="subscribers-modal">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                        <h4 class="modal-title">Subscribers</h4>
-                    </div>
-                    <div class="modal-body">
-                        <div class="table-reponsive">
-                            <table class="table table-striped table-condensed">
-                                <thead>
-                                    <tr>
-                                        <th>Protocol</th>
-                                        <th>IP</th>
-                                        <th>Port</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="subscribers-table">
-
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-success" data-dismiss="modal">Close</button>
-                    </div>
-                </div><!-- /.modal-content -->
-            </div><!-- /.modal-dialog -->
-        </div><!-- /.modal -->
     </div>
+</div>
 </th:block>
 </body>
 </html>
