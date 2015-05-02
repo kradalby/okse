@@ -71,7 +71,7 @@ public class AMQPReceive {
             }
         }
         if (addrs.size() == 0) {
-            addrs.add("amqp://127.0.0.1:5672/bang/bang");
+            addrs.add("amqp://127.0.0.1:61050/bang/bang");
         }
     }
 

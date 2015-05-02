@@ -151,7 +151,6 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
         log.debug("Adding sender: " + sender.getName() + " to route: " + address);
         log.debug(outgoing.toString());
         routes.add(sender);
-        routes.printRouteTable();
     }
 
     private void remove(Sender sender) {
@@ -169,6 +168,9 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
                 outgoing.remove(address);
             }
         }
+        log.debug("Detaching: " + sender.getName());
+        sender.detach();
+        sender.close();
         log.debug(outgoing.toString());
     }
     private void add(Receiver receiver) {
@@ -182,7 +184,6 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
         log.debug("Adding receiver: " + receiver.getName() + " to route: " + address);
         log.debug(incoming.toString());
         routes.add(receiver);
-        routes.printRouteTable();
     }
 
     private void remove(Receiver receiver) {

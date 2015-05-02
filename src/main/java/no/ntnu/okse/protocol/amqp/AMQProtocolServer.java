@@ -57,7 +57,7 @@ public class AMQProtocolServer extends AbstractProtocolServer {
     }
 
     public static AMQProtocolServer getInstance() {
-        if (!_invoked) _singleton = new AMQProtocolServer(5672);
+        if (!_invoked) _singleton = new AMQProtocolServer(61050);
         return _singleton;
     }
 
