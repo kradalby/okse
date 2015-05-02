@@ -99,14 +99,14 @@ var Subscribers = (function($) {
 
     // Create a string of all filters to fill the table cell with
     var createFilterSetString = function(filterSet) {
-        if (filterSet.length == 0) {
-            return "All"
-        } else {
+        if ( ! filterSet.length == 0) {
             var returnString = ""
             $.each(filterSet, function(i, filter) {
                returnString += filter + "\n"
             });
             return returnString;
+        } else {
+            return "";
         }
     }
 
