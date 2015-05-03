@@ -217,6 +217,7 @@ var Subscribers = (function($) {
             subscribers = data;
             checkIfPaginationIsNeeded()
             // Remove 'deleted class' if it exists
+            Main.refreshElementByClassWithText('.totalSubscribers', subscribers.length)
             if ($('#subscribers-table').hasClass('deleted')) { $('#subscribers-table').removeClass('deleted'); }
         }
     }

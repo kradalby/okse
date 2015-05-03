@@ -27,6 +27,7 @@ package no.ntnu.okse.web.controller;
 import no.ntnu.okse.Application;
 import no.ntnu.okse.core.Utilities;
 import no.ntnu.okse.core.subscription.SubscriptionService;
+import no.ntnu.okse.core.topic.TopicService;
 import org.apache.log4j.Logger;
 import org.springframework.web.bind.annotation.*;
 
@@ -49,6 +50,7 @@ public class MainController {
     @RequestMapping(value = "/api/main", method = RequestMethod.GET)
     public @ResponseBody HashMap<String, Object> main() {
         SubscriptionService ss = SubscriptionService.getInstance();
+        TopicService ts = TopicService.getInstance();
 
         long totalRam = Runtime.getRuntime().totalMemory();
         long freeRam = Runtime.getRuntime().freeMemory();
@@ -56,6 +58,7 @@ public class MainController {
         HashMap<String, Object> result = new HashMap<String, Object>(){{
             put("subscribers", ss.getNumberOfSubscribers());
             put("publishers", ss.getNumberOfPublishers());
+            put("topics", ts.getTotalNumberOfTopics());
             put("uptime", Utilities.getDurationAsISO8601(Application.getRunningTime()));
             // Runtime statistics
             put("runtimeStatistics", new HashMap<String, Object>(){{

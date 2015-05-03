@@ -14,13 +14,24 @@
                 <!-- Default panel contents -->
                 <div class="panel-heading">All topics</div>
                 <div class="panel-body">
-                    <div class="alert alert-warning">
-                        <strong>Note: </strong>
-                        All the topics registered in the broker will be shown below. If you choose to delete a topic,
-                        all the child topics will be removed from the table on the next refresh.
-                        Furthermore, all subscriptions will also be removed in case of a topic being deleted.
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="alert alert-warning">
+                                <strong>Note: </strong>
+                                All the topics registered in the broker will be shown below. If you choose to delete a topic,
+                                all the child topics will be removed from the table on the next refresh.
+                                Furthermore, all subscriptions will also be removed in case of a topic being deleted.
+                            </div>
+                        </div>
                     </div>
-                    <a class="btn btn-danger" id="delete-all-topics">Delete all topics</a>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <a class="btn btn-danger" id="delete-all-topics">Delete all topics</a>
+                        </div>
+                        <div class="col-md-6 text-right">
+                            <h3>Total: <span class="label label-default totalTopics">0</span></h3>
+                        </div>
+                    </div>
                 </div>
                 <!-- Table -->
                 <div class="table-responsive">
