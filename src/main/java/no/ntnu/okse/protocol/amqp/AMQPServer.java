@@ -27,6 +27,7 @@ package no.ntnu.okse.protocol.amqp;
 import no.ntnu.okse.core.messaging.MessageService;
 import no.ntnu.okse.core.topic.Topic;
 import no.ntnu.okse.core.topic.TopicService;
+import org.apache.commons.validator.routines.InetAddressValidator;
 import org.apache.log4j.Logger;
 import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
@@ -264,10 +265,32 @@ public class AMQPServer extends BaseHandler {
 
                 Message msg = Message.Factory.create();
                 msg.decode(bytes, 0, bytes.length);
+
                 MessageBytes mb = new MessageBytes(bytes);
-                Address address = new Address(msg.getAddress());
+
+                Address address;
+
+
+
+
+                if (msg.getAddress().contains("/")) {
+                    String ip = msg.getAddress().split("/")[0];
+                    if (ip.contains(":") && InetAddressValidator.getInstance().isValid(ip.split(":")[0])) {
+                        address = new Address(msg.getAddress());
+                    } else if (InetAddressValidator.getInstance().isValid(ip)) {
+                        address = new Address(msg.getAddress());
+                    } else {
+                        address = new Address();
+                        address.setName(msg.getAddress());
+                    }
+                } else {
+                    address = new Address();
+                    address.setName(msg.getAddress());
+                }
 
                 Topic t = TopicService.getInstance().getTopic(address.getName());
+
+                log.debug("Received a message with queue/topic: " + address.getName());
 
                 AmqpValue amqpMessageBodyString = (AmqpValue)msg.getBody();
 
