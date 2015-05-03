@@ -29,12 +29,15 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 import com.google.common.io.ByteStreams;
 import no.ntnu.okse.Application;
+import no.ntnu.okse.core.CoreService;
 import no.ntnu.okse.core.messaging.Message;
 import no.ntnu.okse.core.subscription.SubscriptionService;
 import no.ntnu.okse.protocol.AbstractProtocolServer;
+import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
@@ -78,11 +81,15 @@ public class WSNotificationServer extends AbstractProtocolServer {
     // Internal Default Values
     private static final String DEFAULT_HOST = "0.0.0.0";
     private static final int DEFAULT_PORT = 61000;
+    private static final Long DEFAULT_CONNECTION_TIMEOUT = 5L;
 
     // Flag and defaults for operation behind NAT
     private static boolean behindNAT = false;
     private static String publicWANHost = "0.0.0.0";
     private static Integer publicWANPort = 61000;
+
+    // HTTP Client connection timeout
+    private static Long connectionTimeout = DEFAULT_CONNECTION_TIMEOUT;
 
     // The singleton containing the WSNotificationServer instance
     private static WSNotificationServer _singleton;
@@ -172,6 +179,13 @@ public class WSNotificationServer extends AbstractProtocolServer {
 
         // Declare HttpClient field
         _client = null;
+
+        // Attempt to fetch connection timeout from settings, otherwise use 5 seconds as default
+        try {
+            connectionTimeout = Long.parseLong(Application.config.getProperty("WSN_CONNECTION_TIMEOUT", connectionTimeout.toString()));
+        } catch (NumberFormatException e) {
+            log.error("Failed to parse WSN Connection Timeout, using default: " + connectionTimeout);
+        }
 
         // If we have host or port provided, set them, otherwise use internal defaults
         this.port = port == null ? DEFAULT_PORT : port;
@@ -431,7 +445,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
                     }
 
                     // Pass it along to the requestparser
-                    _requestParser.acceptLocalMessage(outMessage);
+                    CoreService.getInstance().execute(() -> _requestParser.acceptLocalMessage(outMessage));
                 }
             }
         } else {
@@ -707,6 +721,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
 
         /* Create the actual http-request*/
         org.eclipse.jetty.client.api.Request request = _client.newRequest(requestInformation.getEndpointReference());
+        request.timeout(connectionTimeout, TimeUnit.SECONDS);
 
         /* Try to send the message */
         try{
@@ -714,6 +729,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
             if ((message.statusCode & InternalMessage.STATUS_HAS_MESSAGE) == 0) {
 
                 request.method(HttpMethod.GET);
+
                 log.debug("Sending message without content to " + requestInformation.getEndpointReference());
                 ContentResponse response = request.send();
                 totalRequests++;
@@ -744,6 +760,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
                     // Send the request to the specified endpoint reference
                     log.info("Sending message with content to " + requestInformation.getEndpointReference());
                     request.content(new InputStreamContentProvider((InputStream) message.getMessage()), "application/soap+xml;charset/utf-8");
+
                     ContentResponse response = request.send();
                     totalMessagesSent++;
 
