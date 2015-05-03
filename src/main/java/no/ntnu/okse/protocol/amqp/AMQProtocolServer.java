@@ -24,6 +24,7 @@
 
 package no.ntnu.okse.protocol.amqp;
 
+import no.ntnu.okse.Application;
 import no.ntnu.okse.core.messaging.Message;
 import no.ntnu.okse.core.subscription.SubscriptionService;
 import no.ntnu.okse.protocol.AbstractProtocolServer;
@@ -44,35 +45,52 @@ public class AMQProtocolServer extends AbstractProtocolServer {
     private static Thread _serverThread;
     private static boolean _invoked;
 
-    private static final String configurationFile = "";
-
     private static AMQProtocolServer _singleton;
-    private static String hostname = "0.0.0.0";
 
+    // Internal default values
+    private static final String DEFAULT_HOST = "0.0.0.0";
+    private static final int DEFAULT_PORT = 61050;
 
     private Driver driver;
 
-    private AMQProtocolServer(Integer port) {
-        this.init(port);
+    private AMQProtocolServer(String host, Integer port) {
+        this.init(host, port);
     }
 
     public static AMQProtocolServer getInstance() {
-        if (!_invoked) _singleton = new AMQProtocolServer(61050);
+        // If not invoked, create an instance and inject as _singleton
+        if (!_invoked) {
+
+            // Attempt to extract host and port from configuration file
+            String configHost = Application.config.getProperty("AMQP_HOST", DEFAULT_HOST);
+            Integer configPort = null;
+            try {
+                configPort = Integer.parseInt(Application.config.getProperty("AMQP_PORT", Integer.toString(DEFAULT_PORT)));
+            } catch (NumberFormatException e) {
+                log.error("Failed to parse AMQP Port, using default: " + DEFAULT_PORT);
+            }
+
+            // Update singleton
+            _singleton = new AMQProtocolServer(configHost, configPort);
+        }
+
         return _singleton;
     }
 
+    public static AMQProtocolServer getInstance(String host, Integer port) {
+        if (!_invoked) _singleton = new AMQProtocolServer(host, port);
+        return _singleton;
+    }
 
     @Override
-    protected void init(Integer port) {
+    protected void init(String host, Integer port) {
         log = Logger.getLogger(AMQProtocolServer.class.getName());
         protocolServerType = "AMQP";
         _invoked = true;
-        this.port = port;
-
-
+        // If we have host or port provided, set them, otherwise use internal defaults
+        this.port = port == null ? DEFAULT_PORT : port;
+        this.host = host == null ? DEFAULT_HOST : host;
     }
-
-
 
     @Override
     public void boot() {
@@ -97,7 +115,7 @@ public class AMQProtocolServer extends AbstractProtocolServer {
             driver = new Driver(collector, new Handshaker(),
                 new FlowController(1024), sh,
                 server);
-            driver.listen(hostname, port);
+            driver.listen(this.host, this.port);
             driver.run();
         } catch (IOException e) {
             totalErrors++;

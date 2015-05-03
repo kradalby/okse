@@ -24,10 +24,9 @@
 
 package no.ntnu.okse.examples;
 
+import no.ntnu.okse.Application;
 import no.ntnu.okse.core.messaging.Message;
 import no.ntnu.okse.core.messaging.MessageService;
-import no.ntnu.okse.core.topic.Topic;
-import no.ntnu.okse.core.topic.TopicService;
 import no.ntnu.okse.protocol.AbstractProtocolServer;
 import no.ntnu.okse.protocol.wsn.WSNotificationServer;
 import org.apache.log4j.Logger;
@@ -56,6 +55,10 @@ public class DummyProtocolServer extends AbstractProtocolServer {
     private static Thread _serverThread;
     private static boolean _invoked;
 
+    // Internal defaults
+    private static final String DEFAULT_HOST = "0.0.0.0";
+    private static final int DEFAULT_PORT = 61001;
+
     // Fields
     private ServerSocketChannel serverChannel;
     private HashSet<SocketChannel> clients;
@@ -65,8 +68,8 @@ public class DummyProtocolServer extends AbstractProtocolServer {
      * Private constructor
      * @param port The port this server should bind to
      */
-    private DummyProtocolServer(Integer port) {
-        init(port);
+    private DummyProtocolServer(String host, Integer port) {
+        init(host, port);
     }
 
     /**
@@ -74,7 +77,24 @@ public class DummyProtocolServer extends AbstractProtocolServer {
      * @return The DummyProtocolServer instance
      */
     public static DummyProtocolServer getInstance() {
-        if (!_invoked) _singleton = new DummyProtocolServer(61001);
+        // If not invoked, create an instance and inject as _singleton
+        if (!_invoked) {
+            // Attempt to extract host and port from configuration file
+            Integer configPort = null;
+            String configHost = null;
+            // Fetch potential data from configuration file
+            if (Application.config.containsKey("DUMMYPROTOCOL_HOST")) configHost = Application.config.getProperty("DUMMYPROTOCOL_HOST");
+            if (Application.config.containsKey("DUMMYPROTOCOL_PORT")) {
+                try {
+                    configPort = Integer.parseInt(Application.config.getProperty("DUMMYPROTOCOL_PORT"));
+                } catch (NumberFormatException e) {
+                    log.error("Failed to parse DummyProtocol Port, using default: " + DEFAULT_PORT);
+                }
+            }
+            // Update singleton
+            _singleton = new DummyProtocolServer(configHost, configPort);
+        }
+
         return _singleton;
     }
 
@@ -83,12 +103,20 @@ public class DummyProtocolServer extends AbstractProtocolServer {
      * @param port The port this server should bind to
      */
     @Override
-    protected void init(Integer port) {
+    protected void init(String host, Integer port) {
+        // Init logger
         log = Logger.getLogger(DummyProtocolServer.class.getName());
+        // Set protocol name
         protocolServerType = "DummyProtocol";
+        // Update invoked flag
         _invoked = true;
+        // Initialize the client set
         clients = new HashSet<>();
-        this.port = port;
+
+        // If we have host or port provided, set them, otherwise use internal defaults
+        this.port = port == null ? DEFAULT_PORT : port;
+        this.host = host == null ? DEFAULT_HOST : host;
+
         try {
 
             // Create a multiplexer (Selector)
@@ -112,7 +140,7 @@ public class DummyProtocolServer extends AbstractProtocolServer {
 
             try {
                 // Bind the serverchannel localhost on 61001
-                serverChannel.socket().bind(new InetSocketAddress("0.0.0.0", this.port));
+                serverChannel.socket().bind(new InetSocketAddress(this.host, this.port));
                 // Set to non-blocking
                 serverChannel.configureBlocking(false);
                 // Register the serverChannel to the selector
@@ -136,6 +164,7 @@ public class DummyProtocolServer extends AbstractProtocolServer {
             _serverThread = new Thread(() -> this.run());
             _serverThread.setName("DummyProtocolServer");
             _serverThread.start();
+
             log.info("DummyProtocolServer booted successfully");
         }
     }
@@ -243,7 +272,6 @@ public class DummyProtocolServer extends AbstractProtocolServer {
                 log.error("Unknown exception: " + e.getMessage());
             }
         }
-
     }
 
     /**
@@ -309,6 +337,8 @@ public class DummyProtocolServer extends AbstractProtocolServer {
                         return true;
                     }
                 }
+            } else if (args[0].equalsIgnoreCase("testuri")) {
+                log.debug(WSNotificationServer.getInstance().getURI());
             } else if (args[0].equalsIgnoreCase("exit")) {
                 return true;
             }

@@ -30,7 +30,6 @@ import no.ntnu.okse.core.messaging.Message;
 import no.ntnu.okse.core.messaging.MessageService;
 import no.ntnu.okse.core.subscription.Publisher;
 import no.ntnu.okse.core.subscription.Subscriber;
-import no.ntnu.okse.core.topic.Topic;
 import no.ntnu.okse.core.topic.TopicService;
 
 import org.apache.log4j.Logger;

@@ -28,6 +28,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.Properties;
 
 import com.google.common.io.ByteStreams;
 import no.ntnu.okse.Application;
@@ -49,24 +50,16 @@ import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.xml.XmlConfiguration;
 import org.ntnunotif.wsnu.base.internal.ServiceConnection;
 import org.ntnunotif.wsnu.base.net.NuNamespaceContextResolver;
-import org.ntnunotif.wsnu.base.net.XMLParser;
 import org.ntnunotif.wsnu.base.util.InternalMessage;
 import org.ntnunotif.wsnu.base.util.RequestInformation;
-import org.ntnunotif.wsnu.services.general.WsnUtilities;
-import org.ntnunotif.wsnu.services.implementations.notificationbroker.NotificationBrokerImpl;
-import org.ntnunotif.wsnu.services.implementations.publisherregistrationmanager.SimplePublisherRegistrationManager;
-import org.ntnunotif.wsnu.services.implementations.subscriptionmanager.SimpleSubscriptionManager;
 import org.oasis_open.docs.wsn.b_2.NotificationMessageHolderType;
 import org.oasis_open.docs.wsn.b_2.Notify;
 import org.oasis_open.docs.wsn.b_2.TopicExpressionType;
-import org.xmlsoap.schemas.soap.envelope.Envelope;
-import sun.corba.OutputStreamFactory;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.XMLConstants;
-import javax.xml.bind.JAXBElement;
 import javax.xml.namespace.QName;
 
 /**
@@ -79,12 +72,22 @@ public class WSNotificationServer extends AbstractProtocolServer {
     // Runstate variables
     private static boolean _invoked, _running;
 
-    // Path to configuration file on classpath
+    // Path to internal configuration file on classpath
     private static final String configurationFile = "/config/wsnserver.xml";
+
+    // Internal Default Values
+    private static final String DEFAULT_HOST = "0.0.0.0";
+    private static final int DEFAULT_PORT = 61000;
+
+    // Flag and defaults for operation behind NAT
+    private static boolean behindNAT = false;
+    private static String publicWANHost = "0.0.0.0";
+    private static Integer publicWANPort = 61000;
 
     // The singleton containing the WSNotificationServer instance
     private static WSNotificationServer _singleton;
 
+    // Instance fields
     private Server _server;
     private WSNRequestParser _requestParser;
     private WSNCommandProxy _commandProxy;
@@ -94,10 +97,22 @@ public class WSNotificationServer extends AbstractProtocolServer {
     private HashSet<ServiceConnection> _services;
 
     /**
-     * Empty constructor, uses defaults from jetty configuration file for WSNServer
+     * Empty constructor, uses internal defaults or provided from config file
      */
     private WSNotificationServer() {
-        this.init(null);
+        // Check config file
+        Properties config = Application.config;
+        String configHost = config.getProperty("WSN_HOST", DEFAULT_HOST);
+        Integer configPort = null;
+        try {
+            configPort = Integer.parseInt(config.getProperty("WSN_PORT", Integer.toString(DEFAULT_PORT)));
+        } catch (NumberFormatException e) {
+            log.error("Failed to parse WSN Port from config file! Using default: " + DEFAULT_PORT);
+        }
+
+        // Call init with what the results were
+        this.init(configHost, configPort);
+
         _running = false;
         _invoked = true;
     }
@@ -106,10 +121,11 @@ public class WSNotificationServer extends AbstractProtocolServer {
      * Constructor that takes in a port that the WSNServer jetty instance should
      * listen to.
      * <p>
-     * @param port: An integer representing the port the WSNServer should bind to.
+     * @param host A string representing the host the WSNServer should bind to
+     * @param port An integer representing the port the WSNServer should bind to.
      */
-    private WSNotificationServer(Integer port) {
-        this.init(port);
+    private WSNotificationServer(String host, Integer port) {
+        this.init(host, port);
     }
 
     /**
@@ -119,13 +135,8 @@ public class WSNotificationServer extends AbstractProtocolServer {
      * @return: The WSNotification instance.
      */
     public static WSNotificationServer getInstance() {
-        if (WSNotificationServer._invoked) return _singleton;
-        else {
-            _singleton = new WSNotificationServer();
-            WSNotificationServer._invoked = true;
-
-            return _singleton;
-        }
+        if (!_invoked) _singleton = new WSNotificationServer();
+        return _singleton;
     }
 
     /**
@@ -136,17 +147,14 @@ public class WSNotificationServer extends AbstractProtocolServer {
      * running. In that case, one must stop the WSNServer instance and invoke it again to
      * specify a different port.</p>
      *
-     * @param port: An integer representing the port WSNServer should bind to.
+     * @param host A string representing the hostname the server should bind to
+     * @param port An integer representing the port WSNServer should bind to.
      *
      * @return: The WSNotification instance.
      */
-    public static WSNotificationServer getInstance(Integer port) {
-        if (WSNotificationServer._invoked) return _singleton;
-        else {
-            _singleton = new WSNotificationServer(port);
-            WSNotificationServer._invoked = true;
-            return _singleton;
-        }
+    public static WSNotificationServer getInstance(String host, Integer port) {
+        if (!_invoked) _singleton = new WSNotificationServer(host, port);
+        return _singleton;
     }
 
     /**
@@ -155,7 +163,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
      *
      * @param port: An integer representing the port WSNServer should bind to.
      */
-    protected void init(Integer port) {
+    protected void init(String host, Integer port) {
 
         log = Logger.getLogger(WSNotificationServer.class.getName());
 
@@ -165,6 +173,26 @@ public class WSNotificationServer extends AbstractProtocolServer {
         // Declare HttpClient field
         _client = null;
 
+        // If we have host or port provided, set them, otherwise use internal defaults
+        this.port = port == null ? DEFAULT_PORT : port;
+        this.host = host == null ? DEFAULT_HOST : host;
+
+        // Check if config file specifies that we are behind NAT, and update the provided WAN IP and PORT
+        if (Application.config.containsKey("WSN_USES_NAT")) {
+            if (Application.config.getProperty("WSN_USES_NAT").equalsIgnoreCase("true")) behindNAT = true;
+            else behindNAT = false;
+        }
+        if (Application.config.containsKey("WSN_WAN_HOST")) {
+            publicWANHost = Application.config.getProperty("WSN_WAN_HOST");
+        }
+        if (Application.config.containsKey("WSN_WAN_PORT")) {
+            try {
+                publicWANPort = Integer.parseInt("WSN_WAN_PORT");
+            } catch (NumberFormatException e) {
+                log.error("Failed to parse WSN WAN Port, using default: " + publicWANPort);
+            }
+        }
+
         // Declare configResource (Fetched from classpath as a Resource from system)
         Resource configResource;
         try {
@@ -172,11 +200,12 @@ public class WSNotificationServer extends AbstractProtocolServer {
             configResource = Resource.newSystemResource(configurationFile);
             XmlConfiguration config = new XmlConfiguration(configResource.getInputStream());
             this._server = (Server)config.configure();
+            // Remove the xmlxonfig connector
+            this._server.removeConnector(this._server.getConnectors()[0]);
 
-            if (port != null) {
-                this.addStandardConnector("0.0.0.0", port);
-                this._server.setConnectors((Connector[]) this._connectors.toArray());
-            }
+            // Add a the serverconnector
+            log.debug("Adding WSNServer connector");
+            this.addStandardConnector(this.host, this.port);
 
             // Initialize the RequestParser for WSNotification
             this._requestParser = new WSNRequestParser(this);
@@ -291,6 +320,8 @@ public class WSNotificationServer extends AbstractProtocolServer {
             log.info("Stopping WSNServer...");
             this._client.stop();
             this._server.stop();
+            this._singleton = null;
+            this._invoked = false;
             log.info("WSNServer Client and ServerThread stopped");
         } catch (Exception e) {
             totalErrors++;
@@ -412,12 +443,18 @@ public class WSNotificationServer extends AbstractProtocolServer {
      * Fetches the complete URI of this ProtocolServer
      * @return A string representing the complete URI of this ProtocolServer
      */
-    public static String getURI(){
+    public static String getURI() {
+        // Check if we are behind NAT
+        if (behindNAT) {
+            return "http://" + publicWANHost + ":" + publicWANPort;
+        }
+        // If somehow URI could not be retrieved
         if (_singleton._server.getURI() == null) {
             _singleton.log.warn("Failed to fetch URI of server");
-            return "http://0.0.0.0:8080";
+            return "http://" + DEFAULT_HOST + ":" + DEFAULT_PORT;
         }
-        return "http://" + _singleton._server.getURI().getHost()+ ":" + (_singleton._server.getURI().getPort() > -1 ? _singleton._server.getURI().getPort() : 8080);
+        // Return the server connectors registered host and port
+        return "http://" + _singleton._server.getURI().getHost()+ ":" + (_singleton._server.getURI().getPort() > -1 ? _singleton._server.getURI().getPort() : DEFAULT_PORT);
     }
 
     /**
