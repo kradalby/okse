@@ -33,11 +33,14 @@ import org.apache.log4j.Logger;
  */
 public abstract class AbstractProtocolServer implements ProtocolServer {
 
+    // Holder fields for hostname and port
     protected int port;
+    protected String host;
 
     // Runstate variables
     protected boolean _running;
 
+    // Name and statistics
     protected String protocolServerType;
     protected int totalRequests, totalBadRequests, totalErrors, totalMessagesRecieved, totalMessagesSent;
 
@@ -46,6 +49,7 @@ public abstract class AbstractProtocolServer implements ProtocolServer {
      */
     protected AbstractProtocolServer() {
         port = 0;
+        host = "";
         _running = false;
         protocolServerType = "";
         totalMessagesSent = 0;
@@ -101,7 +105,13 @@ public abstract class AbstractProtocolServer implements ProtocolServer {
      */
     public int getPort() { return this.port; }
 
+    /**
+     * Returns the Hostname of this ProtocolServer
+     * @return The Hostname the server is bound to
+     */
+    public String getHost() { return this.host; }
+
     // Initializer
-    protected abstract void init(Integer port);
+    protected abstract void init(String host, Integer port);
 
 }
