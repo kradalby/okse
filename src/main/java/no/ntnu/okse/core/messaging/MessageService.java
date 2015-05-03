@@ -33,7 +33,9 @@ import no.ntnu.okse.core.topic.Topic;
 import no.ntnu.okse.core.topic.TopicService;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -144,15 +146,29 @@ public class MessageService extends AbstractCoreService implements TopicChangeLi
                         continue;
                     }
 
-                    // sjekke mot mappings, og hvis lages det meldinger på de topicene; lag nye Message-objekter mot de
                     HashSet<Topic> mappings = TopicService.getInstance().getAllMappingsAgainstTopic(m.getTopic());
                     if (mappings == null) {
-                        log.debug("The topic " + m.getTopic() + " has no mappings");
+                        log.debug("The topic: " + m.getTopic() + " has no mappings");
                     } else {
-                        log.debug("Found the following mappings against " + m.getTopic() + ": " + mappings);
-                        // public generer meldinger (duplisere meldinga til andre topics)
-                        
+                        log.debug("Found the following mappings against topic: " + m.getTopic() + ": " + mappings);
+
+                        generateMessageForAGivenTopicSet(m, mappings).forEach(duplicateMessage -> {
+                            duplicateMessage.setAttribute("duplicate", m.getTopic());
+
+                            if (m.getAttribute("duplicate") != null) {
+                                if ( ! m.getTopic().equals(duplicateMessage.getAttribute("duplicate"))) {
+                                    distributeMessage(duplicateMessage);
+                                } else {
+                                    log.debug("The message to topic: " + duplicateMessage.getTopic() + " is a duplicate against topic: " + m.getTopic() +", and will not be distributed");
+                                }
+                            } else {
+                                distributeMessage(duplicateMessage);
+                            }
+
+                        });
                     }
+
+
 
                     // Tell the ExecutorService to execute the following job
                     CoreService.getInstance().execute(() -> {
@@ -228,6 +244,18 @@ public class MessageService extends AbstractCoreService implements TopicChangeLi
         return Application.CACHE_MESSAGES;
     }
 
+
+    public List<Message> generateMessageForAGivenTopicSet(Message m, HashSet<Topic> topics) {
+        ArrayList<Message> collector = new ArrayList<>();
+
+        topics.stream()
+                .forEach(t -> {
+                    Message msg = new Message(m.getMessage(), t.getFullTopicString(), m.getPublisher(), m.getOriginProtocol());
+                    collector.add(msg);
+                });
+
+        return collector;
+    }
 
 
     /* ----------------------------------------------------------------------------------------------- */
