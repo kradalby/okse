@@ -37,7 +37,6 @@ import no.ntnu.okse.core.CoreService;
 import no.ntnu.okse.core.messaging.Message;
 import no.ntnu.okse.core.subscription.SubscriptionService;
 import no.ntnu.okse.protocol.AbstractProtocolServer;
-import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
@@ -191,21 +190,20 @@ public class WSNotificationServer extends AbstractProtocolServer {
         this.port = port == null ? DEFAULT_PORT : port;
         this.host = host == null ? DEFAULT_HOST : host;
 
-        // Check if config file specifies that we are behind NAT, and update the provided WAN IP and PORT
-        if (Application.config.containsKey("WSN_USES_NAT")) {
-            if (Application.config.getProperty("WSN_USES_NAT").equalsIgnoreCase("true")) behindNAT = true;
-            else behindNAT = false;
-        }
-        if (Application.config.containsKey("WSN_WAN_HOST")) {
-            publicWANHost = Application.config.getProperty("WSN_WAN_HOST");
-        }
-        if (Application.config.containsKey("WSN_WAN_PORT")) {
-            try {
-                publicWANPort = Integer.parseInt("WSN_WAN_PORT");
-            } catch (NumberFormatException e) {
-                log.error("Failed to parse WSN WAN Port, using default: " + publicWANPort);
-            }
-        }
+        /* Check if config file specifies that we are behind NAT, and update the provided WAN IP and PORT */
+        // Check for use NAT flag
+        if (Application.config.getProperty("WSN_USES_NAT", "false").equalsIgnoreCase("true")) behindNAT = true;
+        else behindNAT = false;
+
+        // Check for WAN_HOST
+        publicWANHost = Application.config.getProperty("WSN_WAN_HOST", publicWANHost);
+
+        // Check for WAN_PORT
+        try {
+            publicWANPort = Integer.parseInt("WSN_WAN_PORT");
+        } catch (NumberFormatException e) {
+            log.error("Failed to parse WSN WAN Port, using default: " + publicWANPort);
+        } 
 
         // Declare configResource (Fetched from classpath as a Resource from system)
         Resource configResource;
@@ -656,7 +654,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
                 baseRequest.setHandled(true);
                 totalErrors++;
 
-            // Check if we have status=OK and also we have a message
+                // Check if we have status=OK and also we have a message
             } else if (((InternalMessage.STATUS_OK & returnMessage.statusCode) > 0) &&
                     (InternalMessage.STATUS_HAS_MESSAGE & returnMessage.statusCode) > 0){
 
