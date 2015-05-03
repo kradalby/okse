@@ -181,6 +181,18 @@ public class TopicService extends AbstractCoreService {
     }
 
     /**
+     * Get all mappings registered mappings in the system as a shallow copy.
+     * @return A HashMap of all the registered mappings
+     */
+    public HashMap<String, HashSet<String>> getAllMappings() {
+        HashMap<String, HashSet<String>> collector = new HashMap<>();
+
+        mappings.forEach((k, v) -> collector.put(k, v));
+
+        return collector;
+    }
+
+    /**
      * Get all the root topic nodes as a shallow copy of the internal topic service hash set.
      * @return A HashSet of all the root topic nodes.
      */
@@ -380,6 +392,19 @@ public class TopicService extends AbstractCoreService {
 
         // Return what we have created for registration in the master containers
         return collector;
+    }
+
+    /**
+     * Removes a mapping by a mapping key
+     * @param mapping The mapping represented as a string
+     */
+    public void deleteMapping(String mapping) {
+        if (mappings.containsKey(mapping)) {
+            mappings.remove(mapping);
+            log.debug("Removed the mapping for topic: " + mapping);
+        } else {
+            log.warn("Attempt to remove a mapping that did in fact not exist ");
+        }
     }
 
     /**

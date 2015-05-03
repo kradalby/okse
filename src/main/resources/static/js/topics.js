@@ -29,8 +29,8 @@
 var Topics = (function($) {
 
     /*
-     Creates, fills and returns a <tr>-element. The <tr>-element is generated based on the subscribers
-     list from the OKSE-RestAPI. It also adds all the buttons needed for deleting subscribers. It uses the id for
+     Creates, fills and returns a <tr>-element. The <tr>-element is generated based on the topics
+     list from the OKSE-RestAPI. It also adds all the buttons needed for deleting topics. It uses the id for
      this purpose. This function does not manipulate the DOM by checking if an element exists. It overwrites everything.
      */
     var createTableForAllTopics = function(topics) {
