@@ -29,6 +29,7 @@ import no.ntnu.okse.core.AbstractCoreService;
 import no.ntnu.okse.core.CoreService;
 import no.ntnu.okse.core.event.TopicChangeEvent;
 import no.ntnu.okse.core.event.listeners.TopicChangeListener;
+import no.ntnu.okse.core.topic.Topic;
 import no.ntnu.okse.core.topic.TopicService;
 
 import java.time.LocalDateTime;
@@ -143,6 +144,16 @@ public class MessageService extends AbstractCoreService implements TopicChangeLi
                         continue;
                     }
 
+                    // sjekke mot mappings, og hvis lages det meldinger på de topicene; lag nye Message-objekter mot de
+                    HashSet<Topic> mappings = TopicService.getInstance().getAllMappingsAgainstTopic(m.getTopic());
+                    if (mappings == null) {
+                        log.debug("The topic " + m.getTopic() + " has no mappings");
+                    } else {
+                        log.debug("Found the following mappings against " + m.getTopic() + ": " + mappings);
+                        // public generer meldinger (duplisere meldinga til andre topics)
+                        
+                    }
+
                     // Tell the ExecutorService to execute the following job
                     CoreService.getInstance().execute(() -> {
                         // Add message to latestMessages cache
@@ -216,6 +227,8 @@ public class MessageService extends AbstractCoreService implements TopicChangeLi
     public boolean isCachingMessages() {
         return Application.CACHE_MESSAGES;
     }
+
+
 
     /* ----------------------------------------------------------------------------------------------- */
 

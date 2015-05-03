@@ -82,14 +82,24 @@ public class TopicService extends AbstractCoreService {
         // TODO: that maybe be done in the Subscriber objets? Who knows.
         log.info("Initializing topic mapping from configuration file");
         if (Application.config.containsKey("TOPIC_MAPPING")) {
+
             Properties topicMapping = Utilities.readConfigurationFromFile(Application.config.getProperty("TOPIC_MAPPING"));
+
             if (topicMapping == null) {
                 log.error("Failed to load topic mapping from config file");
                 return;
             }
+
             log.debug("Topic mapping properties: " + topicMapping.stringPropertyNames());
             for (String toMapFrom : topicMapping.stringPropertyNames()) {
+                addTopic(toMapFrom);
+
                 String[] toMapToList = topicMapping.getProperty(toMapFrom).split(",");
+
+                for (String toMapTo: toMapToList) {
+                    addTopic(toMapTo);
+                }
+
                 mappings.put(toMapFrom, new HashSet<String>(Arrays.asList(toMapToList)));
                 log.debug("Found mapping between " + toMapFrom + " and " + mappings.get(toMapFrom));
             }
@@ -222,7 +232,7 @@ public class TopicService extends AbstractCoreService {
     /**
      * Attempts to fetch a topic based on the ID
      * @param id The topic ID to use in the search
-     * @return A topic if found, null otherwhise.
+     * @return A topic if found, null otherwise.
      */
     public Topic getTopicByID(String id) {
         List<Topic> result = new ArrayList<>();
@@ -239,6 +249,22 @@ public class TopicService extends AbstractCoreService {
         }
         return result.get(0);
     }
+
+    /**
+     * Attempts to fetch all mappings for a topic, based on the raw topic string
+     * @param rawTopicString The string to identify the topic
+     * @return A HashSet containing all the found topics, null otherwise
+     */
+    public HashSet<Topic> getAllMappingsAgainstTopic(String rawTopicString) {
+        HashSet<Topic> result = new HashSet<>();
+
+        if (mappings.containsKey(rawTopicString)) {
+          mappings.get(rawTopicString).forEach(topicToMapAgainst -> result.add(getTopic(topicToMapAgainst)));
+        }
+
+        return (result.size() > 0) ? result : null;
+    }
+
 
     /**
      * This method allows registration for TopicChange listeners.
