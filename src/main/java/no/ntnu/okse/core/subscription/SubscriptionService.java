@@ -286,6 +286,10 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
      * @param s The subscriber to be added
      */
     public void addSubscriber(Subscriber s) {
+        if (s == null) {
+            log.warn("Recieved null argument!");
+            return;
+        }
         if (!_subscribers.contains(s)) {
             // Create the job
             Runnable job = () -> addSubscriberLocal(s);
@@ -303,6 +307,10 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
      * @param s A subscriber that exists in the subscribers set
      */
     public void removeSubscriber(Subscriber s) {
+        if (s == null) {
+            log.warn("Recieved null argument!");
+            return;
+        }
         if (_subscribers.contains(s)) {
             // Create the job
             Runnable job = () -> removeSubscriberLocal(s);
@@ -321,6 +329,10 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
      * @param timeout The new timeout of the subscription represented as seconds since unix epoch
      */
     public void renewSubscriber(Subscriber s, Long timeout) {
+        if (s == null) {
+            log.warn("Recieved null argument!");
+            return;
+        }
         if (_subscribers.contains(s)) {
             // Create the job
             Runnable job = () -> renewSubscriberLocal(s, timeout);
@@ -338,6 +350,10 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
      * @param s The subciber object that is to be paused
      */
     public void pauseSubscriber(Subscriber s) {
+        if (s == null) {
+            log.warn("Recieved null argument!");
+            return;
+        }
         if (_subscribers.contains(s)) {
             // Create the job
             Runnable job = () -> pauseSubscriberLocal(s);
@@ -355,6 +371,10 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
      * @param s The subscriber object that is to be resumed
      */
     public void resumeSubscriber(Subscriber s) {
+        if (s == null) {
+            log.warn("Recieved null argument!");
+            return;
+        }
         if (_subscribers.contains(s)) {
             // Create the job
             Runnable job = () -> resumeSubscriberLocal(s);
@@ -375,6 +395,10 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
      * @param p The publisher object that is to be registered
      */
     public void addPublisher(Publisher p) {
+        if (p == null) {
+            log.warn("Recieved null argument!");
+            return;
+        }
         if (!_publishers.contains(p)) {
             // Create the job
             Runnable job = () -> addPublisherLocal(p);
@@ -392,6 +416,10 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
      * @param p A publisher object that exists in the publishers set
      */
     public void removePublisher(Publisher p) {
+        if (p == null) {
+            log.warn("Recieved null argument!");
+            return;
+        }
         if (_publishers.contains(p)) {
             // Create the job
             Runnable job = () -> removePublisherLocal(p);
@@ -426,7 +454,7 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
     }
 
     /**
-     * Attemt to locate a subscriber by the ID.
+     * Attempt to locate a subscriber by the ID.
      * @param id : The ID for the subscriber
      * @return The subscriber, if found, null otherwise.
      */
@@ -453,8 +481,6 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
         // Initialize a collector
         HashSet<Subscriber> results = new HashSet<>();
 
-        // TODO: Will this trigger concurrent modification exception if new subs are added during iteration?
-
         // Iterate over all subscribers
         getAllSubscribers().stream()
                     // Only pass on those who match topic argument
@@ -473,8 +499,6 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
     public HashSet<Publisher> getAllPublishersForTopic(String topic) {
         // Initialize a collector
         HashSet<Publisher> results = new HashSet<>();
-
-        // TODO: Will this trigger concurrent modification exception if new subs are added during iteration?
 
         // Iterate over all subscribers
         getAllPublishers().stream()
@@ -578,8 +602,8 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
      * @param type  : What type of action is associated with the publisher object.
      */
     private void firePublisherChangeEvent(Publisher reg, PublisherChangeEvent.Type type) {
-        PublisherChangeEvent rce = new PublisherChangeEvent(type, reg);
-        _registrationListeners.stream().forEach(l -> l.publisherChanged(rce));
+        PublisherChangeEvent pce = new PublisherChangeEvent(type, reg);
+        _registrationListeners.stream().forEach(l -> l.publisherChanged(pce));
     }
 
     /* End listener support */
