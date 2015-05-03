@@ -24,6 +24,7 @@
 
 package no.ntnu.okse.protocol.amqp;
 
+import no.ntnu.okse.Application;
 import no.ntnu.okse.core.messaging.Message;
 import no.ntnu.okse.core.subscription.SubscriptionService;
 import no.ntnu.okse.protocol.AbstractProtocolServer;
@@ -47,7 +48,7 @@ public class AMQProtocolServer extends AbstractProtocolServer {
     private static final String configurationFile = "";
 
     private static AMQProtocolServer _singleton;
-    private static String hostname = "0.0.0.0";
+    private static String hostname = Application.config.getProperty("AMQPHOST", "127.0.0.1");
 
 
     private Driver driver;
@@ -57,7 +58,7 @@ public class AMQProtocolServer extends AbstractProtocolServer {
     }
 
     public static AMQProtocolServer getInstance() {
-        if (!_invoked) _singleton = new AMQProtocolServer(61050);
+        if (!_invoked) _singleton = new AMQProtocolServer(Integer.parseInt(Application.config.getProperty("AMQPPORT", "5672")));
         return _singleton;
     }
 
