@@ -141,7 +141,6 @@ xmlns:ns6="http://schemas.xmlsoap.org/soap/envelope/">
 <ns6:Body>
 <ns3:Subscribe>
 <ns3:ConsumerReference><ns2:Address>%s</ns2:Address></ns3:ConsumerReference>
-<ns3:Filter></ns3:Filter>
 </ns3:Subscribe>
 </ns6:Body>
 </ns6:Envelope>

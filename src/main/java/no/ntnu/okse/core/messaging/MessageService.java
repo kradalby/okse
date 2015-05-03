@@ -146,7 +146,7 @@ public class MessageService extends AbstractCoreService implements TopicChangeLi
                     // Tell the ExecutorService to execute the following job
                     CoreService.getInstance().execute(() -> {
                         // Add message to latestMessages cache
-                        latestMessages.put(m.getTopic().getFullTopicString(), m);
+                        latestMessages.put(m.getTopic(), m);
                         // Fetch all registered protocol servers, and call the sendMessage() method on them
                         CoreService.getInstance().getAllProtocolServers().forEach(p -> {
                             // Fire the sendMessage on all servers
@@ -232,7 +232,7 @@ public class MessageService extends AbstractCoreService implements TopicChangeLi
         // Iterate over all topics and generate individual messages per topic
         TopicService.getInstance().getAllTopics().stream().forEach(t -> {
             // Create the message wrapper
-            Message msg = new Message(m.getMessage(), t, m.getPublisher(), m.getOriginProtocol());
+            Message msg = new Message(m.getMessage(), t.getFullTopicString(), m.getPublisher(), m.getOriginProtocol());
             // Flag the generated message the same as the originating message
             msg.setSystemMessage(m.isSystemMessage());
             // Add the message to the collector
