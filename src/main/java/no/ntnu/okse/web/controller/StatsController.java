@@ -26,6 +26,7 @@ package no.ntnu.okse.web.controller;
 
 import no.ntnu.okse.core.CoreService;
 import no.ntnu.okse.core.subscription.SubscriptionService;
+import no.ntnu.okse.core.topic.TopicService;
 import no.ntnu.okse.protocol.ProtocolServer;
 import no.ntnu.okse.web.model.ProtocolStats;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -52,6 +53,7 @@ public class StatsController {
     public @ResponseBody HashMap<String, Object> getAllStats() {
         CoreService cs = CoreService.getInstance();
         SubscriptionService ss = SubscriptionService.getInstance();
+        TopicService ts = TopicService.getInstance();
 
         HashMap<String, Object> result = new HashMap<>();
 
@@ -64,6 +66,7 @@ public class StatsController {
             put("totalErrors", cs.getTotalErrorsFromProtocolServers());
             put("publishers", ss.getNumberOfPublishers());
             put("subscribers", ss.getNumberOfSubscribers());
+            put("topics", ts.getTotalNumberOfTopics());
         }});
 
         // ProtocolServer statistics

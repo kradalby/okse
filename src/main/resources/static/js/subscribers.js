@@ -124,7 +124,7 @@ var Subscribers = (function($) {
         $.each(subscribers, function (i, subscriber) {
             trHTML +=
                 '<tr id="'+ subscriber.subscriberID +' ">' +
-                '<td>' + subscriber.topic + '</td>' +
+                '<td>' + ((subscriber.topic == null) ? '*' : subscriber.topic) + '</td>' +
                 '<td>' + subscriber.originProtocol + '</td>' + // TODO: Add support for no protocol here when available
                 '<td>' + subscriber.host + '</td>' +
                 '<td>' + subscriber.port + '</td>' +
@@ -217,6 +217,7 @@ var Subscribers = (function($) {
             subscribers = data;
             checkIfPaginationIsNeeded()
             // Remove 'deleted class' if it exists
+            Main.refreshElementByClassWithText('.totalSubscribers', subscribers.length)
             if ($('#subscribers-table').hasClass('deleted')) { $('#subscribers-table').removeClass('deleted'); }
         }
     }

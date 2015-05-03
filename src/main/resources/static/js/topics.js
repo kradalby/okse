@@ -128,9 +128,11 @@ var Topics = (function($) {
         refresh: function(response) {
             unBindButtons();
 
-            // This is done becuse unlike when we get all subscribers, which returnes an array,
+            // This is done because unlike when we get all subscribers, which returnes an array,
             // this returns an object, and therefore we must count the keys
             var count = Object.keys(response).length
+
+            Main.refreshElementByClassWithText('.totalTopics', count)
 
             // Remove 'deleted class' if it exists
             if ($('#topics-table').hasClass('deleted')) { $('#topics-table').removeClass('deleted'); }
