@@ -24,7 +24,9 @@
 
 package no.ntnu.okse.core.topic;
 
+import no.ntnu.okse.Application;
 import no.ntnu.okse.core.AbstractCoreService;
+import no.ntnu.okse.core.Utilities;
 import no.ntnu.okse.core.event.TopicChangeEvent;
 import no.ntnu.okse.core.event.listeners.TopicChangeListener;
 import org.eclipse.jetty.util.ConcurrentHashSet;
@@ -47,6 +49,7 @@ public class TopicService extends AbstractCoreService {
     private LinkedBlockingQueue<TopicTask> queue;
     private ConcurrentHashMap<String, Topic> allTopics;
     private ConcurrentHashSet<TopicChangeListener> _listeners;
+    private ConcurrentHashMap<String, HashSet<String>> mappings;
 
     /**
      * Private constructor that passes this classname to superclass log instance. Uses getInstance to instanciate.
@@ -73,9 +76,26 @@ public class TopicService extends AbstractCoreService {
         queue = new LinkedBlockingQueue<>();
         allTopics = new ConcurrentHashMap<>();
         _listeners = new ConcurrentHashSet<>();
+        mappings = new ConcurrentHashMap<>();
         _invoked = true;
         // TODO: Read some shit from config or database to initialize pre-set topics with attributes. Or should
         // TODO: that maybe be done in the Subscriber objets? Who knows.
+        log.info("Initializing topic mapping from configuration file");
+        if (Application.config.containsKey("TOPIC_MAPPING")) {
+            Properties topicMapping = Utilities.readConfigurationFromFile(Application.config.getProperty("TOPIC_MAPPING"));
+            if (topicMapping == null) {
+                log.error("Failed to load topic mapping from config file");
+                return;
+            }
+            log.debug("Topic mapping properties: " + topicMapping.stringPropertyNames());
+            for (String toMapFrom : topicMapping.stringPropertyNames()) {
+                String[] toMapToList = topicMapping.getProperty(toMapFrom).split(",");
+                mappings.put(toMapFrom, new HashSet<String>(Arrays.asList(toMapToList)));
+                log.debug("Found mapping between " + toMapFrom + " and " + mappings.get(toMapFrom));
+            }
+            log.debug("Predefined mappings: " + mappings);
+            log.info("Topic mapping configuration done");
+        }
     }
 
     /**
