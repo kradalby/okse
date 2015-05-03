@@ -83,9 +83,9 @@ public class AMQPSend {
 
     private void run() {
         try {
-            Messenger mng = new MessengerImpl();
+            Messenger mng = Messenger.Factory.create();
             mng.start();
-            Message msg = new MessageImpl();
+            Message msg = Message.Factory.create();
             msg.setAddress(address);
             System.out.println(msg.getAddress());
             if (subject != null) msg.setSubject(subject);

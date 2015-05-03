@@ -45,9 +45,8 @@ public class AMQProtocolServer extends AbstractProtocolServer {
     private static Thread _serverThread;
     private static boolean _invoked;
 
-    private static final String configurationFile = "";
-
     private static AMQProtocolServer _singleton;
+
     // Internal default values
     private static final String DEFAULT_HOST = "0.0.0.0";
     private static final int DEFAULT_PORT = 61050;
@@ -61,18 +60,16 @@ public class AMQProtocolServer extends AbstractProtocolServer {
     public static AMQProtocolServer getInstance() {
         // If not invoked, create an instance and inject as _singleton
         if (!_invoked) {
+
             // Attempt to extract host and port from configuration file
+            String configHost = Application.config.getProperty("AMQP_HOST", DEFAULT_HOST);
             Integer configPort = null;
-            String configHost = null;
-            // Fetch potential data from configuration file
-            if (Application.config.containsKey("AMQP_HOST")) configHost = Application.config.getProperty("AMQP_HOST");
-            if (Application.config.containsKey("AMQP_PORT")) {
-                try {
-                    configPort = Integer.parseInt(Application.config.getProperty("AMQP_PORT"));
-                } catch (NumberFormatException e) {
-                    log.error("Failed to parse AMQP Port, using default: " + DEFAULT_PORT);
-                }
+            try {
+                configPort = Integer.parseInt(Application.config.getProperty("AMQP_PORT", Integer.toString(DEFAULT_PORT)));
+            } catch (NumberFormatException e) {
+                log.error("Failed to parse AMQP Port, using default: " + DEFAULT_PORT);
             }
+
             // Update singleton
             _singleton = new AMQProtocolServer(configHost, configPort);
         }

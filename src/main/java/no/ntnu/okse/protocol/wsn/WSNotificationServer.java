@@ -102,16 +102,14 @@ public class WSNotificationServer extends AbstractProtocolServer {
     private WSNotificationServer() {
         // Check config file
         Properties config = Application.config;
-        String configHost = null;
+        String configHost = config.getProperty("WSN_HOST", DEFAULT_HOST);
         Integer configPort = null;
-        if (config.containsKey("WSN_HOST")) configHost = config.getProperty("WSN_HOST");
-        if (config.containsKey("WSN_PORT")) {
-            try {
-                configPort = Integer.parseInt(config.getProperty("WSN_PORT"));
-            } catch (NumberFormatException e) {
-                log.error("Failed to parse WSN Port from config file! Using default: " + DEFAULT_PORT);
-            }
+        try {
+            configPort = Integer.parseInt(config.getProperty("WSN_PORT", Integer.toString(DEFAULT_PORT)));
+        } catch (NumberFormatException e) {
+            log.error("Failed to parse WSN Port from config file! Using default: " + DEFAULT_PORT);
         }
+
         // Call init with what the results were
         this.init(configHost, configPort);
 
