@@ -370,6 +370,9 @@ public class WSNotificationServer extends AbstractProtocolServer {
             // For all valid recipients
             for (String recipient : _commandProxy.getAllRecipients()) {
 
+                // If the subscription has expired, continue
+                if (_commandProxy.getProxySubscriptionManager().getSubscriber(recipient).hasExpired()) continue;
+
                 // Filter do filter handling, if any
                 Notify toSend = _commandProxy.getRecipientFilteredNotify(recipient, notify, namespaceContextResolver);
 
@@ -383,6 +386,19 @@ public class WSNotificationServer extends AbstractProtocolServer {
                     );
                     // Update the requestinformation
                     outMessage.getRequestInformation().setEndpointReference(_commandProxy.getEndpointReferenceOfRecipient(recipient));
+
+                    // Check if the subscriber has requested raw message format
+                    // If the recipient has requested UseRaw, remove Notify payload wrapping
+                    if (_commandProxy
+                            .getProxySubscriptionManager()
+                            .getSubscriber(recipient)
+                            .getAttribute(WSNSubscriptionManager.WSN_USERAW_TOKEN) != null) {
+
+                        Object content = WSNTools.extractMessageContentFromNotify(toSend);
+                        // Update the InternalMessage with the content of the NotificationMessage
+                        outMessage.setMessage(content);
+                    }
+
                     // Pass it along to the requestparser
                     _requestParser.acceptLocalMessage(outMessage);
                 }
@@ -478,7 +494,6 @@ public class WSNotificationServer extends AbstractProtocolServer {
 
                 while(returnMessage.hasMoreElements()) {
                     String inputStream = (String)returnMessage.nextElement();
-                    log.debug(outMessage + "=" + inputStream);
                     if(outMessage.equals("Transfer-Encoding") && inputStream.equals("chunked")) {
                         log.debug("Found Transfer-Encoding was chunked.");
                         isChunked = true;

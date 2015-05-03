@@ -29,10 +29,12 @@ import no.ntnu.okse.core.messaging.MessageService;
 import no.ntnu.okse.core.topic.Topic;
 import no.ntnu.okse.core.topic.TopicService;
 import no.ntnu.okse.protocol.AbstractProtocolServer;
+import no.ntnu.okse.protocol.wsn.WSNotificationServer;
 import org.apache.log4j.Logger;
+import org.ntnunotif.wsnu.base.util.Utilities;
+import org.ntnunotif.wsnu.services.general.WsnUtilities;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
@@ -286,20 +288,26 @@ public class DummyProtocolServer extends AbstractProtocolServer {
         try {
             // message <topic> <message content>
             if (args[0].equalsIgnoreCase("message")) {
-                // Attempt to fetch the topic
-                Topic t = TopicService.getInstance().getTopic(args[1]);
                 // If it exists build a message string and distribute it
-                if (t != null) {
+                if (args.length > 2) {
                     StringBuilder builder = new StringBuilder();
                     for (int i = 2; i < args.length; i++) {
                         builder.append(args[i] + " ");
                     }
                     String msg = builder.toString().trim();
-                    Message message = new Message(msg, t, null, protocolServerType);
+                    Message message = new Message(msg, args[1], null, protocolServerType);
                     MessageService.getInstance().distributeMessage(message);
                     totalMessagesRecieved++;
 
                     return true;
+                }
+            } else if (args[0].equalsIgnoreCase("relay")) {
+                if (Utilities.isValidInetAddress(args[1])) {
+                    if (Utilities.isValidInetAddress(args[2])) {
+                        // relay <remote URI> <URI of this broker>
+                        WsnUtilities.sendSubscriptionRequest(args[1], args[2], WSNotificationServer.getInstance().getRequestParser());
+                        return true;
+                    }
                 }
             } else if (args[0].equalsIgnoreCase("exit")) {
                 return true;

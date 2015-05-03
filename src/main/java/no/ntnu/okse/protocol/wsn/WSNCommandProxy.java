@@ -58,7 +58,6 @@ import org.oasis_open.docs.wsrf.rw_2.ResourceUnknownFault;
 
 import javax.jws.*;
 import javax.jws.soap.SOAPBinding;
-import javax.lang.model.element.Element;
 import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.annotation.XmlSeeAlso;
@@ -67,12 +66,8 @@ import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.namespace.QName;
-import javax.xml.transform.*;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
 import javax.xml.ws.wsaddressing.W3CEndpointReference;
 import javax.xml.ws.wsaddressing.W3CEndpointReferenceBuilder;
-import java.io.StringWriter;
 import java.util.*;
 
 /**
@@ -285,10 +280,9 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
                         String content = WSNTools.extractRawXmlContentFromDomNode((ElementNSImpl) messageHolderType.getMessage().getAny());
                         log.debug("Messace object: " + messageHolderType.getMessage().toString());
                         log.debug("Message content: " + content);
-                        // Fetch the topic object
-                        Topic okseTopic = topicService.getTopic(topicName);
+
                         // Generate the message
-                        message = new Message(content, okseTopic, null, WSNotificationServer.getInstance().getProtocolServerType());
+                        message = new Message(content, topicName, null, WSNotificationServer.getInstance().getProtocolServerType());
                         log.debug("OKSE Message generated");
                         // Extract the endpoint reference from publisher
                         W3CEndpointReference publisherReference = messageHolderType.getProducerReference();
@@ -350,6 +344,9 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         // For all valid recipients
         for (String recipient : this.getAllRecipients()) {
 
+            // If the subscription has expired, continue
+            if (_subscriptionManager.getSubscriber(recipient).hasExpired()) continue;
+
             // Filter do filter handling, if any
             Notify toSend = getRecipientFilteredNotify(recipient, notify, namespaceContextResolver);
 
@@ -363,6 +360,15 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
                 );
                 // Update the requestinformation
                 outMessage.getRequestInformation().setEndpointReference(getEndpointReferenceOfRecipient(recipient));
+
+                // If the recipient has requested UseRaw, remove Notify payload wrapping
+                if (_subscriptionManager
+                        .getSubscriber(recipient)
+                        .getAttribute(WSNSubscriptionManager.WSN_USERAW_TOKEN) != null) {
+                    Object content = WSNTools.extractMessageContentFromNotify(toSend);
+                    // Update the InternalMessage with the content of the NotificationMessage
+                    outMessage.setMessage(content);
+                }
                 // Pass it along to the requestparser
                 hub.acceptLocalMessage(outMessage);
 
@@ -409,6 +415,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
             targetNamespace = "http://docs.oasis-open.org/wsn/b-2") Subscribe subscribeRequest) throws NotifyMessageNotSupportedFault, UnrecognizedPolicyRequestFault, TopicExpressionDialectUnknownFault, ResourceUnknownFault, InvalidTopicExpressionFault, UnsupportedPolicyRequestFault, InvalidFilterFault, InvalidProducerPropertiesExpressionFault, UnacceptableInitialTerminationTimeFault, SubscribeCreationFailedFault, TopicNotSupportedFault, InvalidMessageContentExpressionFault {
 
         W3CEndpointReference consumerEndpoint = subscribeRequest.getConsumerReference();
+        boolean useRaw = false;
 
         if (consumerEndpoint == null) {
             ExceptionUtilities.throwSubscribeCreationFailedFault("en", "Missing endpointreference");
@@ -419,6 +426,16 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         // EndpointReference is returned as "" from getAddress if something went wrong.
         if(endpointReference.equals("")){
             ExceptionUtilities.throwSubscribeCreationFailedFault("en", "EndpointReference malformatted or missing.");
+        }
+
+        // Check if the subscriber has requested non-Notify wrapped notifications
+        if (subscribeRequest.getSubscriptionPolicy() != null) {
+            for (Object o : subscribeRequest.getSubscriptionPolicy().getAny()) {
+                if (o.getClass().equals(UseRaw.class)) {
+                    log.debug("Subscriber requested raw message format");
+                    useRaw = true;
+                }
+            }
         }
 
         log.debug("Endpointreference is: " + endpointReference);
@@ -582,6 +599,8 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         subscriber.setTimeout(terminationTime);
         // Add potential XPATH content filters discovered in the subscribe request
         contentFilters.forEach(filter -> subscriber.addFilter(filter));
+        // Add useRaw flag if present
+        if (useRaw) subscriber.setAttribute(WSNSubscriptionManager.WSN_USERAW_TOKEN, "true");
 
         // Register the OKSE subscriber to the SubscriptionService, via the WSNSubscriptionManager
         log.debug("Passing the subscriber to the SubscriptionService...");

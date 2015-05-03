@@ -331,7 +331,6 @@ public class WSNRequestParser implements Hub {
      * @param message The message to be sent out
      * @return An InternalMessage ready to be processed and sent across the wire.
      */
-    //TODO: Generate meaningful soap headers
     public InternalMessage generateOutgoingMessage(InternalMessage message) {
         Object messageContent = message.getMessage();
 

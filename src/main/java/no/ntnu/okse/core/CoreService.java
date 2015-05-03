@@ -29,6 +29,7 @@ import no.ntnu.okse.core.event.Event;
 
 import no.ntnu.okse.core.event.SystemEvent;
 import no.ntnu.okse.core.messaging.Message;
+import no.ntnu.okse.core.messaging.MessageService;
 import no.ntnu.okse.protocol.ProtocolServer;
 
 import java.util.ArrayList;
@@ -81,8 +82,17 @@ public class CoreService extends AbstractCoreService {
     protected void init() {
         eventQueue = new LinkedBlockingQueue();
         services = new HashSet<>();
-        executor = Executors.newFixedThreadPool(10);
         protocolServers = new ArrayList<>();
+        int execServicePoolSize = 10;
+        // Check if default has been overridden in the config file
+        if (Application.config.containsKey("CORE_SERVICE_THREAD_POOL_SIZE")) {
+            try {
+                execServicePoolSize = Integer.parseInt(Application.config.getProperty("CORE_SERVICE_THREAD_POOL_SIZE"));
+            } catch (NumberFormatException e) {
+                log.error("Failed to parse CoreService executor service thread pool size, using default (10)");
+            }
+        }
+        executor = Executors.newFixedThreadPool(execServicePoolSize);
         // Set the invoked flag
         _invoked = true;
     }
@@ -310,6 +320,10 @@ public class CoreService extends AbstractCoreService {
 
         // Create a system message
         Message m = new Message("The broker is shutting down", null, null, Application.OKSE_SYSTEM_NAME);
+
+        // Distribute the message to the Message Service
+        MessageService.getInstance().distributeMessage(m);
+
         // Wait until message is processed
         while (!m.isProcessed()) {
             try {
