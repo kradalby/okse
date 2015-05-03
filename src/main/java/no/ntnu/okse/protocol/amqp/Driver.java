@@ -68,12 +68,10 @@ public class Driver extends BaseHandler {
 
             for (Handler h : handlers) {
                 if (h instanceof AMQPServer) {
-                    log.debug("Executing sendNextMessagesInQueue");
                     ((AMQPServer) h).sendNextMessagesInQueue();
                 }
             }
 
-            log.debug(collector.toString());
             processEvents();
 
 
@@ -108,7 +106,6 @@ public class Driver extends BaseHandler {
             for (Handler h : handlers) {
                 ev.dispatch(h);
                 if (h instanceof AMQPServer) {
-                    log.debug("Executing sendNextMessagesInQueue in processEvents");
                     ((AMQPServer) h).sendNextMessagesInQueue();
                 }
             }

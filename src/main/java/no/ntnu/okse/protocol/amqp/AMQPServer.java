@@ -39,11 +39,6 @@ import org.apache.qpid.proton.engine.Receiver;
 import org.apache.qpid.proton.engine.Sender;
 import org.apache.qpid.proton.message.Message;
 import org.apache.qpid.proton.messenger.impl.Address;
-import java.io.*;
-import java.lang.instrument.Instrumentation;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -186,36 +181,6 @@ public class AMQPServer extends BaseHandler {
 
     public MessageBytes convertAMQPMessageToMessageBytes(Message msg) {
 
-        /*int bytes = 0;
-        for (Method m : msg.getClass().getMethods()) {
-            if (m.getName().startsWith("get") && m.getParameterTypes().length == 0) {
-                Object r = null;
-                try {
-                    r = m.invoke(msg);
-                    bytes += r.toString().getBytes().length;
-                } catch (IllegalAccessException e) {
-                    //e.printStackTrace();
-                } catch (InvocationTargetException e) {
-                    //e.printStackTrace();
-                } catch (NullPointerException e) {
-                    //e.printStackTrace();
-                }
-            }
-        }*/
-        /*ByteArrayOutputStream out = new ByteArrayOutputStream();
-        DataOutputStream dout = new DataOutputStream(out);
-        try {
-            dout.writeChars(msg.getBody().toString());
-            dout.close();
-            out.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        byte[] storingData = out.toByteArray();*/
-
-
-        //System.out.println("Totalt antall bytes: " + storingData.length);
         int guestimateByteSize = 0;
         if(msg.getBody().toString().length() != 0){
             guestimateByteSize += msg.getBody().toString().getBytes().length;
@@ -229,12 +194,6 @@ public class AMQPServer extends BaseHandler {
         System.out.println("Totalt antall bytes from guestimate int: " + guestimateByteSize);
         int encoded;
 
-       /* if(msg.getAddress().getBytes() != null && msg.getSubject().getBytes() != null ){
-            test = msg.getAddress().getBytes().length + msg.getSubject().getBytes().length + body.getBytes().length;
-        }
-
-        System.out.println("Dette er test: " + test);
-        System.out.println(msg.getBody().toString());*/
 
         byte[] buffer = new byte[guestimateByteSize];
         System.out.println("This is buffer.length: " + buffer.length);
@@ -337,32 +296,5 @@ public class AMQPServer extends BaseHandler {
             }
         }
     }
-
-//    @Override
-//    public void onDelivery(Event evt) {
-//        Delivery dlv = evt.getDelivery();
-//        Link link = dlv.getLink();
-//        if (link instanceof Sender) {
-//            dlv.settle();
-//        } else {
-//            Receiver rcv = (Receiver) link;
-//            if (!dlv.isPartial()) {
-//                byte[] bytes = new byte[dlv.pending()];
-//                rcv.recv(bytes, 0, bytes.length);
-//                String address = subscriptionHandler.getAddress(rcv);
-//                MessageBytes message = new MessageBytes(bytes);
-//                System.out.println(message.toString());
-//                System.out.println(message.getBytes());
-//                messages.put(address, message);
-//                dlv.disposition(Accepted.getInstance());
-//                dlv.settle();
-//                if (!quiet) {
-//                    log.debug(String.format("Got message(%s): %s from %s", address, message, rcv.toString()));
-//                }
-//                send(address);
-//            }
-//        }
-//    }
-
 
 }
