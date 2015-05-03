@@ -484,7 +484,7 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
         // Iterate over all subscribers
         getAllSubscribers().stream()
                     // Only pass on those who match topic argument
-                    .filter(s -> s.getTopic().equals(topic) || s.getTopic() == null)
+                    .filter(s ->  s.getTopic() == null || s.getTopic().equals(topic))
                     // Collect in the results set
                     .forEach(s -> results.add(s));
 

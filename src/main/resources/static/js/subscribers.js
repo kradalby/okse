@@ -124,7 +124,7 @@ var Subscribers = (function($) {
         $.each(subscribers, function (i, subscriber) {
             trHTML +=
                 '<tr id="'+ subscriber.subscriberID +' ">' +
-                '<td>' + subscriber.topic + '</td>' +
+                '<td>' + ((subscriber.topic == null) ? '*' : subscriber.topic) + '</td>' +
                 '<td>' + subscriber.originProtocol + '</td>' + // TODO: Add support for no protocol here when available
                 '<td>' + subscriber.host + '</td>' +
                 '<td>' + subscriber.port + '</td>' +

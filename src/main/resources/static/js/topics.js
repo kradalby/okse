@@ -132,6 +132,8 @@ var Topics = (function($) {
             // this returns an object, and therefore we must count the keys
             var count = Object.keys(response).length
 
+            Main.refreshElementByClassWithText('.totalTopics', count)
+
             // Remove 'deleted class' if it exists
             if ($('#topics-table').hasClass('deleted')) { $('#topics-table').removeClass('deleted'); }
 
