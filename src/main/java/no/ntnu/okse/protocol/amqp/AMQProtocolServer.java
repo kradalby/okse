@@ -25,12 +25,15 @@
 package no.ntnu.okse.protocol.amqp;
 
 import no.ntnu.okse.core.messaging.Message;
+import no.ntnu.okse.core.subscription.SubscriptionService;
 import no.ntnu.okse.protocol.AbstractProtocolServer;
 
 import org.apache.log4j.Logger;
 import org.apache.qpid.proton.engine.Collector;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.Pipe;
 
 /**
  * Created by kradalby on 21/04/15.
@@ -44,20 +47,21 @@ public class AMQProtocolServer extends AbstractProtocolServer {
     private static final String configurationFile = "";
 
     private static AMQProtocolServer _singleton;
+
     //private static String hostname = "192.168.101.182"; //"78.91.9.241";
-    private static String hostname = "127.0.0.1";
+    //private static String hostname = "127.0.0.1";
+    private static String hostname = "0.0.0.0";
 
     private Driver driver;
-    private AMQPServer server;
 
-    private AMQProtocolServer(Integer port) {this.init(port);}
-
-
-    public static AMQProtocolServer getInstance() {
-        if (!_invoked) _singleton = new AMQProtocolServer(5672);
-        return _singleton;
+    private AMQProtocolServer(Integer port) {
+        this.init(port);
     }
 
+    public static AMQProtocolServer getInstance() {
+        if (!_invoked) _singleton = new AMQProtocolServer(61050);
+        return _singleton;
+    }
 
 
     @Override
@@ -69,6 +73,8 @@ public class AMQProtocolServer extends AbstractProtocolServer {
 
 
     }
+
+
 
     @Override
     public void boot() {
@@ -88,6 +94,7 @@ public class AMQProtocolServer extends AbstractProtocolServer {
             Collector collector = Collector.Factory.create();
             //Router router = new Router();
             SubscriptionHandler sh = new SubscriptionHandler();
+            SubscriptionService.getInstance().addSubscriptionChangeListener(sh);
             server = new AMQPServer(sh, false);
             driver = new Driver(collector, new Handshaker(),
                 new FlowController(1024), sh,
@@ -113,12 +120,17 @@ public class AMQProtocolServer extends AbstractProtocolServer {
 
     @Override
     public void sendMessage(Message message) {
-        server.addMessageToQueue(message);
+        if (!message.getOriginProtocol().equals(protocolServerType)) {
+            server.addMessageToQueue(message);
+        }
     }
 
-    public void incrementTotalMessages() {
+    public void incrementTotalMessagesSent() {
+        totalMessagesSent++;
+    }
+
+    public void incrementTotalMessagesRecieved() {
         totalMessagesRecieved++;
-        //totalMessages++;
     }
 
     public void incrementTotalRequests() {
@@ -131,5 +143,11 @@ public class AMQProtocolServer extends AbstractProtocolServer {
 
     public void incrementTotalErrors() {
         totalErrors++;
+    }
+
+    private AMQPServer server;
+
+    public Driver getDriver() {
+        return driver;
     }
 }

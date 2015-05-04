@@ -73,7 +73,17 @@ public class Driver extends BaseHandler {
             _running = true;
         }
         while (true) {
+
+            for (Handler h : handlers) {
+                if (h instanceof AMQPServer) {
+                    log.debug("Executing sendNextMessagesInQueue");
+                    ((AMQPServer) h).sendNextMessagesInQueue();
+                }
+            }
+
+            log.debug(collector.toString());
             processEvents();
+
 
             // I don't know if there is a better way to do this, but
             // the only way canceled selection keys are removed from
@@ -111,10 +121,14 @@ public class Driver extends BaseHandler {
         while (_running) {
             Event ev = collector.peek();
             if (ev == null) break;
+            log.debug("Dispatching event of type: " + ev.getType().name());
             ev.dispatch(this);
-            log.debug("Dispatching new event in AMQP");
             for (Handler h : handlers) {
                 ev.dispatch(h);
+                if (h instanceof AMQPServer) {
+                    log.debug("Executing sendNextMessagesInQueue in processEvents");
+                    ((AMQPServer) h).sendNextMessagesInQueue();
+                }
             }
             collector.pop();
         }
@@ -177,18 +191,6 @@ public class Driver extends BaseHandler {
         }
     }
 
-
-    private class IncommingOkseMessageHandler implements Selectable {
-
-        @Override
-        public void selected() throws IOException {
-            for (Handler h : handlers) {
-                if (h instanceof AMQPServer) {
-                    ((AMQPServer) h).sendNextMessageInQueue();
-                }
-            }
-        }
-    }
 
     private class ChannelHandler implements Selectable {
 
@@ -296,6 +298,11 @@ public class Driver extends BaseHandler {
             log.debug("CONNECTING: " + conn.getHostname());
             socket.connect(new InetSocketAddress(conn.getHostname(), 5672));
         }
+    }
+
+    public void wakeUp() {
+        log.debug("Waking up the selector to get out the next messages from the queue");
+        selector.wakeup();
     }
 
 }

@@ -24,6 +24,7 @@
 
 package no.ntnu.okse.protocol.wsn;
 
+import com.sun.org.apache.xerces.internal.dom.ElementNSImpl;
 import no.ntnu.okse.Application;
 import no.ntnu.okse.core.messaging.Message;
 import no.ntnu.okse.core.messaging.MessageService;
@@ -254,8 +255,10 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
             return;
         }
 
+        // Store the MessageService and CoreService instances
         MessageService messageService = MessageService.getInstance();
         TopicService topicService = TopicService.getInstance();
+        // Declare the message object
         Message message;
 
         for (NotificationMessageHolderType messageHolderType : notify.getNotificationMessage()) {
@@ -274,7 +277,9 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
                     if (topicService.topicExists(topicName)) {
                         log.debug("Topic existed, generating OKSE Message for distribution");
                         // Extract the content
-                        String content = messageHolderType.getMessage().getAny().toString();
+                        String content = WSNTools.extractRawXmlContentFromDomNode((ElementNSImpl) messageHolderType.getMessage().getAny());
+                        log.debug("Messace object: " + messageHolderType.getMessage().toString());
+                        log.debug("Message content: " + content);
                         // Fetch the topic object
                         Topic okseTopic = topicService.getTopic(topicName);
                         // Generate the message
@@ -340,6 +345,9 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         // For all valid recipients
         for (String recipient : this.getAllRecipients()) {
 
+            // If the subscription has expired, continue
+            if (_subscriptionManager.getSubscriber(recipient).hasExpired()) continue;
+
             // Filter do filter handling, if any
             Notify toSend = getRecipientFilteredNotify(recipient, notify, namespaceContextResolver);
 
@@ -353,6 +361,15 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
                 );
                 // Update the requestinformation
                 outMessage.getRequestInformation().setEndpointReference(getEndpointReferenceOfRecipient(recipient));
+
+                // If the recipient has requested UseRaw, remove Notify payload wrapping
+                if (_subscriptionManager
+                        .getSubscriber(recipient)
+                        .getAttribute(WSNSubscriptionManager.WSN_USERAW_TOKEN) != null) {
+                    Object content = WSNTools.extractMessageContentFromNotify(toSend);
+                    // Update the InternalMessage with the content of the NotificationMessage
+                    outMessage.setMessage(content);
+                }
                 // Pass it along to the requestparser
                 hub.acceptLocalMessage(outMessage);
 
@@ -399,6 +416,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
             targetNamespace = "http://docs.oasis-open.org/wsn/b-2") Subscribe subscribeRequest) throws NotifyMessageNotSupportedFault, UnrecognizedPolicyRequestFault, TopicExpressionDialectUnknownFault, ResourceUnknownFault, InvalidTopicExpressionFault, UnsupportedPolicyRequestFault, InvalidFilterFault, InvalidProducerPropertiesExpressionFault, UnacceptableInitialTerminationTimeFault, SubscribeCreationFailedFault, TopicNotSupportedFault, InvalidMessageContentExpressionFault {
 
         W3CEndpointReference consumerEndpoint = subscribeRequest.getConsumerReference();
+        boolean useRaw = false;
 
         if (consumerEndpoint == null) {
             ExceptionUtilities.throwSubscribeCreationFailedFault("en", "Missing endpointreference");
@@ -409,6 +427,16 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         // EndpointReference is returned as "" from getAddress if something went wrong.
         if(endpointReference.equals("")){
             ExceptionUtilities.throwSubscribeCreationFailedFault("en", "EndpointReference malformatted or missing.");
+        }
+
+        // Check if the subscriber has requested non-Notify wrapped notifications
+        if (subscribeRequest.getSubscriptionPolicy() != null) {
+            for (Object o : subscribeRequest.getSubscriptionPolicy().getAny()) {
+                if (o.getClass().equals(UseRaw.class)) {
+                    log.debug("Subscriber requested raw message format");
+                    useRaw = true;
+                }
+            }
         }
 
         log.debug("Endpointreference is: " + endpointReference);
@@ -429,8 +457,10 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         FilterType filters = subscribeRequest.getFilter();
         Map<QName, Object> filtersPresent = null;
 
-        // TODO: Investigate effects of multiple topicexpression.
-        // TODO: Investigate how X-Path expressions are evaluated and how we should store them
+        // Initialize topicContent and requestDialect and contentFilters
+        String rawTopicContent = null;
+        String requestDialect = null;
+        ArrayList<String> contentFilters = new ArrayList<>();
 
         if (filters != null) {
             log.debug("Filters present. Attempting to iterate over filters...");
@@ -441,7 +471,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
                 if (o instanceof JAXBElement) {
                     JAXBElement filter = (JAXBElement) o;
 
-                    log.info("Fetching namespacecontext of filter value");
+                    log.debug("Fetching namespacecontext of filter value");
                     // Get the namespace context for this filter
                     NamespaceContext namespaceContext = connection.getRequestInformation().getNamespaceContext(filter.getValue());
 
@@ -449,14 +479,37 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
                     if (filterSupport != null &&
                             filterSupport.supportsFilter(filter.getName(), filter.getValue(), namespaceContext)) {
 
+                        // Extract the QName
                         QName fName = filter.getName();
 
                         log.debug("Subscription request contained filter: " + fName + " Value: " + filter.getValue());
-                        TopicExpressionType type = (TopicExpressionType) filter.getValue();
-                        type.getContent().stream().forEach(p -> log.info("Content: " + p.toString()));
-                        log.debug("Attributes: " + type.getOtherAttributes());
-                        log.debug("Dialect: " + type.getDialect());
+                        // If we have a TopicExpressionType as current
+                        if (filter.getValue() instanceof org.oasis_open.docs.wsn.b_2.TopicExpressionType) {
+                            // Cast to proper type
+                            TopicExpressionType type = (TopicExpressionType) filter.getValue();
+                            // Extract the actual value of the element
+                            log.debug("Content: " + type.getContent().get(0));
+                            // Set it as the raw topic content string
+                            rawTopicContent = type.getContent().get(0).toString();
+                            // List potential attributes
+                            log.debug("Attributes: " + type.getOtherAttributes());
+                            // List and add the dialect of the expression type
+                            log.debug("Dialect: " + type.getDialect());
+                            requestDialect = type.getDialect();
+                            // Do we have a MessageContent filter (XPATH)
+                        } else if (filter.getValue() instanceof org.oasis_open.docs.wsn.b_2.QueryExpressionType) {
+                            // Cast to proper type
+                            QueryExpressionType type = (QueryExpressionType) filter.getValue();
+                            // For each potential expression, add to the message content filter set
+                            type.getContent().stream().forEach(p -> {
+                                log.debug("Content: " + p.toString());
+                                contentFilters.add(p.toString());
+                            });
+                            // What XPATH dialect (or potentially other non-supported) was provided
+                            log.debug("Dialect: " + type.getDialect());
+                        }
 
+                        // Add the filter to the WS-Nu filtersPresent set
                         filtersPresent.put(fName, filter.getValue());
                     } else {
                         log.warn("Subscription attempt with non-supported filter: " + filter.getName());
@@ -468,8 +521,10 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
             }
         }
 
+        // Initialize initial termination time
         long terminationTime = 0;
 
+        // If it was provided in the request
         if (subscribeRequest.getInitialTerminationTime() != null) {
             try {
                 terminationTime = ServiceUtilities.interpretTerminationTime(subscribeRequest.getInitialTerminationTime().getValue());
@@ -529,20 +584,12 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         log.debug("Preparing OKSE subscriber objects");
         /* Prepare needed information for OKSE Subscriber object */
 
-        String rawTopicContent = "";
-        String requestDialect = "";
-
-        log.debug("Extracting topic information");
-        // Extract topic information
-        for (QName q : subscriptionInfo.getFilterSet()) {
-            for (Object o : ((TopicExpressionType) filtersPresent.get(q)).getContent()) {
-                rawTopicContent = o.toString();
-            }
-            requestDialect = ((TopicExpressionType) filtersPresent.get(q)).getDialect();
+        if (rawTopicContent != null) {
+            log.debug("Sending addTopic request to TopicService");
+            TopicService.getInstance().addTopic(rawTopicContent);
+        } else {
+            log.debug("No topic was specified, setting to null and listening to all topics");
         }
-
-        log.debug("Sending addTopic request to TopicService");
-        TopicService.getInstance().addTopic(rawTopicContent);
 
         log.debug("Initializing OKSE subscriber object");
         // Instanciate new OKSE Subscriber object
@@ -551,6 +598,10 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         subscriber.setAttribute(WSNSubscriptionManager.WSN_SUBSCRIBER_TOKEN, newSubscriptionKey);
         subscriber.setAttribute(WSNSubscriptionManager.WSN_DIALECT_TOKEN, requestDialect);
         subscriber.setTimeout(terminationTime);
+        // Add potential XPATH content filters discovered in the subscribe request
+        contentFilters.forEach(filter -> subscriber.addFilter(filter));
+        // Add useRaw flag if present
+        if (useRaw) subscriber.setAttribute(WSNSubscriptionManager.WSN_USERAW_TOKEN, "true");
 
         // Register the OKSE subscriber to the SubscriptionService, via the WSNSubscriptionManager
         log.debug("Passing the subscriber to the SubscriptionService...");
@@ -732,8 +783,9 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
             // Generate the NotificationMessage
             log.debug("Generated Notify wrapper");
 
-            /* Add the HolderType to the response */
-            response.getAny().add(new JAXBElement(new QName("NotifyContent"), String.class, currentMessage.getMessage()));
+            // Create a unmarshalled and linked Notify and extract the Message content from it
+            Object messageObject = WSNTools.extractMessageContentFromNotify(WSNTools.createNotify(currentMessage));
+            response.getAny().add(messageObject);
 
             // Return the response
             return response;

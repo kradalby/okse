@@ -57,7 +57,7 @@ var Logs = (function($) {
                 url: 'log/levels',
                 type: 'GET',
                 success: function(data) {
-                    console.log("[Debug][Logs] Adding log level buttons")
+                    $.okseDebug.logPrint("[Debug][Logs] Adding log level buttons")
                     var buttons = ""
                     $.each(data, function(i, level) {
                         if (level == 'DEBUG') {
@@ -73,7 +73,11 @@ var Logs = (function($) {
                             $('#button-' + level).addClass('active').siblings().removeClass('active');
                             logLevel = level
                             updateUrl()
-                            Main.setIntervalForLogTab()
+                            Main.setIntervalForTab({
+                                url: Logs.url(),
+                                type: 'GET',
+                                success: Logs.refresh
+                            })
                             /*
                             Main.ajax({
                                 url: Logs.url(),
@@ -96,7 +100,7 @@ var Logs = (function($) {
                 url: 'log/files',
                 type: 'GET',
                 success: function(data) {
-                    console.log("[Debug][Logs] Adding log files buttons")
+                    $.okseDebug.logPrint("[Debug][Logs] Adding log files buttons")
                     var files = ""
                     $.each(data, function(i) {
                         if (i == 0) {
@@ -112,7 +116,11 @@ var Logs = (function($) {
                             $('#button-logID-' + i).addClass('active').siblings().removeClass('active');
                             logID = i
                             updateUrl()
-                            Main.setIntervalForLogTab()
+                            Main.setIntervalForTab({
+                                url: Logs.url(),
+                                type: 'GET',
+                                success: Logs.refresh
+                            })
                             /*
                             Main.ajax({
                                 url: Logs.url(),
@@ -128,27 +136,28 @@ var Logs = (function($) {
             $("#log-length").keyup(function(){
                 logLength = $(this).val()
                 updateUrl()
-                Main.setIntervalForLogTab()
-                /*
-                Main.ajax({
+                Main.setIntervalForTab({
                     url: Logs.url(),
                     type: 'GET',
                     success: Logs.refresh
-                });
-                */
+                })
             });
 
             /*
              * Add a listener to clear interval
              * */
-            $("#button-refresh").on("click", function(e) {
+            $("#logs-button-refresh").on("click", function(e) {
                 e.preventDefault()
                 if (!$(this).hasClass("active")) {
                     $(this).addClass("active")
                     $(this).text("Stop refresh")
-                    Main.setIntervalForLogTab()
+                    Main.setIntervalForTab({
+                        url: Logs.url(),
+                        type: 'GET',
+                        success: Logs.refresh
+                    });
                 } else {
-                    $(this).removeClass("active");
+                    $(this).removeClass("active")
                     $(this).text("Start refresh")
                     Main.clearIntervalForTab()
                 }

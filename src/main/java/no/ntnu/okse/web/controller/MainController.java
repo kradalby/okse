@@ -40,21 +40,33 @@ import java.util.HashMap;
  * okse is licenced under the MIT licence.
  */
 @RestController
-public class ApiController {
+public class MainController {
 
-    private static Logger log = Logger.getLogger(ApiController.class.getName());
+    private static int MB = 1024 * 1024;
+
+    private static Logger log = Logger.getLogger(MainController.class.getName());
 
     @RequestMapping(value = "/api/main", method = RequestMethod.GET)
     public @ResponseBody HashMap<String, Object> main() {
         SubscriptionService ss = SubscriptionService.getInstance();
 
-        HashMap<String, Object> mainApi = new HashMap<String, Object>(){{
+        long totalRam = Runtime.getRuntime().totalMemory();
+        long freeRam = Runtime.getRuntime().freeMemory();
+
+        HashMap<String, Object> result = new HashMap<String, Object>(){{
             put("subscribers", ss.getNumberOfSubscribers());
             put("publishers", ss.getNumberOfPublishers());
-            put("runtime", Utilities.getDurationAsISO8601(Application.getRunningTime()));
+            put("uptime", Utilities.getDurationAsISO8601(Application.getRunningTime()));
+            // Runtime statistics
+            put("runtimeStatistics", new HashMap<String, Object>(){{
+                put("cpuAvailable", Runtime.getRuntime().availableProcessors());
+                put("totalRam", totalRam / MB);
+                put("freeRam", freeRam / MB);
+                put("usedRam", (totalRam - freeRam) / MB);
+            }});
         }};
 
-        return mainApi;
+        return result;
     }
 
 

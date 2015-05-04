@@ -27,8 +27,10 @@ package no.ntnu.okse.core.topic;
 import no.ntnu.okse.core.AbstractCoreService;
 import no.ntnu.okse.core.event.TopicChangeEvent;
 import no.ntnu.okse.core.event.listeners.TopicChangeListener;
+import org.eclipse.jetty.util.ConcurrentHashSet;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.stream.Collectors;
 
@@ -43,8 +45,8 @@ public class TopicService extends AbstractCoreService {
     private static TopicService _singleton = null;
     private static Thread _serviceThread;
     private LinkedBlockingQueue<TopicTask> queue;
-    private HashMap<String, Topic> allTopics;
-    private HashSet<TopicChangeListener> _listeners;
+    private ConcurrentHashMap<String, Topic> allTopics;
+    private ConcurrentHashSet<TopicChangeListener> _listeners;
 
     /**
      * Private constructor that passes this classname to superclass log instance. Uses getInstance to instanciate.
@@ -69,8 +71,8 @@ public class TopicService extends AbstractCoreService {
     protected void init() {
         log.info("Initializing TopicService...");
         queue = new LinkedBlockingQueue<>();
-        allTopics = new HashMap<>();
-        _listeners = new HashSet<>();
+        allTopics = new ConcurrentHashMap<>();
+        _listeners = new ConcurrentHashSet<>();
         _invoked = true;
         // TODO: Read some shit from config or database to initialize pre-set topics with attributes. Or should
         // TODO: that maybe be done in the Subscriber objets? Who knows.

@@ -25,6 +25,7 @@
 package no.ntnu.okse;
 
 import no.ntnu.okse.core.CoreService;
+import no.ntnu.okse.core.Utilities;
 import no.ntnu.okse.core.messaging.MessageService;
 import no.ntnu.okse.core.subscription.SubscriptionService;
 import no.ntnu.okse.core.topic.TopicService;
@@ -39,6 +40,7 @@ import org.ntnunotif.wsnu.base.util.Log;
 
 import java.io.File;
 import java.time.Duration;
+import java.util.Properties;
 
 
 /**
@@ -61,6 +63,9 @@ public class Application {
     public static long DEFAULT_SUBSCRIPTION_TERMINATION_TIME = 15552000000L; // Half a year
     public static long DEFAULT_PUBLISHER_TERMINATION_TIME = 15552000000L; // Half a year
 
+    /* Public reference to the properties object for potential custom options */
+    public static Properties config;
+
     private static Logger log;
     public static CoreService cs;
     public static Server webserver;
@@ -71,9 +76,14 @@ public class Application {
      * @param args Command line arguments
      */
     public static void main(String[] args) {
+
+        // Check for presence of the needed config files, if they do not exist, they must be created
+        Utilities.createConfigDirectoryAndFilesIfNotExists();
+
+        // Configure the log4j logger
         PropertyConfigurator.configure("config/log4j.properties");
-        // Turn off WS-Nu debug output
-        Log.setEnableDebug(false);
+
+        // Init the logger
         log = Logger.getLogger(Application.class.getName());
 
         File dbFile = new File("okse.db");
@@ -84,6 +94,15 @@ public class Application {
         } else {
             log.info("okse.db exists");
         }
+
+        // Read and store the Properties from config file
+        log.info("Reading OKSE configuration file");
+        config = Utilities.readConfigurationFromFile("config/okse.properties");
+
+        // Initialize default variables from configuration file
+        log.info("Initializing default values from configuration file");
+        initializeDefaultsFromConfigFile(config);
+        log.info("Configuration file initialization complete");
 
         // Initialize main system components
         webserver = new Server();
@@ -121,5 +140,49 @@ public class Application {
      */
     public static void resetStartTime() {
         startedAt = System.currentTimeMillis();
+    }
+
+    /**
+     * Initializes/updates the default field values in this Application class from the configuration file
+     * @param properties A Properties object containing values from the configuration file.
+     */
+    private static void initializeDefaultsFromConfigFile(Properties properties) {
+        if (properties == null) {
+            log.error("Failed to update variables from config file, using internal defaults.");
+            return;
+        }
+        // Iterate over all the keys
+        for (String option : properties.stringPropertyNames()) {
+            option = option.toUpperCase();
+            // Update values based on what keys are provided
+            switch (option) {
+                case "CACHE_MESSAGES":
+                    if (properties.getProperty(option).equalsIgnoreCase("true")) CACHE_MESSAGES = true;
+                    else CACHE_MESSAGES = false;
+                    break;
+                case "BROADCAST_SYSTEM_MESSAGES_TO_SUBSCRIBERS":
+                    if (properties.getProperty(option).equalsIgnoreCase("true")) {
+                        BROADCAST_SYSTEM_MESSAGES_TO_SUBSCRIBERS = true;
+                    } else BROADCAST_SYSTEM_MESSAGES_TO_SUBSCRIBERS = false;
+                    break;
+                case "DEFAULT_SUBSCRIPTION_TERMINATION_TIME":
+                    try {
+                        DEFAULT_SUBSCRIPTION_TERMINATION_TIME = Long.parseLong(properties.getProperty(option));
+                    } catch (NumberFormatException numEx) {
+                        log.error("Malformed subscription termination time, using internal default");
+                    }
+                    break;
+                case "DEFAULT_PUBLISHER_TERMINATION_TIME":
+                    try {
+                        DEFAULT_PUBLISHER_TERMINATION_TIME = Long.parseLong(properties.getProperty(option));
+                    } catch (NumberFormatException numEx) {
+                        log.error("Malformed subscription termination time, using internal default");
+                    }
+                    break;
+                case "ENABLE_WSNU_DEBUG_OUTPUT":
+                    if (properties.getProperty(option).equalsIgnoreCase("true")) Log.setEnableDebug(true);
+                    else Log.setEnableDebug(false);
+            }
+        }
     }
 }
