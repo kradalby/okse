@@ -50,6 +50,9 @@ public class AMQProtocolServer extends AbstractProtocolServer {
     // Internal default values
     private static final String DEFAULT_HOST = "0.0.0.0";
     private static final int DEFAULT_PORT = 5672;
+    private static final String DEFAULT_USE_QUEUE = "true";
+
+    protected boolean useQueue;
 
     private Driver driver;
 
@@ -72,6 +75,7 @@ public class AMQProtocolServer extends AbstractProtocolServer {
 
             // Update singleton
             _singleton = new AMQProtocolServer(configHost, configPort);
+            _singleton.useQueue = Boolean.parseBoolean(Application.config.getProperty("AMQP_USE_QUEUE", DEFAULT_USE_QUEUE));
         }
 
         return _singleton;

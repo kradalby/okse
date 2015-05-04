@@ -132,32 +132,39 @@ public class AMQPServer extends BaseHandler {
     }
 
     private int send(String address) {
-
-        List<Sender> sendersOnTopic = subscriptionHandler.getOutgoing(address).getRoutes();
-
         int count = 0;
-        MessageBytes mb = messages.get(address);
-        for (Sender snd : sendersOnTopic) {
-            //while (snd.getCredit() > 0 && snd.getQueued() < 1024) {
-            if (mb == null) {
-                snd.drained();
-                return count;
+
+        if (AMQProtocolServer.getInstance().useQueue) {
+            log.debug(String.format("Use Queue is set to: %b, using queue mode", AMQProtocolServer.getInstance().useQueue));
+            return send(address, null);
+        } else {
+            log.debug(String.format("Use Queue is set to: %b, using topic mode", AMQProtocolServer.getInstance().useQueue));
+            List<Sender> sendersOnTopic = subscriptionHandler.getOutgoing(address).getRoutes();
+
+            MessageBytes mb = messages.get(address);
+            for (Sender snd : sendersOnTopic) {
+                //while (snd.getCredit() > 0 && snd.getQueued() < 1024) {
+                if (mb == null) {
+                    snd.drained();
+                    return count;
+                }
+                log.debug(String.format("Preparing to send: %s", mb.toString()));
+                Delivery dlv = snd.delivery(nextTag());
+
+                byte[] bytes = mb.getBytes();
+                snd.send(bytes, 0, bytes.length);
+                AMQProtocolServer.getInstance().incrementTotalMessagesSent();
+
+                dlv.disposition(Accepted.getInstance());
+                dlv.settle();
+
+                count++;
+                if (!quiet) {
+                    log.debug(String.format("Sent message(%s): %s to %s", address, mb.toString(), snd.toString()));
+                }
+                //}
             }
-            log.debug(String.format("Preparing to send: %s", mb.toString()));
-            Delivery dlv = snd.delivery(nextTag());
 
-            byte[] bytes = mb.getBytes();
-            snd.send(bytes, 0, bytes.length);
-            AMQProtocolServer.getInstance().incrementTotalMessagesSent();
-
-            dlv.disposition(Accepted.getInstance());
-            dlv.settle();
-
-            count++;
-            if (!quiet) {
-                log.debug(String.format("Sent message(%s): %s to %s", address, mb.toString(), snd.toString()));
-            }
-            //}
         }
 
         return count;

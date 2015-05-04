@@ -172,10 +172,10 @@ public class Driver extends BaseHandler {
             System.out.println("Acceptor selected --------------------------------");
             printByteBuffer(transport.head());
             System.out.println("Acceptor selected --------------------------------");
-//            Sasl sasl = transport.sasl();
-//            sasl.setMechanisms("ANONYMOUS");
-//            sasl.server();
-//            sasl.done(Sasl.PN_SASL_OK);
+            Sasl sasl = transport.sasl();
+            sasl.setMechanisms("ANONYMOUS");
+            sasl.server();
+            sasl.done(Sasl.PN_SASL_OK);
             transport.bind(conn);
             System.out.println(2);
             new ChannelHandler(sock, SelectionKey.OP_READ, transport);
@@ -308,7 +308,7 @@ public class Driver extends BaseHandler {
 
     public void printByteBuffer(ByteBuffer buf) {
         for (int i = 0; i < buf.limit();i++) {
-            System.out.println(String.format("Position: %s: %s", i, buf.get(i)));
+            //System.out.println(String.format("Position: %s: %s", i, buf.get(i)));
         }
     }
 
