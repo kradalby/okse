@@ -30,7 +30,6 @@ import no.ntnu.okse.core.messaging.Message;
 import no.ntnu.okse.core.messaging.MessageService;
 import no.ntnu.okse.core.subscription.Publisher;
 import no.ntnu.okse.core.subscription.Subscriber;
-import no.ntnu.okse.core.topic.Topic;
 import no.ntnu.okse.core.topic.TopicService;
 
 import org.apache.log4j.Logger;
@@ -280,10 +279,9 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
                         String content = WSNTools.extractRawXmlContentFromDomNode((ElementNSImpl) messageHolderType.getMessage().getAny());
                         log.debug("Messace object: " + messageHolderType.getMessage().toString());
                         log.debug("Message content: " + content);
-                        // Fetch the topic object
-                        Topic okseTopic = topicService.getTopic(topicName);
+
                         // Generate the message
-                        message = new Message(content, okseTopic, null, WSNotificationServer.getInstance().getProtocolServerType());
+                        message = new Message(content, topicName, null, WSNotificationServer.getInstance().getProtocolServerType());
                         log.debug("OKSE Message generated");
                         // Extract the endpoint reference from publisher
                         W3CEndpointReference publisherReference = messageHolderType.getProducerReference();

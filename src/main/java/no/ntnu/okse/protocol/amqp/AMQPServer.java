@@ -168,7 +168,7 @@ public class AMQPServer extends BaseHandler {
 
         MessageBytes mb = convertAMQPMessageToMessageBytes(msg);
 
-        String address = message.getTopic().getFullTopicString();
+        String address = message.getTopic();
         messages.put(address, mb);
         queue.add(address);
 
@@ -217,7 +217,7 @@ public class AMQPServer extends BaseHandler {
 
         Section body = new AmqpValue(message.getMessage());
 
-        msg.setAddress("127.0.0.1/" + message.getTopic().getFullTopicString());
+        msg.setAddress("127.0.0.1/" + message.getTopic());
         msg.setSubject("bang");
         msg.setBody(body);
         return msg;
@@ -288,7 +288,7 @@ public class AMQPServer extends BaseHandler {
                     address.setName(msg.getAddress());
                 }
 
-                Topic t = TopicService.getInstance().getTopic(address.getName());
+
 
                 log.debug("Received a message with queue/topic: " + address.getName());
 
@@ -304,16 +304,15 @@ public class AMQPServer extends BaseHandler {
                 }
 
 
-                if (t != null) {
-                    no.ntnu.okse.core.messaging.Message message =
-                            new no.ntnu.okse.core.messaging.Message((String)amqpMessageBodyString.getValue(), t, null, AMQProtocolServer.getInstance().getProtocolServerType());
-                    message.setOriginProtocol(AMQProtocolServer.getInstance().getProtocolServerType());
 
-                    MessageService.getInstance().distributeMessage(message);
-                    AMQProtocolServer.getInstance().incrementTotalMessagesRecieved();
-                    log.debug(String.format("Got and distributed message(%s): %s from %s", address, message, rcv.toString()));
+                no.ntnu.okse.core.messaging.Message message =
+                        new no.ntnu.okse.core.messaging.Message((String)amqpMessageBodyString.getValue(), address.getName(), null, AMQProtocolServer.getInstance().getProtocolServerType());
+                message.setOriginProtocol(AMQProtocolServer.getInstance().getProtocolServerType());
 
-                }
+                MessageService.getInstance().distributeMessage(message);
+                AMQProtocolServer.getInstance().incrementTotalMessagesRecieved();
+                log.debug(String.format("Got and distributed message(%s): %s from %s", address, message, rcv.toString()));
+
 
 
             }

@@ -54,7 +54,13 @@ public class SubscriberController {
         SubscriptionService ss = SubscriptionService.getInstance();
         HashSet<Subscriber> allSubscribers = ss.getAllSubscribers(); // TODO: Sort this lexicographically on topic
         List<Subscriber> listToSort = new ArrayList<>(allSubscribers).stream()
-                .sorted((s1, s2) -> s1.getTopic().compareTo(s2.getTopic()))
+                .sorted((s1, s2) -> { // Null-safe compare operator
+                    if (s1.getTopic() == null ^ s2.getTopic() == null) { return (s1.getTopic() == null) ? -1 : 1; }
+
+                    if (s1.getTopic() == null && s2.getTopic() == null) { return 0; }
+
+                    return s1.getTopic().compareTo(s2.getTopic());
+                })
                 .collect(Collectors.toList());
         return listToSort;
     }
