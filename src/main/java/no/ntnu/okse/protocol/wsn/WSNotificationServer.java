@@ -29,9 +29,11 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 import com.google.common.io.ByteStreams;
 import no.ntnu.okse.Application;
+import no.ntnu.okse.core.CoreService;
 import no.ntnu.okse.core.messaging.Message;
 import no.ntnu.okse.core.subscription.SubscriptionService;
 import no.ntnu.okse.protocol.AbstractProtocolServer;
@@ -78,11 +80,15 @@ public class WSNotificationServer extends AbstractProtocolServer {
     // Internal Default Values
     private static final String DEFAULT_HOST = "0.0.0.0";
     private static final int DEFAULT_PORT = 61000;
+    private static final Long DEFAULT_CONNECTION_TIMEOUT = 5L;
 
     // Flag and defaults for operation behind NAT
     private static boolean behindNAT = false;
     private static String publicWANHost = "0.0.0.0";
     private static Integer publicWANPort = 61000;
+
+    // HTTP Client connection timeout
+    private static Long connectionTimeout = DEFAULT_CONNECTION_TIMEOUT;
 
     // The singleton containing the WSNotificationServer instance
     private static WSNotificationServer _singleton;
@@ -173,25 +179,31 @@ public class WSNotificationServer extends AbstractProtocolServer {
         // Declare HttpClient field
         _client = null;
 
+        // Attempt to fetch connection timeout from settings, otherwise use 5 seconds as default
+        try {
+            connectionTimeout = Long.parseLong(Application.config.getProperty("WSN_CONNECTION_TIMEOUT", connectionTimeout.toString()));
+        } catch (NumberFormatException e) {
+            log.error("Failed to parse WSN Connection Timeout, using default: " + connectionTimeout);
+        }
+
         // If we have host or port provided, set them, otherwise use internal defaults
         this.port = port == null ? DEFAULT_PORT : port;
         this.host = host == null ? DEFAULT_HOST : host;
 
-        // Check if config file specifies that we are behind NAT, and update the provided WAN IP and PORT
-        if (Application.config.containsKey("WSN_USES_NAT")) {
-            if (Application.config.getProperty("WSN_USES_NAT").equalsIgnoreCase("true")) behindNAT = true;
-            else behindNAT = false;
-        }
-        if (Application.config.containsKey("WSN_WAN_HOST")) {
-            publicWANHost = Application.config.getProperty("WSN_WAN_HOST");
-        }
-        if (Application.config.containsKey("WSN_WAN_PORT")) {
-            try {
-                publicWANPort = Integer.parseInt("WSN_WAN_PORT");
-            } catch (NumberFormatException e) {
-                log.error("Failed to parse WSN WAN Port, using default: " + publicWANPort);
-            }
-        }
+        /* Check if config file specifies that we are behind NAT, and update the provided WAN IP and PORT */
+        // Check for use NAT flag
+        if (Application.config.getProperty("WSN_USES_NAT", "false").equalsIgnoreCase("true")) behindNAT = true;
+        else behindNAT = false;
+
+        // Check for WAN_HOST
+        publicWANHost = Application.config.getProperty("WSN_WAN_HOST", publicWANHost);
+
+        // Check for WAN_PORT
+        try {
+            publicWANPort = Integer.parseInt("WSN_WAN_PORT");
+        } catch (NumberFormatException e) {
+            log.error("Failed to parse WSN WAN Port, using default: " + publicWANPort);
+        } 
 
         // Declare configResource (Fetched from classpath as a Resource from system)
         Resource configResource;
@@ -431,7 +443,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
                     }
 
                     // Pass it along to the requestparser
-                    _requestParser.acceptLocalMessage(outMessage);
+                    CoreService.getInstance().execute(() -> _requestParser.acceptLocalMessage(outMessage));
                 }
             }
         } else {
@@ -642,7 +654,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
                 baseRequest.setHandled(true);
                 totalErrors++;
 
-            // Check if we have status=OK and also we have a message
+                // Check if we have status=OK and also we have a message
             } else if (((InternalMessage.STATUS_OK & returnMessage.statusCode) > 0) &&
                     (InternalMessage.STATUS_HAS_MESSAGE & returnMessage.statusCode) > 0){
 
@@ -707,6 +719,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
 
         /* Create the actual http-request*/
         org.eclipse.jetty.client.api.Request request = _client.newRequest(requestInformation.getEndpointReference());
+        request.timeout(connectionTimeout, TimeUnit.SECONDS);
 
         /* Try to send the message */
         try{
@@ -714,6 +727,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
             if ((message.statusCode & InternalMessage.STATUS_HAS_MESSAGE) == 0) {
 
                 request.method(HttpMethod.GET);
+
                 log.debug("Sending message without content to " + requestInformation.getEndpointReference());
                 ContentResponse response = request.send();
                 totalRequests++;
@@ -744,6 +758,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
                     // Send the request to the specified endpoint reference
                     log.info("Sending message with content to " + requestInformation.getEndpointReference());
                     request.content(new InputStreamContentProvider((InputStream) message.getMessage()), "application/soap+xml;charset/utf-8");
+
                     ContentResponse response = request.send();
                     totalMessagesSent++;
 

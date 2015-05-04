@@ -26,6 +26,7 @@ package no.ntnu.okse.protocol.wsn;
 
 import com.sun.org.apache.xerces.internal.dom.ElementNSImpl;
 import no.ntnu.okse.Application;
+import no.ntnu.okse.core.CoreService;
 import no.ntnu.okse.core.messaging.Message;
 import no.ntnu.okse.core.messaging.MessageService;
 import no.ntnu.okse.core.subscription.Publisher;
@@ -228,16 +229,19 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         }
 
         log.debug("Was told to send single notify to a target");
+
         // Initialize a new WS-Nu internalmessage
         InternalMessage outMessage = new InternalMessage(InternalMessage.STATUS_OK |
                 InternalMessage.STATUS_HAS_MESSAGE |
                 InternalMessage.STATUS_ENDPOINTREF_IS_SET,
                 notify);
+
         // Update the requestinformation
         outMessage.getRequestInformation().setEndpointReference(ServiceUtilities.getAddress(w3CEndpointReference));
         log.debug("Forwarding Notify");
+
         // Pass it along to the requestparser
-        hub.acceptLocalMessage(outMessage);
+        CoreService.getInstance().execute(() -> hub.acceptLocalMessage(outMessage));
     }
 
     /**
@@ -368,9 +372,9 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
                     // Update the InternalMessage with the content of the NotificationMessage
                     outMessage.setMessage(content);
                 }
-                // Pass it along to the requestparser
-                hub.acceptLocalMessage(outMessage);
 
+                // Pass it along to the requestparser
+                CoreService.getInstance().execute(() -> hub.acceptLocalMessage(outMessage));
             }
         }
         log.debug("Finished sending message to valid WS-Notification recipients");
