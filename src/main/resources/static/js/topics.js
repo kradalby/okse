@@ -40,32 +40,12 @@ var Topics = (function($) {
             var subscribers = topicInfo.subscribers
             trHTML +=
                 '<tr id="' + topic.topicID +'">' +
-                    '<td>' + topic.name + '</td>' +
                     '<td>' + topic.fullTopicString + '</td>' +
+                    '<td>' + '<span class="badge">' + subscribers + '</span></td>' +
                     '<td>' + topic.root + '</td>' +
                     '<td>' + topic.leaf + '</td>' +
-                    '<td>' + '<a class="btn btn-xs btn-block btn-warning show-subscribers" data-id="' + topic.topicID + '">Subscribers <span class="badge">' + subscribers +'</span></a></td>' +
                     '<td>' + '<a class="btn btn-xs btn-block btn-danger delete-topic">Delete</a></td>' +
                 '</tr>'
-        });
-        return trHTML
-    }
-
-    /*
-     Creates, fills and returns a <tr>-element. The <tr>-element is generated based on the subscribers
-     list from the OKSE-RestAPI. It also adds all the buttons needed for deleting subscribers. It uses the id for
-     this purpose. This function does not manipulate the DOM by checking if an element exists. It overwrites everything.
-     */
-    var createTableForSubscribers = function(subscribers) {
-        var trHTML = '';
-        $.each(subscribers, function (i, subscriber) {
-            trHTML +=
-                '<tr id="'+ subscriber.subscriberID +' ">' +
-                    '<td>' + subscriber.originProtocol + '</td>' +
-                    '<td>' + subscriber.host + '</td>' +
-                    '<td>' + subscriber.port + '</td>' +
-                    '<td><a class="btn btn-xs btn-block btn-warning delete-subscriber">Delete</a></td>' +
-                '</tr>';
         });
         return trHTML
     }
@@ -74,14 +54,10 @@ var Topics = (function($) {
         Unbinds the buttons that change on every AJAX-response.
         Removes the 'click'-listener
      */
-    var unBindButtons = function() {
-        $('.delete-topic').off('click');
-        $('.delete-subscriber').off('click');
-        $('.show-subscriber').off('click');
-    }
+    var unBindButtons = function() { $('.delete-topic').off('click'); }
 
     /*
-        Binds the buttons after
+        Binds the buttons after the AJAX-request success function has completed
      */
     var bindButtons = function() {
 
@@ -89,19 +65,28 @@ var Topics = (function($) {
             e.preventDefault();
 
             if (confirm("Are you sure you want to delete this topic? This will remove all subscribers and child topics.")) {
-
+                // Disable the topic and buttons temporarily
                 var topicID = $(e.target).closest("tr").attr("id")
                 $(e.target).closest('tr').addClass('deleted')
                 $(e.target).addClass("disabled")
 
                 Main.ajax({
-                    url: 'topics/delete/' + topicID,
+                    url: 'topic/delete/' + topicID,
                     type: 'DELETE',
-                    success: function(topic) {
-                        console.log("[Debug][Topics] Callback from server; topic and subscribers deleted")
+                    success: function(data) {
+                        $.okseDebug.logPrint("[Debug][Topics] Callback from server; topic and subscribers deleted")
+                        /*
+                        // Disabling all children topics also
+                        $.each(data.children, function(i, topic) {
+                            $('#' + topic.topicID).addClass('deleted')
+                            $('#' + topic.topicID).find('a').each(function() {
+                                $(this).addClass('disabled')
+                            });
+                        });
+                        */
                     },
                     error: function(xhr, status, error) {
-                        console.log("[Debug][Topics] Unable to remove topic with id: " + e.target.id)
+                        $.okseDebug.logPrint("[Debug][Topics] Unable to remove topic with id: " + e.target.id)
                         $(e.target).closest('tr').removeClass('deleted')
                         $(e.target).removeClass("disabled")
                         Main.displayMessage('Unable to remove topic!')
@@ -109,57 +94,6 @@ var Topics = (function($) {
                     }
                 });
             }
-        });
-
-        $('.delete-subscriber').on('click', function(e) {
-            e.preventDefault()
-
-            if (confirm("Are you sure you want to delete this subscriber?")) {
-
-                var subscriberID = $(e.target).closest('tr').attr('id')
-                $(e.target).closest("tr").addClass("deleted")
-                $(e.target).addClass("disabled")
-
-                Main.ajax({
-                    url: 'topics/delete/subscriber/' + subscriberID,
-                    type: 'DELETE',
-                    success: function(subscriber) {
-                        console.log("[Debug][Topics] Callback from server; subscriber deleted")
-                    },
-                    error: function(xhr, status, error) {
-                        console.log("[Debug][Topics] Unable to remove subscriber with id: " + e.target.id)
-                        $(e.target).closest("tr").removeClass("deleted")
-                        $(e.target).removeClass("disabled")
-                        Main.error(xhr, status, error)
-                    }
-                });
-            }
-        });
-
-        $('.show-subscribers').on('click', function(e) {
-            e.preventDefault()
-
-            console.log("[Debug][Topics] Showing subscribers modal for topic with id: " + $(this).data('id'))
-            Main.ajax({
-                url: 'topics/get/' + $(this).data('id') + '/subscriber/all',
-                type: 'GET',
-                success: function(data) {
-                    console.log("[Debug][Topics] Callback from server; showing subscribers modal")
-                    if (!(data.length == 0)) {
-                        var table = createTableForSubscribers(data)
-                        $('#subscribers-table').html(table)
-                    } else {
-                        $('#subscribers-table').html('<tr class="danger"><td colspan="4"><h4 class="text-center">No subscribers returned from SubscriptionService</h4></td></tr>')
-                    }
-                    $('#subscribers-modal').modal('show')
-                },
-                error: function(xhr, status, error) {
-                    Main.displayMessage('Unable to show subscribers!')
-                    Main.error(xhr, status, error)
-                }
-            });
-
-            return false;
         });
     }
 
@@ -171,12 +105,16 @@ var Topics = (function($) {
                 if (confirm("Are you sure you want to delete all the topics? This will also remove all subscriptions.")) {
 
                     Main.ajax({
-                        url: 'topics/delete/all',
+                        url: 'topic/delete/all',
                         type: 'DELETE',
                         success: function(data) {
-                            console.log("[Debug][Topics] Callback from server; deleted all topics");
+                            $.okseDebug.logPrint("[Debug][Topics] Callback from server; deleted all topics")
+                            // Disable all topics and buttons
                             if (data.deleted == true) {
                                 $('#topics-table').addClass('deleted')
+                                $('#topics-table').find('a').each(function() {
+                                    $(this).addClass('disabled')
+                                });
                             }
                         },
                         error: function(xhr, status, error) {
@@ -194,9 +132,8 @@ var Topics = (function($) {
             // this returns an object, and therefore we must count the keys
             var count = Object.keys(response).length
 
-            if ($('#topics-table').hasClass('deleted')) {
-                $('#topics-table').removeClass('deleted');
-            }
+            // Remove 'deleted class' if it exists
+            if ($('#topics-table').hasClass('deleted')) { $('#topics-table').removeClass('deleted'); }
 
             if (!(count == 0)) {
                 var table = createTableForAllTopics(response)

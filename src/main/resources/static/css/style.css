@@ -68,3 +68,16 @@ body {
 .deleted {
     opacity: 0.3;
 }
+
+#statistics .alert {
+    margin-bottom: 0;
+}
+
+#pagination-selector {
+    margin-bottom: 0;
+}
+
+#protocol-table-head > tr > th:not(:first-child),
+#protocol-table > tr > td:not(:first-child) {
+    text-align: right;
+}

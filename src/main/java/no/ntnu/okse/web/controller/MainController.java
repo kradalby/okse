@@ -24,11 +24,14 @@
 
 package no.ntnu.okse.web.controller;
 
+import no.ntnu.okse.Application;
+import no.ntnu.okse.core.Utilities;
 import no.ntnu.okse.core.subscription.SubscriptionService;
 import org.apache.log4j.Logger;
 import org.springframework.web.bind.annotation.*;
 
 import java.lang.String;
+import java.time.Duration;
 import java.util.HashMap;
 
 /**
@@ -37,15 +40,33 @@ import java.util.HashMap;
  * okse is licenced under the MIT licence.
  */
 @RestController
-public class ApiController {
+public class MainController {
 
-    private static Logger log = Logger.getLogger(ApiController.class.getName());
+    private static int MB = 1024 * 1024;
+
+    private static Logger log = Logger.getLogger(MainController.class.getName());
 
     @RequestMapping(value = "/api/main", method = RequestMethod.GET)
-    public HashMap<String, String> main() {
-        HashMap<String, String> mainApi = new HashMap<>();
-        mainApi.put("subscribers", String.valueOf(SubscriptionService.getInstance().getAllSubscribers().size()));
-        return mainApi;
+    public @ResponseBody HashMap<String, Object> main() {
+        SubscriptionService ss = SubscriptionService.getInstance();
+
+        long totalRam = Runtime.getRuntime().totalMemory();
+        long freeRam = Runtime.getRuntime().freeMemory();
+
+        HashMap<String, Object> result = new HashMap<String, Object>(){{
+            put("subscribers", ss.getNumberOfSubscribers());
+            put("publishers", ss.getNumberOfPublishers());
+            put("uptime", Utilities.getDurationAsISO8601(Application.getRunningTime()));
+            // Runtime statistics
+            put("runtimeStatistics", new HashMap<String, Object>(){{
+                put("cpuAvailable", Runtime.getRuntime().availableProcessors());
+                put("totalRam", totalRam / MB);
+                put("freeRam", freeRam / MB);
+                put("usedRam", (totalRam - freeRam) / MB);
+            }});
+        }};
+
+        return result;
     }
 
 

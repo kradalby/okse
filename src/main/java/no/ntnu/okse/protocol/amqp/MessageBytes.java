@@ -10,27 +10,41 @@
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
 
-package no.ntnu.okse.protocol.dto;
+package no.ntnu.okse.protocol.amqp;
 
 /**
- * Created by Aleksander Skraastad (myth) on 3/2/15.
- * <p>
- * okse is licenced under the MIT licence.
+ * Most of this code is from the qpid-proton-demo (https://github.com/rhs/qpid-proton-demo) by Rafael Schloming
+ * Created by kradalby on 24/04/15.
  */
-public class WsnDTO extends AbstractDTO {
+public class MessageBytes {
 
+    private final byte[] bytes;
 
+    public MessageBytes(byte[] bytes) {
+        this.bytes = bytes;
+    }
 
+    public MessageBytes(String string) {
+        this.bytes = string.getBytes();
+    }
+
+    public byte[] getBytes() {
+        return bytes;
+    }
+
+    public String toString() {
+        return new String(bytes);
+    }
 }

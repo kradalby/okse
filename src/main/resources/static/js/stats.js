@@ -29,36 +29,52 @@
 var Stats = (function($) {
 
     /*
-     Creates, fills and returns a tr element
+     Creates, fills and returns a <tr>-element. The <tr>-element is generated based on the protocols
+     list from the OKSE-RestAPI. This function does not manipulate the DOM by checking if an element exists.
+     It overwrites everything.
      */
-    var fillTable = function(data) {
-        var HTML = '';
-        $.each(data.protocols, function (i, protocolstats) {
-            if ($('#' + protocolstats.protocolServerType).length === 0) {
-                HTML +=
-                    '<div class="panel-heading" id="" + protocolstats.protocolServerType>' + protocolstats.protocolServerType + '</div>' +
-                        '<ul class="list-group">' +
-                        '<li class="list-group-item"> <strong>Requests handled:</strong> ' + protocolstats.totalRequests + '</li>' +
-                        '<li class="list-group-item"> <strong>Messages sent:</strong> ' + protocolstats.totalMessages + '</li>' +
-                        '</ul>'
-            }
+    var createTableForAllProtocols = function(protocols) {
+        var trHTML = ""
+        $.each(protocols, function(i, protocol) {
+            trHTML +=
+                '<tr>' +
+                    '<td>' + protocol.protocolServer + '</td>' +
+                    '<td>' + protocol.totalMessagesSent + '</td>' +
+                    '<td>' + protocol.totalMessagesRecieved + '</td>' +
+                    '<td>' + protocol.totalRequests + '</td>' +
+                    '<td>' + protocol.totalBadRequests + '</td>' +
+                    '<td>' + protocol.totalErrors + '</td>' +
+                '</tr>'
         });
-        return HTML
+        return trHTML
+    }
+
+    // Updates all the subscriber counters on the main
+    var refreshSubscribersAndPublishers = function(subscribers, publishers) {
+        $('.totalSubscribers').each(function() {
+            $(this).text(subscribers)
+        });
+        $('.totalPublishers').each(function() {
+            $(this).text(publishers)
+        });
+    }
+
+    var refreshCoreServiceStatistics = function(statistics) {
+        $('#messagesSent').html(statistics.totalMessagesSent)
+        $('#messagesReceived').html(statistics.totalMessagesReceived)
+        $('#totalRequests').html(statistics.totalRequests)
+        $('#badRequests').html(statistics.totalBadRequests)
+        $('#totalErrors').html(statistics.totalErrors)
+        refreshSubscribersAndPublishers(statistics.subscribers, statistics.publishers)
     }
 
     return {
+        refreshSubscribersAndPublishers: refreshSubscribersAndPublishers,
         refresh: function(data) {
-            $('#stats-total-messages').html('<strong>Messages sent: </strong>' + data.totalMessages)
-            $('#stats-total-requests').html('<strong>Requests handled: </strong>' + data.totalRequests)
+            var table = createTableForAllProtocols(data.protocolServerStatistics)
+            $('#protocol-table').html(table)
 
-            $('#stats-total-badrequests').html('<strong>Bad requests: </strong>' + data.totalBadRequests)
-            $('#stats-total-error').html('<strong>Total errors: </strong>' + data.totalErrors)
-
-            $('#totalram').html('<strong>Total RAM: </strong>' + data.ramTotal + ' MB')
-            $('#freeram').html('<strong>Free RAM: </strong>' + data.ramFree + ' MB')
-            $('#ramuse').html('<strong>Used RAM: </strong>' + data.ramUse + ' MB')
-            $('#cpucores').html('<strong>CPU cores: </strong>' + data.cpuUse)
-            $('#protocolList').html(fillTable(data))
+            refreshCoreServiceStatistics(data.coreServiceStatistics)
         }
     }
 

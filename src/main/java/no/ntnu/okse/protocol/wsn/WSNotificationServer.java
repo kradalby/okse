@@ -49,6 +49,7 @@ import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.xml.XmlConfiguration;
 import org.ntnunotif.wsnu.base.internal.ServiceConnection;
 import org.ntnunotif.wsnu.base.net.NuNamespaceContextResolver;
+import org.ntnunotif.wsnu.base.net.XMLParser;
 import org.ntnunotif.wsnu.base.util.InternalMessage;
 import org.ntnunotif.wsnu.base.util.RequestInformation;
 import org.ntnunotif.wsnu.services.general.WsnUtilities;
@@ -58,12 +59,14 @@ import org.ntnunotif.wsnu.services.implementations.subscriptionmanager.SimpleSub
 import org.oasis_open.docs.wsn.b_2.NotificationMessageHolderType;
 import org.oasis_open.docs.wsn.b_2.Notify;
 import org.oasis_open.docs.wsn.b_2.TopicExpressionType;
+import org.xmlsoap.schemas.soap.envelope.Envelope;
 import sun.corba.OutputStreamFactory;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.XMLConstants;
+import javax.xml.bind.JAXBElement;
 import javax.xml.namespace.QName;
 
 /**
@@ -325,13 +328,13 @@ public class WSNotificationServer extends AbstractProtocolServer {
         if (!message.getOriginProtocol().equals(protocolServerType)) {
             log.debug("The message originated from other protocol than WSNotification");
 
-            // Create wrapper provided the message, subscriptionref, publisherref and dialect
-            Notify notify = WSNTools.generateNotificationMessage(
-                    message,    // OKSE Message object
-                    message.getAttribute(WSNSubscriptionManager.WSN_ENDPOINT_TOKEN), // Returns publisherKey found
-                    null, // We do not yet know the recipient endpoints
-                    WSNTools._ConcreteTopicExpression
-            );
+            // Create the Notify wrapper
+            Notify notify = WSNTools.createNotify(message);
+
+            if (notify == null) {
+                totalErrors++;
+                log.error("Aborting sendMessage as content failed parsing");
+            }
 
             /*
                 Start to resolve recipients. The reason we cannot re-use the WSNCommandProxy's
@@ -344,6 +347,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
             // bind namespaces to topics
             for (NotificationMessageHolderType holderType : notify.getNotificationMessage()) {
 
+                // Extract the topic
                 TopicExpressionType topic = holderType.getTopic();
 
                 if (holderType.getTopic() != null) {
@@ -366,6 +370,9 @@ public class WSNotificationServer extends AbstractProtocolServer {
             // For all valid recipients
             for (String recipient : _commandProxy.getAllRecipients()) {
 
+                // If the subscription has expired, continue
+                if (_commandProxy.getProxySubscriptionManager().getSubscriber(recipient).hasExpired()) continue;
+
                 // Filter do filter handling, if any
                 Notify toSend = _commandProxy.getRecipientFilteredNotify(recipient, notify, namespaceContextResolver);
 
@@ -379,6 +386,19 @@ public class WSNotificationServer extends AbstractProtocolServer {
                     );
                     // Update the requestinformation
                     outMessage.getRequestInformation().setEndpointReference(_commandProxy.getEndpointReferenceOfRecipient(recipient));
+
+                    // Check if the subscriber has requested raw message format
+                    // If the recipient has requested UseRaw, remove Notify payload wrapping
+                    if (_commandProxy
+                            .getProxySubscriptionManager()
+                            .getSubscriber(recipient)
+                            .getAttribute(WSNSubscriptionManager.WSN_USERAW_TOKEN) != null) {
+
+                        Object content = WSNTools.extractMessageContentFromNotify(toSend);
+                        // Update the InternalMessage with the content of the NotificationMessage
+                        outMessage.setMessage(content);
+                    }
+
                     // Pass it along to the requestparser
                     _requestParser.acceptLocalMessage(outMessage);
                 }
@@ -393,7 +413,8 @@ public class WSNotificationServer extends AbstractProtocolServer {
      * @return A string representing the complete URI of this ProtocolServer
      */
     public static String getURI(){
-        if(_singleton._server.getURI() == null){
+        if (_singleton._server.getURI() == null) {
+            _singleton.log.warn("Failed to fetch URI of server");
             return "http://0.0.0.0:8080";
         }
         return "http://" + _singleton._server.getURI().getHost()+ ":" + (_singleton._server.getURI().getPort() > -1 ? _singleton._server.getURI().getPort() : 8080);
@@ -473,7 +494,6 @@ public class WSNotificationServer extends AbstractProtocolServer {
 
                 while(returnMessage.hasMoreElements()) {
                     String inputStream = (String)returnMessage.nextElement();
-                    log.debug(outMessage + "=" + inputStream);
                     if(outMessage.equals("Transfer-Encoding") && inputStream.equals("chunked")) {
                         log.debug("Found Transfer-Encoding was chunked.");
                         isChunked = true;

@@ -24,54 +24,65 @@
 
 package no.ntnu.okse.web.controller;
 
-import no.ntnu.okse.Application;
+import no.ntnu.okse.core.CoreService;
+import no.ntnu.okse.core.subscription.SubscriptionService;
 import no.ntnu.okse.protocol.ProtocolServer;
 import no.ntnu.okse.web.model.ProtocolStats;
-import no.ntnu.okse.web.model.Stats;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 
 /**
  * Created by Fredrik on 13/03/15.
  */
 
 @RestController
-@RequestMapping(value = "/api/stats")
+@RequestMapping(value = "/api/statistics")
 public class StatsController {
 
-    @RequestMapping(method = RequestMethod.GET)
-    public Stats stats() {
+    private static final String GET_STATS = "/get/all";
+
+
+    @RequestMapping(method = RequestMethod.GET, value = GET_STATS)
+    public @ResponseBody HashMap<String, Object> getAllStats() {
+        CoreService cs = CoreService.getInstance();
+        SubscriptionService ss = SubscriptionService.getInstance();
+
+        HashMap<String, Object> result = new HashMap<>();
+
+        // CoreService statistics
+        result.put("coreServiceStatistics", new HashMap<String, Object>(){{
+            put("totalMessagesSent", cs.getTotalMessagesSentFromProtocolServers());
+            put("totalMessagesReceived", cs.getTotalMessagesRecievedFromProtocolServers());
+            put("totalRequests", cs.getTotalRequestsFromProtocolServers());
+            put("totalBadRequests", cs.getTotalBadRequestsFromProtocolServers());
+            put("totalErrors", cs.getTotalErrorsFromProtocolServers());
+            put("publishers", ss.getNumberOfPublishers());
+            put("subscribers", ss.getNumberOfSubscribers());
+        }});
 
         // ProtocolServer statistics
-        int totalMessages = Application.cs.getTotalMessagesSentFromProtocolServers();
-        int totalRequests = Application.cs.getTotalRequestsFromProtocolServers();
+        ArrayList<ProtocolServer> protocols = cs.getAllProtocolServers();
+        ArrayList<ProtocolStats> protocolStats = new ArrayList<>();
 
-        int totalBadRequests = Application.cs.getTotalBadRequestsFromProtocolServers();
-        int totalErrors = Application.cs.getTotalErrorsFromProtocolServers();
+        protocols.forEach(p -> {
+            protocolStats.add(new ProtocolStats(
+                    p.getProtocolServerType(),
+                    p.getTotalMessagesSent(),
+                    p.getTotalMessagesRecieved(),
+                    p.getTotalRequests(),
+                    p.getTotalBadRequests(),
+                    p.getTotalErrors()
+            ));
+        });
+        result.put("protocolServerStatistics", protocolStats);
 
-        double cpuAvailable = Runtime.getRuntime().availableProcessors();
-        long totalRam = Runtime.getRuntime().totalMemory();
-        long freeRam = Runtime.getRuntime().freeMemory();
-        ArrayList<ProtocolServer> protocols = Application.cs.getAllProtocolServers();
-        ArrayList<ProtocolStats> protocolstats = new ArrayList<>();
-
-        for (ProtocolServer each : protocols) {
-            protocolstats.add(new ProtocolStats(each.getProtocolServerType(), each.getTotalRequests(), each.getTotalMessagesSent()));
-        }
-
-        Stats stat = new Stats(freeRam, totalRam, cpuAvailable, totalRequests, totalMessages, totalBadRequests, totalErrors, protocolstats);
-
-
-        return stat;
-
-
-
-
-
-
+        return result;
     }
 }
 

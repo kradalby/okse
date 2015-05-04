@@ -24,6 +24,7 @@
 
 package no.ntnu.okse.web.controller;
 
+import no.ntnu.okse.core.Utilities;
 import no.ntnu.okse.core.subscription.SubscriptionService;
 import org.springframework.beans.factory.annotation.Value;
 import no.ntnu.okse.Application;
@@ -49,9 +50,9 @@ import java.util.logging.Logger;
  * okse is licenced under the MIT licence.
  */
 @Controller
-public class IndexController {
+public class IndexViewController {
 
-    private static org.apache.log4j.Logger log = org.apache.log4j.Logger.getLogger(IndexController.class.getName());
+    private static org.apache.log4j.Logger log = org.apache.log4j.Logger.getLogger(IndexViewController.class.getName());
 
     @Value("${spring.application.name}")
     private String appName;
@@ -67,9 +68,13 @@ public class IndexController {
             return "fragments/indexNotLoggedIn";
         }
 
+        SubscriptionService ss = SubscriptionService.getInstance();
+
         model.addAttribute("projectName", appName);
         model.addAttribute("environment", createEnvironmentList());
-        model.addAttribute("subscribers", SubscriptionService.getInstance().getAllSubscribers().size());
+        model.addAttribute("subscribers", ss.getNumberOfSubscribers());
+        model.addAttribute("publishers", ss.getNumberOfPublishers());
+        model.addAttribute("uptime", Utilities.getDurationAsISO8601(Application.getRunningTime()));
 
         HashSet<String> ipAddresses = new HashSet<>();
 
