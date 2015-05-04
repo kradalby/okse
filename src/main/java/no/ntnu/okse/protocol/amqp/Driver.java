@@ -117,20 +117,9 @@ public class Driver extends BaseHandler {
     @Override
     public void onTransport(Event evt) {
         Transport transport = evt.getTransport();
-        System.out.println("OnConnection ----------------------");
-        printByteBuffer(transport.head());
-        System.out.println("OnConnection ----------------------");
         ChannelHandler ch = (ChannelHandler) transport.getContext();
         ch.selected();
     }
-
-    //BOUND remoteopen localopen
-//    @Override
-//    public void onSessionInit(Event evt) {
-//        Transport transport = evt.getTransport();
-//        System.out.println("OnConnection ----------------------");
-//        printByteBuffer(transport.head());
-//    }
 
     @Override
     public void onConnectionLocalOpen(Event evt) {
@@ -164,22 +153,19 @@ public class Driver extends BaseHandler {
 
         public void selected() throws IOException {
             SocketChannel sock = socket.accept();
-            System.out.println(1);
-            log.debug("ACCEPTED: " + sock);
             Connection conn = Connection.Factory.create();
             conn.collect(collector);
+            log.debug("ACCEPTED: " + sock);
             Transport transport = Transport.Factory.create();
-            System.out.println("Acceptor selected --------------------------------");
-            printByteBuffer(transport.head());
-            System.out.println("Acceptor selected --------------------------------");
-            Sasl sasl = transport.sasl();
-            sasl.setMechanisms("ANONYMOUS");
-            sasl.server();
-            sasl.done(Sasl.PN_SASL_OK);
+            if (AMQProtocolServer.getInstance().useSASL) {
+                Sasl sasl = transport.sasl();
+                sasl.setMechanisms("ANONYMOUS");
+                sasl.server();
+                Sasl.SaslOutcome outcome = sasl.getOutcome();
+                sasl.done(Sasl.PN_SASL_OK);
+            }
             transport.bind(conn);
-            System.out.println(2);
             new ChannelHandler(sock, SelectionKey.OP_READ, transport);
-            System.out.println(3);
         }
     }
 
@@ -192,18 +178,10 @@ public class Driver extends BaseHandler {
 
         ChannelHandler(SocketChannel socket, int ops, Transport transport) throws IOException {
             this.socket = socket;
-            System.out.println(4);
             socket.configureBlocking(false);
-            System.out.println(5);
             key = socket.register(selector, ops, this);
-            System.out.println(6);
             this.transport = transport;
-            System.out.println(7);
-            System.out.println("ChannelHandler Constructor --------------------------------");
-            printByteBuffer(transport.head());
-            System.out.println("ChannelHandler Constructor --------------------------------");
             transport.setContext(this);
-            System.out.println(8);
         }
 
         boolean update() {
@@ -284,9 +262,11 @@ public class Driver extends BaseHandler {
 
     private static Transport makeTransport(Connection conn) {
         Transport transport = Transport.Factory.create();
-        Sasl sasl = transport.sasl();
-        sasl.setMechanisms("ANONYMOUS");
-        sasl.client();
+        if (AMQProtocolServer.getInstance().useSASL) {
+            Sasl sasl = transport.sasl();
+            sasl.setMechanisms("ANONYMOUS");
+            sasl.client();
+        }
         transport.bind(conn);
         return transport;
     }
@@ -308,7 +288,7 @@ public class Driver extends BaseHandler {
 
     public void printByteBuffer(ByteBuffer buf) {
         for (int i = 0; i < buf.limit();i++) {
-            //System.out.println(String.format("Position: %s: %s", i, buf.get(i)));
+            System.out.println(String.format("Position: %s: %s", i, buf.get(i)));
         }
     }
 
