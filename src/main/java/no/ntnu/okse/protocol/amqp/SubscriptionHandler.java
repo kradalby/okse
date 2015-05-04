@@ -172,6 +172,7 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
             }
         }
         log.debug("Detaching: " + sender.getSession().getConnection().getRemoteHostname());
+        sender.abort();
         sender.detach();
         sender.close();
         log.debug(outgoing.toString());
@@ -224,33 +225,39 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
         add(event.getLink());
     }
 
-    /*@Override
-    public void onLinkLocalClose(Event event) {
-        log.debug("Local link closed");
-        remove(event.getLink());
-    }*/
+    @Override
+    public void onConnectionUnbound(Event event) {
+        if (event.getLink() instanceof Sender) {
+            log.debug("Local link closed");
+            SubscriptionService.getInstance().removeSubscriber(localSenderSubscriberMap.get(event.getLink()));
+        }
+        //Driver: CLOSING: java.nio.channels.SocketChannel[connected local=/127.0.0.1:61050 remote=/127.0.0.1:56151]
+    }
 
-    /*@Override
+    /*
+    @Override
     public void onLinkFinal(Event event) {
         log.debug("Local link final");
-        remove(event.getLink());
+        SubscriptionService.getInstance().removeSubscriber(localSenderSubscriberMap.get(event.getLink()));
 
     }*/
-   /* @Override
+   /*@Override
     public void onConnectionRemoteClose(Event event) {
-        log.debug("Remote connection closed, calling remove...");
-        if (event.getLink() instanceof Sender) {
-            remove(event.getLink());
-        }
-    }*/
+       log.debug("Remote connection closed, calling remove...");
+       if (event.getLink() instanceof Sender) {
+           SubscriptionService.getInstance().removeSubscriber(localSenderSubscriberMap.get(event.getLink()));
+       }
+   }*/
+
 
     /*@Override
     public void onConnectionLocalClose(Event event) {
         log.debug("Local connection closed, calling remove...");
         if (event.getLink() instanceof Sender) {
-            remove(event.getLink());
+            SubscriptionService.getInstance().removeSubscriber(localSenderSubscriberMap.get(event.getLink()));
         }
     }*/
+
 
     @Override
     @WebMethod(exclude = true)
@@ -261,10 +268,10 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
             if (e.getType().equals(SubscriptionChangeEvent.Type.UNSUBSCRIBE)) {
                 log.debug("Check if Key exists: " + localSubscriberSenderMap.containsKey(e.getData()));
                 log.debug("Unsubscribing " + localSubscriberSenderMap.get(e.getData()));
+                //Close AMQP connection
+                localSubscriberSenderMap.get(e.getData()).getSession().getConnection().close();
                 // Remove the local mappings from AMQP subscriptionKey to OKSE Subscriber object and AMQP subscriptionHandle
                 remove(localSubscriberSenderMap.get(e.getData()));
-                //Close AMQP connection
-
             } else if (e.getType().equals(SubscriptionChangeEvent.Type.SUBSCRIBE)) {
                 log.debug("Recieved a SUBSCRIBE event");
                 // TODO: Investigate if we really need to do anything here since it will function as a callback
