@@ -49,7 +49,7 @@ public class AMQProtocolServer extends AbstractProtocolServer {
 
     // Internal default values
     private static final String DEFAULT_HOST = "0.0.0.0";
-    private static final int DEFAULT_PORT = 61050;
+    private static final int DEFAULT_PORT = 5672;
 
     private Driver driver;
 
