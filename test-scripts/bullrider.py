@@ -49,7 +49,7 @@ NOTIFY = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <s:Body>
 <wsnt:Notify>
 <wsnt:NotificationMessage>
-<wsnt:Topic Dialect="http://docs.oasis-open.org/wsn/t-1/TopicExpression/Full">%s</wsnt:Topic>
+<wsnt:Topic Dialect="http://docs.oasis-open.org/wsn/t-1/TopicExpression/Concrete">%s</wsnt:Topic>
 <wsnt:Message><notifyContent>%s</notifyContent></wsnt:Message>
 </wsnt:NotificationMessage>
 </wsnt:Notify>
