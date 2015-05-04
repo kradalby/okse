@@ -420,7 +420,7 @@ public class WSNRequestParser implements Hub {
 
     @Override
     public InternalMessage acceptLocalMessage(InternalMessage internalMessage) {
-        return this._protocolServer.sendMessage(this.generateOutgoingMessage(internalMessage));
+        return _protocolServer.sendMessage(this.generateOutgoingMessage(internalMessage));
     }
 
     @Override
@@ -430,17 +430,17 @@ public class WSNRequestParser implements Hub {
 
     @Override
     public void registerService(ServiceConnection serviceConnection) {
-        this._protocolServer.registerService(serviceConnection);
+        _protocolServer.registerService(serviceConnection);
     }
 
     @Override
     public void removeService(ServiceConnection serviceConnection) {
-        this._protocolServer.removeService(serviceConnection);
+        _protocolServer.removeService(serviceConnection);
     }
 
     @Override
     public boolean isServiceRegistered(ServiceConnection serviceConnection) {
-        return this._protocolServer.getServices().contains(serviceConnection);
+        return _protocolServer.getServices().contains(serviceConnection);
     }
 
     @Override
