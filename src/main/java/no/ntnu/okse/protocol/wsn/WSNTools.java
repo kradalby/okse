@@ -26,15 +26,25 @@ package no.ntnu.okse.protocol.wsn;
 
 import no.ntnu.okse.core.messaging.Message;
 import org.apache.log4j.Logger;
+import org.ntnunotif.wsnu.base.net.NuNamespaceContextResolver;
 import org.ntnunotif.wsnu.base.net.XMLParser;
+import org.ntnunotif.wsnu.base.topics.ConcreteEvaluator;
+import org.ntnunotif.wsnu.base.topics.FullEvaluator;
 import org.ntnunotif.wsnu.base.util.InternalMessage;
+import org.oasis_open.docs.wsn.b_2.NotificationMessageHolderType;
 import org.oasis_open.docs.wsn.b_2.Notify;
+import org.oasis_open.docs.wsn.b_2.ObjectFactory;
+import org.oasis_open.docs.wsn.b_2.TopicExpressionType;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.xmlsoap.schemas.soap.envelope.Envelope;
 
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.*;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
@@ -193,5 +203,74 @@ public class WSNTools {
      */
     public static Object extractMessageContentFromNotify(Notify notify) {
         return notify.getNotificationMessage().get(0).getMessage().getAny();
+    }
+
+    /**
+     * This method is a helper method to build a Notify with its context. It is meant as example on how this may be
+     * solved.
+     *
+     * @return a notify with its context
+     */
+    public static NotifyWithContext buildNotifyWithContext(String content, String topic, String prefix, String namespace) {
+
+        // Create a contextResolver, and fill it with the namespace bindings used in the notify
+        NuNamespaceContextResolver contextResolver = new NuNamespaceContextResolver();
+        contextResolver.openScope();
+        contextResolver.putNamespaceBinding(prefix, namespace);
+
+        // Build the notify
+        ObjectFactory factory = new ObjectFactory();
+        Notify notify = factory.createNotify();
+
+            // Create message and holder
+            NotificationMessageHolderType.Message message = factory.createNotificationMessageHolderTypeMessage();
+            NotificationMessageHolderType messageHolderType = factory.createNotificationMessageHolderType();
+
+            // create message content
+            try {
+                DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+                Document document = documentBuilderFactory.newDocumentBuilder().newDocument();
+                Element element = document.createElement("message");
+                element.setTextContent(content);
+                message.setAny(element);
+            } catch (ParserConfigurationException e) {
+                System.err.println("failed to build message");
+            }
+
+            // Set holders message
+            messageHolderType.setMessage(message);
+
+            // Build topic expression
+            String expression = prefix + ":" + topic;
+            // Build topic
+            TopicExpressionType topicExpressionType = factory.createTopicExpressionType();
+            topicExpressionType.setDialect(ConcreteEvaluator.dialectURI);
+            topicExpressionType.getContent().add(expression);
+
+            messageHolderType.setTopic(topicExpressionType);
+
+            // remember to bind the necessary objects to the context
+            contextResolver.registerObjectWithCurrentNamespaceScope(message);
+            contextResolver.registerObjectWithCurrentNamespaceScope(topicExpressionType);
+
+            // Add message to the notify
+            notify.getNotificationMessage().add(messageHolderType);
+
+
+        // ready for return
+        contextResolver.closeScope();
+        NotifyWithContext notifyWithContext = new NotifyWithContext();
+        notifyWithContext.notify = notify;
+        notifyWithContext.nuNamespaceContextResolver = contextResolver;
+
+        return notifyWithContext;
+    }
+
+    /**
+     * A wrapper class to hold a notify with its context.
+     */
+    public static class NotifyWithContext {
+        public Notify notify;
+        public NuNamespaceContextResolver nuNamespaceContextResolver;
     }
 }

@@ -90,7 +90,7 @@ xsi:schemaLocation="http://docs.oasis-open.org/wsn/b-2 http://docs.oasis-open.or
 <ns6:Body>
 <ns3:Subscribe>
 <ns3:ConsumerReference><ns2:Address>%s</ns2:Address></ns3:ConsumerReference>
-<ns3:Filter xmlns:test="http://test.com" xmlns:test2="http://test2.com"><ns3:TopicExpression Dialect="http://docs.oasis-open.org/wsn/t-1/TopicExpression/Concrete">%s</ns3:TopicExpression></ns3:Filter>
+<ns3:Filter xmlns:msg="http://okse.default.message"><ns3:TopicExpression Dialect="http://docs.oasis-open.org/wsn/t-1/TopicExpression/Concrete">%s</ns3:TopicExpression></ns3:Filter>
 <ns3:InitialTerminationTime>2016-01-01T00:00:00</ns3:InitialTerminationTime>
 </ns3:Subscribe>
 </ns6:Body>
@@ -185,7 +185,7 @@ xmlns:ns6="http://schemas.xmlsoap.org/soap/envelope/">
 <ns3:Subscribe>
 <ns3:ConsumerReference><ns2:Address>%s</ns2:Address></ns3:ConsumerReference>
 <ns3:Filter><ns3:TopicExpression Dialect="http://docs.oasis-open.org/wsn/t-1/TopicExpression/Concrete">%s</ns3:TopicExpression>
-<ns3:MessageContent Dialect="http://www.w3.org/TR/1999/REC-xpath-19991116">/notifyContent[text()="derp"]</ns3:MessageContent>
+<ns3:MessageContent Dialect="http://www.w3.org/TR/1999/REC-xpath-19991116">/message[text()="derp"]</ns3:MessageContent>
 </ns3:Filter>
 </ns3:Subscribe>
 </ns6:Body>

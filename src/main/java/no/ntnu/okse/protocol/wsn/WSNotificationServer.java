@@ -372,7 +372,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
             log.debug("The message originated from other protocol than WSNotification");
 
             // Create the Notify wrapper
-            Notify notify = WSNTools.createNotify(message);
+            WSNTools.NotifyWithContext notify = WSNTools.buildNotifyWithContext(message.getMessage(), message.getTopic(), "msg", "http://okse.default.message");
 
             if (notify == null) {
                 totalErrors++;
@@ -385,10 +385,10 @@ public class WSNotificationServer extends AbstractProtocolServer {
                 thus creating duplicate messages.
              */
 
-            NuNamespaceContextResolver namespaceContextResolver = new NuNamespaceContextResolver();
+            NuNamespaceContextResolver namespaceContextResolver = notify.nuNamespaceContextResolver;
 
             // bind namespaces to topics
-            for (NotificationMessageHolderType holderType : notify.getNotificationMessage()) {
+            for (NotificationMessageHolderType holderType : notify.notify.getNotificationMessage()) {
 
                 // Extract the topic
                 TopicExpressionType topic = holderType.getTopic();
@@ -417,7 +417,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
                 if (_commandProxy.getProxySubscriptionManager().getSubscriber(recipient).hasExpired()) continue;
 
                 // Filter do filter handling, if any
-                Notify toSend = _commandProxy.getRecipientFilteredNotify(recipient, notify, namespaceContextResolver);
+                Notify toSend = _commandProxy.getRecipientFilteredNotify(recipient, notify.notify, namespaceContextResolver);
 
                 // If any message was left to send, send it
                 if (toSend != null) {

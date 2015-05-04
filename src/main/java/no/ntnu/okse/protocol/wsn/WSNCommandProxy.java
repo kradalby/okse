@@ -301,13 +301,10 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
 
                 } catch (InvalidTopicExpressionFault invalidTopicExpressionFault) {
                     log.warn("Tried to send a topic with an invalid expression");
-                    invalidTopicExpressionFault.printStackTrace();
                 } catch (MultipleTopicsSpecifiedFault multipleTopicsSpecifiedFault) {
                     log.warn("Tried to send a message with multiple topics");
-                    multipleTopicsSpecifiedFault.printStackTrace();
                 } catch (TopicExpressionDialectUnknownFault topicExpressionDialectUnknownFault) {
                     log.warn("Tried to send a topic with an invalid expression dialect");
-                    topicExpressionDialectUnknownFault.printStackTrace();
                 }
             }
         }
