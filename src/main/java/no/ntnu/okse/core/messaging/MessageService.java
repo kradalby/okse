@@ -248,6 +248,7 @@ public class MessageService extends AbstractCoreService implements TopicChangeLi
     /**
      * Takes in a message and a HashSet of topics and creates duplicate messages of
      * the origin message, and returns it as a list.
+     *
      * @param m The origin message
      * @param topics A HashSet containing all the topics that the message topic is mapped against
      * @return A containing the new message objects, to dispatch into the queue.

@@ -29,6 +29,7 @@ import no.ntnu.okse.core.AbstractCoreService;
 import no.ntnu.okse.core.Utilities;
 import no.ntnu.okse.core.event.TopicChangeEvent;
 import no.ntnu.okse.core.event.listeners.TopicChangeListener;
+import no.ntnu.okse.core.subscription.SubscriptionService;
 import org.eclipse.jetty.util.ConcurrentHashSet;
 
 import java.util.*;
@@ -98,12 +99,10 @@ public class TopicService extends AbstractCoreService {
 
                 for (String toMapTo: toMapToList) {
                     addTopic(toMapTo);
+                    addMappingBetweenTopics(toMapFrom, toMapTo);
                 }
-
-                mappings.put(toMapFrom, new HashSet<String>(Arrays.asList(toMapToList)));
-                log.debug("Found mapping between " + toMapFrom + " and " + mappings.get(toMapFrom));
             }
-            log.debug("Predefined mappings: " + mappings);
+            log.debug("Predefined mappings are: " + mappings);
             log.info("Topic mapping configuration done");
         }
     }
@@ -400,8 +399,20 @@ public class TopicService extends AbstractCoreService {
      */
     public void deleteMapping(String mapping) {
         if (mappings.containsKey(mapping)) {
-            mappings.remove(mapping);
-            log.debug("Removed the mapping for topic: " + mapping);
+            HashSet<String> mappedAgainst = mappings.remove(mapping);
+
+            if (SubscriptionService.getInstance().getAllSubscribersForTopic(mapping).isEmpty()) {
+                log.debug("Removing Topic{" + mapping + "} due to mapping removal because it doesn't have any subscribers");
+                deleteTopic(mapping);
+            }
+
+            mappedAgainst.forEach(t -> {
+                if (SubscriptionService.getInstance().getAllSubscribersForTopic(t).isEmpty()) {
+                    log.debug("Removing Topic{" + t + "} due to mapping removal because it doesn't have any subscribers");
+                    deleteTopic(t);
+                }
+            });
+            log.info("Removed the mappings for Topic{" + mapping + "}");
         } else {
             log.warn("Attempt to remove a mapping that did in fact not exist ");
         }
@@ -439,6 +450,23 @@ public class TopicService extends AbstractCoreService {
         } else {
             log.warn("Attempt to remove a topic that did in fact not exist.");
         }
+    }
+
+    /**
+     * Accepts two topic string and creates this topics. It also adds it to the mapping HashMap
+     * @param fromTopic Topic to map from
+     * @param toTopic Topic to map to
+     */
+    public void addMappingBetweenTopics(String fromTopic, String toTopic) {
+        addTopic(fromTopic);
+        addTopic(toTopic);
+
+        if (! mappings.containsKey(fromTopic)) {
+            mappings.put(fromTopic, new HashSet<String>(Arrays.asList(toTopic)));
+        } else {
+            mappings.get(fromTopic).add(toTopic);
+        }
+        log.debug("Added mapping between Topic{" + fromTopic + "} and Topic{" + toTopic + "}");
     }
 
     /**

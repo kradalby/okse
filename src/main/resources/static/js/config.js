@@ -67,7 +67,7 @@ var Config = (function($) {
                 $(e.target).addClass("disabled")
 
                 Main.ajax({
-                    url: 'config/mapping/delete/' + fromTopic,
+                    url: 'config/mapping/delete/single?topic=' + fromTopic,
                     type: 'DELETE',
                     success: function(data) {
                         $.okseDebug.logPrint("[Debug][Config] Callback from server; mapping deleted")
@@ -88,6 +88,8 @@ var Config = (function($) {
         refresh: function(response) {
             unBindButtons()
 
+
+
             var count = Object.keys(response).length
 
             if ( ! count == 0 ) {
@@ -97,18 +99,19 @@ var Config = (function($) {
             }
 
             bindButtons()
+
         },
         init: function() {
             $('#add-mapping').on('click', function(e) {
                 e.preventDefault()
                 Main.ajax({
-                    url: 'config/mapping/add/' + 'tmbn' + '/' + 'nato',
+                    url: 'config/mapping/add?fromTopic=' + encodeURIComponent($('#from-topic').val()) + '&toTopic=' + encodeURIComponent($('#to-topic').val()),
                     type: 'POST',
                     success: function(data) {
                         $.okseDebug.logPrint("[Debug][Topics] Callback from server; added mapping")
                     },
                     error: function(xhr, status, error) {
-                        Main.displayMessage('Unable to add mapping')
+                        Main.displayMessage('The broker were unable to add the mapping, try again!')
                         Main.error(xhr, status, error)
                     }
                 });

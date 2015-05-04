@@ -2,8 +2,12 @@ package no.ntnu.okse.web.controller;
 
 import no.ntnu.okse.core.topic.TopicService;
 import org.apache.log4j.Logger;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 
@@ -17,8 +21,9 @@ import java.util.HashSet;
 public class ConfigController {
 
     private static final String GET_ALL_MAPPINGS = "/mapping/get/all";
-    private static final String ADD_MAPPING = "/mapping/add/{topic}/{newTopic}";
-    private static final String DELETE_MAPPING = "/mapping/delete/{topicToRemove}";
+    private static final String ADD_MAPPING = "/mapping/add";
+    private static final String DELETE_MAPPING = "/mapping/delete/single";
+    private static final String DELETE_ALL_MAPPINGS = "mapping/delete";
 
     private static Logger log = Logger.getLogger(ConfigController.class.getName());
 
@@ -29,17 +34,21 @@ public class ConfigController {
     }
 
     @RequestMapping(method = RequestMethod.POST, value= ADD_MAPPING)
-    public @ResponseBody String addMapping(@PathVariable("topic") String topic, @PathVariable("newTopic") String newTopic) {
-        log.debug("Adding a mapping between topic: " + topic + " and topic: " + newTopic);
-        return "{ \"added\" :true }"; // TODO: Add some other shit here!
+    public @ResponseBody ResponseEntity<String> addMapping(@RequestParam(value = "fromTopic") String topic, @RequestParam(value = "toTopic") String newTopic) {
+        log.debug("Adding a mapping between Topic{" + topic + "} and Topic{" + newTopic + "}");
+        TopicService ts = TopicService.getInstance();
+        ts.addMappingBetweenTopics(topic, newTopic);
+        // TODO: We probably need to add some check somewhere, that checks if the input string is correct.
+        return new ResponseEntity<String>("{ \"added\" :true }", HttpStatus.OK);
     }
 
     @RequestMapping(method = RequestMethod.DELETE, value = DELETE_MAPPING)
-    public @ResponseBody String deleteMapping(@PathVariable("topicToRemove") String topicToRemove) {
-        log.debug("Trying to remove the mapping for topic: " + topicToRemove);
+    public @ResponseBody ResponseEntity<String> deleteMapping(@RequestParam(value = "topic") String topicToRemove) {
+        log.debug("Trying to remove the mapping for Topic{" + topicToRemove + "}");
         TopicService ts = TopicService.getInstance();
         ts.deleteMapping(topicToRemove);
-        return "{ \"deleted\" :true }"; // TODO: Add check here or somewhere inside.
+
+        return new ResponseEntity<String>("{ \"deleted\" :true }", HttpStatus.OK);
     }
 
 }
