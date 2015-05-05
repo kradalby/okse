@@ -60,7 +60,6 @@ public class AMQPServerTest {
             Application.main(new String[0]);
         }
 
-        ps = AMQProtocolServer.getInstance();
         sh = new SubscriptionHandler();
         server = new AMQPServer(sh, false);
     }
@@ -69,7 +68,6 @@ public class AMQPServerTest {
     public void tearDown() throws Exception {
         server = null;
         sh = null;
-        ps = null;
         //CoreService.getInstance().stopAllProtocolServers();
         //CoreService.getInstance().getAllProtocolServers().forEach(ps ->  {
         //    CoreService.getInstance().removeProtocolServer(ps);
