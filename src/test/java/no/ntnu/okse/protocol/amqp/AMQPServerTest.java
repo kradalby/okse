@@ -44,67 +44,67 @@ import static org.testng.Assert.*;
 public class AMQPServerTest {
 
 
-    @BeforeMethod
-    public void setUp() throws Exception {
-        // This is _not_ a good way to detect
-        // if the AMQProtocolServer.getInstance().getServer() is initiated or not.
-        try{
-            new Socket("localhost", 8080).close();
-        }
-        catch(IOException e){
-            Application.main(new String[0]);
-        }
-
-    }
-
-    @AfterMethod
-    public void tearDown() throws Exception {
-        //CoreService.getInstance().stopAllProtocolServers();
-        //CoreService.getInstance().getAllProtocolServers().forEach(ps ->  {
-        //    CoreService.getInstance().removeProtocolServer(ps);
-        //});
-    }
-
-
-    @Test
-    public void testConvertAMQPMessageToMessageBytes() throws Exception {
-        String message = "Hei på test";
-        String topic = "test/testConvertAMQPMessageToMessageBytes";
-
-        Section body = new AmqpValue(message);
-
-        org.apache.qpid.proton.message.Message AMQPMessage = org.apache.qpid.proton.message.Message.Factory.create();
-
-        AMQPMessage.setAddress("127.0.0.1" + "/" + topic);
-        AMQPMessage.setSubject("Supertesty test");
-        AMQPMessage.setBody(body);
-
-        MessageBytes mb = AMQPServer.convertAMQPMessageToMessageBytes(AMQPMessage);
-
-        org.apache.qpid.proton.message.Message AMQPMessageReconstruct = org.apache.qpid.proton.message.Message.Factory.create();
-
-        AMQPMessageReconstruct.decode(mb.getBytes(), 0, mb.getBytes().length);
-
-        assertEquals(AMQPMessage.getAddress(), AMQPMessageReconstruct.getAddress());
-        assertEquals(AMQPMessage.getSubject(), AMQPMessageReconstruct.getSubject());
-        //assertEquals(AMQPMessage.getBody(), AMQPMessageReconstruct.getBody());
-        assertEquals((String) ((AmqpValue) AMQPMessage.getBody()).getValue(), (String) ((AmqpValue) AMQPMessageReconstruct.getBody()).getValue());
-    }
-
-    @Test
-    public void testConvertOkseMessageToAMQP() throws Exception {
-        String topic = "test";
-        Message okseMessage = new Message("Hei", topic, null, "AMQP");
-
-        org.apache.qpid.proton.message.Message AMQPMessage = AMQPServer.convertOkseMessageToAMQP(okseMessage);
-
-        Address address = new Address(AMQPMessage.getAddress());
-
-
-        assertEquals(okseMessage.getMessage(), (String) ((AmqpValue) AMQPMessage.getBody()).getValue());
-        assertEquals(okseMessage.getTopic(), address.getName());
-        assertEquals(okseMessage.getMessageID(), AMQPMessage.getSubject());
-    }
+//    @BeforeMethod
+//    public void setUp() throws Exception {
+//        // This is _not_ a good way to detect
+//        // if the AMQProtocolServer.getInstance().getServer() is initiated or not.
+//        try{
+//            new Socket("localhost", 8080).close();
+//        }
+//        catch(IOException e){
+//            Application.main(new String[0]);
+//        }
+//
+//    }
+//
+//    @AfterMethod
+//    public void tearDown() throws Exception {
+//        //CoreService.getInstance().stopAllProtocolServers();
+//        //CoreService.getInstance().getAllProtocolServers().forEach(ps ->  {
+//        //    CoreService.getInstance().removeProtocolServer(ps);
+//        //});
+//    }
+//
+//
+//    @Test
+//    public void testConvertAMQPMessageToMessageBytes() throws Exception {
+//        String message = "Hei på test";
+//        String topic = "test/testConvertAMQPMessageToMessageBytes";
+//
+//        Section body = new AmqpValue(message);
+//
+//        org.apache.qpid.proton.message.Message AMQPMessage = org.apache.qpid.proton.message.Message.Factory.create();
+//
+//        AMQPMessage.setAddress("127.0.0.1" + "/" + topic);
+//        AMQPMessage.setSubject("Supertesty test");
+//        AMQPMessage.setBody(body);
+//
+//        MessageBytes mb = AMQPServer.convertAMQPMessageToMessageBytes(AMQPMessage);
+//
+//        org.apache.qpid.proton.message.Message AMQPMessageReconstruct = org.apache.qpid.proton.message.Message.Factory.create();
+//
+//        AMQPMessageReconstruct.decode(mb.getBytes(), 0, mb.getBytes().length);
+//
+//        assertEquals(AMQPMessage.getAddress(), AMQPMessageReconstruct.getAddress());
+//        assertEquals(AMQPMessage.getSubject(), AMQPMessageReconstruct.getSubject());
+//        //assertEquals(AMQPMessage.getBody(), AMQPMessageReconstruct.getBody());
+//        assertEquals((String) ((AmqpValue) AMQPMessage.getBody()).getValue(), (String) ((AmqpValue) AMQPMessageReconstruct.getBody()).getValue());
+//    }
+//
+//    @Test
+//    public void testConvertOkseMessageToAMQP() throws Exception {
+//        String topic = "test";
+//        Message okseMessage = new Message("Hei", topic, null, "AMQP");
+//
+//        org.apache.qpid.proton.message.Message AMQPMessage = AMQPServer.convertOkseMessageToAMQP(okseMessage);
+//
+//        Address address = new Address(AMQPMessage.getAddress());
+//
+//
+//        assertEquals(okseMessage.getMessage(), (String) ((AmqpValue) AMQPMessage.getBody()).getValue());
+//        assertEquals(okseMessage.getTopic(), address.getName());
+//        assertEquals(okseMessage.getMessageID(), AMQPMessage.getSubject());
+//    }
 
 //    @Test
 //    public void testSendRecieveAMQPMessagesWhenQueueIsUsed() throws Exception {
