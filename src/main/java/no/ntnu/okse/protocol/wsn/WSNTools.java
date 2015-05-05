@@ -26,21 +26,33 @@ package no.ntnu.okse.protocol.wsn;
 
 import no.ntnu.okse.core.messaging.Message;
 import org.apache.log4j.Logger;
+import org.ntnunotif.wsnu.base.net.NuNamespaceContextResolver;
 import org.ntnunotif.wsnu.base.net.XMLParser;
+import org.ntnunotif.wsnu.base.topics.ConcreteEvaluator;
+import org.ntnunotif.wsnu.base.topics.FullEvaluator;
 import org.ntnunotif.wsnu.base.util.InternalMessage;
+import org.oasis_open.docs.wsn.b_2.NotificationMessageHolderType;
 import org.oasis_open.docs.wsn.b_2.Notify;
+import org.oasis_open.docs.wsn.b_2.ObjectFactory;
+import org.oasis_open.docs.wsn.b_2.TopicExpressionType;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.xmlsoap.schemas.soap.envelope.Envelope;
 
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.*;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -193,5 +205,125 @@ public class WSNTools {
      */
     public static Object extractMessageContentFromNotify(Notify notify) {
         return notify.getNotificationMessage().get(0).getMessage().getAny();
+    }
+
+    /**
+     * Injects an XML sub-tree into the message content of a notify
+     * @param object The Xml root subnode to be injected
+     * @param notify The Notify object to be updated
+     */
+    public static void injectMessageContentIntoNotify(Object object, Notify notify) {
+        notify.getNotificationMessage().get(0).getMessage().setAny(object);
+    }
+
+    /**
+     * Helper method that removes namespace prefixes from a topic expression
+     * @param topicExpression The raw topic expression as a string
+     * @return A rebuilt topic node set string without namespace prefixes
+     */
+    public static String removeNameSpacePrefixesFromTopicExpression(String topicExpression) {
+        // If we do not have any prefix delimiter, return
+        if (!topicExpression.contains(":")) return topicExpression;
+        // Create the holder list for our results
+        ArrayList<String> filteredNodeSet = new ArrayList<>();
+        // Split to an array of nodes
+        String[] nodes = topicExpression.split("/");
+        // Iterate through the nodes
+        for (String node : nodes) {
+            // If the current node contains a prefix delimiter
+            if (node.contains(":")) {
+                // Split the node
+                String[] filtered = node.split(":");
+                // Maybe superflous check for duplicate ocurrances of :
+                if (filtered.length == 2) filteredNodeSet.add(filtered[1]);
+                else {
+                    // If we had more than one ocurrance of : remove the first and keep remaining
+                    StringBuilder builder = new StringBuilder();
+                    for (int i = 1; i < filtered.length; i++) builder.append(filtered[i]);
+                    filteredNodeSet.add(builder.toString());
+                }
+            } else {
+                // If no namespace prefix was defined, just add to node set
+                filteredNodeSet.add(node);
+            }
+        }
+        // Return the node set after reinserting path delimiter
+        return String.join("/", filteredNodeSet);
+    }
+
+    /**
+     * Helper method that takes in raw string content,
+     *
+     * @return a notify with its context
+     */
+    public static NotifyWithContext buildNotifyWithContext(String content, String topic, String prefix, String namespace) {
+
+        // Create a contextResolver, and fill it with the namespace bindings used in the notify
+        NuNamespaceContextResolver contextResolver = new NuNamespaceContextResolver();
+        contextResolver.openScope();
+        if (prefix != null && namespace != null) contextResolver.putNamespaceBinding(prefix, namespace);
+
+        // Build the notify
+        ObjectFactory factory = new ObjectFactory();
+        Notify notify = factory.createNotify();
+
+            // Create message and holder
+            NotificationMessageHolderType.Message message = factory.createNotificationMessageHolderTypeMessage();
+            NotificationMessageHolderType messageHolderType = factory.createNotificationMessageHolderType();
+
+            Element e = buildGenericContentElement(content);
+            message.setAny(e);
+
+            // Set holders message
+            messageHolderType.setMessage(message);
+
+            // Build topic expression
+            String expression = (prefix != null && namespace != null) ? prefix + ":" + topic : topic;
+            // Build topic
+            TopicExpressionType topicExpressionType = factory.createTopicExpressionType();
+            topicExpressionType.setDialect(ConcreteEvaluator.dialectURI);
+            topicExpressionType.getContent().add(expression);
+
+            messageHolderType.setTopic(topicExpressionType);
+
+            // remember to bind the necessary objects to the context
+            contextResolver.registerObjectWithCurrentNamespaceScope(message);
+            contextResolver.registerObjectWithCurrentNamespaceScope(topicExpressionType);
+
+            // Add message to the notify
+            notify.getNotificationMessage().add(messageHolderType);
+
+
+        // ready for return
+        contextResolver.closeScope();
+        NotifyWithContext notifyWithContext = new NotifyWithContext();
+        notifyWithContext.notify = notify;
+        notifyWithContext.nuNamespaceContextResolver = contextResolver;
+
+        return notifyWithContext;
+    }
+
+    public static Element buildGenericContentElement(String content) {
+
+        // create message content
+        try {
+            DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+            Document document = documentBuilderFactory.newDocumentBuilder().newDocument();
+            Element element = document.createElement("Content");
+            element.setTextContent(content);
+            return element;
+        } catch (ParserConfigurationException e) {
+            log.error("Invalid parser configuration, unknown reason: " + e.getMessage());
+        }
+
+        return null;
+    }
+
+    /**
+     * A wrapper class to hold a notify with its context.
+     */
+    public static class NotifyWithContext {
+        public Notify notify;
+        public NuNamespaceContextResolver nuNamespaceContextResolver;
     }
 }

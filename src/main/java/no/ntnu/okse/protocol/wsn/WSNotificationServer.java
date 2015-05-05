@@ -54,6 +54,7 @@ import org.ntnunotif.wsnu.base.internal.ServiceConnection;
 import org.ntnunotif.wsnu.base.net.NuNamespaceContextResolver;
 import org.ntnunotif.wsnu.base.util.InternalMessage;
 import org.ntnunotif.wsnu.base.util.RequestInformation;
+import org.ntnunotif.wsnu.services.implementations.notificationproducer.AbstractNotificationProducer;
 import org.oasis_open.docs.wsn.b_2.NotificationMessageHolderType;
 import org.oasis_open.docs.wsn.b_2.Notify;
 import org.oasis_open.docs.wsn.b_2.TopicExpressionType;
@@ -371,12 +372,18 @@ public class WSNotificationServer extends AbstractProtocolServer {
         if (!message.getOriginProtocol().equals(protocolServerType)) {
             log.debug("The message originated from other protocol than WSNotification");
 
-            // Create the Notify wrapper
-            Notify notify = WSNTools.createNotify(message);
-
-            if (notify == null) {
-                totalErrors++;
-                log.error("Aborting sendMessage as content failed parsing");
+            WSNTools.NotifyWithContext notifywrapper = WSNTools.buildNotifyWithContext(message.getMessage(), message.getTopic(), null, null);
+            // If it contained XML, we need to create properly marshalled jaxb node structure
+            if (message.getMessage().contains("<") || message.getMessage().contains(">")) {
+                // Unmarshal from raw XML
+                Notify notify = WSNTools.createNotify(message);
+                // If it was malformed, or maybe just a message containing < or >, build it as generic content element
+                if (notify == null) {
+                    WSNTools.injectMessageContentIntoNotify(WSNTools.buildGenericContentElement(message.getMessage()), notifywrapper.notify);
+                // Else inject the unmarshalled XML nodes into the Notify message attribute
+                } else {
+                    WSNTools.injectMessageContentIntoNotify(WSNTools.extractMessageContentFromNotify(notify), notifywrapper.notify);
+                }
             }
 
             /*
@@ -385,10 +392,10 @@ public class WSNotificationServer extends AbstractProtocolServer {
                 thus creating duplicate messages.
              */
 
-            NuNamespaceContextResolver namespaceContextResolver = new NuNamespaceContextResolver();
+            NuNamespaceContextResolver namespaceContextResolver = notifywrapper.nuNamespaceContextResolver;
 
             // bind namespaces to topics
-            for (NotificationMessageHolderType holderType : notify.getNotificationMessage()) {
+            for (NotificationMessageHolderType holderType : notifywrapper.notify.getNotificationMessage()) {
 
                 // Extract the topic
                 TopicExpressionType topic = holderType.getTopic();
@@ -417,7 +424,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
                 if (_commandProxy.getProxySubscriptionManager().getSubscriber(recipient).hasExpired()) continue;
 
                 // Filter do filter handling, if any
-                Notify toSend = _commandProxy.getRecipientFilteredNotify(recipient, notify, namespaceContextResolver);
+                Notify toSend = _commandProxy.getRecipientFilteredNotify(recipient, notifywrapper.notify, namespaceContextResolver);
 
                 // If any message was left to send, send it
                 if (toSend != null) {

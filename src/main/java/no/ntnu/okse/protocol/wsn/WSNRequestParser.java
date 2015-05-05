@@ -205,8 +205,6 @@ public class WSNRequestParser implements Hub {
                         }
 
                         if (e.getLinkedException() != null) {
-                            // For DEBUG purposes
-                            e.printStackTrace();
                             faultMessage += "\n\tWith linked exception:" + e.getLinkedException().getClass().getName();
                             faultMessage += e.getLinkedException().getMessage() == null ? "" : e.getLinkedException().getMessage();
                         }

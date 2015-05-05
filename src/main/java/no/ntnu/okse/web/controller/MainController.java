@@ -43,7 +43,7 @@ import java.util.HashMap;
 @RestController
 public class MainController {
 
-    private static int MB = 1024 * 1024;
+    public static int MB = 1024 * 1024;
 
     private static Logger log = Logger.getLogger(MainController.class.getName());
 
