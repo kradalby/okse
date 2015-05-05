@@ -189,6 +189,14 @@ public class AMQPServer extends BaseHandler {
 
     public MessageBytes convertAMQPMessageToMessageBytes(Message msg) {
 
+        byte[] buffer = gestimateMessageByteSize(msg);
+
+        MessageBytes mb = new MessageBytes(buffer);
+        System.out.println("This is mb.length: " + mb.getBytes().length);
+        return mb;
+    }
+
+    private byte[] gestimateMessageByteSize(Message msg) {
         int guestimateByteSize = 0;
         if(msg.getBody().toString().length() != 0){
             guestimateByteSize += msg.getBody().toString().getBytes().length;
@@ -199,7 +207,7 @@ public class AMQPServer extends BaseHandler {
         if(msg.getSubject().getBytes().length != 0){
             guestimateByteSize += msg.getSubject().getBytes().length;
         }
-        System.out.println("Totalt antall bytes from guestimate int: " + guestimateByteSize);
+        System.out.println("Total amount bytes from guestimate int: " + guestimateByteSize);
         int encoded;
 
 
@@ -214,9 +222,8 @@ public class AMQPServer extends BaseHandler {
                 buffer = new byte[buffer.length+1];
             }
         }
-        MessageBytes mb = new MessageBytes(buffer);
-        System.out.println("This is mb.length: " + mb.getBytes().length);
-        return mb;
+
+        return buffer;
     }
 
     public Message convertOkseMessageToAMQP(no.ntnu.okse.core.messaging.Message message) {
