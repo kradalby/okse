@@ -96,6 +96,11 @@ public class AMQPServer extends BaseHandler {
         return String.format("%s", tag++).getBytes();
     }
 
+
+    public MessageBytes getFirstFromMessageQueueOnGivenTopic(String topic) {
+        return messages.get(topic);
+    }
+
 //    private int send(String address) {
 //        return send(address, null);
 //    }
