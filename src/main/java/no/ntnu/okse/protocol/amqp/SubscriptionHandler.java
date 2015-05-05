@@ -164,7 +164,7 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
         Subscriber subscriber = localSenderSubscriberMap.get(sender);
         localSenderSubscriberMap.remove(sender);
         localSubscriberSenderMap.remove(subscriber);
-        
+
         String address = getAddress(sender);
         Routes<Sender> routes = outgoing.get(address);
         if (routes != null) {
@@ -275,8 +275,6 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
             // If we are dealing with an Unsubscribe
             if (e.getType().equals(SubscriptionChangeEvent.Type.UNSUBSCRIBE)) {
                 log.debug("Unsubscribing " + localSubscriberSenderMap.get(e.getData()));
-                //Close AMQP connection
-                localSubscriberSenderMap.get(e.getData()).getSession().getConnection().close();
                 // Remove the local mappings from AMQP subscriptionKey to OKSE Subscriber object and AMQP subscriptionHandle
                 remove(localSubscriberSenderMap.get(e.getData()));
             } else if (e.getType().equals(SubscriptionChangeEvent.Type.SUBSCRIBE)) {
