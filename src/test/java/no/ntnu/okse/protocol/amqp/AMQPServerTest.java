@@ -54,6 +54,7 @@ public class AMQPServerTest {
         catch(IOException e){
             Application.main(new String[0]);
         }
+        AMQProtocolServer.getInstance();
 
     }
 
