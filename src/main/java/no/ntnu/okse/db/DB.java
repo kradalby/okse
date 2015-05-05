@@ -191,4 +191,24 @@ public class DB {
         System.out.println("select: Operation done successfully");
         return null;
     }
+
+    /**
+     * SQL querie, update the password
+     * @param user (username)
+     * @param password (new password)
+     */
+    public static void changePassword(String user, String password) {
+        Statement stmt = null;
+        String sql = null;
+        conDB();
+        try {
+            stmt = con.createStatement();
+            sql = "UPDATE users SET password='" + password +"' WHERE username='" + user + "'";
+            stmt.executeUpdate(sql);
+            stmt.close();
+            con.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
 }
