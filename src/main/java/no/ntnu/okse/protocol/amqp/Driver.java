@@ -52,6 +52,7 @@ public class Driver extends BaseHandler {
     final private Handler[] handlers;
     final private Selector selector;
     private static Logger log;
+    private Acceptor acceptor;
 
     public Driver(Collector collector, Handler ... handlers) throws IOException {
         this.collector = collector;
@@ -61,7 +62,10 @@ public class Driver extends BaseHandler {
     }
 
     public void listen(String host, int port) throws IOException {
-        new Acceptor(host, port);
+        acceptor = new Acceptor(host, port);
+    }
+    public int getClientPort(){
+        return acceptor.getRemoteSocketPort();
     }
 
     public void run() throws IOException {
@@ -142,6 +146,7 @@ public class Driver extends BaseHandler {
 
         final private ServerSocketChannel socket;
         final private SelectionKey key;
+        private SocketChannel thisIsTheSocket;
 
         Acceptor(String host, int port) throws IOException {
             socket = ServerSocketChannel.open();
@@ -153,6 +158,7 @@ public class Driver extends BaseHandler {
 
         public void selected() throws IOException {
             SocketChannel sock = socket.accept();
+            thisIsTheSocket = sock;
             Connection conn = Connection.Factory.create();
             conn.collect(collector);
             log.debug("ACCEPTED: " + sock);
@@ -167,8 +173,17 @@ public class Driver extends BaseHandler {
             transport.bind(conn);
             new ChannelHandler(sock, SelectionKey.OP_READ, transport);
         }
-    }
 
+        public int getRemoteSocketPort(){
+            String[] socketStringArray = thisIsTheSocket.toString().split(":");
+            if(socketStringArray.length == 3){
+                return Integer.valueOf(thisIsTheSocket.toString().split(":")[2].replace("]", ""));
+            }
+            else {
+                return 1;
+            }
+        }
+    }
 
     private class ChannelHandler implements Selectable {
 
