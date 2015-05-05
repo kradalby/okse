@@ -42,7 +42,7 @@ import java.util.logging.Logger;
 public class AMQPReceive {
     private static Logger tracer = Logger.getLogger("proton.example");
     private boolean verbose = false;
-    private int maxct = 5;
+    private int maxct = 555555;
     private List<String> addrs = new ArrayList<String>();
 
     private static void usage() {
@@ -71,7 +71,7 @@ public class AMQPReceive {
             }
         }
         if (addrs.size() == 0) {
-            addrs.add("amqp://78.91.24.118:61050/queue");
+            addrs.add("amqp://78.91.24.118:61050/bang/bang");
         }
     }
 

@@ -229,7 +229,7 @@ public class DummyProtocolServer extends AbstractProtocolServer {
                         // Clear the buffer
                         readBuffer.clear();
 
-                        log.debug("Command recieved: " + command);
+                        log.debug("Command received: " + command);
                         totalRequests++;
 
                         // Write a response
@@ -252,7 +252,7 @@ public class DummyProtocolServer extends AbstractProtocolServer {
                         client.write(writeBuffer);
                         writeBuffer.clear();
 
-                        // If we recieved an exit, close socket and cancel the key
+                        // If we received an exit, close socket and cancel the key
                         if (command.equalsIgnoreCase("exit")) {
                             clients.remove(client);
                             log.info("Disconnected client:" + client.socket().getInetAddress() + ":" + client.socket().getPort());
@@ -309,7 +309,7 @@ public class DummyProtocolServer extends AbstractProtocolServer {
 
     /**
      * Parse an incoming command from the raw string
-     * @param command The command string recieved from the client
+     * @param command The command string received from the client
      */
     private boolean parseCommand(String command) {
         String[] args = command.split(" ");

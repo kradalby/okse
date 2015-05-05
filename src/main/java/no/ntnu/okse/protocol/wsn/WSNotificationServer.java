@@ -352,7 +352,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
     }
 
     /**
-     * Support method to allow other classes in the wsn package to increment total messages recieved
+     * Support method to allow other classes in the wsn package to increment total messages received
      */
     protected void incrementTotalMessagesRecieved() {
         totalMessagesRecieved++;
@@ -368,7 +368,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
      */
     @Override
     public void sendMessage(Message message) {
-        log.debug("WSNServer recieved message for distribution");
+        log.debug("WSNServer received message for distribution");
         if (!message.getOriginProtocol().equals(protocolServerType)) {
             log.debug("The message originated from other protocol than WSNotification");
 
@@ -769,7 +769,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
                     ContentResponse response = request.send();
                     totalMessagesSent++;
 
-                    // Check what HTTP status we recieved, if is not A-OK, flag the internalmessage as fault
+                    // Check what HTTP status we received, if is not A-OK, flag the internalmessage as fault
                     // and make the response content the message of the InternalMessage returned
                     if (response.getStatus() != HttpStatus.OK_200) {
                         totalBadRequests++;

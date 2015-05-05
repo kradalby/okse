@@ -27,6 +27,7 @@ package no.ntnu.okse.protocol.amqp;
 import no.ntnu.okse.core.messaging.MessageService;
 import no.ntnu.okse.core.topic.Topic;
 import no.ntnu.okse.core.topic.TopicService;
+import org.apache.commons.validator.routines.InetAddressValidator;
 import org.apache.log4j.Logger;
 import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
@@ -131,32 +132,39 @@ public class AMQPServer extends BaseHandler {
     }
 
     private int send(String address) {
-
-        List<Sender> sendersOnTopic = subscriptionHandler.getOutgoing(address).getRoutes();
-
         int count = 0;
-        MessageBytes mb = messages.get(address);
-        for (Sender snd : sendersOnTopic) {
-            //while (snd.getCredit() > 0 && snd.getQueued() < 1024) {
-            if (mb == null) {
-                snd.drained();
-                return count;
+
+        if (AMQProtocolServer.getInstance().useQueue) {
+            log.debug(String.format("Use Queue is set to: %b, using queue mode", AMQProtocolServer.getInstance().useQueue));
+            return send(address, null);
+        } else {
+            log.debug(String.format("Use Queue is set to: %b, using topic mode", AMQProtocolServer.getInstance().useQueue));
+            List<Sender> sendersOnTopic = subscriptionHandler.getOutgoing(address).getRoutes();
+
+            MessageBytes mb = messages.get(address);
+            for (Sender snd : sendersOnTopic) {
+                //while (snd.getCredit() > 0 && snd.getQueued() < 1024) {
+                if (mb == null) {
+                    snd.drained();
+                    return count;
+                }
+                log.debug(String.format("Preparing to send: %s", mb.toString()));
+                Delivery dlv = snd.delivery(nextTag());
+
+                byte[] bytes = mb.getBytes();
+                snd.send(bytes, 0, bytes.length);
+                AMQProtocolServer.getInstance().incrementTotalMessagesSent();
+
+                dlv.disposition(Accepted.getInstance());
+                dlv.settle();
+
+                count++;
+                if (!quiet) {
+                    log.debug(String.format("Sent message(%s): %s to %s", address, mb.toString(), snd.toString()));
+                }
+                //}
             }
-            log.debug(String.format("Preparing to send: %s", mb.toString()));
-            Delivery dlv = snd.delivery(nextTag());
 
-            byte[] bytes = mb.getBytes();
-            snd.send(bytes, 0, bytes.length);
-            AMQProtocolServer.getInstance().incrementTotalMessagesSent();
-
-            dlv.disposition(Accepted.getInstance());
-            dlv.settle();
-
-            count++;
-            if (!quiet) {
-                log.debug(String.format("Sent message(%s): %s to %s", address, mb.toString(), snd.toString()));
-            }
-            //}
         }
 
         return count;
@@ -179,8 +187,16 @@ public class AMQPServer extends BaseHandler {
 
     }
 
-    public MessageBytes convertAMQPMessageToMessageBytes(Message msg) {
+    public static MessageBytes convertAMQPMessageToMessageBytes(Message msg) {
 
+        byte[] buffer = gestimateMessageByteSize(msg);
+
+        MessageBytes mb = new MessageBytes(buffer);
+        System.out.println("This is mb.length: " + mb.getBytes().length);
+        return mb;
+    }
+
+    private static byte[] gestimateMessageByteSize(Message msg) {
         int guestimateByteSize = 0;
         if(msg.getBody().toString().length() != 0){
             guestimateByteSize += msg.getBody().toString().getBytes().length;
@@ -191,33 +207,30 @@ public class AMQPServer extends BaseHandler {
         if(msg.getSubject().getBytes().length != 0){
             guestimateByteSize += msg.getSubject().getBytes().length;
         }
-        System.out.println("Totalt antall bytes from guestimate int: " + guestimateByteSize);
         int encoded;
 
 
         byte[] buffer = new byte[guestimateByteSize];
-        System.out.println("This is buffer.length: " + buffer.length);
         while (true) {
             try {
-                log.debug("While loop: encode block, buffer length: " + buffer.length);
+                //log.debug("While loop: encode block, buffer length: " + buffer.length);
                 encoded = msg.encode(buffer, 0, buffer.length);
                 break;
             } catch (java.nio.BufferOverflowException e) {
                 buffer = new byte[buffer.length+1];
             }
         }
-        MessageBytes mb = new MessageBytes(buffer);
-        System.out.println("This is mb.length: " + mb.getBytes().length);
-        return mb;
+
+        return buffer;
     }
 
-    public Message convertOkseMessageToAMQP(no.ntnu.okse.core.messaging.Message message) {
+    public static Message convertOkseMessageToAMQP(no.ntnu.okse.core.messaging.Message message) {
         Message msg = Message.Factory.create();
 
         Section body = new AmqpValue(message.getMessage());
 
-        msg.setAddress("127.0.0.1/" + message.getTopic());
-        msg.setSubject("bang");
+        msg.setAddress(AMQProtocolServer.getInstance().getHost() +"/" + message.getTopic());
+        msg.setSubject(message.getMessageID());
         msg.setBody(body);
         return msg;
     }
@@ -264,10 +277,32 @@ public class AMQPServer extends BaseHandler {
 
                 Message msg = Message.Factory.create();
                 msg.decode(bytes, 0, bytes.length);
+
                 MessageBytes mb = new MessageBytes(bytes);
-                Address address = new Address(msg.getAddress());
+
+                Address address;
 
 
+
+
+                if (msg.getAddress().contains("/")) {
+                    String ip = msg.getAddress().split("/")[0];
+                    if (ip.contains(":") && InetAddressValidator.getInstance().isValid(ip.split(":")[0])) {
+                        address = new Address(msg.getAddress());
+                    } else if (InetAddressValidator.getInstance().isValid(ip)) {
+                        address = new Address(msg.getAddress());
+                    } else {
+                        address = new Address();
+                        address.setName(msg.getAddress());
+                    }
+                } else {
+                    address = new Address();
+                    address.setName(msg.getAddress());
+                }
+
+
+
+                log.debug("Received a message with queue/topic: " + address.getName());
 
                 AmqpValue amqpMessageBodyString = (AmqpValue)msg.getBody();
 

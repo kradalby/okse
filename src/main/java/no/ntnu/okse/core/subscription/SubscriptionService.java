@@ -125,7 +125,7 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
         while (_running) {
             try {
                 SubscriptionTask task = queue.take();
-                log.debug(task.getType() + " job recieved, executing task...");
+                log.debug(task.getType() + " job received, executing task...");
                 // Perform the task
                 task.run();
             } catch (InterruptedException e) {
