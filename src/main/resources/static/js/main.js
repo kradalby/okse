@@ -110,14 +110,25 @@ var Main = (function($) {
     }
 
     var refresh = function(response) {
-        Stats.refreshSubscribersAndPublishers(response.subscribers, response.publishers)
+        refreshElementByClassWithText('.totalSubscribers', response.subscribers)
+        refreshElementByClassWithText('.totalPublishers', response.publishers)
+        refreshElementByClassWithText('.totalTopics', response.topics)
         $('#uptime').html(response.uptime)
         refreshRuntimeStatistics(response.runtimeStatistics)
     }
 
+    // Updates the given class with a given text
+    var refreshElementByClassWithText = function(element, text) {
+        $(element).each(function() {
+            $(this).text(text)
+        });
+    }
+
+
     return {
         ajax: ajax,
         error: error,
+        refreshElementByClassWithText: refreshElementByClassWithText,
         setIntervalForTab: setIntervalForTab,
         clearIntervalForTab: function() {
             clearInterval(clickInterval)
@@ -159,6 +170,7 @@ var Main = (function($) {
                         ajaxSettings.success = Logs.refresh
                         break;
                     case "config":
+                        ajaxSettings.url = clickedElement + '/mapping/get/all'
                         ajaxSettings.success = Config.refresh
                         break;
                     case "subscribers":

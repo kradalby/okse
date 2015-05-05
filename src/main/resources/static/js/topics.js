@@ -28,9 +28,50 @@
 
 var Topics = (function($) {
 
+    var topics;
+
+    var _PAGINATOR = 'topic-pagination-selector'
+    var _CURRENTPAGE = 1; // Variable holding the last page showed in the paginator.
+
     /*
-     Creates, fills and returns a <tr>-element. The <tr>-element is generated based on the subscribers
-     list from the OKSE-RestAPI. It also adds all the buttons needed for deleting subscribers. It uses the id for
+     This function does all checks required to find out the correct paginator to append (or remove)
+     from the DOM. See each check to see what they do.
+     */
+    var checkIfPaginationIsNeeded = function() {
+        // Do we need a pagination to populate the table?
+        Paginator.tools.checkIfPaginationIsNeeded({
+            element: _PAGINATOR,
+            pagesNeeded: (Math.ceil(topics.length / Paginator.settings.pageSize)),
+            currentPage: _CURRENTPAGE,
+            setCurrentPage: function(page) {
+                _CURRENTPAGE = page
+            },
+            listLength: topics.length,
+            fillTableCallback: fillTable
+        })
+    }
+
+    var fillTable = function(from, to) {
+        unBindButtons()
+
+        if (topics.length == 0) {
+            $('#topics-table').html('<tr class="danger"><td colspan="6"><h4 class="text-center">No topics returned from TopicService</h4></td></tr>')
+        }
+        if (from === undefined || to === undefined) {
+            $.okseDebug.logPrint("[Debug][Topics] Filling table with the complete list")
+            $('#topics-table').html(createTableForAllTopics(topics))
+        } else {
+            $.okseDebug.logPrint("[Debug][Topics] Filling table with [" + from + "," + to + "]")
+            var topicsToPopulate = topics.slice(from, to)
+            $('#topics-table').html(createTableForAllTopics(topicsToPopulate))
+        }
+
+        bindButtons()
+    }
+
+    /*
+     Creates, fills and returns a <tr>-element. The <tr>-element is generated based on the topics
+     list from the OKSE-RestAPI. It also adds all the buttons needed for deleting topics. It uses the id for
      this purpose. This function does not manipulate the DOM by checking if an element exists. It overwrites everything.
      */
     var createTableForAllTopics = function(topics) {
@@ -71,7 +112,7 @@ var Topics = (function($) {
                 $(e.target).addClass("disabled")
 
                 Main.ajax({
-                    url: 'topic/delete/' + topicID,
+                    url: 'topic/delete/single?topicID=' + encodeURIComponent(topicID),
                     type: 'DELETE',
                     success: function(data) {
                         $.okseDebug.logPrint("[Debug][Topics] Callback from server; topic and subscribers deleted")
@@ -99,6 +140,23 @@ var Topics = (function($) {
 
     return {
         init: function() {
+            $("#topics-button-refresh").on("click", function(e) {
+                e.preventDefault()
+                if (!$(this).hasClass("active")) {
+                    $(this).addClass("active")
+                    $(this).text("Stop refresh")
+                    Main.setIntervalForTab({
+                        url: 'topic/get/all',
+                        type: 'GET',
+                        success: Topics.refresh
+                    })
+                } else {
+                    $(this).removeClass("active")
+                    $(this).text("Start refresh")
+                    Main.clearIntervalForTab()
+                }
+            })
+
             $('#delete-all-topics').on('click', function(e) {
                 e.preventDefault()
 
@@ -126,23 +184,12 @@ var Topics = (function($) {
             });
         },
         refresh: function(response) {
-            unBindButtons();
-
-            // This is done becuse unlike when we get all subscribers, which returnes an array,
-            // this returns an object, and therefore we must count the keys
-            var count = Object.keys(response).length
+            topics = response
+            checkIfPaginationIsNeeded()
 
             // Remove 'deleted class' if it exists
             if ($('#topics-table').hasClass('deleted')) { $('#topics-table').removeClass('deleted'); }
-
-            if (!(count == 0)) {
-                var table = createTableForAllTopics(response)
-                $('#topics-table').html(table)
-            } else {
-                $('#topics-table').html('<tr class="danger"><td colspan="6"><h4 class="text-center">No topics returned from TopicService</h4></td></tr>')
-            }
-
-            bindButtons();
+            Main.refreshElementByClassWithText('.totalTopics', response.length)
         }
     }
 
