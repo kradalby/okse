@@ -51,6 +51,7 @@ import javax.xml.transform.stream.StreamResult;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.util.ArrayList;
 
 
 /**
@@ -206,6 +207,41 @@ public class WSNTools {
     }
 
     /**
+     * Helper method that removes namespace prefixes from a topic expression
+     * @param topicExpression The raw topic expression as a string
+     * @return A rebuilt topic node set string without namespace prefixes
+     */
+    public static String removeNameSpacePrefixesFromTopicExpression(String topicExpression) {
+        // If we do not have any prefix delimiter, return
+        if (!topicExpression.contains(":")) return topicExpression;
+        // Create the holder list for our results
+        ArrayList<String> filteredNodeSet = new ArrayList<>();
+        // Split to an array of nodes
+        String[] nodes = topicExpression.split("/");
+        // Iterate through the nodes
+        for (String node : nodes) {
+            // If the current node contains a prefix delimiter
+            if (node.contains(":")) {
+                // Split the node
+                String[] filtered = node.split(":");
+                // Maybe superflous check for duplicate ocurrances of :
+                if (filtered.length == 2) filteredNodeSet.add(filtered[1]);
+                else {
+                    // If we had more than one ocurrance of : remove the first and keep remaining
+                    StringBuilder builder = new StringBuilder();
+                    for (int i = 1; i < filtered.length; i++) builder.append(filtered[i]);
+                    filteredNodeSet.add(builder.toString());
+                }
+            } else {
+                // If no namespace prefix was defined, just add to node set
+                filteredNodeSet.add(node);
+            }
+        }
+        // Return the node set after reinserting path delimiter
+        return String.join("/", filteredNodeSet);
+    }
+
+    /**
      * This method is a helper method to build a Notify with its context. It is meant as example on how this may be
      * solved.
      *
@@ -216,7 +252,7 @@ public class WSNTools {
         // Create a contextResolver, and fill it with the namespace bindings used in the notify
         NuNamespaceContextResolver contextResolver = new NuNamespaceContextResolver();
         contextResolver.openScope();
-        contextResolver.putNamespaceBinding(prefix, namespace);
+        if (prefix != null && namespace != null) contextResolver.putNamespaceBinding(prefix, namespace);
 
         // Build the notify
         ObjectFactory factory = new ObjectFactory();
