@@ -290,7 +290,6 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
 
         //Check if sender container id is equal to the event container id to see if the client has disconnected
         if (senderRemoteContainer.equals(eventRemoteContainer)){
-            log.debug("Unsub: " + event.getConnection().getRemoteContainer());
             SubscriptionService.getInstance().removeSubscriber(localSenderSubscriberMap.get(sender));
         }
     }
