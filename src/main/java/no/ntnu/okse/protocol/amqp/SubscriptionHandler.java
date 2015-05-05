@@ -164,10 +164,7 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
         Subscriber subscriber = localSenderSubscriberMap.get(sender);
         localSenderSubscriberMap.remove(sender);
         localSubscriberSenderMap.remove(subscriber);
-
-        //må kalles hvis vi får DC fra klienten sin side ikke fra DELETE i admin panel
-        //SubscriptionService.getInstance().removeSubscriber(subscriber);
-
+        
         String address = getAddress(sender);
         Routes<Sender> routes = outgoing.get(address);
         if (routes != null) {
@@ -241,24 +238,8 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
             if(event.getConnection().getRemoteContainer().equals(localSubscriberSenderMap.get(key).getSession().getConnection().getRemoteContainer())){
                 SubscriptionService.getInstance().removeSubscriber(key);
             }
-            //log.debug("This is the key: " + key);
             log.debug("This is the value: " + localSubscriberSenderMap.get(key).getSession().getConnection().getRemoteContainer());
-            //log.debug("This is key.host: " + key.getHost());
-            //log.debug("This is event RemoteHostname: " + event.getConnection().getRemoteHostname());
-            //log.debug("This is event.Link(): " + event.getLink());
-
         }
-
-        //event.getSession().getConnection().getRemoteHostname();
-
-        //event.getConnection().getRemoteHostname();
-        if (event.getLink() instanceof Sender) {
-            log.debug("Local link closed");
-           // event.getSession().sender()
-            //SubscriptionService.getInstance().removeSubscriber(localSenderSubscriberMap.get(event.getLink()));
-            //AMQProtocolServer.getInstance().getDriver().
-        }
-        //Driver: CLOSING: java.nio.channels.SocketChannel[connected local=/127.0.0.1:61050 remote=/127.0.0.1:56151]
     }
 
     /*
@@ -293,7 +274,6 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
         if (e.getData().getOriginProtocol().equals(AMQProtocolServer.getInstance().getProtocolServerType())) {
             // If we are dealing with an Unsubscribe
             if (e.getType().equals(SubscriptionChangeEvent.Type.UNSUBSCRIBE)) {
-                log.debug("Check if Key exists: " + localSubscriberSenderMap.containsKey(e.getData()));
                 log.debug("Unsubscribing " + localSubscriberSenderMap.get(e.getData()));
                 //Close AMQP connection
                 localSubscriberSenderMap.get(e.getData()).getSession().getConnection().close();
