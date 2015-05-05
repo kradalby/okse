@@ -84,3 +84,7 @@ src/main/java/no/ntnu/okse/protocol/amqp/qpidProtonDemo/Driver.java
 src/main/java/no/ntnu/okse/protocol/amqp/qpidProtonDemo/FlowController.java
 src/main/java/no/ntnu/okse/protocol/amqp/qpidProtonDemo/Drain.java
 src/main/java/no/ntnu/okse/protocol/amqp/qpidProtonDemo/Message.java
+logs/log.txt
+logs/okse.log
+*.log
+
