@@ -200,6 +200,9 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
         Session session = sender.getSession();
         Connection connection = session.getConnection();
         String remoteHostName = connection.getRemoteHostname();
+        AMQProtocolServer server = AMQProtocolServer.getInstance();
+        Driver driver = server.getDriver();
+
 
         Subscriber subscriber = localSenderSubscriberMap.get(sender);
         localSenderSubscriberMap.remove(sender);
@@ -208,13 +211,13 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
         String address = getAddress(sender);
         Routes<Sender> routes = outgoing.get(address);
         if (routes != null) {
-            log.debug("Removing sender: " + remoteHostName + " from route: " + address);
+            log.debug("Removing sender: " + driver.getInetAddress() + " from route: " + address);
             routes.remove(sender);
             if (routes.size() == 0) {
                 outgoing.remove(address);
             }
         }
-        log.debug("Detaching: " + remoteHostName);
+        log.debug("Detaching: " + driver.getInetAddress());
         sender.abort();
         sender.detach();
         sender.close();
