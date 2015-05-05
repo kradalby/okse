@@ -89,7 +89,7 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
 
     private static HashMap<Sender, Subscriber> localSenderSubscriberMap = new HashMap<>();
     private static HashMap<Subscriber, Sender> localSubscriberSenderMap = new HashMap<>();
-    private static HashMap<Object, Sender> localRemoteContainerSenderMap = new HashMap<>();
+    private static HashMap<String, Sender> localRemoteContainerSenderMap = new HashMap<>();
     private static HashMap<Sender, AbstractNotificationProducer.SubscriptionHandle> localSubscriberHandle = new HashMap<>();
 
     final private Map<String,Routes<Sender>> outgoing = new HashMap<String,Routes<Sender>>();
@@ -149,6 +149,12 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
         //Get RemoteContainer id for the connection, used to identify the connection
         String remoteContainer = connection.getRemoteContainer();
 
+        //If RemoteContainer id is not null add the subscriber to HashMap with RemoteContainer id as Key
+        //Is used to identify which sender has open connections to the broker
+        if(remoteContainer != null){
+            localRemoteContainerSenderMap.put(remoteContainer, sender);
+        }
+
         if(remoteHostName != null){
             senderAddress = remoteHostName;
         }
@@ -170,11 +176,6 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
         SubscriptionService.getInstance().addSubscriber(subscriber);
 
 
-        //If RemoteContainer id is not null add the subscriber to HashMap with RemoteContainer id as Key
-        //Is used to identify which sender has open connections to the broker
-        if(remoteContainer != null){
-            localRemoteContainerSenderMap.put(remoteHostName, sender);
-        }
 
         localSenderSubscriberMap.put(sender, subscriber);
         localSubscriberSenderMap.put(subscriber, sender);
@@ -270,11 +271,11 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
     @Override
     public void onConnectionUnbound(Event event) {
         //log.debug("This is event.getSession(): " + event.getSession());
-        log.debug("This is event RemoteContainer: " + event.getConnection().getRemoteContainer());
 
         //Getting the RemoteContainer id for the event
         Connection eventConnection = event.getConnection();
         String eventRemoteContainer = eventConnection.getRemoteContainer();
+        log.debug("This is event RemoteContainer: " + eventRemoteContainer);
 
         //Setting the RemoteContainer id for the sender to "Unknown" before we get it from the sender object
         String senderRemoteContainer = "Unknown";
@@ -289,6 +290,7 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
 
         //Check if sender container id is equal to the event container id to see if the client has disconnected
         if (senderRemoteContainer.equals(eventRemoteContainer)){
+            log.debug("Unsub: " + event.getConnection().getRemoteContainer());
             SubscriptionService.getInstance().removeSubscriber(localSenderSubscriberMap.get(sender));
         }
     }
