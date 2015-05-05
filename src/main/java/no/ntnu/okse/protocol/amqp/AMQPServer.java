@@ -189,6 +189,7 @@ public class AMQPServer extends BaseHandler {
 
     public static MessageBytes convertAMQPMessageToMessageBytes(Message msg) {
 
+
         byte[] buffer = gestimateMessageByteSize(msg);
 
         MessageBytes mb = new MessageBytes(buffer);
@@ -197,6 +198,7 @@ public class AMQPServer extends BaseHandler {
     }
 
     private static byte[] gestimateMessageByteSize(Message msg) {
+
         int guestimateByteSize = 0;
         if(msg.getBody().toString().length() != 0){
             guestimateByteSize += msg.getBody().toString().getBytes().length;
@@ -208,7 +210,6 @@ public class AMQPServer extends BaseHandler {
             guestimateByteSize += msg.getSubject().getBytes().length;
         }
         int encoded;
-
 
         byte[] buffer = new byte[guestimateByteSize];
         while (true) {
