@@ -150,7 +150,7 @@ var Subscribers = (function($) {
                  $(e.target).addClass("disabled")
 
                  Main.ajax({
-                    url: 'subscriber/delete/' + subscriberID,
+                    url: 'subscriber/delete/single?subscriberID=' + encodeURIComponent(subscriberID),
                     type: 'DELETE',
                     success: function(subscriber) {
                         $.okseDebug.logPrint("[Debug][Subscriber] Callback from server; subscriber deleted")

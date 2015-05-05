@@ -71,7 +71,7 @@ var Topics = (function($) {
                 $(e.target).addClass("disabled")
 
                 Main.ajax({
-                    url: 'topic/delete/' + topicID,
+                    url: 'topic/delete/single?topicID=' + encodeURIComponent(topicID),
                     type: 'DELETE',
                     success: function(data) {
                         $.okseDebug.logPrint("[Debug][Topics] Callback from server; topic and subscribers deleted")

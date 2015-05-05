@@ -45,14 +45,12 @@ public class TopicController {
 
     private static final String GET_ALL_TOPICS = "/get/all";
     private static final String DELETE_ALL_TOPICS = "/delete/all";
-    private static final String DELETE_SINGLE_TOPIC = "/delete/{id}";
+    private static final String DELETE_SINGLE_TOPIC = "/delete/single";
 
     private static Logger log = Logger.getLogger(TopicController.class.getName());
 
     @RequestMapping(method = RequestMethod.GET, value = GET_ALL_TOPICS)
-    public
-    @ResponseBody
-    HashMap<String, HashMap<String, Object>> getAlltopics() {
+    public @ResponseBody HashMap<String, HashMap<String, Object>> getAlltopics() {
         TopicService ts = TopicService.getInstance();
         SubscriptionService ss = SubscriptionService.getInstance();
         HashSet<Topic> allTopics = ts.getAllTopics();
@@ -83,10 +81,10 @@ public class TopicController {
     }
 
     @RequestMapping(method = RequestMethod.DELETE, value = DELETE_SINGLE_TOPIC)
-    public @ResponseBody HashMap<String, Object> deleteSingleTopic(@PathVariable("id") String id) {
+    public @ResponseBody HashMap<String, Object> deleteSingleTopic(@RequestParam(value = "topicID") String id) {
         log.info("Deleting Topic with ID: " + id);
         TopicService ts = TopicService.getInstance();
-        Topic t = ts.getTopicByID(id);
+        Topic t = ts.getTopicByID(id.trim());
         ts.deleteTopic(t.getFullTopicString());
         HashMap<String, Object> result = new HashMap<String, Object>(){{
             put("topicID", t.getTopicID());

@@ -44,7 +44,7 @@ import java.util.stream.Collectors;
 public class SubscriberController {
 
     private static final String GET_ALL_SUBSCRIBERS = "/get/all";
-    private static final String DELETE_SINGLE_SUBSCRIBER = "/delete/{id}";
+    private static final String DELETE_SINGLE_SUBSCRIBER = "/delete/single";
     private static final String DELETE_ALL_SUBSCRIBERS = "/delete/all";
 
     private static Logger log = Logger.getLogger(SubscriberController.class.getName());
@@ -66,10 +66,10 @@ public class SubscriberController {
     }
 
     @RequestMapping(method = RequestMethod.DELETE, value= DELETE_SINGLE_SUBSCRIBER)
-    public @ResponseBody Subscriber deleteSingleSubscriber(@PathVariable("id") String id) {
-        log.info("Deleting subscriber with ID: " + id);
+    public @ResponseBody Subscriber deleteSingleSubscriber(@RequestParam(value = "subscriberID") String subscriberID) {
+        log.debug("Deleting subscriber with ID: " + subscriberID);
         SubscriptionService ss = SubscriptionService.getInstance();
-        Subscriber s = ss.getSubscriberByID(id);
+        Subscriber s = ss.getSubscriberByID(subscriberID.trim());
         ss.removeSubscriber(s);
         return s;
     }
