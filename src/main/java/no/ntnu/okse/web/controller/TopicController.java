@@ -45,29 +45,34 @@ public class TopicController {
 
     private static final String GET_ALL_TOPICS = "/get/all";
     private static final String DELETE_ALL_TOPICS = "/delete/all";
-    private static final String DELETE_SINGLE_TOPIC = "/delete/{id}";
+    private static final String DELETE_SINGLE_TOPIC = "/delete/single";
 
     private static Logger log = Logger.getLogger(TopicController.class.getName());
 
     @RequestMapping(method = RequestMethod.GET, value = GET_ALL_TOPICS)
-    public
-    @ResponseBody
-    HashMap<String, HashMap<String, Object>> getAlltopics() {
+    public @ResponseBody List<HashMap<String, Object>> getAlltopics() {
         TopicService ts = TopicService.getInstance();
         SubscriptionService ss = SubscriptionService.getInstance();
         HashSet<Topic> allTopics = ts.getAllTopics();
 
-        HashMap<String, HashMap<String, Object>> results = new HashMap<>();
+        List<HashMap<String, Object>> results = new ArrayList<>();
 
-        // TODO: This may need optimicing. Currently this operation is quite expensive.
-        allTopics.forEach(t -> {
-            int subscribers = ss.getAllSubscribersForTopic(t.getFullTopicString()).size();
-            HashMap<String, Object> topicInfo = new HashMap<String, Object>() {{
-                put("subscribers", subscribers);
-                put("topic", t);
-            }};
-            results.put(t.getFullTopicString(), topicInfo);
-        });
+        allTopics.stream()
+                .forEach(t -> {
+                            int subscribers = ss.getAllSubscribersForTopic(t.getFullTopicString()).size();
+                            HashMap<String, Object> topicInfo = new HashMap<String, Object>() {{
+                                put("subscribers", subscribers);
+                                put("topic", t);
+                            }};
+                            results.add(topicInfo);
+                });
+
+        results.stream()
+                .sorted((t1, t2) -> {
+                    Topic first = (Topic) t1.get("topic");
+                    Topic second = (Topic) t2.get("topic");
+                    return first.getFullTopicString().compareTo(second.getFullTopicString());
+                });
 
         return results;
     }
@@ -83,10 +88,10 @@ public class TopicController {
     }
 
     @RequestMapping(method = RequestMethod.DELETE, value = DELETE_SINGLE_TOPIC)
-    public @ResponseBody HashMap<String, Object> deleteSingleTopic(@PathVariable("id") String id) {
+    public @ResponseBody HashMap<String, Object> deleteSingleTopic(@RequestParam(value = "topicID") String id) {
         log.info("Deleting Topic with ID: " + id);
         TopicService ts = TopicService.getInstance();
-        Topic t = ts.getTopicByID(id);
+        Topic t = ts.getTopicByID(id.trim());
         ts.deleteTopic(t.getFullTopicString());
         HashMap<String, Object> result = new HashMap<String, Object>(){{
             put("topicID", t.getTopicID());

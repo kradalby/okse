@@ -24,9 +24,12 @@
 
 package no.ntnu.okse.core.topic;
 
+import no.ntnu.okse.Application;
 import no.ntnu.okse.core.AbstractCoreService;
+import no.ntnu.okse.core.Utilities;
 import no.ntnu.okse.core.event.TopicChangeEvent;
 import no.ntnu.okse.core.event.listeners.TopicChangeListener;
+import no.ntnu.okse.core.subscription.SubscriptionService;
 import org.eclipse.jetty.util.ConcurrentHashSet;
 
 import java.util.*;
@@ -47,6 +50,7 @@ public class TopicService extends AbstractCoreService {
     private LinkedBlockingQueue<TopicTask> queue;
     private ConcurrentHashMap<String, Topic> allTopics;
     private ConcurrentHashSet<TopicChangeListener> _listeners;
+    private ConcurrentHashMap<String, HashSet<String>> mappings;
 
     /**
      * Private constructor that passes this classname to superclass log instance. Uses getInstance to instanciate.
@@ -73,9 +77,34 @@ public class TopicService extends AbstractCoreService {
         queue = new LinkedBlockingQueue<>();
         allTopics = new ConcurrentHashMap<>();
         _listeners = new ConcurrentHashSet<>();
+        mappings = new ConcurrentHashMap<>();
         _invoked = true;
         // TODO: Read some shit from config or database to initialize pre-set topics with attributes. Or should
         // TODO: that maybe be done in the Subscriber objets? Who knows.
+        log.info("Initializing topic mapping from configuration file");
+        if (Application.config.containsKey("TOPIC_MAPPING")) {
+
+            Properties topicMapping = Utilities.readConfigurationFromFile(Application.config.getProperty("TOPIC_MAPPING"));
+
+            if (topicMapping == null) {
+                log.error("Failed to load topic mapping from config file");
+                return;
+            }
+
+            log.debug("Topic mapping properties: " + topicMapping.stringPropertyNames());
+            for (String toMapFrom : topicMapping.stringPropertyNames()) {
+                addTopic(toMapFrom);
+
+                String[] toMapToList = topicMapping.getProperty(toMapFrom).split(",");
+
+                for (String toMapTo: toMapToList) {
+                    addTopic(toMapTo);
+                    addMappingBetweenTopics(toMapFrom, toMapTo);
+                }
+            }
+            log.debug("Predefined mappings are: " + mappings);
+            log.info("Topic mapping configuration done");
+        }
     }
 
     /**
@@ -202,7 +231,7 @@ public class TopicService extends AbstractCoreService {
     /**
      * Attempts to fetch a topic based on the ID
      * @param id The topic ID to use in the search
-     * @return A topic if found, null otherwhise.
+     * @return A topic if found, null otherwise.
      */
     public Topic getTopicByID(String id) {
         List<Topic> result = new ArrayList<>();
@@ -219,6 +248,34 @@ public class TopicService extends AbstractCoreService {
         }
         return result.get(0);
     }
+
+    /**
+     * Get all mappings registered mappings in the system as a shallow copy.
+     * @return A HashMap of all the registered mappings
+     */
+    public HashMap<String, HashSet<String>> getAllMappings() {
+        HashMap<String, HashSet<String>> collector = new HashMap<>();
+
+        mappings.forEach((k, v) -> collector.put(k, v));
+
+        return collector;
+    }
+
+    /**
+     * Attempts to fetch all mappings for a topic, based on the raw topic string
+     * @param rawTopicString The string to identify the topic
+     * @return A HashSet containing all the found topics, null otherwise
+     */
+    public HashSet<Topic> getAllMappingsAgainstTopic(String rawTopicString) {
+        HashSet<Topic> result = new HashSet<>();
+
+        if (mappings.containsKey(rawTopicString)) {
+          mappings.get(rawTopicString).forEach(topicToMapAgainst -> result.add(getTopic(topicToMapAgainst)));
+        }
+
+        return (result.size() > 0) ? result : null;
+    }
+
 
     /**
      * This method allows registration for TopicChange listeners.
@@ -337,6 +394,36 @@ public class TopicService extends AbstractCoreService {
     }
 
     /**
+     * Removes a mapping by a mapping key
+     * @param mapping The mapping represented as a string
+     */
+    public void deleteMapping(String mapping) {
+        if (mappings.containsKey(mapping)) {
+            HashSet<String> mappedAgainst = mappings.remove(mapping);
+
+            if (SubscriptionService.getInstance().getAllSubscribersForTopic(mapping).isEmpty()) {
+                if (topicExists(mapping)) {
+                    deleteTopicLocal(getTopic(mapping));
+                    log.debug("Removing Topic{" + mapping + "} due to mapping removal because it doesn't have any subscribers");
+                };
+            }
+
+            mappedAgainst.forEach(t -> {
+                if (SubscriptionService.getInstance().getAllSubscribersForTopic(t).isEmpty()) {
+                    if (topicExists(t)) {
+                        deleteTopicLocal(getTopic(t));
+                        log.debug("Removing Topic{" + t + "} due to mapping removal because it doesn't have any subscribers");
+                    }
+
+                }
+            });
+            log.info("Removed the mappings for Topic{" + mapping + "}");
+        } else {
+            log.warn("Attempt to remove a mapping that did in fact not exist ");
+        }
+    }
+
+    /**
      * Removes a Topic given by a full raw topic string. Also locates all potential children from this topic
      * and removes them aswell.
      * @param topic The full raw topic string representing the topic to be deleted
@@ -368,6 +455,23 @@ public class TopicService extends AbstractCoreService {
         } else {
             log.warn("Attempt to remove a topic that did in fact not exist.");
         }
+    }
+
+    /**
+     * Accepts two topic string and creates this topics. It also adds it to the mapping HashMap
+     * @param fromTopic Topic to map from
+     * @param toTopic Topic to map to
+     */
+    public void addMappingBetweenTopics(String fromTopic, String toTopic) {
+        addTopic(fromTopic);
+        addTopic(toTopic);
+
+        if (! mappings.containsKey(fromTopic)) {
+            mappings.put(fromTopic, new HashSet<String>(Arrays.asList(toTopic)));
+        } else {
+            mappings.get(fromTopic).add(toTopic);
+        }
+        log.debug("Added mapping between Topic{" + fromTopic + "} and Topic{" + toTopic + "}");
     }
 
     /**

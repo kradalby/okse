@@ -29,10 +29,13 @@ import no.ntnu.okse.core.AbstractCoreService;
 import no.ntnu.okse.core.CoreService;
 import no.ntnu.okse.core.event.TopicChangeEvent;
 import no.ntnu.okse.core.event.listeners.TopicChangeListener;
+import no.ntnu.okse.core.topic.Topic;
 import no.ntnu.okse.core.topic.TopicService;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -143,6 +146,30 @@ public class MessageService extends AbstractCoreService implements TopicChangeLi
                         continue;
                     }
 
+                    HashSet<Topic> mappings = TopicService.getInstance().getAllMappingsAgainstTopic(m.getTopic());
+                    if (mappings == null) {
+                        log.debug("The topic: " + m.getTopic() + " has no mappings");
+                    } else {
+                        log.debug("Found the following mappings against topic: " + m.getTopic() + ": " + mappings);
+
+                        generateMessageForAGivenTopicSet(m, mappings).forEach(duplicateMessage -> {
+                            duplicateMessage.setAttribute("duplicate", m.getTopic());
+
+                            if (m.getAttribute("duplicate") != null) {
+                                if ( ! m.getTopic().equals(duplicateMessage.getAttribute("duplicate"))) {
+                                    distributeMessage(duplicateMessage);
+                                } else {
+                                    log.debug("The message to topic: " + duplicateMessage.getTopic() + " is a duplicate against topic: " + m.getTopic() +", and will not be distributed");
+                                }
+                            } else {
+                                distributeMessage(duplicateMessage);
+                            }
+
+                        });
+                    }
+
+
+
                     // Tell the ExecutorService to execute the following job
                     CoreService.getInstance().execute(() -> {
                         // Add message to latestMessages cache
@@ -216,6 +243,28 @@ public class MessageService extends AbstractCoreService implements TopicChangeLi
     public boolean isCachingMessages() {
         return Application.CACHE_MESSAGES;
     }
+
+
+    /**
+     * Takes in a message and a HashSet of topics and creates duplicate messages of
+     * the origin message, and returns it as a list.
+     *
+     * @param m The origin message
+     * @param topics A HashSet containing all the topics that the message topic is mapped against
+     * @return A containing the new message objects, to dispatch into the queue.
+     */
+    public List<Message> generateMessageForAGivenTopicSet(Message m, HashSet<Topic> topics) {
+        ArrayList<Message> collector = new ArrayList<>();
+
+        topics.stream()
+                .forEach(t -> {
+                    Message msg = new Message(m.getMessage(), t.getFullTopicString(), m.getPublisher(), m.getOriginProtocol());
+                    collector.add(msg);
+                });
+
+        return collector;
+    }
+
 
     /* ----------------------------------------------------------------------------------------------- */
 
