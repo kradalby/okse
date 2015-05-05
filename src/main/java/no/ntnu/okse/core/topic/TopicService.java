@@ -180,18 +180,6 @@ public class TopicService extends AbstractCoreService {
     }
 
     /**
-     * Get all mappings registered mappings in the system as a shallow copy.
-     * @return A HashMap of all the registered mappings
-     */
-    public HashMap<String, HashSet<String>> getAllMappings() {
-        HashMap<String, HashSet<String>> collector = new HashMap<>();
-
-        mappings.forEach((k, v) -> collector.put(k, v));
-
-        return collector;
-    }
-
-    /**
      * Get all the root topic nodes as a shallow copy of the internal topic service hash set.
      * @return A HashSet of all the root topic nodes.
      */
@@ -259,6 +247,18 @@ public class TopicService extends AbstractCoreService {
             return null;
         }
         return result.get(0);
+    }
+
+    /**
+     * Get all mappings registered mappings in the system as a shallow copy.
+     * @return A HashMap of all the registered mappings
+     */
+    public HashMap<String, HashSet<String>> getAllMappings() {
+        HashMap<String, HashSet<String>> collector = new HashMap<>();
+
+        mappings.forEach((k, v) -> collector.put(k, v));
+
+        return collector;
     }
 
     /**
@@ -402,14 +402,19 @@ public class TopicService extends AbstractCoreService {
             HashSet<String> mappedAgainst = mappings.remove(mapping);
 
             if (SubscriptionService.getInstance().getAllSubscribersForTopic(mapping).isEmpty()) {
-                log.debug("Removing Topic{" + mapping + "} due to mapping removal because it doesn't have any subscribers");
-                deleteTopic(mapping);
+                if (topicExists(mapping)) {
+                    deleteTopicLocal(getTopic(mapping));
+                    log.debug("Removing Topic{" + mapping + "} due to mapping removal because it doesn't have any subscribers");
+                };
             }
 
             mappedAgainst.forEach(t -> {
                 if (SubscriptionService.getInstance().getAllSubscribersForTopic(t).isEmpty()) {
-                    log.debug("Removing Topic{" + t + "} due to mapping removal because it doesn't have any subscribers");
-                    deleteTopic(t);
+                    if (topicExists(t)) {
+                        deleteTopicLocal(getTopic(t));
+                        log.debug("Removing Topic{" + t + "} due to mapping removal because it doesn't have any subscribers");
+                    };
+
                 }
             });
             log.info("Removed the mappings for Topic{" + mapping + "}");

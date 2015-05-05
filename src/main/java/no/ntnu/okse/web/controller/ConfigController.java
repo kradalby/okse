@@ -23,7 +23,7 @@ public class ConfigController {
     private static final String GET_ALL_MAPPINGS = "/mapping/get/all";
     private static final String ADD_MAPPING = "/mapping/add";
     private static final String DELETE_MAPPING = "/mapping/delete/single";
-    private static final String DELETE_ALL_MAPPINGS = "mapping/delete";
+    private static final String DELETE_ALL_MAPPINGS = "mapping/delete/all";
 
     private static Logger log = Logger.getLogger(ConfigController.class.getName());
 
@@ -39,6 +39,7 @@ public class ConfigController {
         TopicService ts = TopicService.getInstance();
         ts.addMappingBetweenTopics(topic, newTopic);
         // TODO: We probably need to add some check somewhere, that checks if the input string is correct.
+
         return new ResponseEntity<String>("{ \"added\" :true }", HttpStatus.OK);
     }
 
@@ -48,6 +49,16 @@ public class ConfigController {
         TopicService ts = TopicService.getInstance();
         ts.deleteMapping(topicToRemove);
 
+        return new ResponseEntity<String>("{ \"deleted\" :true }", HttpStatus.OK);
+    }
+
+    @RequestMapping(method = RequestMethod.DELETE, value = DELETE_ALL_MAPPINGS)
+    public @ResponseBody ResponseEntity<String> deleteAllMapping() {
+        log.debug("Trying to delete all mappings");
+        TopicService ts = TopicService.getInstance();
+        ts.getAllMappings().forEach((k, v) -> {
+            ts.deleteMapping(k);
+        });
         return new ResponseEntity<String>("{ \"deleted\" :true }", HttpStatus.OK);
     }
 

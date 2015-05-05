@@ -108,7 +108,7 @@ var Config = (function($) {
                     url: 'config/mapping/add?fromTopic=' + encodeURIComponent($('#from-topic').val()) + '&toTopic=' + encodeURIComponent($('#to-topic').val()),
                     type: 'POST',
                     success: function(data) {
-                        $.okseDebug.logPrint("[Debug][Topics] Callback from server; added mapping")
+                        $.okseDebug.logPrint("[Debug][Config] Callback from server; added mapping")
                     },
                     error: function(xhr, status, error) {
                         Main.displayMessage('The broker were unable to add the mapping, try again!')
@@ -116,6 +116,21 @@ var Config = (function($) {
                     }
                 });
             });
+
+            $('#delete-all-mappings').on('click', function(e) {
+                e.preventDefault()
+                Main.ajax({
+                    url: 'config/mapping/delete/all',
+                    type: 'DELETE',
+                    success: function(data) {
+                        $.okseDebug.logPrint("[Debug][Config] Callback from server; deleted all mappings")
+                    },
+                    error: function(xhr, status, error) {
+                        Main.displayMessage('The broker were unable to remove all mappings')
+                        Main.error(xhr, status, error)
+                    }
+                });
+            })
         }
     }
 
