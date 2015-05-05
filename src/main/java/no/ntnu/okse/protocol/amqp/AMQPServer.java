@@ -186,36 +186,6 @@ public class AMQPServer extends BaseHandler {
 
     public MessageBytes convertAMQPMessageToMessageBytes(Message msg) {
 
-        /*int bytes = 0;
-        for (Method m : msg.getClass().getMethods()) {
-            if (m.getName().startsWith("get") && m.getParameterTypes().length == 0) {
-                Object r = null;
-                try {
-                    r = m.invoke(msg);
-                    bytes += r.toString().getBytes().length;
-                } catch (IllegalAccessException e) {
-                    //e.printStackTrace();
-                } catch (InvocationTargetException e) {
-                    //e.printStackTrace();
-                } catch (NullPointerException e) {
-                    //e.printStackTrace();
-                }
-            }
-        }*/
-        /*ByteArrayOutputStream out = new ByteArrayOutputStream();
-        DataOutputStream dout = new DataOutputStream(out);
-        try {
-            dout.writeChars(msg.getBody().toString());
-            dout.close();
-            out.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        byte[] storingData = out.toByteArray();*/
-
-
-        //System.out.println("Totalt antall bytes: " + storingData.length);
         int guestimateByteSize = 0;
         if(msg.getBody().toString().length() != 0){
             guestimateByteSize += msg.getBody().toString().getBytes().length;
@@ -228,13 +198,6 @@ public class AMQPServer extends BaseHandler {
         }
         System.out.println("Totalt antall bytes from guestimate int: " + guestimateByteSize);
         int encoded;
-
-       /* if(msg.getAddress().getBytes() != null && msg.getSubject().getBytes() != null ){
-            test = msg.getAddress().getBytes().length + msg.getSubject().getBytes().length + body.getBytes().length;
-        }
-
-        System.out.println("Dette er test: " + test);
-        System.out.println(msg.getBody().toString());*/
 
         byte[] buffer = new byte[guestimateByteSize];
         System.out.println("This is buffer.length: " + buffer.length);
