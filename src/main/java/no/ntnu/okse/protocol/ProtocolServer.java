@@ -33,6 +33,10 @@ import no.ntnu.okse.core.messaging.Message;
  */
 public interface ProtocolServer {
 
+    public String getHost();
+
+    public int getPort();
+
     /**
      * This interface method must return the total amount of requests the protocol server has handled.
      * @return An integer representing the total amount of requests handled.
