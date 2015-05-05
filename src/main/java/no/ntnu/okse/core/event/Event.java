@@ -31,44 +31,27 @@ package no.ntnu.okse.core.event;
  */
 public abstract class Event {
 
-    private String operation;
     protected Object data;
-    private String dataType;
 
     /**
      * Constructs an Event containing an operation, some data and a dataType.
-     * <p/>
-     * @param operation: A string representing the operation to be performed.
+     * <p>
      * @param data: An object containing the data payload.
-     * @param dataType: A string representing the type of data.
      */
-    public Event(String operation, Object data, String dataType) {
-        this.operation = operation;
+    protected Event(Object data) {
         this.data = data;
-        this.dataType = dataType;
-    }
-
-    /**
-     * What operation is to be performed from this event.
-     * <p/>
-     * @return: A string representing the operation to be performed.
-     */
-    public String getOperation() {
-        return operation;
     }
 
     /**
      * An abstract method to retrieve the data payload.
-     * <p/>
-     * @return: An object containing the data payload.
+     * <p>
+     * @return: An object containing the data payload casted to proper type in subclass.
      */
     public abstract Object getData();
 
     /**
-     * What data type is the data object
-     * @return: A string representing the class instance of the data object
+     * An abstract method that should return a subclass enum type
+     * @return Type enum implemented in subclass
      */
-    public String getDataType() {
-        return dataType;
-    }
+    public abstract Object getType();
 }

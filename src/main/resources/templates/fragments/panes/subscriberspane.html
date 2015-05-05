@@ -1,0 +1,68 @@
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity3"
+      layout:decorator="layout">
+<head>
+</head>
+<body>
+<th:block layout:fragment="subscriberspane">
+<div class="tab-pane" id="subscribers">
+    <div class="row">
+        <div class="col-md-12" id="subscribers-column">
+            <!-- All subscribers will be inserted here -->
+            <div class="panel panel-info">
+                <!-- Default panel contents -->
+                <div class="panel-heading">All subscribers</div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="alert alert-warning">
+                                <strong>Note: </strong>
+                                All the subscriptions registered in the broker will be shown below.
+                                If the list of subscribers exceeds 25 subscribers, a paginator will appear.
+                                The list of subscribers is alphabetically sorted.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <a class="btn btn-danger" id="delete-all-subscribers">Delete all subscribers</a>
+                            <a class="btn btn-warning active" role="button" id="subscribers-button-refresh">Stop refresh</a>
+                        </div>
+                        <div class="col-md-6 text-right">
+                            <h3 class="total-number-header">Total: <span class="label label-default totalSubscribers">0</span></h3>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12 text-center">
+                            <div id="page-selector">
+                                <ul id="subscriber-pagination-selector"></ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Table -->
+                <div class="table-responsive">
+                    <table class="table table-striped table-condensed">
+                        <thead>
+                        <tr>
+                            <th>Topic</th>
+                            <th>Protocol</th>
+                            <th>Host</th>
+                            <th>Port</th>
+                            <th>Filters</th>
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody id="subscribers-table">
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</th:block>
+</body>
+</html>

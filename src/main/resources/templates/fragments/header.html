@@ -1,66 +1,37 @@
-<!--
-  ~ The MIT License (MIT)
-  ~
-  ~ Copyright (c) 2015 Norwegian Defence Research Establishment / NTNU
-  ~
-  ~ Permission is hereby granted, free of charge, to any person obtaining a copy
-  ~ of this software and associated documentation files (the "Software"), to deal
-  ~ in the Software without restriction, including without limitation the rights
-  ~ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-  ~ copies of the Software, and to permit persons to whom the Software is
-  ~ furnished to do so, subject to the following conditions:
-  ~
-  ~ The above copyright notice and this permission notice shall be included in
-  ~ all copies or substantial portions of the Software.
-  ~
-  ~ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-  ~ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-  ~ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-  ~ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-  ~ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-  ~ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-  ~ THE SOFTWARE.
-  -->
-<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout"
       xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity3"
       layout:decorator="layout">
-<head>
-</head>
-<body>
-<nav class="navbar navbar-inverse navbar-fixed-top" th:fragment="header">
-    <div class="container">
-        <div class="navbar-header">
-            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="/" th:href="@{/}">OKSE Admin Console</a>
-        </div>
-        <div id="navbar" class="navbar-collapse collapse">
-            <!-- If the user is not logged in, we parse this -->
-            <div th:switch="${#authorization.expression('isAuthenticated()')}">
-                <!-- If the user is not logged in, we parse this -->
-                <form th:case="false" class="navbar-form navbar-right" th:action="@{/login}" method="POST">
-                    <div class="form-group">
-                        <input type="text" name="username" placeholder="Username" class="form-control" />
-                    </div>
-                    <div class="form-group">
-                        <input type="password" name="password" placeholder="Password" class="form-control" />
-                    </div>
-                    <button type="submit" class="btn btn-success">Sign in</button>
-                </form>
-                <!-- Else we parse this the user is not logged in, we parse this -->
-                <form th:case="true" class="navbar-form navbar-right" th:action="@{/logout}" method="POST">
-                    <button type="submit" class="btn btn-warning">Log out</button>
-                </form>
-                <span th:if="${#authorization.expression('isAuthenticated()')}" class="navbar-text navbar-right" sec:authentication="name">User</span>
+    <head>
+    </head>
+    <body>
+        <nav class="navbar navbar-inverse navbar-fixed-top" th:fragment="header">
+            <div class="container">
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="/" th:href="@{/}">OKSE Admin Console</a>
+                </div>
+                <div id="navbar" class="navbar-collapse collapse">
+                        <form th:if="${#authorization.expression('!isAuthenticated()')}" class="navbar-form navbar-right" th:action="@{/login}" method="POST">
+                            <div class="form-group">
+                                <input type="text" name="username" placeholder="Username" class="form-control" />
+                            </div>
+                            <div class="form-group">
+                                <input type="password" name="password" placeholder="Password" class="form-control" />
+                            </div>
+                            <button type="submit" class="btn btn-success">Sign in</button>
+                        </form>
+                        <form th:if="${#authorization.expression('isAuthenticated()')}" class="navbar-form navbar-right" th:action="@{/logout}" method="POST">
+                            <button type="submit" class="btn btn-warning">Log out</button>
+                        </form>
+                        <span th:if="${#authorization.expression('isAuthenticated()')}" class="navbar-text navbar-right" sec:authentication="name">User</span>
+                </div><!--/.navbar-collapse -->
             </div>
-        </div><!--/.navbar-collapse -->
-    </div>
-</nav>
-</body>
+        </nav>
+    </body>
 </html>

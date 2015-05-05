@@ -26,7 +26,7 @@ package no.ntnu.okse.db;
 
 /**
  * Created by Aleksander Skraastad (myth) on 2/25/15.
- * <p/>
+ * <p>
  * okse is licenced under the MIT licence.
  */
 
@@ -117,12 +117,12 @@ public class DB {
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
         }
     }
-
+    
     /**
      * INSERT INTO table (fields) VALUES (values)
-     * @param table
-     * @param fields
-     * @param values
+     * @param table A string representing the table
+     * @param fields A string representing the fields
+     * @param values A string representing the values
      */
     public static void insert(String table, String fields, String values) {
         PreparedStatement insert = null;
@@ -165,8 +165,8 @@ public class DB {
 
     /**
      * SELECT * FROM table
-     * @param table
-     * @return
+     * @param table A string representing the table
+     * @return A resultSet of all returned results
      */
     public static ResultSet selectAll(String table) {
         Statement stmt = null;
@@ -183,11 +183,11 @@ public class DB {
     }
 
     /**
-     * SELECT * FROM table WHERE column = value
-     * @param table
-     * @param column
-     * @param value
-     * @return
+     * SELECT * FROM tavle WHERE colum = value
+     * @param table A string representing the table
+     * @param colum A string representing the column
+     * @param value A string representing the value
+     * @return A ResultSet of the returned results
      */
     public static ResultSet select(String table, String column, String value) {
         PreparedStatement query = null;

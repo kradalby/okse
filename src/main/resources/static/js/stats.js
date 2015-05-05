@@ -28,14 +28,47 @@
 
 var Stats = (function($) {
 
-    return {
-        error: function() {
-            console.log("error in ajax for Stats")
-        },
-        refresh: function(data) {
-            console.log(JSON.stringify(data))
-        }
+    /*
+     Creates, fills and returns a <tr>-element. The <tr>-element is generated based on the protocols
+     list from the OKSE-RestAPI. This function does not manipulate the DOM by checking if an element exists.
+     It overwrites everything.
+     */
+    var createTableForAllProtocols = function(protocols) {
+        var trHTML = ""
+        $.each(protocols, function(i, protocol) {
+            trHTML +=
+                '<tr>' +
+                    '<td>' + protocol.protocolServer + '</td>' +
+                    '<td>' + protocol.totalMessagesSent + '</td>' +
+                    '<td>' + protocol.totalMessagesRecieved + '</td>' +
+                    '<td>' + protocol.totalRequests + '</td>' +
+                    '<td>' + protocol.totalBadRequests + '</td>' +
+                    '<td>' + protocol.totalErrors + '</td>' +
+                '</tr>'
+        });
+        return trHTML
     }
 
 
-})(jQuery)
+
+    var refreshCoreServiceStatistics = function(statistics) {
+        $('#messagesSent').html(statistics.totalMessagesSent)
+        $('#messagesReceived').html(statistics.totalMessagesReceived)
+        $('#totalRequests').html(statistics.totalRequests)
+        $('#badRequests').html(statistics.totalBadRequests)
+        $('#totalErrors').html(statistics.totalErrors)
+        Main.refreshElementByClassWithText('.totalSubscribers', statistics.subscribers)
+        Main.refreshElementByClassWithText('.totalPublishers', statistics.publishers)
+        Main.refreshElementByClassWithText('.totalTopics', statistics.topics)
+    }
+
+    return {
+        refresh: function(data) {
+            var table = createTableForAllProtocols(data.protocolServerStatistics)
+            $('#protocol-table').html(table)
+
+            refreshCoreServiceStatistics(data.coreServiceStatistics)
+        }
+    }
+
+})(jQuery);

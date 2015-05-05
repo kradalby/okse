@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<!DOCTYPE Configure PUBLIC "-//Jetty//Configure//EN" "http://www.eclipse.org/jetty/configure.dtd">
+<Configure id="DefaultWSNUApplicationServer" class="org.eclipse.jetty.server.Server">
+
+    <New id="httpConfig" class="org.eclipse.jetty.server.HttpConfiguration">
+        <Set name="secureScheme">https</Set>
+        <Set name="securePort"><Property name="jetty.tls.port" default="8443" /></Set>
+        <Set name="outputBufferSize">32768</Set>
+        <Set name="requestHeaderSize">8192</Set>
+        <Set name="responseHeaderSize">8192</Set>
+
+        <Call name="addCustomizer">
+            <Arg><New class="org.eclipse.jetty.server.ForwardedRequestCustomizer"/></Arg>
+        </Call>
+    </New>
+
+    <Call name="addConnector">
+        <Arg>
+            <New class="org.eclipse.jetty.server.ServerConnector">
+                <Arg name="server"><Ref refid="DefaultWSNUApplicationServer"></Ref></Arg>
+                <Arg name="factories">
+                    <Array type="org.eclipse.jetty.server.ConnectionFactory">
+                        <Item>
+                            <New class="org.eclipse.jetty.server.HttpConnectionFactory">
+                                <Arg name="config"><Ref refid="httpConfig"></Ref></Arg>
+                            </New>
+                        </Item>
+                    </Array>
+                </Arg>
+                <Set name="host"><SystemProperty name="jetty.host" default="0.0.0.0"></SystemProperty></Set>
+                <Set name="port"><SystemProperty name="jetty.port" default="61000"></SystemProperty></Set>
+            </New>
+        </Arg>
+    </Call>
+
+    <Get name="ThreadPool">
+        <Set name="minThreads">10</Set>
+        <Set name="maxThreads">20</Set>
+    </Get>
+</Configure>
