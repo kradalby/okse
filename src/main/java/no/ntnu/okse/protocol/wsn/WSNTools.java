@@ -52,6 +52,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -207,6 +208,15 @@ public class WSNTools {
     }
 
     /**
+     * Injects an XML sub-tree into the message content of a notify
+     * @param object The Xml root subnode to be injected
+     * @param notify The Notify object to be updated
+     */
+    public static void injectMessageContentIntoNotify(Object object, Notify notify) {
+        notify.getNotificationMessage().get(0).getMessage().setAny(object);
+    }
+
+    /**
      * Helper method that removes namespace prefixes from a topic expression
      * @param topicExpression The raw topic expression as a string
      * @return A rebuilt topic node set string without namespace prefixes
@@ -242,8 +252,7 @@ public class WSNTools {
     }
 
     /**
-     * This method is a helper method to build a Notify with its context. It is meant as example on how this may be
-     * solved.
+     * Helper method that takes in raw string content,
      *
      * @return a notify with its context
      */
@@ -262,22 +271,14 @@ public class WSNTools {
             NotificationMessageHolderType.Message message = factory.createNotificationMessageHolderTypeMessage();
             NotificationMessageHolderType messageHolderType = factory.createNotificationMessageHolderType();
 
-            // create message content
-            try {
-                DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
-                Document document = documentBuilderFactory.newDocumentBuilder().newDocument();
-                Element element = document.createElement("message");
-                element.setTextContent(content);
-                message.setAny(element);
-            } catch (ParserConfigurationException e) {
-                System.err.println("failed to build message");
-            }
+            Element e = buildGenericContentElement(content);
+            message.setAny(e);
 
             // Set holders message
             messageHolderType.setMessage(message);
 
             // Build topic expression
-            String expression = prefix + ":" + topic;
+            String expression = (prefix != null && namespace != null) ? prefix + ":" + topic : topic;
             // Build topic
             TopicExpressionType topicExpressionType = factory.createTopicExpressionType();
             topicExpressionType.setDialect(ConcreteEvaluator.dialectURI);
@@ -300,6 +301,22 @@ public class WSNTools {
         notifyWithContext.nuNamespaceContextResolver = contextResolver;
 
         return notifyWithContext;
+    }
+
+    public static Element buildGenericContentElement(String content) {
+
+        // create message content
+        try {
+            DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+            Document document = documentBuilderFactory.newDocumentBuilder().newDocument();
+            Element element = document.createElement("Content");
+            element.setTextContent(content);
+            return element;
+        } catch (ParserConfigurationException e) {
+            log.error("Invalid parser configuration, unknown reason: " + e.getMessage());
+        }
+
+        return null;
     }
 
     /**
