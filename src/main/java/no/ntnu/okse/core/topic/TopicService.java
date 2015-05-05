@@ -413,7 +413,7 @@ public class TopicService extends AbstractCoreService {
                     if (topicExists(t)) {
                         deleteTopicLocal(getTopic(t));
                         log.debug("Removing Topic{" + t + "} due to mapping removal because it doesn't have any subscribers");
-                    };
+                    }
 
                 }
             });

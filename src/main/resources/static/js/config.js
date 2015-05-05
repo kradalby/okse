@@ -119,18 +119,22 @@ var Config = (function($) {
 
             $('#delete-all-mappings').on('click', function(e) {
                 e.preventDefault()
-                Main.ajax({
-                    url: 'config/mapping/delete/all',
-                    type: 'DELETE',
-                    success: function(data) {
-                        $.okseDebug.logPrint("[Debug][Config] Callback from server; deleted all mappings")
-                    },
-                    error: function(xhr, status, error) {
-                        Main.displayMessage('The broker were unable to remove all mappings')
-                        Main.error(xhr, status, error)
-                    }
-                });
-            })
+
+                if (confirm("Are you sure you want to delete all mappings?")) {
+
+                    Main.ajax({
+                        url: 'config/mapping/delete/all',
+                        type: 'DELETE',
+                        success: function (data) {
+                            $.okseDebug.logPrint("[Debug][Config] Callback from server; deleted all mappings")
+                        },
+                        error: function (xhr, status, error) {
+                            Main.displayMessage('The broker were unable to remove all mappings')
+                            Main.error(xhr, status, error)
+                        }
+                    });
+                }
+            });
         }
     }
 
