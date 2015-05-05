@@ -6,8 +6,8 @@ import requests
 from random import shuffle
 
 DEBUG = True
-INTERVAL = 1
-RUNS = 10
+INTERVAL = 0.01
+RUNS = 1000
 SOAP_HEADER = "application/soap+xml;charset=utf-8"
 MODES = {
     "all": "All available",
@@ -55,9 +55,9 @@ xmlns:ns9="http://docs.oasis-open.org/wsrf/r-2">
 </s:Header>
 <s:Body>
 <wsnt:Notify>
-<wsnt:NotificationMessage xmlns:ox="http://okse.default.topic">
+<wsnt:NotificationMessage>
 <wsnt:Topic Dialect="http://docs.oasis-open.org/wsn/t-1/TopicExpression/Concrete">%s</wsnt:Topic>
-<wsnt:Message><notifyContent>%s</notifyContent></wsnt:Message>
+<wsnt:Message><Content>%s</Content></wsnt:Message>
 </wsnt:NotificationMessage>
 </wsnt:Notify>
 </s:Body>
