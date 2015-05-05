@@ -111,7 +111,7 @@ public class WSNTools {
      */
     public static String generateRawSoapEnvelopedNotifyString(Message m) {
         return generateRawSoapEnvelopedNotifyString(
-                m.getTopic().getFullTopicString(),
+                m.getTopic(),
                 m.getAttribute(WSNSubscriptionManager.WSN_DIALECT_TOKEN),
                 m.getMessage());
     }

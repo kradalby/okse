@@ -49,15 +49,7 @@ var Stats = (function($) {
         return trHTML
     }
 
-    // Updates all the subscriber counters on the main
-    var refreshSubscribersAndPublishers = function(subscribers, publishers) {
-        $('.totalSubscribers').each(function() {
-            $(this).text(subscribers)
-        });
-        $('.totalPublishers').each(function() {
-            $(this).text(publishers)
-        });
-    }
+
 
     var refreshCoreServiceStatistics = function(statistics) {
         $('#messagesSent').html(statistics.totalMessagesSent)
@@ -65,11 +57,12 @@ var Stats = (function($) {
         $('#totalRequests').html(statistics.totalRequests)
         $('#badRequests').html(statistics.totalBadRequests)
         $('#totalErrors').html(statistics.totalErrors)
-        refreshSubscribersAndPublishers(statistics.subscribers, statistics.publishers)
+        Main.refreshElementByClassWithText('.totalSubscribers', statistics.subscribers)
+        Main.refreshElementByClassWithText('.totalPublishers', statistics.publishers)
+        Main.refreshElementByClassWithText('.totalTopics', statistics.topics)
     }
 
     return {
-        refreshSubscribersAndPublishers: refreshSubscribersAndPublishers,
         refresh: function(data) {
             var table = createTableForAllProtocols(data.protocolServerStatistics)
             $('#protocol-table').html(table)

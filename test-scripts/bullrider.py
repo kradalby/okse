@@ -19,6 +19,7 @@ MODES = {
     "subscribe-notopic": "Subscribe (No Topic)",
     "subscribe-simpletopic": "Subscribe (SimpleTopic)",
     "subscribe-useraw": "Subscribe (UseRaw=true)",
+    "subscribe-fulltopic": "Subscribe (FullTopic)",
     "unsubscribe": "Unsubscribe",
     "register": "PublisherRegistration",
     "getcurrent": "GetCurrentMessage",
@@ -41,7 +42,7 @@ RANDOM_WORDS = [
 ]
 
 NOTIFY = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<s:Envelope xmlns:ns2="http://www.w3.org/2001/12/soap-envelope" xmlns:ns3="http://docs.oasis-open.org/wsrf/bf-2" xmlns:wsa="http://www.w3.org/2005/08/addressing" xmlns:wsnt="http://docs.oasis-open.org/wsn/b-2" xmlns:ns6="http://docs.oasis-open.org/wsn/t-1" xmlns:ns7="http://docs.oasis-open.org/wsn/br-2" xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns9="http://docs.oasis-open.org/wsrf/r-2">
+<s:Envelope xmlns:test="http://test.com" xmlns:test2="http://test2.com" xmlns:ns2="http://www.w3.org/2001/12/soap-envelope" xmlns:ns3="http://docs.oasis-open.org/wsrf/bf-2" xmlns:wsa="http://www.w3.org/2005/08/addressing" xmlns:wsnt="http://docs.oasis-open.org/wsn/b-2" xmlns:ns6="http://docs.oasis-open.org/wsn/t-1" xmlns:ns7="http://docs.oasis-open.org/wsn/br-2" xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns9="http://docs.oasis-open.org/wsrf/r-2" xmlns:xml="http://www.w3.org/XML/1998/namespace" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://docs.oasis-open.org/wsn/b-2 http://docs.oasis-open.org/wsn/b-2.xsd">
 <s:Header>
 <wsa:Action>http://docs.oasis-open.org/wsn/bw-2/NotificationConsumer/Notify</wsa:Action>
 </s:Header>
@@ -79,14 +80,39 @@ SUBSCRIBE = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 xmlns:ns3="http://docs.oasis-open.org/wsn/b-2"
 xmlns:ns4="http://docs.oasis-open.org/wsn/t-1"
 xmlns:ns5="http://docs.oasis-open.org/wsrf/bf-2"
-xmlns:ns6="http://schemas.xmlsoap.org/soap/envelope/">
+xmlns:ns6="http://schemas.xmlsoap.org/soap/envelope/"
+xmlns:xml="http://www.w3.org/XML/1998/namespace"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://docs.oasis-open.org/wsn/b-2 http://docs.oasis-open.org/wsn/b-2.xsd">
 <ns6:Header>
 <ns2:Action>http://docs.oasis-open.org/wsn/bw-2/NotificationProducer/SubscribeRequest</ns2:Action>
 </ns6:Header>
 <ns6:Body>
 <ns3:Subscribe>
 <ns3:ConsumerReference><ns2:Address>%s</ns2:Address></ns3:ConsumerReference>
-<ns3:Filter><ns3:TopicExpression Dialect="http://docs.oasis-open.org/wsn/t-1/TopicExpression/Concrete">%s</ns3:TopicExpression></ns3:Filter>
+<ns3:Filter xmlns:test="http://test.com" xmlns:test2="http://test2.com"><ns3:TopicExpression Dialect="http://docs.oasis-open.org/wsn/t-1/TopicExpression/Concrete">%s</ns3:TopicExpression></ns3:Filter>
+<ns3:InitialTerminationTime>2016-01-01T00:00:00</ns3:InitialTerminationTime>
+</ns3:Subscribe>
+</ns6:Body>
+</ns6:Envelope>
+"""
+
+SUBSCRIBE_FULLTOPIC = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns6:Envelope xmlns:ns2="http://www.w3.org/2005/08/addressing"
+xmlns:ns3="http://docs.oasis-open.org/wsn/b-2"
+xmlns:ns4="http://docs.oasis-open.org/wsn/t-1"
+xmlns:ns5="http://docs.oasis-open.org/wsrf/bf-2"
+xmlns:ns6="http://schemas.xmlsoap.org/soap/envelope/"
+xmlns:test="http://test.com"
+xmlns:test2="http://test2.com">
+<ns6:Header>
+<ns2:Action>http://docs.oasis-open.org/wsn/bw-2/NotificationProducer/SubscribeRequest</ns2:Action>
+</ns6:Header>
+<ns6:Body>
+<ns3:Subscribe>
+<ns3:ConsumerReference><ns2:Address>%s</ns2:Address></ns3:ConsumerReference>
+<ns3:Filter>
+<ns3:TopicExpression Dialect="http://docs.oasis-open.org/wsn/t-1/TopicExpression/Full">%s</ns3:TopicExpression></ns3:Filter>
 </ns3:Subscribe>
 </ns6:Body>
 </ns6:Envelope>
@@ -141,7 +167,6 @@ xmlns:ns6="http://schemas.xmlsoap.org/soap/envelope/">
 <ns6:Body>
 <ns3:Subscribe>
 <ns3:ConsumerReference><ns2:Address>%s</ns2:Address></ns3:ConsumerReference>
-<ns3:Filter></ns3:Filter>
 </ns3:Subscribe>
 </ns6:Body>
 </ns6:Envelope>
@@ -419,6 +444,19 @@ class WSNRequest(object):
 
         self.send_request(payload)
 
+    def send_subscription_fulltopic(self):
+        """
+        Sends a subscription request using FullTopic
+        """
+
+        print "[i] Sending a Subscribe request using FullTopic expression"
+
+        # Generate the payload
+        payload = SUBSCRIBE_FULLTOPIC % ('http://' + self.WAN_IP, self.TOPIC)
+
+        # Send the request
+        self.send_request(payload)
+
     def send_subscription_notopic(self):
         """
         Sends a subscription without topic expression
@@ -585,6 +623,9 @@ if __name__ == "__main__":
 
     elif mode == 'subscribe':
         wsn_request.send_subscription()
+
+    elif mode == 'subscribe-fulltopic':
+        wsn_request.send_subscription_fulltopic()
 
     elif mode == 'subscribe-notopic':
         wsn_request.send_subscription_notopic()
