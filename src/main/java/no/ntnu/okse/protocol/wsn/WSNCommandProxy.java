@@ -273,6 +273,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
 
                     List<QName> topicQNames = TopicValidator.evaluateTopicExpressionToQName(topic, namespaceContextResolver.resolveNamespaceContext(topic));
                     String topicName = TopicUtils.topicToString(topicQNames);
+                    topicName = WSNTools.removeNameSpacePrefixesFromTopicExpression(topicName);
 
                     log.debug("Message topic extracted: " + topicName);
 
@@ -301,13 +302,10 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
 
                 } catch (InvalidTopicExpressionFault invalidTopicExpressionFault) {
                     log.warn("Tried to send a topic with an invalid expression");
-                    invalidTopicExpressionFault.printStackTrace();
                 } catch (MultipleTopicsSpecifiedFault multipleTopicsSpecifiedFault) {
                     log.warn("Tried to send a message with multiple topics");
-                    multipleTopicsSpecifiedFault.printStackTrace();
                 } catch (TopicExpressionDialectUnknownFault topicExpressionDialectUnknownFault) {
                     log.warn("Tried to send a topic with an invalid expression dialect");
-                    topicExpressionDialectUnknownFault.printStackTrace();
                 }
             }
         }
@@ -325,14 +323,6 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
                 if (context == null) {
                     continue;
                 }
-
-                context.getAllPrefixes().forEach(prefix -> {
-                    // check if this is the default xmlns attribute
-                    if (!prefix.equals(XMLConstants.XMLNS_ATTRIBUTE)) {
-                        // add namespace context to the expression node
-                        topic.getOtherAttributes().put(new QName("xmlns:" + prefix), context.getNamespaceURI(prefix));
-                    }
-                });
             }
         }
         log.debug("Processing valid recipients...");
@@ -390,7 +380,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
     @WebMethod(operationName = "Notify")
     public void notify(@WebParam(partName = "Notify", name = "Notify", targetNamespace = "http://docs.oasis-open.org/wsn/b-2")
                        Notify notify) {
-        this.sendNotification(notify);
+        this.sendNotification(notify, connection.getRequestInformation().getNamespaceContextResolver());
     }
 
     /**
@@ -492,7 +482,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
                             // Extract the actual value of the element
                             log.debug("Content: " + type.getContent().get(0));
                             // Set it as the raw topic content string
-                            rawTopicContent = type.getContent().get(0).toString();
+                            rawTopicContent = WSNTools.removeNameSpacePrefixesFromTopicExpression(TopicUtils.extractExpression(type));
                             // List potential attributes
                             log.debug("Attributes: " + type.getOtherAttributes());
                             // List and add the dialect of the expression type
@@ -587,8 +577,16 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         /* Prepare needed information for OKSE Subscriber object */
 
         if (rawTopicContent != null) {
-            log.debug("Sending addTopic request to TopicService");
-            TopicService.getInstance().addTopic(rawTopicContent);
+            // Check if the topic contains wildcards, dots or double separators
+            if (rawTopicContent.contains("*") || rawTopicContent.contains("//") ||
+                    rawTopicContent.contains("//.") || rawTopicContent.contains("/.")) {
+                log.debug("Topic expression contained XPATH or FullTopic wildcards or selectors, resetting topic and adding as filter");
+                contentFilters.add(rawTopicContent);
+                rawTopicContent = null;
+            } else {
+                log.debug("Sending addTopic request to TopicService");
+                TopicService.getInstance().addTopic(rawTopicContent);
+            }
         } else {
             log.debug("No topic was specified, setting to null and listening to all topics");
         }
@@ -603,7 +601,10 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         // Add potential XPATH content filters discovered in the subscribe request
         contentFilters.forEach(filter -> subscriber.addFilter(filter));
         // Add useRaw flag if present
-        if (useRaw) subscriber.setAttribute(WSNSubscriptionManager.WSN_USERAW_TOKEN, "true");
+        if (useRaw) {
+            subscriber.setAttribute(WSNSubscriptionManager.WSN_USERAW_TOKEN, "true");
+            subscriber.addFilter("UseRaw");
+        }
 
         // Register the OKSE subscriber to the SubscriptionService, via the WSNSubscriptionManager
         log.debug("Passing the subscriber to the SubscriptionService...");
@@ -667,9 +668,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
                     log.error("Recieved an invalid topic expression");
                     ExceptionUtilities.throwTopicNotSupportedFault("en", "Expression given is not a legal topicexpression");
                 } else {
-                    for (Object t : topic.getContent()) {
-                        rawTopicString = (String) t;
-                    }
+                    rawTopicString = WSNTools.removeNameSpacePrefixesFromTopicExpression(TopicUtils.extractExpression(topic));
                     rawDialect = topic.getDialect();
                 }
             } catch (TopicExpressionDialectUnknownFault topicExpressionDialectUnknownFault) {
@@ -769,6 +768,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
 
         // Fetch the topic as a String
         String topicName = TopicUtils.topicToString(topicQNames);
+        topicName = WSNTools.removeNameSpacePrefixesFromTopicExpression(topicName);
 
         // Fetch the latest message from the MessageService
         Message currentMessage = MessageService.getInstance().getLatestMessage(topicName);
