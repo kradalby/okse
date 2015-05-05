@@ -158,6 +158,7 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
         log.debug(outgoing.toString());
         log.debug("This is getAddress: " + getAddress(sender));
         routes.add(sender);
+        AMQProtocolServer.getInstance().incrementTotalRequests();
     }
 
     private void remove(Sender sender) {
