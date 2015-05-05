@@ -201,7 +201,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
 
         // Check for WAN_PORT
         try {
-            publicWANPort = Integer.parseInt("WSN_WAN_PORT");
+            publicWANPort = Integer.parseInt(Application.config.getProperty("WSN_WAN_PORT", publicWANPort.toString()));
         } catch (NumberFormatException e) {
             log.error("Failed to parse WSN WAN Port, using default: " + publicWANPort);
         } 
