@@ -40,21 +40,10 @@
             <div class="row">
                 <div class="col-md-12">
                     <div class="panel panel-info">
-                        <div class="panel-heading">Net</div>
-                        <div class="table-responsive">
-                            <table class="table table-striped">
-                                <thead>
-                                    <tr>
-                                        <th colspan="2">Broker</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>78.51.91.122</td>
-                                        <td>8080</td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                        <div class="panel-heading">Broker</div>
+                        <div class="panel-body">
+                            <p>The broker is running on <strong><span>0.0.0.0</span><span th:text="':' + ${serverPort}">:0000</span></strong></p>
+                            <p>See below for protocol specific ports.</p>
                         </div>
                         <div class="table-responsive">
                             <table class="table table-striped">

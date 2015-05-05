@@ -55,6 +55,9 @@ public class IndexViewController {
     @Value("${spring.application.name}")
     private String appName;
 
+    @Value("${server.port}")
+    private int serverPort;
+
     private Properties environment = System.getProperties();
 
     @RequestMapping("/")
@@ -74,6 +77,7 @@ public class IndexViewController {
 
         model.addAttribute("projectName", appName + " (" + Application.VERSION  +")");
         model.addAttribute("environment", createEnvironmentList());
+        model.addAttribute("serverPort", serverPort);
         model.addAttribute("subscribers", ss.getNumberOfSubscribers());
         model.addAttribute("publishers", ss.getNumberOfPublishers());
         model.addAttribute("topics", ts.getTotalNumberOfTopics());
