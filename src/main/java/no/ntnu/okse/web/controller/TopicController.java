@@ -50,24 +50,29 @@ public class TopicController {
     private static Logger log = Logger.getLogger(TopicController.class.getName());
 
     @RequestMapping(method = RequestMethod.GET, value = GET_ALL_TOPICS)
-    public @ResponseBody Map<String, HashMap<String, Object>> getAlltopics() {
+    public @ResponseBody List<HashMap<String, Object>> getAlltopics() {
         TopicService ts = TopicService.getInstance();
         SubscriptionService ss = SubscriptionService.getInstance();
         HashSet<Topic> allTopics = ts.getAllTopics();
 
-        Map<String, HashMap<String, Object>> results = new LinkedHashMap<>();
+        List<HashMap<String, Object>> results = new ArrayList<>();
 
-        // TODO: This may need optimicing. Currently this operation is quite expensive.
         allTopics.stream()
-                .sorted((t1, t2) -> t1.getFullTopicString().compareTo(t2.getFullTopicString()))
                 .forEach(t -> {
-                    int subscribers = ss.getAllSubscribersForTopic(t.getFullTopicString()).size();
-                    HashMap<String, Object> topicInfo = new HashMap<String, Object>() {{
-                        put("subscribers", subscribers);
-                        put("topic", t);
-                    }};
-                    results.put(t.getFullTopicString(), topicInfo);
-        });
+                            int subscribers = ss.getAllSubscribersForTopic(t.getFullTopicString()).size();
+                            HashMap<String, Object> topicInfo = new HashMap<String, Object>() {{
+                                put("subscribers", subscribers);
+                                put("topic", t);
+                            }};
+                            results.add(topicInfo);
+                });
+
+        results.stream()
+                .sorted((t1, t2) -> {
+                    Topic first = (Topic) t1.get("topic");
+                    Topic second = (Topic) t2.get("topic");
+                    return first.getFullTopicString().compareTo(second.getFullTopicString());
+                });
 
         return results;
     }

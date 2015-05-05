@@ -161,7 +161,7 @@ var Subscribers = (function($) {
             })
         },
         refresh: function(data) {
-            subscribers = data;
+            subscribers = data
             checkIfPaginationIsNeeded()
             // Remove 'deleted class' if it exists
             Main.refreshElementByClassWithText('.totalSubscribers', subscribers.length)

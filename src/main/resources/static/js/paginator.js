@@ -7,7 +7,7 @@
  */
 var Paginator = (function($) {
 
-    var _PAGESIZE = 3
+    var _PAGESIZE = 10
 
     /*
      This function sets up the pagination with the correct values.
