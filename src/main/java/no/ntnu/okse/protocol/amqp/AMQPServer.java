@@ -192,7 +192,7 @@ public class AMQPServer extends BaseHandler {
 
     }
 
-    public MessageBytes convertAMQPMessageToMessageBytes(Message msg) {
+    public static MessageBytes convertAMQPMessageToMessageBytes(Message msg) {
 
         byte[] buffer = gestimateMessageByteSize(msg);
 
@@ -201,7 +201,7 @@ public class AMQPServer extends BaseHandler {
         return mb;
     }
 
-    private byte[] gestimateMessageByteSize(Message msg) {
+    private static byte[] gestimateMessageByteSize(Message msg) {
         int guestimateByteSize = 0;
         if(msg.getBody().toString().length() != 0){
             guestimateByteSize += msg.getBody().toString().getBytes().length;
@@ -212,15 +212,13 @@ public class AMQPServer extends BaseHandler {
         if(msg.getSubject().getBytes().length != 0){
             guestimateByteSize += msg.getSubject().getBytes().length;
         }
-        System.out.println("Total amount bytes from guestimate int: " + guestimateByteSize);
         int encoded;
 
 
         byte[] buffer = new byte[guestimateByteSize];
-        System.out.println("This is buffer.length: " + buffer.length);
         while (true) {
             try {
-                log.debug("While loop: encode block, buffer length: " + buffer.length);
+                //log.debug("While loop: encode block, buffer length: " + buffer.length);
                 encoded = msg.encode(buffer, 0, buffer.length);
                 break;
             } catch (java.nio.BufferOverflowException e) {
@@ -231,7 +229,7 @@ public class AMQPServer extends BaseHandler {
         return buffer;
     }
 
-    public Message convertOkseMessageToAMQP(no.ntnu.okse.core.messaging.Message message) {
+    public static Message convertOkseMessageToAMQP(no.ntnu.okse.core.messaging.Message message) {
         Message msg = Message.Factory.create();
 
         Section body = new AmqpValue(message.getMessage());

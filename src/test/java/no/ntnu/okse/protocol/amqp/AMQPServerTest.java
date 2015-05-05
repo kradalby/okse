@@ -43,16 +43,11 @@ import static org.testng.Assert.*;
 
 public class AMQPServerTest {
 
-    AMQProtocolServer ps;
-    SubscriptionHandler sh;
-    AMQPServer server;
-
-
 
     @BeforeMethod
     public void setUp() throws Exception {
         // This is _not_ a good way to detect
-        // if the server is initiated or not.
+        // if the AMQProtocolServer.getInstance().getServer() is initiated or not.
         try{
             new Socket("localhost", 8080).close();
         }
@@ -60,35 +55,16 @@ public class AMQPServerTest {
             Application.main(new String[0]);
         }
 
-        sh = new SubscriptionHandler();
-        server = new AMQPServer(sh, false);
     }
 
     @AfterMethod
     public void tearDown() throws Exception {
-        server = null;
-        sh = null;
         //CoreService.getInstance().stopAllProtocolServers();
         //CoreService.getInstance().getAllProtocolServers().forEach(ps ->  {
         //    CoreService.getInstance().removeProtocolServer(ps);
         //});
     }
 
-    @Test
-    public void testAddMessageToQueue() throws Exception {
-        String topic = "test";
-        Message okseMessage = new Message("Hei", topic, null, "AMQP");
-
-        server.addMessageToQueue(okseMessage);
-
-        MessageBytes mb = server.getFirstFromMessageQueueOnGivenTopic(topic);
-
-        org.apache.qpid.proton.message.Message AMQPMessage = org.apache.qpid.proton.message.Message.Factory.create();
-
-        AMQPMessage.decode(mb.getBytes(), 0, mb.getBytes().length);
-
-        assertEquals(okseMessage.getMessage(), (String) ((AmqpValue) AMQPMessage.getBody()).getValue());
-    }
 
     @Test
     public void testConvertAMQPMessageToMessageBytes() throws Exception {
@@ -103,7 +79,7 @@ public class AMQPServerTest {
         AMQPMessage.setSubject("Supertesty test");
         AMQPMessage.setBody(body);
 
-        MessageBytes mb = server.convertAMQPMessageToMessageBytes(AMQPMessage);
+        MessageBytes mb = AMQPServer.convertAMQPMessageToMessageBytes(AMQPMessage);
 
         org.apache.qpid.proton.message.Message AMQPMessageReconstruct = org.apache.qpid.proton.message.Message.Factory.create();
 
@@ -120,7 +96,7 @@ public class AMQPServerTest {
         String topic = "test";
         Message okseMessage = new Message("Hei", topic, null, "AMQP");
 
-        org.apache.qpid.proton.message.Message AMQPMessage = server.convertOkseMessageToAMQP(okseMessage);
+        org.apache.qpid.proton.message.Message AMQPMessage = AMQPServer.convertOkseMessageToAMQP(okseMessage);
 
         Address address = new Address(AMQPMessage.getAddress());
 
