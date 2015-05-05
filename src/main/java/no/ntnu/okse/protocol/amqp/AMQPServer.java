@@ -224,8 +224,8 @@ public class AMQPServer extends BaseHandler {
 
         Section body = new AmqpValue(message.getMessage());
 
-        msg.setAddress("127.0.0.1/" + message.getTopic());
-        msg.setSubject("bang");
+        msg.setAddress(AMQProtocolServer.getInstance().getHost() +"/" + message.getTopic());
+        msg.setSubject(message.getMessageID());
         msg.setBody(body);
         return msg;
     }
