@@ -143,8 +143,13 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
         Session session = sender.getSession();
         Connection connection = session.getConnection();
 
-        //The ip of the connected client
-        String remoteHostName = connection.getRemoteHostname();
+        AMQProtocolServer server = AMQProtocolServer.getInstance();
+        Driver driver = server.getDriver();
+        int clientPort = driver.getPort();
+
+
+        //The connected client hostname
+        String remoteHostName = driver.getInetAddress().getHostName();
 
         //Get RemoteContainer id for the connection, used to identify the connection
         String remoteContainer = connection.getRemoteContainer();
@@ -159,9 +164,6 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
             senderAddress = remoteHostName;
         }
 
-        AMQProtocolServer server = AMQProtocolServer.getInstance();
-        Driver driver = server.getDriver();
-        int clientPort = driver.getClientPort();
 
         if(clientPort != 0){
             senderClientPort = clientPort;
@@ -264,8 +266,6 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
     public void onLinkLocalOpen(Event event) {
         log.debug("Local link opened");
         add(event.getLink());
-
-
     }
 
     @Override
@@ -294,29 +294,6 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
         }
     }
 
-    /*
-    @Override
-    public void onLinkFinal(Event event) {
-        log.debug("Local link final");
-        SubscriptionService.getInstance().removeSubscriber(localSenderSubscriberMap.get(event.getLink()));
-
-    }*/
-   /*@Override
-    public void onConnectionRemoteClose(Event event) {
-       log.debug("Remote connection closed, calling remove...");
-       if (event.getLink() instanceof Sender) {
-           SubscriptionService.getInstance().removeSubscriber(localSenderSubscriberMap.get(event.getLink()));
-       }
-   }*/
-
-
-    /*@Override
-    public void onConnectionLocalClose(Event event) {
-        log.debug("Local connection closed, calling remove...");
-        if (event.getLink() instanceof Sender) {
-            SubscriptionService.getInstance().removeSubscriber(localSenderSubscriberMap.get(event.getLink()));
-        }
-    }*/
 
 
     @Override
