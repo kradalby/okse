@@ -89,6 +89,7 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
 
     private static HashMap<Sender, Subscriber> localSenderSubscriberMap = new HashMap<>();
     private static HashMap<Subscriber, Sender> localSubscriberSenderMap = new HashMap<>();
+    private static HashMap<Object, Sender> localRemoteContainerSenderMap = new HashMap<>();
     private static HashMap<Sender, AbstractNotificationProducer.SubscriptionHandle> localSubscriberHandle = new HashMap<>();
 
     final private Map<String,Routes<Sender>> outgoing = new HashMap<String,Routes<Sender>>();
@@ -135,17 +136,49 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
     }
 
     private void add(Sender sender) {
-        Subscriber subscriber = new Subscriber(sender.getSession().getConnection().getRemoteHostname(), AMQProtocolServer.getInstance().getDriver().getClientPort(), getAddress(sender), AMQProtocolServer.getInstance().getProtocolServerType());
+        String senderAddress = "Unknown";
+        int senderClientPort = 0;
+        String protocolServerType = "Unknown";
+
+        Session session = sender.getSession();
+        Connection connection = session.getConnection();
+
+        //The ip of the connected client
+        String remoteHostName = connection.getRemoteHostname();
+
+        //Get RemoteContainer id for the connection, used to identify the connection
+        String remoteContainer = connection.getRemoteContainer();
+
+        if(remoteHostName != null){
+            senderAddress = remoteHostName;
+        }
+
+        AMQProtocolServer server = AMQProtocolServer.getInstance();
+        Driver driver = server.getDriver();
+        int clientPort = driver.getClientPort();
+
+        if(clientPort != 0){
+            senderClientPort = clientPort;
+        }
+
+        if(server.getProtocolServerType() != null){
+            protocolServerType = server.getProtocolServerType();
+        }
+
+        //Building the Subscriber from a sender object
+        Subscriber subscriber = new Subscriber(senderAddress, senderClientPort, getAddress(sender), protocolServerType);
         SubscriptionService.getInstance().addSubscriber(subscriber);
+
+
+        //If RemoteContainer id is not null add the subscriber to HashMap with RemoteContainer id as Key
+        //Is used to identify which sender has open connections to the broker
+        if(remoteContainer != null){
+            localRemoteContainerSenderMap.put(remoteHostName, sender);
+        }
+
         localSenderSubscriberMap.put(sender, subscriber);
         localSubscriberSenderMap.put(subscriber, sender);
         TopicService.getInstance().addTopic(getAddress(sender));
-
-        for(Subscriber key : localSubscriberSenderMap.keySet()){
-            log.debug("This is the key on add: " + key);
-            log.debug("This is the value on add: " + localSubscriberSenderMap.get(key));
-
-        }
 
         String address = getAddress(sender);
         Routes<Sender> routes = outgoing.get(address);
@@ -154,13 +187,17 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
             routes = new Routes<Sender>();
             outgoing.put(address,routes);
         }
-        log.debug("Adding sender: " + sender.getSession().getConnection().getRemoteHostname() + " to route: " + address);
+        log.debug("Adding sender: " + remoteHostName + " to route: " + address);
         log.debug(outgoing.toString());
         log.debug("This is getAddress: " + getAddress(sender));
         routes.add(sender);
     }
 
     private void remove(Sender sender) {
+        Session session = sender.getSession();
+        Connection connection = session.getConnection();
+        String remoteHostName = connection.getRemoteHostname();
+
         Subscriber subscriber = localSenderSubscriberMap.get(sender);
         localSenderSubscriberMap.remove(sender);
         localSubscriberSenderMap.remove(subscriber);
@@ -168,13 +205,13 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
         String address = getAddress(sender);
         Routes<Sender> routes = outgoing.get(address);
         if (routes != null) {
-            log.debug("Removing sender: " + sender.getSession().getConnection().getRemoteHostname() + " from route: " + address);
+            log.debug("Removing sender: " + remoteHostName + " from route: " + address);
             routes.remove(sender);
             if (routes.size() == 0) {
                 outgoing.remove(address);
             }
         }
-        log.debug("Detaching: " + sender.getSession().getConnection().getRemoteHostname());
+        log.debug("Detaching: " + remoteHostName);
         sender.abort();
         sender.detach();
         sender.close();
@@ -234,11 +271,25 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
     public void onConnectionUnbound(Event event) {
         //log.debug("This is event.getSession(): " + event.getSession());
         log.debug("This is event RemoteContainer: " + event.getConnection().getRemoteContainer());
-        for(Subscriber key : localSubscriberSenderMap.keySet()){
-            if(event.getConnection().getRemoteContainer().equals(localSubscriberSenderMap.get(key).getSession().getConnection().getRemoteContainer())){
-                SubscriptionService.getInstance().removeSubscriber(key);
-            }
-            log.debug("This is the value: " + localSubscriberSenderMap.get(key).getSession().getConnection().getRemoteContainer());
+
+        //Getting the RemoteContainer id for the event
+        Connection eventConnection = event.getConnection();
+        String eventRemoteContainer = eventConnection.getRemoteContainer();
+
+        //Setting the RemoteContainer id for the sender to "Unknown" before we get it from the sender object
+        String senderRemoteContainer = "Unknown";
+
+        //Get sender from localRemoteContainerSenderMap  with eventRemoteContainer as key
+        Sender sender = localRemoteContainerSenderMap.get(eventRemoteContainer);
+        if(sender != null){
+            Session senderSession = sender.getSession();
+            Connection senderConnection = senderSession.getConnection();
+            senderRemoteContainer = senderConnection.getRemoteContainer();
+        }
+
+        //Check if sender container id is equal to the event container id to see if the client has disconnected
+        if (senderRemoteContainer.equals(eventRemoteContainer)){
+            SubscriptionService.getInstance().removeSubscriber(localSenderSubscriberMap.get(sender));
         }
     }
 
