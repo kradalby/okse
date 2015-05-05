@@ -25,6 +25,7 @@
 package no.ntnu.okse.protocol.amqp;
 
 import org.apache.log4j.Logger;
+import org.apache.qpid.proton.amqp.messaging.Header;
 import org.apache.qpid.proton.engine.BaseHandler;
 import org.apache.qpid.proton.engine.Connection;
 import org.apache.qpid.proton.engine.Collector;
@@ -51,6 +52,7 @@ public class Driver extends BaseHandler {
     final private Handler[] handlers;
     final private Selector selector;
     private static Logger log;
+    private Acceptor acceptor;
 
     public Driver(Collector collector, Handler ... handlers) throws IOException {
         this.collector = collector;
@@ -60,7 +62,10 @@ public class Driver extends BaseHandler {
     }
 
     public void listen(String host, int port) throws IOException {
-        new Acceptor(host, port);
+        acceptor = new Acceptor(host, port);
+    }
+    public int getClientPort(){
+        return acceptor.getRemoteSocketPort();
     }
 
     public void run() throws IOException {
@@ -123,6 +128,7 @@ public class Driver extends BaseHandler {
     @Override
     public void onConnectionLocalOpen(Event evt) {
         Connection conn = evt.getConnection();
+        Transport transport = evt.getTransport();
         if (conn.getRemoteState() == EndpointState.UNINITIALIZED) {
             try {
                 new Connector(conn);
@@ -140,6 +146,7 @@ public class Driver extends BaseHandler {
 
         final private ServerSocketChannel socket;
         final private SelectionKey key;
+        private SocketChannel thisIsTheSocket;
 
         Acceptor(String host, int port) throws IOException {
             socket = ServerSocketChannel.open();
@@ -151,19 +158,32 @@ public class Driver extends BaseHandler {
 
         public void selected() throws IOException {
             SocketChannel sock = socket.accept();
-            log.debug("ACCEPTED: " + sock);
+            thisIsTheSocket = sock;
             Connection conn = Connection.Factory.create();
             conn.collect(collector);
+            log.debug("ACCEPTED: " + sock);
             Transport transport = Transport.Factory.create();
-            Sasl sasl = transport.sasl();
-            sasl.setMechanisms("ANONYMOUS");
-            sasl.server();
-            sasl.done(Sasl.PN_SASL_OK);
+            if (AMQProtocolServer.getInstance().useSASL) {
+                Sasl sasl = transport.sasl();
+                sasl.setMechanisms("ANONYMOUS");
+                sasl.server();
+                Sasl.SaslOutcome outcome = sasl.getOutcome();
+                sasl.done(Sasl.PN_SASL_OK);
+            }
             transport.bind(conn);
             new ChannelHandler(sock, SelectionKey.OP_READ, transport);
         }
-    }
 
+        public int getRemoteSocketPort(){
+            String[] socketStringArray = thisIsTheSocket.toString().split(":");
+            if(socketStringArray.length == 3){
+                return Integer.valueOf(thisIsTheSocket.toString().split(":")[2].replace("]", ""));
+            }
+            else {
+                return 1;
+            }
+        }
+    }
 
     private class ChannelHandler implements Selectable {
 
@@ -257,9 +277,11 @@ public class Driver extends BaseHandler {
 
     private static Transport makeTransport(Connection conn) {
         Transport transport = Transport.Factory.create();
-        Sasl sasl = transport.sasl();
-        sasl.setMechanisms("ANONYMOUS");
-        sasl.client();
+        if (AMQProtocolServer.getInstance().useSASL) {
+            Sasl sasl = transport.sasl();
+            sasl.setMechanisms("ANONYMOUS");
+            sasl.client();
+        }
         transport.bind(conn);
         return transport;
     }
@@ -276,6 +298,13 @@ public class Driver extends BaseHandler {
     public void wakeUp() {
         log.debug("Waking up the selector to get out the next messages from the queue");
         selector.wakeup();
+    }
+
+
+    public void printByteBuffer(ByteBuffer buf) {
+        for (int i = 0; i < buf.limit();i++) {
+            System.out.println(String.format("Position: %s: %s", i, buf.get(i)));
+        }
     }
 
 }

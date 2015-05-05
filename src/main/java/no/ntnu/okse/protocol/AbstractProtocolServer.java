@@ -82,14 +82,14 @@ public abstract class AbstractProtocolServer implements ProtocolServer {
     }
 
     /**
-     * Total amount of messages that has been recieved on WSNotificationServer
-     * @return An integer representing the total amount of messages recieved.
+     * Total amount of messages that has been received on WSNotificationServer
+     * @return An integer representing the total amount of messages received.
      */
     public int getTotalMessagesRecieved() { return totalMessagesRecieved; }
 
     /**
-     * This interface method must return the total amount of bad requests recieved by the protocol server.
-     * @return An integer representing the total amount of recieved malformed or bad requests
+     * This interface method must return the total amount of bad requests received by the protocol server.
+     * @return An integer representing the total amount of received malformed or bad requests
      */
     public int getTotalBadRequests() { return totalBadRequests; };
 
