@@ -25,7 +25,7 @@
 package no.ntnu.okse.web.model;
 
 /**
- * Created by Fredrik on 25/03/15.
+ * Created by Fredrik Borgen Tørnvall on 25/03/15.
  */
 public class ProtocolStats {
 
@@ -36,11 +36,19 @@ public class ProtocolStats {
     private final int totalBadRequests;
     private final int totalErrors;
 
-
-    public ProtocolStats(String protocolServer, int totalMessagesSent, int totalMessagesReceived, int totalRequests, int totalBadRequests, int totalErrors) {
+    /**
+     * Constructes a model for containing protocol stats to be serialized to JSON
+     * @param protocolServer
+     * @param totalMessagesSent
+     * @param totalMessagesRecieved
+     * @param totalRequests
+     * @param totalBadRequests
+     * @param totalErrors
+     */
+    public ProtocolStats(String protocolServer, int totalMessagesSent, int totalMessagesRecieved, int totalRequests, int totalBadRequests, int totalErrors) {
         this.protocolServer = protocolServer;
         this.totalMessagesSent = totalMessagesSent;
-        this.totalMessagesReceived = totalMessagesReceived;
+        this.totalMessagesReceived = totalMessagesRecieved;
         this.totalRequests = totalRequests;
         this.totalBadRequests = totalBadRequests;
         this.totalErrors = totalErrors;

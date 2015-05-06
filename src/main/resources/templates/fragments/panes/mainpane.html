@@ -8,6 +8,11 @@
 <th:block layout:fragment="mainpane">
 <div class="tab-pane active" id="main">
     <div class="row">
+        <div class="col-md-12 text-right">
+            <a class="btn btn-danger" id="protocol-power-button">Stop protocolservers</a>
+        </div>
+    </div>
+    <div class="row row-top-spacing">
         <div class="col-md-4">
             <div class="panel panel-info">
                 <!-- Default panel contents -->
@@ -54,7 +59,7 @@
                                     <th>Port</th>
                                 </tr>
                                 </thead>
-                                <tbody>
+                                <tbody id="protocolinfo-table">
                                 <tr th:each="protocolInfo : ${protocols}">
                                     <td th:text="${protocolInfo.type}">Unknown</td>
                                     <td th:text="${protocolInfo.host}">Unknown</td>
