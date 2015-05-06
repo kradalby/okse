@@ -56,6 +56,7 @@ var Topics = (function($) {
 
         if (topics.length == 0) {
             $('#topics-table').html('<tr class="danger"><td colspan="6"><h4 class="text-center">No topics returned from TopicService</h4></td></tr>')
+            return;
         }
         if (from === undefined || to === undefined) {
             $.okseDebug.logPrint("[Debug][Topics] Filling table with the complete list")

@@ -75,6 +75,7 @@ var Paginator = (function($) {
                 "startPage:" + args.currentPage + " totalPages: " + args.pagesNeeded + "}");
 
             $('#' + args.element).twbsPagination('destroy')
+
             setupPagination(args)
         }
     }
