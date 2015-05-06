@@ -32,6 +32,8 @@ import no.ntnu.okse.core.messaging.Message;
 import no.ntnu.okse.core.messaging.MessageService;
 import no.ntnu.okse.protocol.ProtocolServer;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -131,7 +133,9 @@ public class CoreService extends AbstractCoreService {
 
         // Call the boot() method on all registered ProtocolServers
         log.info("Booting ProtocolServers");
-        this.bootProtocolServers();
+        // Since this is CoreService bootup, we iterate directly, avoiding unnecessary overhead caused
+        // by the bootProtocolServers() method, that is used during live start / stop of protocol servers.
+        protocolServers.forEach(ps -> ps.boot());
         log.info("Completed booting ProtocolServers");
 
         // Call the registerListenerSupport() method on all registered Core , including self
@@ -258,7 +262,7 @@ public class CoreService extends AbstractCoreService {
      * @return: An integer representing the total amount of requests.
      */
     public int getTotalRequestsFromProtocolServers() {
-        return protocolServers.stream().map(ProtocolServer::getTotalRequests).reduce(0, (a, b) -> a + b);
+        return getAllProtocolServers().stream().map(ProtocolServer::getTotalRequests).reduce(0, (a, b) -> a + b);
     }
 
     /**
@@ -266,7 +270,7 @@ public class CoreService extends AbstractCoreService {
      * @return: An integer representing the total amount of messages received.
      */
     public int getTotalMessagesReceivedFromProtocolServers() {
-        return protocolServers.stream().map(ProtocolServer::getTotalMessagesReceived).reduce(0, (a, b) -> a + b);
+        return getAllProtocolServers().stream().map(ProtocolServer::getTotalMessagesReceived).reduce(0, (a, b) -> a + b);
     }
 
     /**
@@ -274,7 +278,7 @@ public class CoreService extends AbstractCoreService {
      * @return An integer representing the total number of messages sent
      */
     public int getTotalMessagesSentFromProtocolServers() {
-        return protocolServers.stream().map(ProtocolServer::getTotalMessagesSent).reduce(0, (a, b) -> a + b);
+        return getAllProtocolServers().stream().map(ProtocolServer::getTotalMessagesSent).reduce(0, (a, b) -> a + b);
     }
 
     /**
@@ -282,7 +286,7 @@ public class CoreService extends AbstractCoreService {
      * @return: An integer representing the total amount of bad or malformed requests
      */
     public int getTotalBadRequestsFromProtocolServers() {
-        return protocolServers.stream().map(ProtocolServer::getTotalBadRequests).reduce(0, (a, b) -> a + b);
+        return getAllProtocolServers().stream().map(ProtocolServer::getTotalBadRequests).reduce(0, (a, b) -> a + b);
     }
 
     /**
@@ -290,7 +294,7 @@ public class CoreService extends AbstractCoreService {
      * @return: An integer representing the total amount of errors from protocol servers.
      */
     public int getTotalErrorsFromProtocolServers() {
-        return protocolServers.stream().map(ProtocolServer::getTotalErrors).reduce(0, (a, b) -> a + b);
+        return getAllProtocolServers().stream().map(ProtocolServer::getTotalErrors).reduce(0, (a, b) -> a + b);
     }
 
     /**
@@ -370,9 +374,37 @@ public class CoreService extends AbstractCoreService {
     private void bootCoreServices() { services.forEach(s -> s.boot()); }
 
     /**
-     * Helper method that boots all added protocolservers.
+     * Helper method that boots all added protocolservers
      */
     private void bootProtocolServers() {
+        // If they are already booted, return.
+        if (protocolServersBooted) return;
+
+        // Fetch the protocolserver Classes registered
+        ArrayList<Class> protocolServerClasses = new ArrayList<>();
+        protocolServers.forEach(ps -> protocolServerClasses.add(ps.getClass()));
+        // Clear the cached protocol servers from core service registry
+        protocolServers.clear();
+        // For each of the fetched classes that was in cache
+        protocolServerClasses.forEach(clazz -> {
+            try {
+                // Fetch the getInstance method from the class
+                Method instanceMethod = clazz.getMethod("getInstance", null);
+                // Cast the returned instance as a ProtocolServer
+                ProtocolServer ps = (ProtocolServer) instanceMethod.invoke(null, null);
+                // Add the invoked instance to the ProtocolServer registry again
+                addProtocolServer(ps);
+            } catch (NoSuchMethodException e) {
+                log.error("Failed to locate getInstance method on " + clazz + ". Is it implemented properly?");
+            } catch (InvocationTargetException e) {
+                log.error("Failed to invoke getInstance method on " + clazz + ". Is it implemented properly?");
+            } catch (IllegalAccessException e) {
+                log.error("Failed to invoke getInstance method on " + clazz + ". It needs to be public access.");
+            }
+        });
+        // At this point, previously cached registered protocol servers have been removed, temporarily
+        // retaining the Class from each protocol server. They have been reinvoked and the new instances
+        // have been reinserted into the registry. Time to boot.
         protocolServers.forEach(ps -> ps.boot());
         protocolServersBooted = true;
     }

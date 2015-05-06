@@ -336,8 +336,20 @@ public class WSNotificationServer extends AbstractProtocolServer {
             _commandProxy.getProxyRegistrationManager().getAllPublishers().forEach(p -> {
                 _commandProxy.getProxyRegistrationManager().removePublisher(p);
             });
+
+            // Give thread some time to perform callback before removing listener support
+            Thread.sleep(1000);
+            // Unregister listener support
+            SubscriptionService.getInstance()
+                    .removeSubscriptionChangeListener(_commandProxy.getProxySubscriptionManager());
+            SubscriptionService.getInstance()
+                    .removePublisherChangeListener(_commandProxy.getProxyRegistrationManager());
+
+            // Stop the HTTP Client
             this._client.stop();
+            // Stop the ServerConnector
             this._server.stop();
+            // Reset flags
             this._singleton = null;
             this._invoked = false;
             log.info("WSNServer Client and ServerThread stopped");

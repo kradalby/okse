@@ -271,7 +271,9 @@ public class DummyProtocolServer extends AbstractProtocolServer {
                 totalErrors++;
                 log.error("I/O exception during select operation: " + e.getMessage());
             } catch (ClosedSelectorException e) {
-                log.error("Unknown exception: " + e.getClass());
+                log.debug("Caught SelectorClose, shutting down");
+            } catch (Exception e) {
+                log.error("Caught unknown exception: " + e);
             }
         }
         log.info("DummypPotocolServer stopped.");
