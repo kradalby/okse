@@ -215,9 +215,6 @@ public class AMQPServer extends BaseHandler {
         log.debug("The first message in the queue is currently: " + queue.peek());
 
         AMQProtocolServer.getInstance().getDriver().wakeUp();
-
-        AMQProtocolServer.getInstance().incrementTotalMessagesSent();
-
     }
 
     /**
