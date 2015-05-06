@@ -181,7 +181,7 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
 
     /**
      * Add a Sender object to AMQPs internal routing system for topic/queue
-     * and create and add a Okse subscriber to the internal system.
+     * and create and add a OKSEs subscriber to the internal system.
      * @param sender
      */
     private void add(Sender sender) {
