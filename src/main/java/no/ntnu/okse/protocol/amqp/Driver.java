@@ -25,7 +25,6 @@
 package no.ntnu.okse.protocol.amqp;
 
 import org.apache.log4j.Logger;
-import org.apache.qpid.proton.amqp.messaging.Header;
 import org.apache.qpid.proton.engine.BaseHandler;
 import org.apache.qpid.proton.engine.Connection;
 import org.apache.qpid.proton.engine.Collector;
@@ -39,7 +38,6 @@ import org.apache.qpid.proton.engine.TransportException;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.Socket;
 import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
@@ -209,7 +207,7 @@ public class Driver extends BaseHandler {
 
         final private ServerSocketChannel socket;
         final private SelectionKey key;
-        private SocketChannel cachedLatestConectedClient;
+        private SocketChannel cachedLatestConnectedClient;
 
         /**
          *
@@ -231,7 +229,7 @@ public class Driver extends BaseHandler {
          */
         public void selected() throws IOException {
             SocketChannel sock = socket.accept();
-            cachedLatestConectedClient = sock;
+            cachedLatestConnectedClient = sock;
             Connection conn = Connection.Factory.create();
             conn.collect(collector);
             log.debug("ACCEPTED: " + sock);
@@ -252,7 +250,7 @@ public class Driver extends BaseHandler {
          * @return Netaddress from latest connected client
          */
         public InetAddress getInetAddress() {
-            return cachedLatestConectedClient.socket().getInetAddress();
+            return cachedLatestConnectedClient.socket().getInetAddress();
         }
 
         /**
@@ -260,7 +258,7 @@ public class Driver extends BaseHandler {
          * @return Port from latest connected client
          */
         public Integer getPort() {
-            return cachedLatestConectedClient.socket().getPort();
+            return cachedLatestConnectedClient.socket().getPort();
         }
     }
 
