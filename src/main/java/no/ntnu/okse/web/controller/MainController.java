@@ -25,7 +25,9 @@
 package no.ntnu.okse.web.controller;
 
 import no.ntnu.okse.Application;
+import no.ntnu.okse.core.CoreService;
 import no.ntnu.okse.core.Utilities;
+import no.ntnu.okse.core.event.SystemEvent;
 import no.ntnu.okse.core.subscription.SubscriptionService;
 import no.ntnu.okse.core.topic.TopicService;
 import org.apache.log4j.Logger;
@@ -43,7 +45,11 @@ import java.util.List;
  * okse is licenced under the MIT licence.
  */
 @RestController
+@RequestMapping(value = "/api/main")
 public class MainController {
+
+    private static final String MAIN_API = "/get/all";
+    private static final String PROTOCOL_POWER = "/protocols/power";
 
     public static int MB = 1024 * 1024;
 
@@ -53,10 +59,11 @@ public class MainController {
      * Returns all necessary information for rendering the main-pane
      * @return A HashMap containing all the information
      */
-    @RequestMapping(value = "/api/main", method = RequestMethod.GET)
+    @RequestMapping(method = RequestMethod.GET, value = MAIN_API)
     public @ResponseBody HashMap<String, Object> main() {
         SubscriptionService ss = SubscriptionService.getInstance();
         TopicService ts = TopicService.getInstance();
+        CoreService cs = CoreService.getInstance();
 
         long totalRam = Runtime.getRuntime().totalMemory();
         long freeRam = Runtime.getRuntime().freeMemory();
@@ -83,9 +90,30 @@ public class MainController {
                 }});
             });
             put("protocols", protocols);
+            put("protocolPower", cs.protocolServersBooted);
         }};
 
         return result;
+    }
+
+    @RequestMapping(method = RequestMethod.POST, value = PROTOCOL_POWER)
+    public @ResponseBody String powerProtocolServers() {
+        CoreService cs = CoreService.getInstance();
+
+        if (cs.protocolServersBooted) {
+            try {
+                cs.getEventQueue().put(new SystemEvent(SystemEvent.Type.SHUTDOWN_PROTOCOL_SERVERS, null));
+            } catch (InterruptedException e) {
+                log.warn("WARNING: Please don't interrupt the thread");
+            }
+        } else {
+            try {
+                cs.getEventQueue().put(new SystemEvent(SystemEvent.Type.BOOT_PROTOCOL_SERVERS, null));
+            } catch (InterruptedException e) {
+                log.warn("WARNING: Please don't interrupt the thread");
+            }
+        }
+        return "{ \"power\":" + cs.protocolServersBooted + " }";
     }
 
 }
