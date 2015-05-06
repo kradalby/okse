@@ -194,31 +194,38 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
         log.debug(outgoing.toString());
         log.debug("This is getAddress: " + getAddress(sender));
         routes.add(sender);
+        AMQProtocolServer.getInstance().incrementTotalRequests();
     }
 
     private void remove(Sender sender) {
-        Session session = sender.getSession();
-        Connection connection = session.getConnection();
-        String remoteHostName = connection.getRemoteHostname();
+        if (sender != null) {
+            Session session = sender.getSession();
+            Connection connection = session.getConnection();
+            String remoteHostName = connection.getRemoteHostname();
+            AMQProtocolServer server = AMQProtocolServer.getInstance();
+            Driver driver = server.getDriver();
 
-        Subscriber subscriber = localSenderSubscriberMap.get(sender);
-        localSenderSubscriberMap.remove(sender);
-        localSubscriberSenderMap.remove(subscriber);
+            Subscriber subscriber = localSenderSubscriberMap.get(sender);
+            localSenderSubscriberMap.remove(sender);
+            localSubscriberSenderMap.remove(subscriber);
 
-        String address = getAddress(sender);
-        Routes<Sender> routes = outgoing.get(address);
-        if (routes != null) {
-            log.debug("Removing sender: " + remoteHostName + " from route: " + address);
-            routes.remove(sender);
-            if (routes.size() == 0) {
-                outgoing.remove(address);
+            String address = getAddress(sender);
+            Routes<Sender> routes = outgoing.get(address);
+            if (routes != null) {
+                if (!AMQProtocolServer.getInstance().isShuttingDown()) {
+                    log.debug("Removing sender: " + driver.getInetAddress() + " from route: " + address);
+                }
+                routes.remove(sender);
+                if (routes.size() == 0) {
+                    outgoing.remove(address);
+                }
             }
+            if (!AMQProtocolServer.getInstance().isShuttingDown()) {log.debug("Detaching: " + driver.getInetAddress());}
+            sender.abort();
+            sender.detach();
+            sender.close();
+            log.debug(outgoing.toString());
         }
-        log.debug("Detaching: " + remoteHostName);
-        sender.abort();
-        sender.detach();
-        sender.close();
-        log.debug(outgoing.toString());
     }
     private void add(Receiver receiver) {
         String address = getAddress(receiver);
@@ -312,5 +319,9 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
                 // TODO: after addSubscriber
             }
         }
+    }
+
+    public void unsubscribeAll() {
+        localSenderSubscriberMap.forEach( (sender,subscriber) -> SubscriptionService.getInstance().removeSubscriber(subscriber));
     }
 }
