@@ -328,7 +328,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         log.debug("Processing valid recipients...");
 
         // Update statistics
-        WSNotificationServer.getInstance().incrementTotalMessagesRecieved();
+        WSNotificationServer.getInstance().incrementTotalMessagesReceived();
 
         // Remember current message with context
         currentMessage = notify;
@@ -665,14 +665,14 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         for (TopicExpressionType topic : topics) {
             try {
                 if (!TopicValidator.isLegalExpression(topic, namespaceContextResolver.resolveNamespaceContext(topic))) {
-                    log.error("Recieved an invalid topic expression");
+                    log.error("Received an invalid topic expression");
                     ExceptionUtilities.throwTopicNotSupportedFault("en", "Expression given is not a legal topicexpression");
                 } else {
                     rawTopicString = WSNTools.removeNameSpacePrefixesFromTopicExpression(TopicUtils.extractExpression(topic));
                     rawDialect = topic.getDialect();
                 }
             } catch (TopicExpressionDialectUnknownFault topicExpressionDialectUnknownFault) {
-                log.error("Recieved an unknown topic expression dialect");
+                log.error("Received an unknown topic expression dialect");
                 ExceptionUtilities.throwInvalidTopicExpressionFault("en", "TopicExpressionDialect unknown");
             }
         }

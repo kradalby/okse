@@ -40,7 +40,7 @@ var Stats = (function($) {
                 '<tr>' +
                     '<td>' + protocol.protocolServer + '</td>' +
                     '<td>' + protocol.totalMessagesSent + '</td>' +
-                    '<td>' + protocol.totalMessagesRecieved + '</td>' +
+                    '<td>' + protocol.totalMessagesReceived + '</td>' +
                     '<td>' + protocol.totalRequests + '</td>' +
                     '<td>' + protocol.totalBadRequests + '</td>' +
                     '<td>' + protocol.totalErrors + '</td>' +

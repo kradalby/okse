@@ -370,7 +370,7 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
                 // Remove the local mappings from AMQP subscriptionKey to OKSE Subscriber object and AMQP subscriptionHandle
                 remove(localSubscriberSenderMap.get(e.getData()));
             } else if (e.getType().equals(SubscriptionChangeEvent.Type.SUBSCRIBE)) {
-                log.debug("Recieved a SUBSCRIBE event");
+                log.debug("Received a SUBSCRIBE event");
                 // TODO: Investigate if we really need to do anything here since it will function as a callback
                 // TODO: after addSubscriber
             }

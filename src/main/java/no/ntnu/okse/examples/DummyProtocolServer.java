@@ -325,7 +325,7 @@ public class DummyProtocolServer extends AbstractProtocolServer {
                     String msg = builder.toString().trim();
                     Message message = new Message(msg, args[1], null, protocolServerType);
                     MessageService.getInstance().distributeMessage(message);
-                    totalMessagesRecieved++;
+                    totalMessagesReceived++;
 
                     return true;
                 }
@@ -343,7 +343,7 @@ public class DummyProtocolServer extends AbstractProtocolServer {
                 return true;
             }
         } catch (ArrayIndexOutOfBoundsException e) {
-            log.error("Recieved invalid command: " + command);
+            log.error("Received invalid command: " + command);
         }
 
         return false;

@@ -323,7 +323,7 @@ public class AMQPServer extends BaseHandler {
                 message.setOriginProtocol(AMQProtocolServer.getInstance().getProtocolServerType());
 
                 MessageService.getInstance().distributeMessage(message);
-                AMQProtocolServer.getInstance().incrementTotalMessagesRecieved();
+                AMQProtocolServer.getInstance().incrementTotalMessagesReceived();
                 log.debug(String.format("Got and distributed message(%s): %s from %s", address, message, rcv.toString()));
 
 

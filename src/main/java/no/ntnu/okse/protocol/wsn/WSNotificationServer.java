@@ -354,8 +354,8 @@ public class WSNotificationServer extends AbstractProtocolServer {
     /**
      * Support method to allow other classes in the wsn package to increment total messages received
      */
-    protected void incrementTotalMessagesRecieved() {
-        totalMessagesRecieved++;
+    protected void incrementTotalMessagesReceived() {
+        totalMessagesReceived++;
     }
 
     /**
