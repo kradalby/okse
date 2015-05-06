@@ -25,6 +25,7 @@
 package no.ntnu.okse.examples;
 
 import no.ntnu.okse.Application;
+import no.ntnu.okse.core.CoreService;
 import no.ntnu.okse.core.messaging.Message;
 import no.ntnu.okse.core.messaging.MessageService;
 import no.ntnu.okse.protocol.AbstractProtocolServer;
@@ -321,8 +322,9 @@ public class DummyProtocolServer extends AbstractProtocolServer {
                     amqp.stopServer();
                 }
                 else if (args[1].equalsIgnoreCase("start")) {
-                    //amqp.boot();
-                    amqp.run();
+                    CoreService cs = CoreService.getInstance();
+                    cs.addProtocolServer(AMQProtocolServer.getInstance());
+                    AMQProtocolServer.getInstance().boot();
                 }
                 return true;
             }

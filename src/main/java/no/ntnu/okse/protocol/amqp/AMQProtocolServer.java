@@ -47,6 +47,9 @@ public class AMQProtocolServer extends AbstractProtocolServer {
 
     private static AMQProtocolServer _singleton;
 
+    private static SubscriptionHandler sh;
+    private static boolean shuttingdown = false;
+
     // Internal default values
     private static final String DEFAULT_HOST = "0.0.0.0";
     private static final int DEFAULT_PORT = 5672;
@@ -116,7 +119,8 @@ public class AMQProtocolServer extends AbstractProtocolServer {
         try {
             Collector collector = Collector.Factory.create();
             //Router router = new Router();
-            SubscriptionHandler sh = new SubscriptionHandler();
+            //SubscriptionHandler sh = new SubscriptionHandler();
+            this.sh = new SubscriptionHandler();
             SubscriptionService.getInstance().addSubscriptionChangeListener(sh);
             server = new AMQPServer(sh, false);
             driver = new Driver(collector, new Handshaker(),
@@ -133,7 +137,15 @@ public class AMQProtocolServer extends AbstractProtocolServer {
     @Override
     public void stopServer() {
         log.info("Stoping AMQProtocolServer");
+        shuttingdown = true;
         driver.stop();
+        this.sh.unsubscribeAll();
+        this.sh = null;
+        _running = false;
+        server = null;
+        this._singleton = null;
+        this._invoked = false;
+        log.info("AMQProtocolServer is stopped");
     }
 
     @Override
@@ -173,4 +185,6 @@ public class AMQProtocolServer extends AbstractProtocolServer {
     public Driver getDriver() {
         return driver;
     }
+
+    public boolean isShuttingDown() { return shuttingdown; }
 }
