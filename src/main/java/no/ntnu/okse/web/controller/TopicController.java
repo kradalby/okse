@@ -59,20 +59,15 @@ public class TopicController {
 
         allTopics.stream()
                 .forEach(t -> {
-                            int subscribers = ss.getAllSubscribersForTopic(t.getFullTopicString()).size();
-                            HashMap<String, Object> topicInfo = new HashMap<String, Object>() {{
-                                put("subscribers", subscribers);
-                                put("topic", t);
-                            }};
-                            results.add(topicInfo);
+                    int subscribers = ss.getAllSubscribersForTopic(t.getFullTopicString()).size();
+                    HashMap<String, Object> topicInfo = new HashMap<String, Object>() {{
+                        put("subscribers", subscribers);
+                        put("topic", t);
+                    }};
+                    results.add(topicInfo);
                 });
 
-        results.stream()
-                .sorted((t1, t2) -> {
-                    Topic first = (Topic) t1.get("topic");
-                    Topic second = (Topic) t2.get("topic");
-                    return first.getFullTopicString().compareTo(second.getFullTopicString());
-                });
+        results.sort((t1, t2) -> ((Topic) t1.get("topic")).getFullTopicString().compareTo(((Topic) t2.get("topic")).getFullTopicString()));
 
         return results;
     }
