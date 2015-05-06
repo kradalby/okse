@@ -280,6 +280,7 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
             sender.close();
             log.debug(outgoing.toString());
         }
+
     }
 
     /**

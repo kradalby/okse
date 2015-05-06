@@ -25,7 +25,6 @@
 package no.ntnu.okse.protocol.amqp;
 
 import org.apache.log4j.Logger;
-import org.apache.qpid.proton.amqp.messaging.Header;
 import org.apache.qpid.proton.engine.BaseHandler;
 import org.apache.qpid.proton.engine.Connection;
 import org.apache.qpid.proton.engine.Collector;
@@ -39,7 +38,6 @@ import org.apache.qpid.proton.engine.TransportException;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.Socket;
 import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
@@ -58,6 +56,13 @@ public class Driver extends BaseHandler {
     private boolean _running;
     private Acceptor acceptor;
 
+
+    /**
+     *
+     * @param collector
+     * @param handlers
+     * @throws IOException
+     */
     public Driver(Collector collector, Handler ... handlers) throws IOException {
         this.collector = collector;
         this.handlers = handlers;
@@ -65,19 +70,37 @@ public class Driver extends BaseHandler {
         log = Logger.getLogger(Driver.class.getName());
     }
 
+    /**
+     *
+     * @param host Client host address
+     * @param port Client port
+     * @throws IOException
+     */
     public void listen(String host, int port) throws IOException {
         //new Acceptor(host, port);
         acceptor = new Acceptor(host, port);
     }
 
+    /**
+     * Gets the netaddress from the acceptor
+     * @return The address from connection
+     */
     public InetAddress getInetAddress() {
         return acceptor.getInetAddress();
     }
 
+    /**
+     * Gets the port from the acceptor
+     * @return The port from connection
+     */
     public Integer getPort() {
         return acceptor.getPort();
     }
 
+    /**
+     *
+     * @throws IOException
+     */
     public void run() throws IOException {
         if (!_running) {
             _running = true;
@@ -125,6 +148,10 @@ public class Driver extends BaseHandler {
         }
     }
 
+    /**
+     * Process events from the event collector
+     *
+     */
     public void processEvents() {
         while (_running) {
             Event ev = collector.peek();
@@ -154,6 +181,10 @@ public class Driver extends BaseHandler {
         ch.selected();
     }
 
+    /**
+     *
+     * @param evt
+     */
     @Override
     public void onConnectionLocalOpen(Event evt) {
         Connection conn = evt.getConnection();
@@ -167,6 +198,7 @@ public class Driver extends BaseHandler {
         }
     }
 
+
     private interface Selectable {
         void selected() throws IOException;
     }
@@ -175,8 +207,14 @@ public class Driver extends BaseHandler {
 
         final private ServerSocketChannel socket;
         final private SelectionKey key;
-        private SocketChannel cachedLatestConectedClient;
+        private SocketChannel cachedLatestConnectedClient;
 
+        /**
+         *
+         * @param host
+         * @param port
+         * @throws IOException
+         */
         Acceptor(String host, int port) throws IOException {
             socket = ServerSocketChannel.open();
             socket.configureBlocking(false);
@@ -185,9 +223,13 @@ public class Driver extends BaseHandler {
             key = socket.register(selector, SelectionKey.OP_ACCEPT, this);
         }
 
+        /**
+         *
+         * @throws IOException
+         */
         public void selected() throws IOException {
             SocketChannel sock = socket.accept();
-            cachedLatestConectedClient = sock;
+            cachedLatestConnectedClient = sock;
             Connection conn = Connection.Factory.create();
             conn.collect(collector);
             log.debug("ACCEPTED: " + sock);
@@ -203,16 +245,26 @@ public class Driver extends BaseHandler {
             new ChannelHandler(sock, SelectionKey.OP_READ, transport);
         }
 
-
+        /**
+         *
+         * @return Netaddress from latest connected client
+         */
         public InetAddress getInetAddress() {
-            return cachedLatestConectedClient.socket().getInetAddress();
+            return cachedLatestConnectedClient.socket().getInetAddress();
         }
 
+        /**
+         *
+         * @return Port from latest connected client
+         */
         public Integer getPort() {
-            return cachedLatestConectedClient.socket().getPort();
+            return cachedLatestConnectedClient.socket().getPort();
         }
     }
 
+    /**
+     *
+     */
     private class ChannelHandler implements Selectable {
 
         final SocketChannel socket;
@@ -227,6 +279,10 @@ public class Driver extends BaseHandler {
             transport.setContext(this);
         }
 
+        /**
+         *
+         * @return
+         */
         boolean update() {
             if (socket.isConnected()) {
                 int c = transport.capacity();
@@ -245,6 +301,9 @@ public class Driver extends BaseHandler {
             }
         }
 
+        /**
+         * Handles connection to the server
+         */
         public void selected() {
             if (!key.isValid()) { return; }
 
@@ -301,16 +360,29 @@ public class Driver extends BaseHandler {
 
         }
 
+        /**
+         * Used if only ChannelHandler object is available
+         * @return Netaddress from connection
+         */
         public InetAddress getInetAddress() {
             return this.socket.socket().getInetAddress();
         }
 
+        /**
+         * Used if only ChannelHandler object is available
+         * @return Port from connection
+         */
         public Integer getPort() {
             return this.socket.socket().getPort();
         }
 
     }
 
+    /**
+     * Binds transport to the given connection
+     * @param conn
+     * @return Transport
+     */
     private static Transport makeTransport(Connection conn) {
         Transport transport = Transport.Factory.create();
         if (AMQProtocolServer.getInstance().useSASL) {
@@ -323,7 +395,11 @@ public class Driver extends BaseHandler {
     }
 
     private class Connector extends ChannelHandler {
-
+        /**
+         *
+         * @param conn
+         * @throws IOException
+         */
         Connector(Connection conn) throws IOException {
             super(SocketChannel.open(), SelectionKey.OP_CONNECT, makeTransport(conn));
             log.debug("CONNECTING: " + conn.getHostname());
@@ -331,12 +407,18 @@ public class Driver extends BaseHandler {
         }
     }
 
+    /**
+     *
+     */
     public void wakeUp() {
         log.debug("Waking up the selector to get out the next messages from the queue");
         selector.wakeup();
     }
 
-
+    /**
+     *
+     * @param buf
+     */
     public void printByteBuffer(ByteBuffer buf) {
         for (int i = 0; i < buf.limit();i++) {
             System.out.println(String.format("Position: %s: %s", i, buf.get(i)));
