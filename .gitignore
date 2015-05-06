@@ -73,25 +73,8 @@ hs_err_pid*
 okse.db
 
 #OKSE
-src/main/java/no/ntnu/okse/db/Test.java
 logs/
-src/main/java/no/ntnu/okse/protocol/amqp/qpidProtonDemo/Spout.java
-src/main/java/no/ntnu/okse/protocol/amqp/qpidProtonDemo/Server.java
-src/main/java/no/ntnu/okse/protocol/amqp/qpidProtonDemo/Router.java
-src/main/java/no/ntnu/okse/protocol/amqp/qpidProtonDemo/Pool.java
-src/main/java/no/ntnu/okse/protocol/amqp/qpidProtonDemo/Handshaker.java
-src/main/java/no/ntnu/okse/protocol/amqp/qpidProtonDemo/Driver.java
-src/main/java/no/ntnu/okse/protocol/amqp/qpidProtonDemo/FlowController.java
-src/main/java/no/ntnu/okse/protocol/amqp/qpidProtonDemo/Drain.java
-src/main/java/no/ntnu/okse/protocol/amqp/qpidProtonDemo/Message.java
-logs/log.txt
-logs/okse.log
-*.log
-
-src/main/java/no/ntnu/okse/examples/amqp/AMQPServerSend.java
-=======
-logs/log.txt
-logs/okse.log
 *.log
 logs/
+config/
 
