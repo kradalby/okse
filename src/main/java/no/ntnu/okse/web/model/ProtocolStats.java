@@ -31,7 +31,7 @@ public class ProtocolStats {
 
     private final String protocolServer;
     private final int totalMessagesSent;
-    private final int totalMessagesRecieved;
+    private final int totalMessagesReceived;
     private final int totalRequests;
     private final int totalBadRequests;
     private final int totalErrors;
@@ -48,7 +48,7 @@ public class ProtocolStats {
     public ProtocolStats(String protocolServer, int totalMessagesSent, int totalMessagesRecieved, int totalRequests, int totalBadRequests, int totalErrors) {
         this.protocolServer = protocolServer;
         this.totalMessagesSent = totalMessagesSent;
-        this.totalMessagesRecieved = totalMessagesRecieved;
+        this.totalMessagesReceived = totalMessagesRecieved;
         this.totalRequests = totalRequests;
         this.totalBadRequests = totalBadRequests;
         this.totalErrors = totalErrors;
@@ -62,8 +62,8 @@ public class ProtocolStats {
         return totalMessagesSent;
     }
 
-    public int getTotalMessagesRecieved() {
-        return totalMessagesRecieved;
+    public int getTotalMessagesReceived() {
+        return totalMessagesReceived;
     }
 
     public int getTotalRequests() {

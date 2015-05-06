@@ -328,8 +328,28 @@ public class WSNotificationServer extends AbstractProtocolServer {
     public void stopServer() {
         try {
             log.info("Stopping WSNServer...");
+            // Removing all subscribers
+            _commandProxy.getAllRecipients().forEach(s -> {
+                _commandProxy.getProxySubscriptionManager().removeSubscriber(s);
+            });
+            // Removing all publishers
+            _commandProxy.getProxyRegistrationManager().getAllPublishers().forEach(p -> {
+                _commandProxy.getProxyRegistrationManager().removePublisher(p);
+            });
+
+            // Give thread some time to perform callback before removing listener support
+            Thread.sleep(1000);
+            // Unregister listener support
+            SubscriptionService.getInstance()
+                    .removeSubscriptionChangeListener(_commandProxy.getProxySubscriptionManager());
+            SubscriptionService.getInstance()
+                    .removePublisherChangeListener(_commandProxy.getProxyRegistrationManager());
+
+            // Stop the HTTP Client
             this._client.stop();
+            // Stop the ServerConnector
             this._server.stop();
+            // Reset flags
             this._singleton = null;
             this._invoked = false;
             log.info("WSNServer Client and ServerThread stopped");
@@ -351,8 +371,8 @@ public class WSNotificationServer extends AbstractProtocolServer {
     /**
      * Support method to allow other classes in the wsn package to increment total messages received
      */
-    protected void incrementTotalMessagesRecieved() {
-        totalMessagesRecieved++;
+    protected void incrementTotalMessagesReceived() {
+        totalMessagesReceived++;
     }
 
     /**

@@ -116,12 +116,12 @@ public class MessageService extends AbstractCoreService implements TopicChangeLi
                 try {
                     // Fetch the next job, will wait until a new message arrives
                     Message m = queue.take();
-                    log.info("Recieved a message for distrubution: " + m);
+                    log.info("Received a message for distrubution: " + m);
 
                     // Do we have a system message?
                     if (m.isSystemMessage() && m.getTopic() == null) {
 
-                        log.debug("Recieved message was a SystemMessage: " + m.getMessage());
+                        log.debug("Received message was a SystemMessage: " + m.getMessage());
 
                         // Check if we are to broadcast this system message
                         if (Application.BROADCAST_SYSTEM_MESSAGES_TO_SUBSCRIBERS) {
@@ -216,6 +216,8 @@ public class MessageService extends AbstractCoreService implements TopicChangeLi
             log.error("Interrupted while trying to inject shutdown message to queue");
         }
     }
+
+    /* Begin Public API */
 
     /**
      * Adds a Message object into the message queue for distribution
