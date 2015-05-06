@@ -72,6 +72,8 @@ public class WSNTools {
     // Namespace references
     public static final String _ConcreteTopicExpression = "http://docs.oasis-open.org/wsn/t-1/TopicExpression/Concrete";
     public static final String _SimpleTopicExpression = "http://docs.oasis-open.org/wsn/t-1/TopicExpression/Simple";
+    public static final String _FullTopicExpression = "http://docs.oasis-open.org/wsn/t-1/TopicExpression/Full";
+    public static final String _XpathTopicExpression = "http://www.w3.org/TR/1999/REC-xpath-19991116";
 
     /**
      * Generate a valid XML SOAP envelope containing a WS-Notification Notify
