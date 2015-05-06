@@ -6,8 +6,8 @@ import requests
 from random import shuffle
 
 DEBUG = True
-INTERVAL = 0.01
-RUNS = 1000
+INTERVAL = 0.1
+RUNS = 100
 SOAP_HEADER = "application/soap+xml;charset=utf-8"
 MODES = {
     "all": "All available",
@@ -20,6 +20,7 @@ MODES = {
     "subscribe-simpletopic": "Subscribe (SimpleTopic)",
     "subscribe-useraw": "Subscribe (UseRaw=true)",
     "subscribe-fulltopic": "Subscribe (FullTopic)",
+    "subscribe-xpathtopic": "Subscribe (XPATH Topic)",
     "unsubscribe": "Unsubscribe",
     "register": "PublisherRegistration",
     "getcurrent": "GetCurrentMessage",
@@ -191,6 +192,24 @@ xmlns:ns6="http://schemas.xmlsoap.org/soap/envelope/">
 <ns3:Filter><ns3:TopicExpression Dialect="http://docs.oasis-open.org/wsn/t-1/TopicExpression/Concrete">%s</ns3:TopicExpression>
 <ns3:MessageContent Dialect="http://www.w3.org/TR/1999/REC-xpath-19991116">/message[text()="derp"]</ns3:MessageContent>
 </ns3:Filter>
+</ns3:Subscribe>
+</ns6:Body>
+</ns6:Envelope>
+"""
+
+SUBSCRIBE_XPATHTOPIC = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns6:Envelope xmlns:ns2="http://www.w3.org/2005/08/addressing"
+xmlns:ns3="http://docs.oasis-open.org/wsn/b-2"
+xmlns:ns4="http://docs.oasis-open.org/wsn/t-1"
+xmlns:ns5="http://docs.oasis-open.org/wsrf/bf-2"
+xmlns:ns6="http://schemas.xmlsoap.org/soap/envelope/">
+<ns6:Header>
+<ns2:Action>http://docs.oasis-open.org/wsn/bw-2/NotificationProducer/SubscribeRequest</ns2:Action>
+</ns6:Header>
+<ns6:Body>
+<ns3:Subscribe>
+<ns3:ConsumerReference><ns2:Address>%s</ns2:Address></ns3:ConsumerReference>
+<ns3:Filter><ns3:TopicExpression Dialect="http://www.w3.org/TR/1999/REC-xpath-19991116">%s</ns3:TopicExpression></ns3:Filter>
 </ns3:Subscribe>
 </ns6:Body>
 </ns6:Envelope>
@@ -474,6 +493,19 @@ class WSNRequest(object):
         # Send the request
         self.send_request(payload)
 
+    def send_subscription_xpathtopic(self):
+        """
+        Sends a subscription using xpath topic expression"
+        """
+
+        print "[i] Sending a Subscribe with XPATH topic expression"
+
+        # Generate the payload
+        payload = SUBSCRIBE_XPATHTOPIC % ('http://' + self.WAN_IP)
+
+        # Send the request
+        self.send_request(payload
+
     def send_subscription_xpath(self):
         """
         Sends a subscription with an XPATH expression
@@ -634,6 +666,9 @@ if __name__ == "__main__":
     elif mode == 'subscribe-notopic':
         wsn_request.send_subscription_notopic()
 
+    elif mode == 'subscribe-xpathtopic':
+        wsn_request.send_subscription_xpathtopic()
+
     elif mode == 'subscribe-xpath':
         wsn_request.send_subscription_xpath()
 
@@ -692,6 +727,8 @@ if __name__ == "__main__":
         wsn_request.send_subscription_notopic()
         time.sleep(2)
         wsn_request.send_subscription_xpath()
+        time.sleep(2)
+        wsn_request.send_subscription_xpathtopic()
         time.sleep(2)
         wsn_request.send_subscription_simpletopic()
         time.sleep(2)
