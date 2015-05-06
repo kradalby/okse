@@ -216,6 +216,8 @@ public class AMQPServer extends BaseHandler {
 
         AMQProtocolServer.getInstance().getDriver().wakeUp();
 
+        AMQProtocolServer.getInstance().incrementTotalMessagesSent();
+
     }
 
     /**
@@ -342,7 +344,6 @@ public class AMQPServer extends BaseHandler {
 
                 Address address = new Address(msg.getAddress());
 
-
                 // This handles an edgecase where client only sends
                 // the topic as address, which causes the Address
                 // object creation to fail.
@@ -364,18 +365,16 @@ public class AMQPServer extends BaseHandler {
                     log.error("Got interrupted: " + e.getMessage());
                 }
 
-
-
                 no.ntnu.okse.core.messaging.Message message =
                         new no.ntnu.okse.core.messaging.Message((String)amqpMessageBodyString.getValue(), address.getName(), null, AMQProtocolServer.getInstance().getProtocolServerType());
                 message.setOriginProtocol(AMQProtocolServer.getInstance().getProtocolServerType());
 
                 MessageService.getInstance().distributeMessage(message);
+
                 AMQProtocolServer.getInstance().incrementTotalMessagesReceived();
+                AMQProtocolServer.getInstance().incrementTotalRequests();
+
                 log.debug(String.format("Got and distributed message(%s): %s from %s", address, message, rcv.toString()));
-
-
-
             }
         }
     }

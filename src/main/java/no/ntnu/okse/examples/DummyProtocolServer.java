@@ -337,11 +337,12 @@ public class DummyProtocolServer extends AbstractProtocolServer {
         try {
             if (args[0].equalsIgnoreCase("amqp")) {
                 AMQProtocolServer amqp = AMQProtocolServer.getInstance();
+                CoreService cs = CoreService.getInstance();
                 if (args[1].equalsIgnoreCase("stop")) {
+                    cs.removeProtocolServer(AMQProtocolServer.getInstance());
                     amqp.stopServer();
                 }
                 else if (args[1].equalsIgnoreCase("start")) {
-                    CoreService cs = CoreService.getInstance();
                     cs.addProtocolServer(AMQProtocolServer.getInstance());
                     AMQProtocolServer.getInstance().boot();
                 }
