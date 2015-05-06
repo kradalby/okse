@@ -26,6 +26,7 @@ package no.ntnu.okse.web.controller;
 
 import no.ntnu.okse.core.Utilities;
 import no.ntnu.okse.core.subscription.SubscriptionService;
+import no.ntnu.okse.core.topic.TopicService;
 import org.springframework.beans.factory.annotation.Value;
 import no.ntnu.okse.Application;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -69,12 +70,21 @@ public class IndexViewController {
         }
 
         SubscriptionService ss = SubscriptionService.getInstance();
+        TopicService ts = TopicService.getInstance();
+
+        long totalRam = Runtime.getRuntime().totalMemory();
+        long freeRam = Runtime.getRuntime().freeMemory();
 
         model.addAttribute("projectName", appName);
         model.addAttribute("environment", createEnvironmentList());
         model.addAttribute("subscribers", ss.getNumberOfSubscribers());
         model.addAttribute("publishers", ss.getNumberOfPublishers());
+        model.addAttribute("topics", ts.getTotalNumberOfTopics());
         model.addAttribute("uptime", Utilities.getDurationAsISO8601(Application.getRunningTime()));
+        model.addAttribute("cpuCores", Runtime.getRuntime().availableProcessors());
+        model.addAttribute("totalRam", totalRam / MainController.MB);
+        model.addAttribute("freeRam", freeRam / MainController.MB);
+        model.addAttribute("usedRam", (totalRam - freeRam) / MainController.MB);
 
         HashSet<String> ipAddresses = new HashSet<>();
 

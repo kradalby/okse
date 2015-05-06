@@ -125,7 +125,7 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
         while (_running) {
             try {
                 SubscriptionTask task = queue.take();
-                log.debug(task.getType() + " job recieved, executing task...");
+                log.debug(task.getType() + " job received, executing task...");
                 // Perform the task
                 task.run();
             } catch (InterruptedException e) {
@@ -484,7 +484,7 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
         // Iterate over all subscribers
         getAllSubscribers().stream()
                     // Only pass on those who match topic argument
-                    .filter(s -> s.getTopic().equals(topic))
+                    .filter(s ->  s.getTopic() == null || s.getTopic().equals(topic))
                     // Collect in the results set
                     .forEach(s -> results.add(s));
 

@@ -49,7 +49,7 @@ public class DB {
     }
 
     /**
-     * Closeing database connection
+     * Closing database connection
      */
     public static void closeDB(){
         try {
@@ -117,20 +117,7 @@ public class DB {
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
         }
     }
-
-    /**
-     * Run SQL queries
-     * @param query An SQL query string.
-     * @return A resultset with the returned results
-     * @throws SQLException An SQLException instance with returned error from SQLite driver
-     */
-    public static ResultSet sqlQuery(String query) throws SQLException {
-        conDB();
-        Statement sta = con.createStatement();
-        System.out.println(query);
-        return sta.executeQuery(query);
-    }
-
+    
     /**
      * INSERT INTO table (fields) VALUES (values)
      * @param table A string representing the table
@@ -138,16 +125,41 @@ public class DB {
      * @param values A string representing the values
      */
     public static void insert(String table, String fields, String values) {
-        Statement stmt = null;
-        String query = "INSERT INTO " + table + " (" + fields + ") " +
-                "VALUES (" + values + ")";
+        PreparedStatement insert = null;
+        String insertString =
+                "INSERT INTO " + table + " ( ? ) " +
+                "VALUES ( ? )";
         conDB();
-        System.out.println(query);
         try {
-            stmt = con.createStatement();
-            stmt.executeUpdate(query);
+            con.setAutoCommit(false);
+            insert = con.prepareStatement(insertString);
+            insert.setString(1, fields);
+            insert.setString(2, values);
+            insert.executeUpdate();
+            con.commit();
         } catch (SQLException e) {
             e.printStackTrace();
+            if (con != null) {
+                try {
+                    System.err.print("Transaction is being rolled back");
+                    con.rollback();
+                } catch (SQLException excep) {
+                    excep.printStackTrace();
+                }
+            }
+        } finally {
+            if (insert != null) {
+                try {
+                    insert.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+            try {
+                con.setAutoCommit(true);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -177,38 +189,78 @@ public class DB {
      * @param value A string representing the value
      * @return A ResultSet of the returned results
      */
-    public static ResultSet select(String table, String colum, String value) {
-        Statement stmt = null;
-        String query = "SELECT * FROM " + table + " where " + colum + "='" + value + "'";
+    public static ResultSet select(String table, String column, String value) {
+        PreparedStatement query = null;
+        ResultSet rs = null;
+        String queryString =
+                "SELECT * FROM " + table +
+                        "WHERE " + column + " = ?";
         conDB();
-        System.out.println(query);
+
         try {
-            stmt = con.createStatement();
-            return stmt.executeQuery(query);
-        } catch ( Exception e ) {
-            System.err.println( e.getClass().getName() + ": " + e.getMessage() );
+            con.setAutoCommit(false);
+            query = con.prepareStatement(queryString);
+            query.setString(1, value);
+
+            rs = query.executeQuery();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            if (query != null) {
+
+                try {
+                    query.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+            try {
+                con.setAutoCommit(true);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
         System.out.println("select: Operation done successfully");
-        return null;
+        return rs;
     }
 
     /**
      * SQL querie, update the password
-     * @param user (username)
+     * @param username
      * @param password (new password)
      */
-    public static void changePassword(String user, String password) {
-        Statement stmt = null;
-        String sql = null;
+    public static void changePassword(String username, String password) throws SQLException {
+        PreparedStatement changePassword = null;
+        String changePasswordString =
+                "UPDATE users " +
+                "SET password = ? " +
+                "WHERE username = ?";
         conDB();
+
         try {
-            stmt = con.createStatement();
-            sql = "UPDATE users SET password='" + password +"' WHERE username='" + user + "'";
-            stmt.executeUpdate(sql);
-            stmt.close();
-            con.close();
-        } catch (SQLException e) {
+            con.setAutoCommit(false);
+            changePassword = con.prepareStatement(changePasswordString);
+            changePassword.setString(1, password);
+            changePassword.setString(2, username);
+            changePassword.executeUpdate();
+            con.commit();
+
+        } catch (SQLException e ) {
             e.printStackTrace();
+            if (con != null) {
+                try {
+                    System.err.print("Transaction is being rolled back");
+                    con.rollback();
+                } catch(SQLException excep) {
+                    excep.printStackTrace();
+                }
+            }
+        } finally {
+            if (changePassword != null) {
+                changePassword.close();
+            }
+            con.setAutoCommit(true);
         }
     }
 }

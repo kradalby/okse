@@ -34,9 +34,7 @@ import no.ntnu.okse.protocol.ProtocolServer;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.*;
 
 /**
  * Created by Aleksander Skraastad (myth) on 2/25/15.
@@ -83,16 +81,8 @@ public class CoreService extends AbstractCoreService {
         eventQueue = new LinkedBlockingQueue();
         services = new HashSet<>();
         protocolServers = new ArrayList<>();
-        int execServicePoolSize = 10;
-        // Check if default has been overridden in the config file
-        if (Application.config.containsKey("CORE_SERVICE_THREAD_POOL_SIZE")) {
-            try {
-                execServicePoolSize = Integer.parseInt(Application.config.getProperty("CORE_SERVICE_THREAD_POOL_SIZE"));
-            } catch (NumberFormatException e) {
-                log.error("Failed to parse CoreService executor service thread pool size, using default (10)");
-            }
-        }
-        executor = Executors.newFixedThreadPool(execServicePoolSize);
+        // Initialize the ExecutorService (Dynamic threadpool that increases and decreases on demand in runtime)
+        executor = Executors.newCachedThreadPool();
         // Set the invoked flag
         _invoked = true;
     }
@@ -259,8 +249,8 @@ public class CoreService extends AbstractCoreService {
     }
 
     /**
-     * Statistics for total number of messages that has been recieved through all protocol servers
-     * @return: An integer representing the total amount of messages recieved.
+     * Statistics for total number of messages that has been received through all protocol servers
+     * @return: An integer representing the total amount of messages received.
      */
     public int getTotalMessagesRecievedFromProtocolServers() {
         return protocolServers.stream().map(ProtocolServer::getTotalMessagesRecieved).reduce(0, (a, b) -> a + b);

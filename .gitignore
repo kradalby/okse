@@ -89,3 +89,9 @@ logs/okse.log
 *.log
 
 src/main/java/no/ntnu/okse/examples/amqp/AMQPServerSend.java
+=======
+logs/log.txt
+logs/okse.log
+*.log
+logs/
+

@@ -25,6 +25,7 @@
 package no.ntnu.okse.protocol.amqp;
 
 import org.apache.log4j.Logger;
+import org.apache.qpid.proton.amqp.messaging.Header;
 import org.apache.qpid.proton.engine.BaseHandler;
 import org.apache.qpid.proton.engine.Connection;
 import org.apache.qpid.proton.engine.Collector;
@@ -36,6 +37,7 @@ import org.apache.qpid.proton.engine.Transport;
 import org.apache.qpid.proton.engine.TransportException;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.StandardSocketOptions;
@@ -68,8 +70,12 @@ public class Driver extends BaseHandler {
         acceptor = new Acceptor(host, port);
     }
 
-    public int getClientPort(){
-        return acceptor.getRemoteSocketPort();
+    public InetAddress getInetAddress() {
+        return acceptor.getInetAddress();
+    }
+
+    public Integer getPort() {
+        return acceptor.getPort();
     }
 
     public void run() throws IOException {
@@ -80,12 +86,10 @@ public class Driver extends BaseHandler {
 
             for (Handler h : handlers) {
                 if (h instanceof AMQPServer) {
-                    log.debug("Executing sendNextMessagesInQueue");
                     ((AMQPServer) h).sendNextMessagesInQueue();
                 }
             }
 
-            log.debug(collector.toString());
             processEvents();
 
 
@@ -130,7 +134,6 @@ public class Driver extends BaseHandler {
             for (Handler h : handlers) {
                 ev.dispatch(h);
                 if (h instanceof AMQPServer) {
-                    log.debug("Executing sendNextMessagesInQueue in processEvents");
                     ((AMQPServer) h).sendNextMessagesInQueue();
                 }
             }
@@ -154,6 +157,7 @@ public class Driver extends BaseHandler {
     @Override
     public void onConnectionLocalOpen(Event evt) {
         Connection conn = evt.getConnection();
+        Transport transport = evt.getTransport();
         if (conn.getRemoteState() == EndpointState.UNINITIALIZED) {
             try {
                 new Connector(conn);
@@ -171,7 +175,7 @@ public class Driver extends BaseHandler {
 
         final private ServerSocketChannel socket;
         final private SelectionKey key;
-        private SocketChannel thisIsTheSocket;
+        private SocketChannel cachedLatestConectedClient;
 
         Acceptor(String host, int port) throws IOException {
             socket = ServerSocketChannel.open();
@@ -183,27 +187,29 @@ public class Driver extends BaseHandler {
 
         public void selected() throws IOException {
             SocketChannel sock = socket.accept();
-            thisIsTheSocket = sock;
-            log.debug("ACCEPTED: " + sock);
+            cachedLatestConectedClient = sock;
             Connection conn = Connection.Factory.create();
             conn.collect(collector);
+            log.debug("ACCEPTED: " + sock);
             Transport transport = Transport.Factory.create();
-            Sasl sasl = transport.sasl();
-            sasl.setMechanisms("ANONYMOUS");
-            sasl.server();
-            sasl.done(Sasl.PN_SASL_OK);
+            if (AMQProtocolServer.getInstance().useSASL) {
+                Sasl sasl = transport.sasl();
+                sasl.setMechanisms("ANONYMOUS");
+                sasl.server();
+                Sasl.SaslOutcome outcome = sasl.getOutcome();
+                sasl.done(Sasl.PN_SASL_OK);
+            }
             transport.bind(conn);
             new ChannelHandler(sock, SelectionKey.OP_READ, transport);
         }
 
-        public int getRemoteSocketPort(){
-            String[] socketStringArray = thisIsTheSocket.toString().split(":");
-            if(socketStringArray.length == 3){
-                return Integer.valueOf(thisIsTheSocket.toString().split(":")[2].replace("]", ""));
-            }
-            else {
-                return 1;
-            }
+
+        public InetAddress getInetAddress() {
+            return cachedLatestConectedClient.socket().getInetAddress();
+        }
+
+        public Integer getPort() {
+            return cachedLatestConectedClient.socket().getPort();
         }
     }
 
@@ -295,13 +301,23 @@ public class Driver extends BaseHandler {
 
         }
 
+        public InetAddress getInetAddress() {
+            return this.socket.socket().getInetAddress();
+        }
+
+        public Integer getPort() {
+            return this.socket.socket().getPort();
+        }
+
     }
 
     private static Transport makeTransport(Connection conn) {
         Transport transport = Transport.Factory.create();
-        Sasl sasl = transport.sasl();
-        sasl.setMechanisms("ANONYMOUS");
-        sasl.client();
+        if (AMQProtocolServer.getInstance().useSASL) {
+            Sasl sasl = transport.sasl();
+            sasl.setMechanisms("ANONYMOUS");
+            sasl.client();
+        }
         transport.bind(conn);
         return transport;
     }
@@ -318,6 +334,13 @@ public class Driver extends BaseHandler {
     public void wakeUp() {
         log.debug("Waking up the selector to get out the next messages from the queue");
         selector.wakeup();
+    }
+
+
+    public void printByteBuffer(ByteBuffer buf) {
+        for (int i = 0; i < buf.limit();i++) {
+            System.out.println(String.format("Position: %s: %s", i, buf.get(i)));
+        }
     }
 
 }

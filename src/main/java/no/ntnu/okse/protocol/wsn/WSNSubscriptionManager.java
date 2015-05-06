@@ -34,6 +34,7 @@ import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 /**
@@ -51,16 +52,16 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
 
     private static Logger log;
     private SubscriptionService _subscriptionService = null;
-    private HashMap<String, Subscriber> localSubscriberMap;
-    private HashMap<String, AbstractNotificationProducer.SubscriptionHandle> localSubscriberHandle;
+    private ConcurrentHashMap<String, Subscriber> localSubscriberMap;
+    private ConcurrentHashMap<String, AbstractNotificationProducer.SubscriptionHandle> localSubscriberHandle;
 
     /**
      * Empty constructor that initializes the log and local maps
      */
     public WSNSubscriptionManager() {
         log = Logger.getLogger(WSNSubscriptionManager.class.getName());
-        localSubscriberMap = new HashMap<>();
-        localSubscriberHandle = new HashMap<>();
+        localSubscriberMap = new ConcurrentHashMap<>();
+        localSubscriberHandle = new ConcurrentHashMap<>();
     }
 
     /* Helper methods */

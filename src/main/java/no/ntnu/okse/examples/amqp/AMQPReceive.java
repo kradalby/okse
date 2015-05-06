@@ -42,7 +42,7 @@ import java.util.logging.Logger;
 public class AMQPReceive {
     private static Logger tracer = Logger.getLogger("proton.example");
     private boolean verbose = false;
-    private int maxct = 5;
+    private int maxct = 555555;
     private List<String> addrs = new ArrayList<String>();
 
     private static void usage() {
@@ -71,7 +71,7 @@ public class AMQPReceive {
             }
         }
         if (addrs.size() == 0) {
-            addrs.add("amqp://127.0.0.1:61050/bang/bang");
+            addrs.add("amqp://m.fap.no:61050/bang/bang");
         }
     }
 
@@ -101,7 +101,7 @@ public class AMQPReceive {
 
     private void run() {
         try {
-            Messenger mng = new MessengerImpl();
+            Messenger mng = Messenger.Factory.create();
             mng.start();
             for (String a : addrs) {
                 mng.subscribe(a);
