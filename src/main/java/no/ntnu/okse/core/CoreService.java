@@ -30,6 +30,8 @@ import no.ntnu.okse.core.event.Event;
 import no.ntnu.okse.core.event.SystemEvent;
 import no.ntnu.okse.core.messaging.Message;
 import no.ntnu.okse.core.messaging.MessageService;
+import no.ntnu.okse.core.subscription.SubscriptionService;
+import no.ntnu.okse.core.topic.TopicService;
 import no.ntnu.okse.protocol.ProtocolServer;
 
 import java.lang.reflect.InvocationTargetException;
@@ -56,7 +58,7 @@ public class CoreService extends AbstractCoreService {
     private ExecutorService executor;
     private HashSet<AbstractCoreService> services;
     private ArrayList<ProtocolServer> protocolServers;
-    private boolean protocolServersBooted = false;
+    public static boolean protocolServersBooted = false;
 
     /**
      * Constructs the CoreService instance. Constructor is private due to the singleton pattern used for
@@ -136,6 +138,7 @@ public class CoreService extends AbstractCoreService {
         // Since this is CoreService bootup, we iterate directly, avoiding unnecessary overhead caused
         // by the bootProtocolServers() method, that is used during live start / stop of protocol servers.
         protocolServers.forEach(ps -> ps.boot());
+        protocolServersBooted = true;
         log.info("Completed booting ProtocolServers");
 
         // Call the registerListenerSupport() method on all registered Core , including self
@@ -349,6 +352,20 @@ public class CoreService extends AbstractCoreService {
         // Iterate over all protocol servers and initiate shutdown process
         getAllProtocolServers().forEach(ps -> ps.stopServer());
         protocolServersBooted = false;
+
+        // Let the thread wait a bit, for tasks to be completed.
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            log.error("Interrupt during shutdown wait, please dont.");
+        }
+
+        // Removes all listeners
+        TopicService.getInstance().removeAllListeners();
+        SubscriptionService.getInstance().removeAllListeners();
+        // Reinitialize listener support for the core services
+        registerListenerSupportForAllCoreServices();
+
         log.info("Completed dispatching SHUTDOWN to all ProtocolServers");
     }
 
@@ -376,7 +393,7 @@ public class CoreService extends AbstractCoreService {
     /**
      * Helper method that boots all added protocolservers
      */
-    private void bootProtocolServers() {
+    public void bootProtocolServers() {
         // If they are already booted, return.
         if (protocolServersBooted) return;
 
