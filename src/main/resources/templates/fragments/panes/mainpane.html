@@ -9,7 +9,8 @@
 <div class="tab-pane active" id="main">
     <div class="row">
         <div class="col-md-12 text-right">
-            <a class="btn btn-danger" id="protocol-power-button">Stop protocolservers</a>
+            <a th:if="!${protocolPower}" class="btn btn-success" id="protocol-power-button">Start protocolservers</a>
+            <a th:if="${protocolPower}" class="btn btn-danger" id="protocol-power-button">Stop protocolservers</a>
         </div>
     </div>
     <div class="row row-top-spacing">
@@ -45,9 +46,9 @@
             <div class="row">
                 <div class="col-md-12">
                     <div class="panel panel-info">
-                        <div class="panel-heading">Broker</div>
+                        <div class="panel-heading">Interfaces</div>
                         <div class="panel-body">
-                            <p>The broker is running on <strong><span th:text="${serverHost}">*.*.*.*</span><span th:text="':' + ${serverPort}">:----</span></strong></p>
+                            <p>The admin console is bound to <strong><span th:text="${serverHost}">*.*.*.*</span><span th:text="':' + ${serverPort}">:----</span></strong></p>
                             <p>See below for protocol specific ports.</p>
                         </div>
                         <div class="table-responsive">
@@ -59,12 +60,19 @@
                                     <th>Port</th>
                                 </tr>
                                 </thead>
-                                <tbody id="protocolinfo-table">
-                                <tr th:each="protocolInfo : ${protocols}">
-                                    <td th:text="${protocolInfo.type}">Unknown</td>
-                                    <td th:text="${protocolInfo.host}">Unknown</td>
-                                    <td th:text="${protocolInfo.port}">Unknown</td>
-                                </tr>
+                                <tbody th:if="!${protocols.isEmpty()}" id="protocolinfo-table">
+                                    <tr th:each="protocolInfo : ${protocols}">
+                                        <td th:text="${protocolInfo.type}">Unknown</td>
+                                        <td th:text="${protocolInfo.host}">Unknown</td>
+                                        <td th:text="${protocolInfo.port}">Unknown</td>
+                                    </tr>
+                                </tbody>
+                                <tbody th:unless="!${protocols.isEmpty()}" id="protocolinfo-table">
+                                    <tr class="danger">
+                                        <td colspan="3">
+                                            <h4 class="text-center">No protocols returned from CoreService</h4>
+                                        </td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
