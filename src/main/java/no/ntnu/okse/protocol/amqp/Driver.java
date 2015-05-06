@@ -81,7 +81,7 @@ public class Driver extends BaseHandler {
 
     /**
      * Gets the netaddress from the acceptor
-     * @return The address of the connected client
+     * @return The address from connection
      */
     public InetAddress getInetAddress() {
         return acceptor.getInetAddress();
@@ -89,7 +89,7 @@ public class Driver extends BaseHandler {
 
     /**
      * Gets the port from the acceptor
-     * @return The port which the client is connected on
+     * @return The port from connection
      */
     public Integer getPort() {
         return acceptor.getPort();
@@ -207,7 +207,7 @@ public class Driver extends BaseHandler {
         }
 
         /**
-         * 
+         *
          * @throws IOException
          */
         public void selected() throws IOException {
@@ -230,7 +230,7 @@ public class Driver extends BaseHandler {
 
         /**
          *
-         * @return
+         * @return Netaddress from latest connected client
          */
         public InetAddress getInetAddress() {
             return cachedLatestConectedClient.socket().getInetAddress();
@@ -238,7 +238,7 @@ public class Driver extends BaseHandler {
 
         /**
          *
-         * @return
+         * @return Port from latest connected client
          */
         public Integer getPort() {
             return cachedLatestConectedClient.socket().getPort();
@@ -344,16 +344,16 @@ public class Driver extends BaseHandler {
         }
 
         /**
-         *
-         * @return
+         * Used if only ChannelHandler object is available
+         * @return Netaddress from connection
          */
         public InetAddress getInetAddress() {
             return this.socket.socket().getInetAddress();
         }
 
         /**
-         *
-         * @return
+         * Used if only ChannelHandler object is available
+         * @return Port from connection
          */
         public Integer getPort() {
             return this.socket.socket().getPort();
@@ -378,7 +378,11 @@ public class Driver extends BaseHandler {
     }
 
     private class Connector extends ChannelHandler {
-
+        /**
+         * 
+         * @param conn
+         * @throws IOException
+         */
         Connector(Connection conn) throws IOException {
             super(SocketChannel.open(), SelectionKey.OP_CONNECT, makeTransport(conn));
             log.debug("CONNECTING: " + conn.getHostname());
