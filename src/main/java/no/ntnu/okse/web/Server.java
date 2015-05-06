@@ -26,6 +26,7 @@ package no.ntnu.okse.web;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.PropertySource;
 
 /**
  * Created by Håkon Ødegård Løvdal (hakloev) on 25/02/15.
@@ -33,6 +34,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * okse is licenced under the MIT licence.
  */
 @SpringBootApplication
+@PropertySource(value = {"classpath:application.properties", "file:config/okse.properties"}, ignoreResourceNotFound = true)
 public class Server {
 
     /**

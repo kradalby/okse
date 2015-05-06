@@ -39,10 +39,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.net.*;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Properties;
+import java.util.*;
 import java.util.logging.Logger;
 
 /**
@@ -57,6 +54,12 @@ public class IndexViewController {
 
     @Value("${spring.application.name}")
     private String appName;
+
+    @Value("${ADMIN_PANEL_HOST}")
+    private String serverHost;
+
+    @Value("${server.port}")
+    private int serverPort;
 
     private Properties environment = System.getProperties();
 
@@ -75,8 +78,10 @@ public class IndexViewController {
         long totalRam = Runtime.getRuntime().totalMemory();
         long freeRam = Runtime.getRuntime().freeMemory();
 
-        model.addAttribute("projectName", appName);
+        model.addAttribute("projectName", appName + " (" + Application.VERSION  +")");
         model.addAttribute("environment", createEnvironmentList());
+        model.addAttribute("serverPort", serverPort);
+        model.addAttribute("serverHost", serverHost);
         model.addAttribute("subscribers", ss.getNumberOfSubscribers());
         model.addAttribute("publishers", ss.getNumberOfPublishers());
         model.addAttribute("topics", ts.getTotalNumberOfTopics());
@@ -86,33 +91,17 @@ public class IndexViewController {
         model.addAttribute("freeRam", freeRam / MainController.MB);
         model.addAttribute("usedRam", (totalRam - freeRam) / MainController.MB);
 
-        HashSet<String> ipAddresses = new HashSet<>();
+        ArrayList<HashMap<String, Object>> protocols = new ArrayList<>();
 
-        String ip;
-        try {
-            Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
-            while (interfaces.hasMoreElements()) {
-                NetworkInterface iFace = interfaces.nextElement();
-                // Filters out 127.0.0.1 and inactive interfaces
-                if (iFace.isLoopback() || !iFace.isUp())
-                    continue;
+        Application.cs.getAllProtocolServers().forEach(p -> {
+            protocols.add(new HashMap<String, Object>(){{
+                put("host", p.getHost());
+                put("port", p.getPort());
+                put("type", p.getProtocolServerType());
+            }});
+        });
 
-                Enumeration<InetAddress> addresses = iFace.getInetAddresses();
-                iFace.getInterfaceAddresses();
-                while(addresses.hasMoreElements()) {
-                    InetAddress addr = addresses.nextElement();
-                    // We are only interested in Inet4Addresses
-                    if (addr instanceof Inet6Address)
-                        continue;
-                    ip = addr.getHostAddress();
-                    ipAddresses.add(ip);
-                }
-            }
-        } catch (SocketException e) {
-            throw new RuntimeException(e);
-        }
-
-        model.addAttribute("serverIpAddresses", ipAddresses);
+        model.addAttribute("protocols", protocols);
 
         return "fragments/indexLoggedIn";
 

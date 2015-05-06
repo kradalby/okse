@@ -58,7 +58,7 @@ public class AMQPServer extends BaseHandler {
      */
     private class MessageStore {
 
-        Map<String,Deque<MessageBytes>> messages = new HashMap<String,Deque<MessageBytes>>();
+        Map<String, Deque<MessageBytes>> messages = new HashMap<String, Deque<MessageBytes>>();
 
         void put(String address, MessageBytes messageBytes) {
             Deque<MessageBytes> queue = messages.get(address);
@@ -71,7 +71,9 @@ public class AMQPServer extends BaseHandler {
 
         MessageBytes get(String address) {
             Deque<MessageBytes> queue = messages.get(address);
-            if (queue == null) { return null; }
+            if (queue == null) {
+                return null;
+            }
             MessageBytes msg = queue.remove();
             if (queue.isEmpty()) {
                 messages.remove(address);
@@ -388,5 +390,4 @@ public class AMQPServer extends BaseHandler {
             }
         }
     }
-
 }

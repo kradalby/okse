@@ -73,9 +73,8 @@ hs_err_pid*
 okse.db
 
 #OKSE
-src/main/java/no/ntnu/okse/db/Test.java
-logs/log.txt
-logs/okse.log
+logs/
 *.log
 logs/
 config/
+
