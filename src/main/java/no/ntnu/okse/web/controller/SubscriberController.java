@@ -49,6 +49,10 @@ public class SubscriberController {
 
     private static Logger log = Logger.getLogger(SubscriberController.class.getName());
 
+    /**
+     * This method returns all subscribers registered in the SubscriptionService
+     * @return A response body to be serialized to JSON, containing all the subscribers
+     */
     @RequestMapping(method = RequestMethod.GET, value = GET_ALL_SUBSCRIBERS)
     public @ResponseBody List<Subscriber> getAllSubscribers() {
         SubscriptionService ss = SubscriptionService.getInstance();
@@ -65,6 +69,11 @@ public class SubscriberController {
         return listToSort;
     }
 
+    /**
+     * This method deletes a single subscriber given the subscriberID request parameter.
+     * @param subscriberID The subscriber to be deleted, represented as a String id
+     * @return A JSON serialization of the deleted subscriber
+     */
     @RequestMapping(method = RequestMethod.DELETE, value= DELETE_SINGLE_SUBSCRIBER)
     public @ResponseBody Subscriber deleteSingleSubscriber(@RequestParam(value = "subscriberID") String subscriberID) {
         log.debug("Deleting subscriber with ID: " + subscriberID);
@@ -74,6 +83,10 @@ public class SubscriberController {
         return s;
     }
 
+    /**
+     * Thid method deletes all the subscribers registered in the SubscriptionService.
+     * @return A JSON serialized string
+     */
     @RequestMapping(method = RequestMethod.DELETE, value = DELETE_ALL_SUBSCRIBERS)
     public @ResponseBody String deleteAllSubscribers() {
         SubscriptionService ss = SubscriptionService.getInstance();

@@ -79,8 +79,7 @@ public class TopicService extends AbstractCoreService {
         _listeners = new ConcurrentHashSet<>();
         mappings = new ConcurrentHashMap<>();
         _invoked = true;
-        // TODO: Read some shit from config or database to initialize pre-set topics with attributes. Or should
-        // TODO: that maybe be done in the Subscriber objets? Who knows.
+
         log.info("Initializing topic mapping from configuration file");
         if (Application.config.containsKey("TOPIC_MAPPING")) {
 
@@ -139,6 +138,7 @@ public class TopicService extends AbstractCoreService {
      */
     public void stop() {
         _running = false;
+        removeAllListeners();
         Runnable job = () -> log.info("Stopping TopicService...");
         try {
             _singleton.getQueue().put(new TopicTask(TopicTask.Type.SHUTDOWN, job));
@@ -276,22 +276,7 @@ public class TopicService extends AbstractCoreService {
         return (result.size() > 0) ? result : null;
     }
 
-
-    /**
-     * This method allows registration for TopicChange listeners.
-     * @param listener An object implementing the TopicChangeListener interface
-     */
-    public synchronized void addTopicChangeListener(TopicChangeListener listener) {
-        this._listeners.add(listener);
-    }
-
-    /**
-     * This method allows removal of TopicChange listeners.
-     * @param listener The object implementing TopigChangeListener interface that is to be removed.
-     */
-    public synchronized void removeTopicChangeListener(TopicChangeListener listener) {
-        if (this._listeners.contains(listener)) this._listeners.remove(listener);
-    }
+    /* Begin local API */
 
     /**
      * This method should never be called from outside of a TopicTask processed through the TopicService queue.
@@ -315,6 +300,8 @@ public class TopicService extends AbstractCoreService {
             fireTopicChangeEvent(t, TopicChangeEvent.Type.DELETE);
         }
     }
+
+    /* End local API */
 
     /**
      * Checks to see if a topic node exists in the TopicService.
@@ -400,23 +387,6 @@ public class TopicService extends AbstractCoreService {
     public void deleteMapping(String mapping) {
         if (mappings.containsKey(mapping)) {
             HashSet<String> mappedAgainst = mappings.remove(mapping);
-
-            if (SubscriptionService.getInstance().getAllSubscribersForTopic(mapping).isEmpty()) {
-                if (topicExists(mapping)) {
-                    deleteTopicLocal(getTopic(mapping));
-                    log.debug("Removing Topic{" + mapping + "} due to mapping removal because it doesn't have any subscribers");
-                };
-            }
-
-            mappedAgainst.forEach(t -> {
-                if (SubscriptionService.getInstance().getAllSubscribersForTopic(t).isEmpty()) {
-                    if (topicExists(t)) {
-                        deleteTopicLocal(getTopic(t));
-                        log.debug("Removing Topic{" + t + "} due to mapping removal because it doesn't have any subscribers");
-                    }
-
-                }
-            });
             log.info("Removed the mappings for Topic{" + mapping + "}");
         } else {
             log.warn("Attempt to remove a mapping that did in fact not exist ");
@@ -502,6 +472,31 @@ public class TopicService extends AbstractCoreService {
         }
     }
 
+    /* Begin listener support */
+
+    /**
+     * Purges all registered listener objects from the TopicService
+     */
+    public synchronized void removeAllListeners() {
+        _listeners.clear();
+    }
+
+    /**
+     * This method allows registration for TopicChange listeners.
+     * @param listener An object implementing the TopicChangeListener interface
+     */
+    public synchronized void addTopicChangeListener(TopicChangeListener listener) {
+        this._listeners.add(listener);
+    }
+
+    /**
+     * This method allows removal of TopicChange listeners.
+     * @param listener The object implementing TopigChangeListener interface that is to be removed.
+     */
+    public synchronized void removeTopicChangeListener(TopicChangeListener listener) {
+        if (this._listeners.contains(listener)) this._listeners.remove(listener);
+    }
+
     /**
      * Public helper method to fire a topic change event on all listeners
      * @param topic The topic that has had an event
@@ -512,4 +507,6 @@ public class TopicService extends AbstractCoreService {
         log.debug("Firing topicchange event of type " + type + " on topic " + topic);
         this._listeners.stream().forEach(t -> t.topicChanged(topicEvent));
     }
+
+    /* End listener support */
 }

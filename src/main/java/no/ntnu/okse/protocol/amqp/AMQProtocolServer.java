@@ -47,6 +47,9 @@ public class AMQProtocolServer extends AbstractProtocolServer {
 
     private static AMQProtocolServer _singleton;
 
+    private static SubscriptionHandler sh;
+    private static boolean shuttingdown = false;
+
     // Internal default values
     private static final String DEFAULT_HOST = "0.0.0.0";
     private static final int DEFAULT_PORT = 5672;
@@ -116,7 +119,8 @@ public class AMQProtocolServer extends AbstractProtocolServer {
         try {
             Collector collector = Collector.Factory.create();
             //Router router = new Router();
-            SubscriptionHandler sh = new SubscriptionHandler();
+            //SubscriptionHandler sh = new SubscriptionHandler();
+            this.sh = new SubscriptionHandler();
             SubscriptionService.getInstance().addSubscriptionChangeListener(sh);
             server = new AMQPServer(sh, false);
             driver = new Driver(collector, new Handshaker(),
@@ -125,16 +129,23 @@ public class AMQProtocolServer extends AbstractProtocolServer {
             driver.listen(this.host, this.port);
             driver.run();
         } catch (IOException e) {
-            totalErrors++;
+            totalErrors.incrementAndGet();
             log.error("I/O exception during accept(): " + e.getMessage());
         }
     }
 
     @Override
     public void stopServer() {
+        log.info("Stoping AMQProtocolServer");
+        shuttingdown = true;
+        driver.stop();
+        sh.unsubscribeAll();
+        sh = null;
         _running = false;
-        //TODO: implement driver.stop()
-
+        server = null;
+        _singleton = null;
+        _invoked = false;
+        log.info("AMQProtocolServer is stopped");
     }
 
     @Override
@@ -144,29 +155,29 @@ public class AMQProtocolServer extends AbstractProtocolServer {
 
     @Override
     public void sendMessage(Message message) {
-        if (!message.getOriginProtocol().equals(protocolServerType)) {
+        if (!message.getOriginProtocol().equals(protocolServerType) || message.getAttribute("duplicate") != null) {
             server.addMessageToQueue(message);
         }
     }
 
     public void incrementTotalMessagesSent() {
-        totalMessagesSent++;
+        totalMessagesSent.incrementAndGet();
     }
 
-    public void incrementTotalMessagesRecieved() {
-        totalMessagesRecieved++;
+    public void incrementTotalMessagesReceived() {
+        totalMessagesReceived.incrementAndGet();
     }
 
     public void incrementTotalRequests() {
-        totalRequests++;
+        totalRequests.incrementAndGet();
     }
 
     public void incrementTotalBadRequest() {
-        totalBadRequests++;
+        totalBadRequests.incrementAndGet();
     }
 
     public void incrementTotalErrors() {
-        totalErrors++;
+        totalErrors.incrementAndGet();
     }
 
     private AMQPServer server;
@@ -174,4 +185,6 @@ public class AMQProtocolServer extends AbstractProtocolServer {
     public Driver getDriver() {
         return driver;
     }
+
+    public boolean isShuttingDown() { return shuttingdown; }
 }

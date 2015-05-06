@@ -48,6 +48,7 @@ import javax.jws.soap.SOAPBinding;
 import javax.xml.bind.annotation.XmlSeeAlso;
 import javax.xml.ws.Service;
 import javax.xml.ws.wsaddressing.W3CEndpointReference;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -93,6 +94,14 @@ public class WSNRegistrationManager extends AbstractPublisherRegistrationManager
      */
     public boolean keyExists(String registrationKey) {
         return localPublisherMap.containsKey(registrationKey);
+    }
+
+    /**
+     * Retrieves a collection of all the registered publisher reference keys
+     * @return A collection of publisherReference keys
+     */
+    public Collection<String> getAllPublishers() {
+        return localPublisherMap.keySet();
     }
 
     /**

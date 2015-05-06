@@ -131,7 +131,8 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
     }
 
     /**
-     * WARNING: Never call this method directly, it is called during subscriptionchangeevents that it listens to
+     * Removes a Subscriber from the SubscriptionService, and the listener callback will remove it from
+     * local mappings.
      * @param s The WS-Nu subscriptionkey
      */
     @Override
@@ -313,7 +314,7 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
 
             // Verify new termination time
             if(time < System.currentTimeMillis()) {
-                log.debug("Recieved a terminationTime in renew request that had already passed");
+                log.debug("Received a terminationTime in renew request that had already passed");
                 ExceptionUtilities.throwUnacceptableTerminationTimeFault("en", "Tried to renew a subscription so it " +
                         "should last until a time that has already passed.");
             }
@@ -362,7 +363,7 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
                     ResumeSubscription resumeSubscriptionRequest
             ) throws ResourceUnknownFault, ResumeFailedFault {
 
-        log.debug("Recieved Resume request");
+        log.debug("Received Resume request");
 
         // Fetch the request information
         RequestInformation requestInformation = connection.getRequestInformation();
@@ -391,7 +392,7 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
                         ExceptionUtilities.throwResumeFailedFault("en", "Subscription is not paused");
                     }
                 }
-                log.warn("Recieved a malformed subscription parameter during resume request");
+                log.warn("Received a malformed subscription parameter during resume request");
                 ExceptionUtilities.throwResourceUnknownFault("en", "Ill-formated subscription-parameter");
             } else if(entry.getValue().length == 0) {
                 log.warn("Subscription-parameter in URL is missing value during resume request");
@@ -428,7 +429,7 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
                     PauseSubscription pauseSubscriptionRequest
             ) throws ResourceUnknownFault, PauseFailedFault {
 
-        log.debug("Recieved Pause request");
+        log.debug("Received Pause request");
 
         // Fetch the request information
         RequestInformation requestInformation = connection.getRequestInformation();
@@ -453,7 +454,7 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
                         ExceptionUtilities.throwPauseFailedFault("en", "Subscription is already paused");
                     }
                 }
-                log.debug("Recieved ill-formated subscription parameter in Pause request");
+                log.debug("Received ill-formated subscription parameter in Pause request");
                 ExceptionUtilities.throwResourceUnknownFault("en", "Ill-formated subscription-parameter");
             } else if(entry.getValue().length == 0) {
                 log.debug("Subscription parameter missing in Pause request");
@@ -506,7 +507,7 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
                 localSubscriberHandle.remove(e.getData().getAttribute(WSN_SUBSCRIBER_TOKEN));
 
             } else if (e.getType().equals(SubscriptionChangeEvent.Type.SUBSCRIBE)) {
-                log.debug("Recieved a SUBSCRIBE event");
+                log.debug("Received a SUBSCRIBE event");
                 // TODO: Investigate if we really need to do anything here since it will function as a callback
                 // TODO: after addSubscriber
             }

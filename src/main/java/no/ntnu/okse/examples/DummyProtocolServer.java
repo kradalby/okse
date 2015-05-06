@@ -25,9 +25,12 @@
 package no.ntnu.okse.examples;
 
 import no.ntnu.okse.Application;
+import no.ntnu.okse.core.CoreService;
+import no.ntnu.okse.core.event.SystemEvent;
 import no.ntnu.okse.core.messaging.Message;
 import no.ntnu.okse.core.messaging.MessageService;
 import no.ntnu.okse.protocol.AbstractProtocolServer;
+import no.ntnu.okse.protocol.amqp.AMQProtocolServer;
 import no.ntnu.okse.protocol.wsn.WSNotificationServer;
 import org.apache.log4j.Logger;
 import org.ntnunotif.wsnu.base.util.Utilities;
@@ -151,13 +154,13 @@ public class DummyProtocolServer extends AbstractProtocolServer {
 
             } catch (UnknownHostException e) {
                 log.error("Could not bind socket: " + e.getMessage());
-                totalErrors++;
+                totalErrors.incrementAndGet();
             } catch (ClosedChannelException e) {
                 log.error("Closed channel: " + e.getMessage());
-                totalErrors++;
+                totalErrors.incrementAndGet();
             } catch (IOException e) {
                 log.error("I/O exception: " + e.getMessage());
-                totalErrors++;
+                totalErrors.incrementAndGet();
             }
 
             // Create and start the serverThread
@@ -230,7 +233,7 @@ public class DummyProtocolServer extends AbstractProtocolServer {
                         readBuffer.clear();
 
                         log.debug("Command received: " + command);
-                        totalRequests++;
+                        totalRequests.incrementAndGet();
 
                         // Write a response
                         byte[] response = new String("Executing: " + command + "\n").getBytes();
@@ -244,7 +247,7 @@ public class DummyProtocolServer extends AbstractProtocolServer {
                             result = "Command executed.\n";
                         } else {
                             result = "Invalid command.\n";
-                            totalBadRequests++;
+                            totalBadRequests.incrementAndGet();
                         }
 
                         // Send confirmation of execution
@@ -265,13 +268,15 @@ public class DummyProtocolServer extends AbstractProtocolServer {
                 }
 
             } catch (IOException e) {
-                totalErrors++;
+                totalErrors.incrementAndGet();
                 log.error("I/O exception during select operation: " + e.getMessage());
+            } catch (ClosedSelectorException e) {
+                log.debug("Caught SelectorClose, shutting down");
             } catch (Exception e) {
-                totalErrors++;
-                log.error("Unknown exception: " + e.getMessage());
+                log.error("Caught unknown exception: " + e);
             }
         }
+        log.info("DummypPotocolServer stopped.");
     }
 
     /**
@@ -280,7 +285,23 @@ public class DummyProtocolServer extends AbstractProtocolServer {
     @Override
     public void stopServer() {
         _running = false;
-        _serverThread.notify();
+        clients.forEach(socket -> {
+            try {
+                socket.write(ByteBuffer.wrap("System is shutting down.\n".getBytes()));
+                socket.socket().close();
+            } catch (IOException e) {
+                log.error("IOException during client close.");
+            }
+        });
+        try {
+            selector.close();
+            serverChannel.socket().close();
+        } catch (IOException e) {
+            log.error("IOException during shutdown");
+        }
+        _invoked = false;
+        _serverThread = null;
+        _singleton = null;
     }
 
     /**
@@ -314,6 +335,20 @@ public class DummyProtocolServer extends AbstractProtocolServer {
     private boolean parseCommand(String command) {
         String[] args = command.split(" ");
         try {
+            if (args[0].equalsIgnoreCase("amqp")) {
+                AMQProtocolServer amqp = AMQProtocolServer.getInstance();
+                CoreService cs = CoreService.getInstance();
+                if (args[1].equalsIgnoreCase("stop")) {
+                    cs.removeProtocolServer(AMQProtocolServer.getInstance());
+                    amqp.stopServer();
+                }
+                else if (args[1].equalsIgnoreCase("start")) {
+                    cs.addProtocolServer(AMQProtocolServer.getInstance());
+                    AMQProtocolServer.getInstance().boot();
+                }
+                return true;
+            }
+
             // message <topic> <message content>
             if (args[0].equalsIgnoreCase("message")) {
                 // If it exists build a message string and distribute it
@@ -325,7 +360,7 @@ public class DummyProtocolServer extends AbstractProtocolServer {
                     String msg = builder.toString().trim();
                     Message message = new Message(msg, args[1], null, protocolServerType);
                     MessageService.getInstance().distributeMessage(message);
-                    totalMessagesRecieved++;
+                    totalMessagesReceived.incrementAndGet();
 
                     return true;
                 }
@@ -339,11 +374,22 @@ public class DummyProtocolServer extends AbstractProtocolServer {
                 }
             } else if (args[0].equalsIgnoreCase("testuri")) {
                 log.debug(WSNotificationServer.getInstance().getURI());
+            } else if (args[0].equalsIgnoreCase("shutdownprotocolservers")) {
+                log.debug("SHUTDOWN PROTOCOL SERVERS RECIEVED");
+                try {
+                    CoreService.getInstance().getEventQueue().put(new SystemEvent(
+                        SystemEvent.Type.SHUTDOWN_PROTOCOL_SERVERS,
+                        null
+                    ));
+                } catch (InterruptedException e) {
+                    log.error("Interrupted while attempting to insert an event into CoreService");
+                }
+                return true;
             } else if (args[0].equalsIgnoreCase("exit")) {
                 return true;
             }
         } catch (ArrayIndexOutOfBoundsException e) {
-            log.error("Recieved invalid command: " + command);
+            log.error("Received invalid command: " + command);
         }
 
         return false;

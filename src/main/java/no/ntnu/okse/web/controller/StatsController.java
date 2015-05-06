@@ -48,7 +48,10 @@ public class StatsController {
 
     private static final String GET_STATS = "/get/all";
 
-
+    /**
+     * Returnes all the information needed to refresh the stats-pane
+     * @return A HashMap containing all the information
+     */
     @RequestMapping(method = RequestMethod.GET, value = GET_STATS)
     public @ResponseBody HashMap<String, Object> getAllStats() {
         CoreService cs = CoreService.getInstance();
@@ -60,7 +63,7 @@ public class StatsController {
         // CoreService statistics
         result.put("coreServiceStatistics", new HashMap<String, Object>(){{
             put("totalMessagesSent", cs.getTotalMessagesSentFromProtocolServers());
-            put("totalMessagesReceived", cs.getTotalMessagesRecievedFromProtocolServers());
+            put("totalMessagesReceived", cs.getTotalMessagesReceivedFromProtocolServers());
             put("totalRequests", cs.getTotalRequestsFromProtocolServers());
             put("totalBadRequests", cs.getTotalBadRequestsFromProtocolServers());
             put("totalErrors", cs.getTotalErrorsFromProtocolServers());
@@ -77,7 +80,7 @@ public class StatsController {
             protocolStats.add(new ProtocolStats(
                     p.getProtocolServerType(),
                     p.getTotalMessagesSent(),
-                    p.getTotalMessagesRecieved(),
+                    p.getTotalMessagesReceived(),
                     p.getTotalRequests(),
                     p.getTotalBadRequests(),
                     p.getTotalErrors()

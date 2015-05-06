@@ -1,33 +1,25 @@
-/*
- * The MIT License (MIT)
- *
- * Copyright (c) 2015 Norwegian Defence Research Establishment / NTNU
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
-
 package no.ntnu.okse.examples.amqp;
 
-/**
- * Created by kradalby on 22/04/15.
- */
-
+/*
+   2  *
+   3  * Licensed to the Apache Software Foundation (ASF) under one
+   4  * or more contributor license agreements.  See the NOTICE file
+   5  * distributed with this work for additional information
+   6  * regarding copyright ownership.  The ASF licenses this file
+   7  * to you under the Apache License, Version 2.0 (the
+   8  * "License"); you may not use this file except in compliance
+   9  * with the License.  You may obtain a copy of the License at
+  10  *
+  11  *   http://www.apache.org/licenses/LICENSE-2.0
+  12  *
+  13  * Unless required by applicable law or agreed to in writing,
+  14  * software distributed under the License is distributed on an
+  15  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  16  * KIND, either express or implied.  See the License for the
+  17  * specific language governing permissions and limitations
+  18  * under the License.
+  19  *
+  20  */
 
 import org.apache.qpid.proton.message.Message;
 import org.apache.qpid.proton.messenger.Messenger;
@@ -39,10 +31,16 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class AMQPReceive {
+/**
+ 35  * Example/test of the java Messenger/Message API.
+ 36  * Based closely qpid src/proton/examples/messenger/py/recv.py
+ 37  * @author mberkowitz@sf.org
+ 38  * @since 8/4/2013
+ 39  */
+public class Recv {
     private static Logger tracer = Logger.getLogger("proton.example");
     private boolean verbose = false;
-    private int maxct = 555555;
+    private int maxct = 0;
     private List<String> addrs = new ArrayList<String>();
 
     private static void usage() {
@@ -50,8 +48,7 @@ public class AMQPReceive {
         System.exit(2);
     }
 
-    private AMQPReceive(String args[]) {
-        //System.out.println(args);
+    private Recv(String args[]) {
         int i = 0;
         while (i < args.length) {
             String arg = args[i++];
@@ -71,7 +68,10 @@ public class AMQPReceive {
             }
         }
         if (addrs.size() == 0) {
-            addrs.add("amqp://localhost/bang");
+            //addrs.add("amqp://~0.0.0.0");
+            addrs.add("amqp://~127.0.0.1/test");
+            //addrs.add("amqp://78.91.8.191");
+            //System.out.println("adding address " + addrs.get(0));
         }
     }
 
@@ -100,35 +100,34 @@ public class AMQPReceive {
     }
 
     private void run() {
-        try {
-            Messenger mng = Messenger.Factory.create();
-            mng.start();
-            for (String a : addrs) {
-                mng.subscribe(a);
-            }
-            int ct = 0;
-            boolean done = false;
-            while (!done) {
-                mng.recv();
-                while (mng.incoming() > 0) {
-                    System.out.println("derp");
-                    Message msg = mng.get();
-                    ++ct;
-                    print(ct, msg);
-                    if (maxct > 0 && ct >= maxct) {
-                        done = true;
-                        break;
-                    }
-                }
-            }
-            mng.stop();
-        } catch (Exception e) {
-            tracer.log(Level.SEVERE, "proton error", e);
-        }
-    }
+         try {
+             Messenger mng = new MessengerImpl();
+             mng.start();
+             for (String a : addrs) {
+                 mng.subscribe(a);
+             }
+             int ct = 0;
+             boolean done = false;
+             while (!done) {
+                 mng.recv();
+                 while (mng.incoming() > 0) {
+                     Message msg = mng.get();
+                     ++ct;
+                     print(ct, msg);
+                     if (maxct > 0 && ct >= maxct) {
+                         done = true;
+                         break;
+                     }
+                 }
+             }
+             mng.stop();
+         } catch (Exception e) {
+             tracer.log(Level.SEVERE, "proton error", e);
+         }
+     }
 
-    public static void main(String args[]) {
-        AMQPReceive o = new AMQPReceive(args);
-        o.run();
-    }
+     public static void main(String args[]) {
+         Recv o = new Recv(args);
+         o.run();
+     }
 }

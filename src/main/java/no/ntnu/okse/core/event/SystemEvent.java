@@ -32,7 +32,9 @@ package no.ntnu.okse.core.event;
 public class SystemEvent extends Event {
 
     public static enum Type {
-        SHUTDOWN
+        SHUTDOWN,
+        SHUTDOWN_PROTOCOL_SERVERS,
+        BOOT_PROTOCOL_SERVERS
     }
 
     Type type;

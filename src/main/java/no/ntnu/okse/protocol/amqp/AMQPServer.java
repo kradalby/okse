@@ -51,9 +51,14 @@ import java.util.concurrent.LinkedBlockingQueue;
  */
 public class AMQPServer extends BaseHandler {
 
+    /**
+     * Internal message queue for AMQP.
+     * Basically one Deque with bytes for each
+     * Queue/Topic
+     */
     private class MessageStore {
 
-        Map<String,Deque<MessageBytes>> messages = new HashMap<String,Deque<MessageBytes>>();
+        Map<String, Deque<MessageBytes>> messages = new HashMap<String, Deque<MessageBytes>>();
 
         void put(String address, MessageBytes messageBytes) {
             Deque<MessageBytes> queue = messages.get(address);
@@ -66,7 +71,9 @@ public class AMQPServer extends BaseHandler {
 
         MessageBytes get(String address) {
             Deque<MessageBytes> queue = messages.get(address);
-            if (queue == null) { return null; }
+            if (queue == null) {
+                return null;
+            }
             MessageBytes msg = queue.remove();
             if (queue.isEmpty()) {
                 messages.remove(address);
@@ -92,14 +99,22 @@ public class AMQPServer extends BaseHandler {
         queue = new LinkedBlockingQueue<>();
     }
 
+    /**
+     * Get the tag for the next message as a byte array.
+     * @return byte[]
+     */
     private byte[] nextTag() {
         return String.format("%s", tag++).getBytes();
     }
 
-//    private int send(String address) {
-//        return send(address, null);
-//    }
-
+    /**
+     * Send a AMQP message with address and sender.
+     * If sender is null, the sender will be chosen
+     * at random from the queue for this address
+     * @param address / topic / queue
+     * @param snd Sender object or null
+     * @return int of sent bytes
+     */
     private int send(String address, Sender snd) {
         if (snd == null) {
             SubscriptionHandler.Routes<Sender> routes = subscriptionHandler.getOutgoing(address);
@@ -107,6 +122,9 @@ public class AMQPServer extends BaseHandler {
             if (snd == null) {
                 return 0;
             }
+            // Queue based sending will have an initial snd == null, meaning that it is not a sub
+            // and it is a message that is to be sent. Incrementing total sent here.
+            AMQProtocolServer.getInstance().incrementTotalMessagesSent();
         }
         log.debug("Fetched this sender: " + snd.toString());
 
@@ -117,20 +135,24 @@ public class AMQPServer extends BaseHandler {
                 snd.drained();
                 return count;
             }
-            log.debug(String.format("Preparing to send: %s", mb.toString()));
             Delivery dlv = snd.delivery(nextTag());
             byte[] bytes = mb.getBytes();
             snd.send(bytes, 0, bytes.length);
             dlv.settle();
             count++;
-            if (!quiet) {
-                log.debug(String.format("Sent message(%s): %s to %s", address, mb.toString(), snd.toString()));
-            }
         }
 
         return count;
     }
 
+    /**
+     * Send an AMQP message to the given address,
+     * this method will choose either use Topic
+     * or Queue based on the configuration of
+     * OKSE.
+     * @param address / topic / queue
+     * @return int of bytes sent
+     */
     private int send(String address) {
         int count = 0;
 
@@ -143,12 +165,10 @@ public class AMQPServer extends BaseHandler {
 
             MessageBytes mb = messages.get(address);
             for (Sender snd : sendersOnTopic) {
-                //while (snd.getCredit() > 0 && snd.getQueued() < 1024) {
                 if (mb == null) {
                     snd.drained();
                     return count;
                 }
-                log.debug(String.format("Preparing to send: %s", mb.toString()));
                 Delivery dlv = snd.delivery(nextTag());
 
                 byte[] bytes = mb.getBytes();
@@ -159,10 +179,6 @@ public class AMQPServer extends BaseHandler {
                 dlv.settle();
 
                 count++;
-                if (!quiet) {
-                    log.debug(String.format("Sent message(%s): %s to %s", address, mb.toString(), snd.toString()));
-                }
-                //}
             }
 
         }
@@ -170,6 +186,10 @@ public class AMQPServer extends BaseHandler {
         return count;
     }
 
+    /**
+     * Convert a OKSE message to AMQP and add it the the message queue.
+     * @param message
+     */
     public void addMessageToQueue(no.ntnu.okse.core.messaging.Message message) {
         Message msg = convertOkseMessageToAMQP(message);
 
@@ -184,9 +204,14 @@ public class AMQPServer extends BaseHandler {
         log.debug("The first message in the queue is currently: " + queue.peek());
 
         AMQProtocolServer.getInstance().getDriver().wakeUp();
-
     }
 
+    /**
+     * Convert a AMQP message object to a MessageBytes Object.
+     * MessageBytes is basically a wrapper around a byte array.
+     * @param msg
+     * @return MessageBytes object
+     */
     public static MessageBytes convertAMQPMessageToMessageBytes(Message msg) {
 
 
@@ -197,6 +222,12 @@ public class AMQPServer extends BaseHandler {
         return mb;
     }
 
+    /**
+     * Get an AMQP message as a byte array.
+     * This method uses qualified guessing to achieve its goal.
+     * @param msg
+     * @return byte[]
+     */
     private static byte[] gestimateMessageByteSize(Message msg) {
 
         int guestimateByteSize = 0;
@@ -225,17 +256,25 @@ public class AMQPServer extends BaseHandler {
         return buffer;
     }
 
+    /**
+     * Convert a OKSE message to a AMQP Message.
+     * @param message
+     * @return AMQP message
+     */
     public static Message convertOkseMessageToAMQP(no.ntnu.okse.core.messaging.Message message) {
         Message msg = Message.Factory.create();
 
         Section body = new AmqpValue(message.getMessage());
 
         msg.setAddress(AMQProtocolServer.getInstance().getHost() +"/" + message.getTopic());
-        msg.setSubject(message.getMessageID());
+        msg.setSubject("OKSE translated message");
         msg.setBody(body);
         return msg;
     }
 
+    /**
+     * Send the messages that are ready to go out.
+     */
     public void sendNextMessagesInQueue() {
         try {
             if (queue.size() > 0) {
@@ -261,6 +300,14 @@ public class AMQPServer extends BaseHandler {
         }
     }
 
+    /**
+     * onDelviery is triggered when the AMQP socket receives
+     * a message. When the message is received it will create
+     * a OKSE message and pass it into the MessageService.
+     * It will also add AMQP messages back into the
+     * internal AMQP queue to generate less overhead.
+     * @param event
+     */
     @Override
     public void onDelivery(Event event) {
         log.debug("Received AMQP message");
@@ -281,27 +328,15 @@ public class AMQPServer extends BaseHandler {
 
                 MessageBytes mb = new MessageBytes(bytes);
 
-                Address address;
+                Address address = new Address(msg.getAddress());
 
-
-
-
-                if (msg.getAddress().contains("/")) {
-                    String ip = msg.getAddress().split("/")[0];
-                    if (ip.contains(":") && InetAddressValidator.getInstance().isValid(ip.split(":")[0])) {
-                        address = new Address(msg.getAddress());
-                    } else if (InetAddressValidator.getInstance().isValid(ip)) {
-                        address = new Address(msg.getAddress());
-                    } else {
-                        address = new Address();
-                        address.setName(msg.getAddress());
-                    }
-                } else {
-                    address = new Address();
+                // This handles an edgecase where client only sends
+                // the topic as address, which causes the Address
+                // object creation to fail.
+                if (!address.getName().equals(dlv.getLink().getTarget().getAddress())) {
                     address.setName(msg.getAddress());
+                    address.setHost("");
                 }
-
-
 
                 log.debug("Received a message with queue/topic: " + address.getName());
 
@@ -316,20 +351,18 @@ public class AMQPServer extends BaseHandler {
                     log.error("Got interrupted: " + e.getMessage());
                 }
 
-
-
                 no.ntnu.okse.core.messaging.Message message =
                         new no.ntnu.okse.core.messaging.Message((String)amqpMessageBodyString.getValue(), address.getName(), null, AMQProtocolServer.getInstance().getProtocolServerType());
                 message.setOriginProtocol(AMQProtocolServer.getInstance().getProtocolServerType());
 
                 MessageService.getInstance().distributeMessage(message);
-                AMQProtocolServer.getInstance().incrementTotalMessagesRecieved();
-                log.debug(String.format("Got and distributed message(%s): %s from %s", address, message, rcv.toString()));
 
+                log.debug(String.format("Got and distributed message(%s): %s from %s", address.getName(), message, rcv.toString()));
 
+                AMQProtocolServer.getInstance().incrementTotalMessagesReceived();
+                AMQProtocolServer.getInstance().incrementTotalRequests();
 
             }
         }
     }
-
 }
