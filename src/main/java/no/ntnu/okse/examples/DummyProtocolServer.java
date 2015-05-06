@@ -26,6 +26,7 @@ package no.ntnu.okse.examples;
 
 import no.ntnu.okse.Application;
 import no.ntnu.okse.core.CoreService;
+import no.ntnu.okse.core.event.SystemEvent;
 import no.ntnu.okse.core.messaging.Message;
 import no.ntnu.okse.core.messaging.MessageService;
 import no.ntnu.okse.protocol.AbstractProtocolServer;
@@ -269,11 +270,13 @@ public class DummyProtocolServer extends AbstractProtocolServer {
             } catch (IOException e) {
                 totalErrors++;
                 log.error("I/O exception during select operation: " + e.getMessage());
+            } catch (ClosedSelectorException e) {
+                log.debug("Caught SelectorClose, shutting down");
             } catch (Exception e) {
-                totalErrors++;
-                log.error("Unknown exception: " + e.getMessage());
+                log.error("Caught unknown exception: " + e);
             }
         }
+        log.info("DummypPotocolServer stopped.");
     }
 
     /**
@@ -282,7 +285,23 @@ public class DummyProtocolServer extends AbstractProtocolServer {
     @Override
     public void stopServer() {
         _running = false;
-        _serverThread.notify();
+        clients.forEach(socket -> {
+            try {
+                socket.write(ByteBuffer.wrap("System is shutting down.\n".getBytes()));
+                socket.socket().close();
+            } catch (IOException e) {
+                log.error("IOException during client close.");
+            }
+        });
+        try {
+            selector.close();
+            serverChannel.socket().close();
+        } catch (IOException e) {
+            log.error("IOException during shutdown");
+        }
+        _invoked = false;
+        _serverThread = null;
+        _singleton = null;
     }
 
     /**
@@ -354,6 +373,17 @@ public class DummyProtocolServer extends AbstractProtocolServer {
                 }
             } else if (args[0].equalsIgnoreCase("testuri")) {
                 log.debug(WSNotificationServer.getInstance().getURI());
+            } else if (args[0].equalsIgnoreCase("shutdownprotocolservers")) {
+                log.debug("SHUTDOWN PROTOCOL SERVERS RECIEVED");
+                try {
+                    CoreService.getInstance().getEventQueue().put(new SystemEvent(
+                        SystemEvent.Type.SHUTDOWN_PROTOCOL_SERVERS,
+                        null
+                    ));
+                } catch (InterruptedException e) {
+                    log.error("Interrupted while attempting to insert an event into CoreService");
+                }
+                return true;
             } else if (args[0].equalsIgnoreCase("exit")) {
                 return true;
             }

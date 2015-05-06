@@ -155,7 +155,7 @@ public class AMQProtocolServer extends AbstractProtocolServer {
 
     @Override
     public void sendMessage(Message message) {
-        if (!message.getOriginProtocol().equals(protocolServerType)) {
+        if (!message.getOriginProtocol().equals(protocolServerType) || message.getAttribute("duplicate") != null) {
             server.addMessageToQueue(message);
         }
     }

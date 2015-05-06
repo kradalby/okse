@@ -140,6 +140,7 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
     @Override
     public void stop() {
         _running = false;
+        removeAllListeners();
         Runnable job = () -> log.info("Stopping SubscriptionService...");
         try {
             queue.put(new SubscriptionTask(SubscriptionTask.Type.SHUTDOWN, job));
@@ -553,6 +554,14 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
     /* ------------------------------------------------------------------------------------------ */
 
     /* Begin listener support */
+
+    /**
+     * Purges all registered listener objects from the SubscriptionService
+     */
+    public synchronized void removeAllListeners() {
+        _subscriptionListeners.clear();
+        _registrationListeners.clear();
+    }
 
     /**
      * SubscriptionChange event listener support

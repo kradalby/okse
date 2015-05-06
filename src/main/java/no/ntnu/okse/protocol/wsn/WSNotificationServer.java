@@ -328,8 +328,20 @@ public class WSNotificationServer extends AbstractProtocolServer {
     public void stopServer() {
         try {
             log.info("Stopping WSNServer...");
+            // Removing all subscribers
+            _commandProxy.getAllRecipients().forEach(s -> {
+                _commandProxy.getProxySubscriptionManager().removeSubscriber(s);
+            });
+            // Removing all publishers
+            _commandProxy.getProxyRegistrationManager().getAllPublishers().forEach(p -> {
+                _commandProxy.getProxyRegistrationManager().removePublisher(p);
+            });
+
+            // Stop the HTTP Client
             this._client.stop();
+            // Stop the ServerConnector
             this._server.stop();
+            // Reset flags
             this._singleton = null;
             this._invoked = false;
             log.info("WSNServer Client and ServerThread stopped");
@@ -366,7 +378,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
     @Override
     public void sendMessage(Message message) {
         log.debug("WSNServer received message for distribution");
-        if (!message.getOriginProtocol().equals(protocolServerType)) {
+        if (!message.getOriginProtocol().equals(protocolServerType) || message.getAttribute("duplicate") != null) {
             log.debug("The message originated from other protocol than WSNotification");
 
             WSNTools.NotifyWithContext notifywrapper = WSNTools.buildNotifyWithContext(message.getMessage(), message.getTopic(), null, null);
