@@ -231,7 +231,7 @@ public class AMQPServer extends BaseHandler {
         Section body = new AmqpValue(message.getMessage());
 
         msg.setAddress(AMQProtocolServer.getInstance().getHost() +"/" + message.getTopic());
-        msg.setSubject(message.getMessageID());
+        msg.setSubject("Message translated from OKSE");
         msg.setBody(body);
         return msg;
     }
