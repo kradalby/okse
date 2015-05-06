@@ -136,17 +136,14 @@ public class AMQPServer extends BaseHandler {
                 snd.drained();
                 return count;
             }
-            log.debug(String.format("Preparing to send: %s", mb.toString()));
             Delivery dlv = snd.delivery(nextTag());
             byte[] bytes = mb.getBytes();
             snd.send(bytes, 0, bytes.length);
             dlv.settle();
             count++;
-            if (!quiet) {
-                log.debug(String.format("Sent message(%s): %s to %s", address, mb.toString(), snd.toString()));
-            }
         }
 
+        AMQProtocolServer.getInstance().incrementTotalMessagesSent();
         return count;
     }
 
@@ -170,12 +167,10 @@ public class AMQPServer extends BaseHandler {
 
             MessageBytes mb = messages.get(address);
             for (Sender snd : sendersOnTopic) {
-                //while (snd.getCredit() > 0 && snd.getQueued() < 1024) {
                 if (mb == null) {
                     snd.drained();
                     return count;
                 }
-                log.debug(String.format("Preparing to send: %s", mb.toString()));
                 Delivery dlv = snd.delivery(nextTag());
 
                 byte[] bytes = mb.getBytes();
@@ -186,10 +181,6 @@ public class AMQPServer extends BaseHandler {
                 dlv.settle();
 
                 count++;
-                if (!quiet) {
-                    log.debug(String.format("Sent message(%s): %s to %s", address, mb.toString(), snd.toString()));
-                }
-                //}
             }
 
         }
@@ -372,7 +363,7 @@ public class AMQPServer extends BaseHandler {
 
                 MessageService.getInstance().distributeMessage(message);
                 AMQProtocolServer.getInstance().incrementTotalMessagesReceived();
-                log.debug(String.format("Got and distributed message(%s): %s from %s", address, message, rcv.toString()));
+                log.debug(String.format("Got and distributed message(%s): %s from %s", address.getName(), message, rcv.toString()));
 
 
 
