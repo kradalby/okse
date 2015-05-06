@@ -164,8 +164,8 @@ public class AMQProtocolServer extends AbstractProtocolServer {
         totalMessagesSent++;
     }
 
-    public void incrementTotalMessagesRecieved() {
-        totalMessagesRecieved++;
+    public void incrementTotalMessagesReceived() {
+        totalMessagesReceived++;
     }
 
     public void incrementTotalRequests() {
