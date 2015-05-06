@@ -217,6 +217,7 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
                 outgoing.remove(address);
             }
         }
+
         log.debug("Detaching: " + driver.getInetAddress());
         sender.abort();
         sender.detach();
