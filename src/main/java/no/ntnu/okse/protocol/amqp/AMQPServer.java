@@ -340,27 +340,16 @@ public class AMQPServer extends BaseHandler {
 
                 MessageBytes mb = new MessageBytes(bytes);
 
-                Address address;
+                Address address = new Address(msg.getAddress());
 
 
-
-
-                if (msg.getAddress().contains("/")) {
-                    String ip = msg.getAddress().split("/")[0];
-                    if (ip.contains(":") && InetAddressValidator.getInstance().isValid(ip.split(":")[0])) {
-                        address = new Address(msg.getAddress());
-                    } else if (InetAddressValidator.getInstance().isValid(ip)) {
-                        address = new Address(msg.getAddress());
-                    } else {
-                        address = new Address();
-                        address.setName(msg.getAddress());
-                    }
-                } else {
-                    address = new Address();
+                // This handles an edgecase where client only sends
+                // the topic as address, which causes the Address
+                // object creation to fail.
+                if (address.getName() != dlv.getLink().getTarget().getAddress()) {
                     address.setName(msg.getAddress());
+                    address.setHost("");
                 }
-
-
 
                 log.debug("Received a message with queue/topic: " + address.getName());
 
