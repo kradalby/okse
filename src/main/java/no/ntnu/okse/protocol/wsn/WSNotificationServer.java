@@ -340,6 +340,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
             this._client.stop();
             // Stop the ServerConnector
             this._server.stop();
+            this._serverThread = null;
             // Reset flags
             this._singleton = null;
             this._invoked = false;
