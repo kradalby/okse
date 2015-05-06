@@ -501,10 +501,10 @@ class WSNRequest(object):
         print "[i] Sending a Subscribe with XPATH topic expression"
 
         # Generate the payload
-        payload = SUBSCRIBE_XPATHTOPIC % ('http://' + self.WAN_IP)
+        payload = SUBSCRIBE_XPATHTOPIC % ('http://' + self.WAN_IP, self.TOPIC)
 
         # Send the request
-        self.send_request(payload
+        self.send_request(payload)
 
     def send_subscription_xpath(self):
         """
