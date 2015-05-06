@@ -33,6 +33,7 @@ import no.ntnu.okse.core.messaging.MessageService;
 import no.ntnu.okse.protocol.ProtocolServer;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.concurrent.*;
 
@@ -53,6 +54,7 @@ public class CoreService extends AbstractCoreService {
     private ExecutorService executor;
     private HashSet<AbstractCoreService> services;
     private ArrayList<ProtocolServer> protocolServers;
+    private boolean protocolServersBooted = false;
 
     /**
      * Constructs the CoreService instance. Constructor is private due to the singleton pattern used for
@@ -144,6 +146,8 @@ public class CoreService extends AbstractCoreService {
             try {
                 Event e = eventQueue.take();
                 log.debug("Consumed an event: " + e);
+                if (e.getType().equals(SystemEvent.Type.SHUTDOWN_PROTOCOL_SERVERS)) stopAllProtocolServers();
+                else if (e.getType().equals(SystemEvent.Type.BOOT_PROTOCOL_SERVERS)) bootProtocolServers();
             } catch (InterruptedException e) {
                 log.error("Interrupted while attempting to fetch next event from eventQueue");
             }
@@ -158,7 +162,14 @@ public class CoreService extends AbstractCoreService {
     @Override
     public void stop() {
         // Shut down all the Protocol Servers
-        this.protocolServers.forEach(p -> p.stopServer());
+        stopAllProtocolServers();
+
+        // Give the threads a few seconds to complete
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            log.warn("Interrupted during shutdown sleep");
+        }
         // Shut down all the Core Services
         this.services.forEach(s -> s.stop());
 
@@ -172,6 +183,8 @@ public class CoreService extends AbstractCoreService {
             log.error("Interrupted while trying to inject the SHUTDOWN event to eventQueue");
         }
     }
+
+    /* Begin Public API */
 
     /**
      * This command executes a job implementing the Runnable interface
@@ -282,9 +295,13 @@ public class CoreService extends AbstractCoreService {
 
     /**
      * Fetches the ArrayList of ProtocolServers currently added to CoreService.
-     * @return: An ArrayList of ProtocolServers
+     *
+     * @return: An ArrayList of ProtocolServers that are registered. Returns an empty ArrayList if not booted.
      */
-    public ArrayList<ProtocolServer> getAllProtocolServers() { return this.protocolServers; }
+    public ArrayList<ProtocolServer> getAllProtocolServers() {
+        if (protocolServersBooted) return this.protocolServers;
+        else return new ArrayList<>();
+    }
 
     /**
      * Helper method to fetch a protocol server defined by the actual Class
@@ -310,6 +327,7 @@ public class CoreService extends AbstractCoreService {
 
         // Create a system message
         Message m = new Message("The broker is shutting down", null, null, Application.OKSE_SYSTEM_NAME);
+        m.setSystemMessage(true);
 
         // Distribute the message to the Message Service
         MessageService.getInstance().distributeMessage(m);
@@ -326,7 +344,8 @@ public class CoreService extends AbstractCoreService {
 
         // Iterate over all protocol servers and initiate shutdown process
         getAllProtocolServers().forEach(ps -> ps.stopServer());
-        log.info("ProtocolServers have been stopped");
+        protocolServersBooted = false;
+        log.info("Completed dispatching SHUTDOWN to all ProtocolServers");
     }
 
     /**
@@ -343,6 +362,8 @@ public class CoreService extends AbstractCoreService {
         return null;
     }
 
+    /* Begin private helper methods */
+
     /**
      * Helper method that boots all registered core services
      */
@@ -353,6 +374,7 @@ public class CoreService extends AbstractCoreService {
      */
     private void bootProtocolServers() {
         protocolServers.forEach(ps -> ps.boot());
+        protocolServersBooted = true;
     }
 
 

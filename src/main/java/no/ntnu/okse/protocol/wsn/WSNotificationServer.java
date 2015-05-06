@@ -328,6 +328,14 @@ public class WSNotificationServer extends AbstractProtocolServer {
     public void stopServer() {
         try {
             log.info("Stopping WSNServer...");
+            // Removing all subscribers
+            _commandProxy.getAllRecipients().forEach(s -> {
+                _commandProxy.getProxySubscriptionManager().removeSubscriber(s);
+            });
+            // Removing all publishers
+            _commandProxy.getProxyRegistrationManager().getAllPublishers().forEach(p -> {
+                _commandProxy.getProxyRegistrationManager().removePublisher(p);
+            });
             this._client.stop();
             this._server.stop();
             this._singleton = null;

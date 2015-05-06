@@ -213,6 +213,8 @@ public class MessageService extends AbstractCoreService implements TopicChangeLi
         }
     }
 
+    /* Begin Public API */
+
     /**
      * Adds a Message object into the message queue for distribution
      * @param m The message object to be distributed

@@ -131,7 +131,8 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
     }
 
     /**
-     * WARNING: Never call this method directly, it is called during subscriptionchangeevents that it listens to
+     * Removes a Subscriber from the SubscriptionService, and the listener callback will remove it from
+     * local mappings.
      * @param s The WS-Nu subscriptionkey
      */
     @Override
