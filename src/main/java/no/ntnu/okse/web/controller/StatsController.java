@@ -48,7 +48,10 @@ public class StatsController {
 
     private static final String GET_STATS = "/get/all";
 
-
+    /**
+     * Returnes all the information needed to refresh the stats-pane
+     * @return A HashMap containing all the information
+     */
     @RequestMapping(method = RequestMethod.GET, value = GET_STATS)
     public @ResponseBody HashMap<String, Object> getAllStats() {
         CoreService cs = CoreService.getInstance();

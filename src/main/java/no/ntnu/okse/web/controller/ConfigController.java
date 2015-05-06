@@ -27,12 +27,22 @@ public class ConfigController {
 
     private static Logger log = Logger.getLogger(ConfigController.class.getName());
 
+    /**
+     * This method returns all mappings that exists in the TopicService
+     * @return A JSON serialized response body of the HashMap containing all mappings
+     */
     @RequestMapping(method = RequestMethod.GET, value = GET_ALL_MAPPINGS)
     public @ResponseBody HashMap<String, HashSet<String>> getAllMappings() {
         TopicService ts = TopicService.getInstance();
         return ts.getAllMappings();
     }
 
+    /**
+     * This method adds a mapping between two topics in the TopicService
+     * @param topic The topic to map from
+     * @param newTopic The topic to map to
+     * @return A JSON serialized response body
+     */
     @RequestMapping(method = RequestMethod.POST, value= ADD_MAPPING)
     public @ResponseBody ResponseEntity<String> addMapping(@RequestParam(value = "fromTopic") String topic, @RequestParam(value = "toTopic") String newTopic) {
         log.debug("Adding a mapping between Topic{" + topic + "} and Topic{" + newTopic + "}");
@@ -43,6 +53,11 @@ public class ConfigController {
         return new ResponseEntity<String>("{ \"added\" :true }", HttpStatus.OK);
     }
 
+    /**
+     * This method deletes all mappings for a given topic in the TopicService
+     * @param topicToRemove The topic to remove
+     * @return A JSON serialized response body
+     */
     @RequestMapping(method = RequestMethod.DELETE, value = DELETE_MAPPING)
     public @ResponseBody ResponseEntity<String> deleteMapping(@RequestParam(value = "topic") String topicToRemove) {
         log.debug("Trying to remove the mapping for Topic{" + topicToRemove + "}");
@@ -52,6 +67,10 @@ public class ConfigController {
         return new ResponseEntity<String>("{ \"deleted\" :true }", HttpStatus.OK);
     }
 
+    /**
+     * This method deletes all mappings in the TopicService
+     * @return A JSON serialized response body
+     */
     @RequestMapping(method = RequestMethod.DELETE, value = DELETE_ALL_MAPPINGS)
     public @ResponseBody ResponseEntity<String> deleteAllMapping() {
         log.debug("Trying to delete all mappings");

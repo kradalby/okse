@@ -30,11 +30,16 @@ import java.util.List;
 /**
  * Created by kradalby on 17/04/15.
  */
-
 public class Log {
+
     private String name;
     private List<String> lines;
 
+    /**
+     * Constructs a model for containing log information to be serialized
+     * @param name The log file
+     * @param lines All contents of the file
+     */
     public Log(String name, List<String> lines) {
         this.name = name;
         this.lines = lines;

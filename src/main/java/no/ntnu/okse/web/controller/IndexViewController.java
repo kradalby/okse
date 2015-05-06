@@ -63,6 +63,11 @@ public class IndexViewController {
 
     private Properties environment = System.getProperties();
 
+    /**
+     * This method returns the view to render when a user tries to reach the '/'-url
+     * @param model The model to configure
+     * @return A string telling what HTML fragment to render
+     */
     @RequestMapping("/")
     public String index(Model model) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -107,6 +112,10 @@ public class IndexViewController {
 
     }
 
+    /**
+     * Private helper method that creates a HashMap of some environment specifics
+     * @return A HashMap containing JAVA information etc.
+     */
     private HashMap<String, String> createEnvironmentList() {
         HashMap<String, String> properties = new HashMap<>();
         properties.put("Java Runtime Name", environment.getProperty("java.runtime.name"));

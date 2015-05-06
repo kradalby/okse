@@ -47,6 +47,10 @@ public class MainController {
 
     private static Logger log = Logger.getLogger(MainController.class.getName());
 
+    /**
+     * Returns all necessary information for rendering the main-pane
+     * @return A HashMap containing all the information
+     */
     @RequestMapping(value = "/api/main", method = RequestMethod.GET)
     public @ResponseBody HashMap<String, Object> main() {
         SubscriptionService ss = SubscriptionService.getInstance();
