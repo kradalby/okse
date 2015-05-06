@@ -346,7 +346,7 @@ public class AMQPServer extends BaseHandler {
                 // This handles an edgecase where client only sends
                 // the topic as address, which causes the Address
                 // object creation to fail.
-                if (address.getName() != dlv.getLink().getTarget().getAddress()) {
+                if (!address.getName().equals(dlv.getLink().getTarget().getAddress())) {
                     address.setName(msg.getAddress());
                     address.setHost("");
                 }
