@@ -62,7 +62,7 @@ public class IndexViewController {
     @Value("${server.port}")
     private int serverPort;
 
-    private Properties environment = System.getProperties();
+    private Properties environment = Application.config;
 
     /**
      * This method returns the view to render when a user tries to reach the '/'-url
