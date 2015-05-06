@@ -50,7 +50,7 @@ public interface ProtocolServer {
      * This interface method must return the total amount of messages that has been received by the protocol server.
      * @return An integer representing the total amount of received messages.
      */
-    public int getTotalMessagesRecieved();
+    public int getTotalMessagesReceived();
 
     /**
      * This interface method must return the total amount of bad requests received by the protocol server.
