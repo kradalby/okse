@@ -378,7 +378,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
     @Override
     public void sendMessage(Message message) {
         log.debug("WSNServer received message for distribution");
-        if (!message.getOriginProtocol().equals(protocolServerType)) {
+        if (!message.getOriginProtocol().equals(protocolServerType) || message.getAttribute("duplicate") != null) {
             log.debug("The message originated from other protocol than WSNotification");
 
             WSNTools.NotifyWithContext notifywrapper = WSNTools.buildNotifyWithContext(message.getMessage(), message.getTopic(), null, null);
