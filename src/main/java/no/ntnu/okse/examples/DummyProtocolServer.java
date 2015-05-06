@@ -30,6 +30,7 @@ import no.ntnu.okse.core.event.SystemEvent;
 import no.ntnu.okse.core.messaging.Message;
 import no.ntnu.okse.core.messaging.MessageService;
 import no.ntnu.okse.protocol.AbstractProtocolServer;
+import no.ntnu.okse.protocol.amqp.AMQProtocolServer;
 import no.ntnu.okse.protocol.wsn.WSNotificationServer;
 import org.apache.log4j.Logger;
 import org.ntnunotif.wsnu.base.util.Utilities;
@@ -332,6 +333,19 @@ public class DummyProtocolServer extends AbstractProtocolServer {
     private boolean parseCommand(String command) {
         String[] args = command.split(" ");
         try {
+            if (args[0].equalsIgnoreCase("amqp")) {
+                AMQProtocolServer amqp = AMQProtocolServer.getInstance();
+                if (args[1].equalsIgnoreCase("stop")) {
+                    amqp.stopServer();
+                }
+                else if (args[1].equalsIgnoreCase("start")) {
+                    CoreService cs = CoreService.getInstance();
+                    cs.addProtocolServer(AMQProtocolServer.getInstance());
+                    AMQProtocolServer.getInstance().boot();
+                }
+                return true;
+            }
+
             // message <topic> <message content>
             if (args[0].equalsIgnoreCase("message")) {
                 // If it exists build a message string and distribute it
@@ -343,7 +357,7 @@ public class DummyProtocolServer extends AbstractProtocolServer {
                     String msg = builder.toString().trim();
                     Message message = new Message(msg, args[1], null, protocolServerType);
                     MessageService.getInstance().distributeMessage(message);
-                    totalMessagesRecieved++;
+                    totalMessagesReceived++;
 
                     return true;
                 }
@@ -372,7 +386,7 @@ public class DummyProtocolServer extends AbstractProtocolServer {
                 return true;
             }
         } catch (ArrayIndexOutOfBoundsException e) {
-            log.error("Recieved invalid command: " + command);
+            log.error("Received invalid command: " + command);
         }
 
         return false;

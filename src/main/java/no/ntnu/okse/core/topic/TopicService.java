@@ -387,23 +387,6 @@ public class TopicService extends AbstractCoreService {
     public void deleteMapping(String mapping) {
         if (mappings.containsKey(mapping)) {
             HashSet<String> mappedAgainst = mappings.remove(mapping);
-
-            if (SubscriptionService.getInstance().getAllSubscribersForTopic(mapping).isEmpty()) {
-                if (topicExists(mapping)) {
-                    deleteTopicLocal(getTopic(mapping));
-                    log.debug("Removing Topic{" + mapping + "} due to mapping removal because it doesn't have any subscribers");
-                };
-            }
-
-            mappedAgainst.forEach(t -> {
-                if (SubscriptionService.getInstance().getAllSubscribersForTopic(t).isEmpty()) {
-                    if (topicExists(t)) {
-                        deleteTopicLocal(getTopic(t));
-                        log.debug("Removing Topic{" + t + "} due to mapping removal because it doesn't have any subscribers");
-                    }
-
-                }
-            });
             log.info("Removed the mappings for Topic{" + mapping + "}");
         } else {
             log.warn("Attempt to remove a mapping that did in fact not exist ");

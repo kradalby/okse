@@ -60,7 +60,7 @@ public class StatsController {
         // CoreService statistics
         result.put("coreServiceStatistics", new HashMap<String, Object>(){{
             put("totalMessagesSent", cs.getTotalMessagesSentFromProtocolServers());
-            put("totalMessagesReceived", cs.getTotalMessagesRecievedFromProtocolServers());
+            put("totalMessagesReceived", cs.getTotalMessagesReceivedFromProtocolServers());
             put("totalRequests", cs.getTotalRequestsFromProtocolServers());
             put("totalBadRequests", cs.getTotalBadRequestsFromProtocolServers());
             put("totalErrors", cs.getTotalErrorsFromProtocolServers());
@@ -77,7 +77,7 @@ public class StatsController {
             protocolStats.add(new ProtocolStats(
                     p.getProtocolServerType(),
                     p.getTotalMessagesSent(),
-                    p.getTotalMessagesRecieved(),
+                    p.getTotalMessagesReceived(),
                     p.getTotalRequests(),
                     p.getTotalBadRequests(),
                     p.getTotalErrors()

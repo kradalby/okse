@@ -116,12 +116,12 @@ public class MessageService extends AbstractCoreService implements TopicChangeLi
                 try {
                     // Fetch the next job, will wait until a new message arrives
                     Message m = queue.take();
-                    log.info("Recieved a message for distrubution: " + m);
+                    log.info("Received a message for distrubution: " + m);
 
                     // Do we have a system message?
                     if (m.isSystemMessage() && m.getTopic() == null) {
 
-                        log.debug("Recieved message was a SystemMessage: " + m.getMessage());
+                        log.debug("Received message was a SystemMessage: " + m.getMessage());
 
                         // Check if we are to broadcast this system message
                         if (Application.BROADCAST_SYSTEM_MESSAGES_TO_SUBSCRIBERS) {
@@ -148,9 +148,9 @@ public class MessageService extends AbstractCoreService implements TopicChangeLi
 
                     HashSet<Topic> mappings = TopicService.getInstance().getAllMappingsAgainstTopic(m.getTopic());
                     if (mappings == null) {
-                        log.debug("The topic: " + m.getTopic() + " has no mappings");
+                        log.debug("The Topic{" + m.getTopic() + "} has no mappings");
                     } else {
-                        log.debug("Found the following mappings against topic: " + m.getTopic() + ": " + mappings);
+                        log.debug("Found the following mappings against Topic{" + m.getTopic() + "}: " + mappings);
 
                         generateMessageForAGivenTopicSet(m, mappings).forEach(duplicateMessage -> {
                             duplicateMessage.setAttribute("duplicate", m.getTopic());
@@ -158,11 +158,15 @@ public class MessageService extends AbstractCoreService implements TopicChangeLi
                             if (m.getAttribute("duplicate") != null) {
                                 if ( ! m.getTopic().equals(duplicateMessage.getAttribute("duplicate"))) {
                                     distributeMessage(duplicateMessage);
+                                    log.debug("The message to Topic{" + duplicateMessage.getTopic() + "} was distributed");
                                 } else {
-                                    log.debug("The message to topic: " + duplicateMessage.getTopic() + " is a duplicate against topic: " + m.getTopic() +", and will not be distributed");
+                                    log.debug("The message to Topic{" + duplicateMessage.getTopic() + "} is a duplicate against Topic{" + m.getTopic() +"}, and will not be distributed");
                                 }
-                            } else {
+                            } else if (TopicService.getInstance().topicExists(m.getTopic())) {
                                 distributeMessage(duplicateMessage);
+                                log.debug("The message to Topic{" + duplicateMessage.getTopic() + "} was distributed");
+                            } else {
+                                log.debug("The message was not sent. Most likely since the Topic{" + duplicateMessage.getTopic() + "} does not exist");
                             }
 
                         });

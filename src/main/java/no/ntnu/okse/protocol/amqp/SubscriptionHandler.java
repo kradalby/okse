@@ -48,9 +48,15 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 public class SubscriptionHandler extends BaseHandler implements SubscriptionChangeListener{
 
+    /**
+     * Wrapper class around a ArrayList for holding subscribers to
+     * a topic/queue. Has additional methods to help the queue
+     * behavior and the topic behavior.
+     * @param \<Receiver\/Sender\>
+     */
     public static class Routes<T extends Link> {
 
-        List<T> routes = new ArrayList<T>();
+        List<T> routes = new ArrayList<>();
 
         void add(T route) {
             routes.add(route);
@@ -64,6 +70,10 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
             return routes.size();
         }
 
+        /**
+         * Choose a random subscriber from a queue.
+         * @return random object from list
+         */
         public T choose() {
             if (routes.isEmpty()) { return null; }
             ThreadLocalRandom rand = ThreadLocalRandom.current();
@@ -71,6 +81,10 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
             return routes.get(idx);
         }
 
+        /**
+         * Get all available subscribers for a topic.
+         * @return ArrayList of objects
+         */
         public List<T> getRoutes() {
             return routes;
         }
@@ -89,6 +103,7 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
 
     private static HashMap<Sender, Subscriber> localSenderSubscriberMap = new HashMap<>();
     private static HashMap<Subscriber, Sender> localSubscriberSenderMap = new HashMap<>();
+    private static HashMap<String, Sender> localRemoteContainerSenderMap = new HashMap<>();
     private static HashMap<Sender, AbstractNotificationProducer.SubscriptionHandle> localSubscriberHandle = new HashMap<>();
 
     final private Map<String,Routes<Sender>> outgoing = new HashMap<String,Routes<Sender>>();
@@ -96,6 +111,11 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
 
     public SubscriptionHandler() {}
 
+    /**
+     * Get the address of a Source object.
+     * @param source
+     * @return the address of a Source object.
+     */
     private String getAddress(Source source) {
         if (source == null) {
             return null;
@@ -104,6 +124,11 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
         }
     }
 
+    /**
+     * Get the address of a Target object.
+     * @param target
+     * @return the address of a Target object.
+     */
     private String getAddress(Target target) {
         if (target == null) {
             return null;
@@ -112,40 +137,100 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
         }
     }
 
+    /**
+     * Get the address of a Sender object.
+     * @param sender
+     * @return the address of a Sender object.
+     */
     public String getAddress(Sender sender) {
         String source = getAddress(sender.getSource());
         String target = getAddress(sender.getTarget());
         return source != null ? source : target;
     }
 
+    /**
+     * Get the address of a Receiver object.
+     * @param receiver
+     * @return the address of a Receiver object.
+     */
     public String getAddress(Receiver receiver) {
         return getAddress(receiver.getTarget());
     }
 
+    /**
+     * Get the outgoing routes of a given address.
+     * @param address
+     * @return Routes\<Sender\> list
+     */
     public Routes<Sender> getOutgoing(String address) {
         Routes<Sender> routes = outgoing.get(address);
         if (routes == null) { return EMPTY_OUT; }
         return routes;
     }
 
+    /**
+     * Get the incomming routes of a given address.
+     * @param address
+     * @return Routes\<Receiver\>
+     */
     public Routes<Receiver> getIncomming(String address) {
         Routes<Receiver> routes = incoming.get(address);
         if (routes == null) { return EMPTY_IN; }
         return routes;
     }
 
+    /**
+     * Add a Sender object to AMQPs internal routing system for topic/queue
+     * and create and add a OKSEs subscriber to the internal system.
+     * @param sender
+     */
     private void add(Sender sender) {
-        Subscriber subscriber = new Subscriber(sender.getSession().getConnection().getRemoteHostname(), AMQProtocolServer.getInstance().getDriver().getClientPort(), getAddress(sender), AMQProtocolServer.getInstance().getProtocolServerType());
+        String senderAddress = "Unknown";
+        int senderClientPort = 0;
+        String protocolServerType = "Unknown";
+
+        Session session = sender.getSession();
+        Connection connection = session.getConnection();
+
+        AMQProtocolServer server = AMQProtocolServer.getInstance();
+        Driver driver = server.getDriver();
+        int clientPort = driver.getPort();
+
+
+        //The connected client hostname
+        String remoteHostName = driver.getInetAddress().getHostName();
+
+        //Get RemoteContainer id for the connection, used to identify the connection
+        String remoteContainer = connection.getRemoteContainer();
+
+        //If RemoteContainer id is not null add the subscriber to HashMap with RemoteContainer id as Key
+        //Is used to identify which sender has open connections to the broker
+        if(remoteContainer != null){
+            localRemoteContainerSenderMap.put(remoteContainer, sender);
+        }
+
+        if(remoteHostName != null){
+            senderAddress = remoteHostName;
+        }
+
+
+        if(clientPort != 0){
+            senderClientPort = clientPort;
+        }
+
+        if(server.getProtocolServerType() != null){
+            protocolServerType = server.getProtocolServerType();
+        }
+
+        //Building the Subscriber from a sender object
+        Subscriber subscriber = new Subscriber(senderAddress, senderClientPort, getAddress(sender), protocolServerType);
         SubscriptionService.getInstance().addSubscriber(subscriber);
+
+
+
         localSenderSubscriberMap.put(sender, subscriber);
         localSubscriberSenderMap.put(subscriber, sender);
         TopicService.getInstance().addTopic(getAddress(sender));
-
-        for(Subscriber key : localSubscriberSenderMap.keySet()){
-            log.debug("This is the key on add: " + key);
-            log.debug("This is the value on add: " + localSubscriberSenderMap.get(key));
-
-        }
 
         String address = getAddress(sender);
         Routes<Sender> routes = outgoing.get(address);
@@ -154,35 +239,53 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
             routes = new Routes<Sender>();
             outgoing.put(address,routes);
         }
-        log.debug("Adding sender: " + sender.getSession().getConnection().getRemoteHostname() + " to route: " + address);
+        log.debug("Adding sender: " + remoteHostName + " to route: " + address);
         log.debug(outgoing.toString());
         log.debug("This is getAddress: " + getAddress(sender));
         routes.add(sender);
+        AMQProtocolServer.getInstance().incrementTotalRequests();
     }
 
+    /**
+     * Remove a sender object from AMQPs routing system and
+     * Okses internal subscriber system.
+     * @param sender
+     */
     private void remove(Sender sender) {
-        Subscriber subscriber = localSenderSubscriberMap.get(sender);
-        localSenderSubscriberMap.remove(sender);
-        localSubscriberSenderMap.remove(subscriber);
+        if (sender != null) {
+            Session session = sender.getSession();
+            Connection connection = session.getConnection();
+            String remoteHostName = connection.getRemoteHostname();
+            AMQProtocolServer server = AMQProtocolServer.getInstance();
+            Driver driver = server.getDriver();
 
-        //må kalles hvis vi får DC fra klienten sin side ikke fra DELETE i admin panel
-        //SubscriptionService.getInstance().removeSubscriber(subscriber);
+            Subscriber subscriber = localSenderSubscriberMap.get(sender);
+            localSenderSubscriberMap.remove(sender);
+            localSubscriberSenderMap.remove(subscriber);
 
-        String address = getAddress(sender);
-        Routes<Sender> routes = outgoing.get(address);
-        if (routes != null) {
-            log.debug("Removing sender: " + sender.getSession().getConnection().getRemoteHostname() + " from route: " + address);
-            routes.remove(sender);
-            if (routes.size() == 0) {
-                outgoing.remove(address);
+            String address = getAddress(sender);
+            Routes<Sender> routes = outgoing.get(address);
+            if (routes != null) {
+                if (!AMQProtocolServer.getInstance().isShuttingDown()) {
+                    log.debug("Removing sender: " + driver.getInetAddress() + " from route: " + address);
+                }
+                routes.remove(sender);
+                if (routes.size() == 0) {
+                    outgoing.remove(address);
+                }
             }
+            if (!AMQProtocolServer.getInstance().isShuttingDown()) {log.debug("Detaching: " + driver.getInetAddress());}
+            sender.abort();
+            sender.detach();
+            sender.close();
+            log.debug(outgoing.toString());
         }
-        log.debug("Detaching: " + sender.getSession().getConnection().getRemoteHostname());
-        sender.abort();
-        sender.detach();
-        sender.close();
-        log.debug(outgoing.toString());
     }
+
+    /**
+     * Add a Receiver object to AMQPs internal routing system
+     * @param receiver
+     */
     private void add(Receiver receiver) {
         String address = getAddress(receiver);
         Routes<Receiver> routes = incoming.get(address);
@@ -196,6 +299,10 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
         routes.add(receiver);
     }
 
+    /**
+     * Remove a Receiver object from AMQPs internal routing system
+     * @param receiver
+     */
     private void remove(Receiver receiver) {
         String address = getAddress(receiver);
         Routes<Receiver> routes = incoming.get(address);
@@ -229,61 +336,34 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
     public void onLinkLocalOpen(Event event) {
         log.debug("Local link opened");
         add(event.getLink());
-
-
     }
 
     @Override
     public void onConnectionUnbound(Event event) {
         //log.debug("This is event.getSession(): " + event.getSession());
-        log.debug("This is event RemoteContainer: " + event.getConnection().getRemoteContainer());
-        for(Subscriber key : localSubscriberSenderMap.keySet()){
-            if(event.getConnection().getRemoteContainer().equals(localSubscriberSenderMap.get(key).getSession().getConnection().getRemoteContainer())){
-                SubscriptionService.getInstance().removeSubscriber(key);
-            }
-            //log.debug("This is the key: " + key);
-            log.debug("This is the value: " + localSubscriberSenderMap.get(key).getSession().getConnection().getRemoteContainer());
-            //log.debug("This is key.host: " + key.getHost());
-            //log.debug("This is event RemoteHostname: " + event.getConnection().getRemoteHostname());
-            //log.debug("This is event.Link(): " + event.getLink());
 
+        //Getting the RemoteContainer id for the event
+        Connection eventConnection = event.getConnection();
+        String eventRemoteContainer = eventConnection.getRemoteContainer();
+        log.debug("This is event RemoteContainer: " + eventRemoteContainer);
+
+        //Setting the RemoteContainer id for the sender to "Unknown" before we get it from the sender object
+        String senderRemoteContainer = "Unknown";
+
+        //Get sender from localRemoteContainerSenderMap  with eventRemoteContainer as key
+        Sender sender = localRemoteContainerSenderMap.get(eventRemoteContainer);
+        if(sender != null){
+            Session senderSession = sender.getSession();
+            Connection senderConnection = senderSession.getConnection();
+            senderRemoteContainer = senderConnection.getRemoteContainer();
         }
 
-        //event.getSession().getConnection().getRemoteHostname();
-
-        //event.getConnection().getRemoteHostname();
-        if (event.getLink() instanceof Sender) {
-            log.debug("Local link closed");
-           // event.getSession().sender()
-            //SubscriptionService.getInstance().removeSubscriber(localSenderSubscriberMap.get(event.getLink()));
-            //AMQProtocolServer.getInstance().getDriver().
+        //Check if sender container id is equal to the event container id to see if the client has disconnected
+        if (senderRemoteContainer.equals(eventRemoteContainer)){
+            SubscriptionService.getInstance().removeSubscriber(localSenderSubscriberMap.get(sender));
         }
-        //Driver: CLOSING: java.nio.channels.SocketChannel[connected local=/127.0.0.1:61050 remote=/127.0.0.1:56151]
     }
 
-    /*
-    @Override
-    public void onLinkFinal(Event event) {
-        log.debug("Local link final");
-        SubscriptionService.getInstance().removeSubscriber(localSenderSubscriberMap.get(event.getLink()));
-
-    }*/
-   /*@Override
-    public void onConnectionRemoteClose(Event event) {
-       log.debug("Remote connection closed, calling remove...");
-       if (event.getLink() instanceof Sender) {
-           SubscriptionService.getInstance().removeSubscriber(localSenderSubscriberMap.get(event.getLink()));
-       }
-   }*/
-
-
-    /*@Override
-    public void onConnectionLocalClose(Event event) {
-        log.debug("Local connection closed, calling remove...");
-        if (event.getLink() instanceof Sender) {
-            SubscriptionService.getInstance().removeSubscriber(localSenderSubscriberMap.get(event.getLink()));
-        }
-    }*/
 
 
     @Override
@@ -293,17 +373,18 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
         if (e.getData().getOriginProtocol().equals(AMQProtocolServer.getInstance().getProtocolServerType())) {
             // If we are dealing with an Unsubscribe
             if (e.getType().equals(SubscriptionChangeEvent.Type.UNSUBSCRIBE)) {
-                log.debug("Check if Key exists: " + localSubscriberSenderMap.containsKey(e.getData()));
                 log.debug("Unsubscribing " + localSubscriberSenderMap.get(e.getData()));
-                //Close AMQP connection
-                localSubscriberSenderMap.get(e.getData()).getSession().getConnection().close();
                 // Remove the local mappings from AMQP subscriptionKey to OKSE Subscriber object and AMQP subscriptionHandle
                 remove(localSubscriberSenderMap.get(e.getData()));
             } else if (e.getType().equals(SubscriptionChangeEvent.Type.SUBSCRIBE)) {
-                log.debug("Recieved a SUBSCRIBE event");
+                log.debug("Received a SUBSCRIBE event");
                 // TODO: Investigate if we really need to do anything here since it will function as a callback
                 // TODO: after addSubscriber
             }
         }
+    }
+
+    public void unsubscribeAll() {
+        localSenderSubscriberMap.forEach( (sender,subscriber) -> SubscriptionService.getInstance().removeSubscriber(subscriber));
     }
 }

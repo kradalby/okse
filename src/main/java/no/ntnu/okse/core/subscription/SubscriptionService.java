@@ -288,7 +288,7 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
      */
     public void addSubscriber(Subscriber s) {
         if (s == null) {
-            log.warn("Recieved null argument!");
+            log.warn("Received null argument!");
             return;
         }
         if (!_subscribers.contains(s)) {
@@ -309,7 +309,7 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
      */
     public void removeSubscriber(Subscriber s) {
         if (s == null) {
-            log.warn("Recieved null argument!");
+            log.warn("Received null argument!");
             return;
         }
         if (_subscribers.contains(s)) {
@@ -331,7 +331,7 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
      */
     public void renewSubscriber(Subscriber s, Long timeout) {
         if (s == null) {
-            log.warn("Recieved null argument!");
+            log.warn("Received null argument!");
             return;
         }
         if (_subscribers.contains(s)) {
@@ -352,7 +352,7 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
      */
     public void pauseSubscriber(Subscriber s) {
         if (s == null) {
-            log.warn("Recieved null argument!");
+            log.warn("Received null argument!");
             return;
         }
         if (_subscribers.contains(s)) {
@@ -373,7 +373,7 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
      */
     public void resumeSubscriber(Subscriber s) {
         if (s == null) {
-            log.warn("Recieved null argument!");
+            log.warn("Received null argument!");
             return;
         }
         if (_subscribers.contains(s)) {
@@ -397,7 +397,7 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
      */
     public void addPublisher(Publisher p) {
         if (p == null) {
-            log.warn("Recieved null argument!");
+            log.warn("Received null argument!");
             return;
         }
         if (!_publishers.contains(p)) {
@@ -418,7 +418,7 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
      */
     public void removePublisher(Publisher p) {
         if (p == null) {
-            log.warn("Recieved null argument!");
+            log.warn("Received null argument!");
             return;
         }
         if (_publishers.contains(p)) {

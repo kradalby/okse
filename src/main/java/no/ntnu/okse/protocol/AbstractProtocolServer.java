@@ -42,7 +42,7 @@ public abstract class AbstractProtocolServer implements ProtocolServer {
 
     // Name and statistics
     protected String protocolServerType;
-    protected int totalRequests, totalBadRequests, totalErrors, totalMessagesRecieved, totalMessagesSent;
+    protected int totalRequests, totalBadRequests, totalErrors, totalMessagesReceived, totalMessagesSent;
 
     /**
      * Constructor that just initializes the fields to default values
@@ -53,7 +53,7 @@ public abstract class AbstractProtocolServer implements ProtocolServer {
         _running = false;
         protocolServerType = "";
         totalMessagesSent = 0;
-        totalMessagesRecieved = 0;
+        totalMessagesReceived = 0;
         totalRequests = 0;
         totalBadRequests = 0;
         totalErrors = 0;
@@ -85,7 +85,7 @@ public abstract class AbstractProtocolServer implements ProtocolServer {
      * Total amount of messages that has been received on WSNotificationServer
      * @return An integer representing the total amount of messages received.
      */
-    public int getTotalMessagesRecieved() { return totalMessagesRecieved; }
+    public int getTotalMessagesReceived() { return totalMessagesReceived; }
 
     /**
      * This interface method must return the total amount of bad requests received by the protocol server.

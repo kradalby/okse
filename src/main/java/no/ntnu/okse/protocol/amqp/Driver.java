@@ -37,10 +37,13 @@ import org.apache.qpid.proton.engine.Transport;
 import org.apache.qpid.proton.engine.TransportException;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
+import java.util.Iterator;
 
 /**
  * Most of this code is from the qpid-proton-demo (https://github.com/rhs/qpid-proton-demo) by Rafael Schloming
@@ -52,6 +55,7 @@ public class Driver extends BaseHandler {
     final private Handler[] handlers;
     final private Selector selector;
     private static Logger log;
+    private boolean _running;
     private Acceptor acceptor;
 
     public Driver(Collector collector, Handler ... handlers) throws IOException {
@@ -62,13 +66,22 @@ public class Driver extends BaseHandler {
     }
 
     public void listen(String host, int port) throws IOException {
+        //new Acceptor(host, port);
         acceptor = new Acceptor(host, port);
     }
-    public int getClientPort(){
-        return acceptor.getRemoteSocketPort();
+
+    public InetAddress getInetAddress() {
+        return acceptor.getInetAddress();
+    }
+
+    public Integer getPort() {
+        return acceptor.getPort();
     }
 
     public void run() throws IOException {
+        if (!_running) {
+            _running = true;
+        }
         while (true) {
 
             for (Handler h : handlers) {
@@ -88,22 +101,32 @@ public class Driver extends BaseHandler {
             // cancelled keys remaining.
             selector.selectNow();
             if (selector.keys().isEmpty()) {
+                log.info("No sockets open - closing the selector");
                 selector.close();
                 return;
             }
 
             selector.selectedKeys().clear();
             selector.select();
-
             for (SelectionKey key : selector.selectedKeys()) {
                 Selectable selectable = (Selectable) key.attachment();
                 selectable.selected();
             }
+
+            if (!_running) {
+                Iterator keys = selector.keys().iterator();
+                while (keys.hasNext()) {
+                    SelectionKey key = (SelectionKey) keys.next();
+                    key.cancel();
+                    key.channel().close();
+                }
+            }
+
         }
     }
 
     public void processEvents() {
-        while (true) {
+        while (_running) {
             Event ev = collector.peek();
             if (ev == null) break;
             log.debug("Dispatching event of type: " + ev.getType().name());
@@ -116,6 +139,12 @@ public class Driver extends BaseHandler {
             }
             collector.pop();
         }
+    }
+
+    //Driver.stop() method, for stoping the driver and closing the socket
+    public void stop() {
+        _running = false;
+        selector.wakeup();
     }
 
     @Override
@@ -146,7 +175,7 @@ public class Driver extends BaseHandler {
 
         final private ServerSocketChannel socket;
         final private SelectionKey key;
-        private SocketChannel thisIsTheSocket;
+        private SocketChannel cachedLatestConectedClient;
 
         Acceptor(String host, int port) throws IOException {
             socket = ServerSocketChannel.open();
@@ -158,7 +187,7 @@ public class Driver extends BaseHandler {
 
         public void selected() throws IOException {
             SocketChannel sock = socket.accept();
-            thisIsTheSocket = sock;
+            cachedLatestConectedClient = sock;
             Connection conn = Connection.Factory.create();
             conn.collect(collector);
             log.debug("ACCEPTED: " + sock);
@@ -174,14 +203,13 @@ public class Driver extends BaseHandler {
             new ChannelHandler(sock, SelectionKey.OP_READ, transport);
         }
 
-        public int getRemoteSocketPort(){
-            String[] socketStringArray = thisIsTheSocket.toString().split(":");
-            if(socketStringArray.length == 3){
-                return Integer.valueOf(thisIsTheSocket.toString().split(":")[2].replace("]", ""));
-            }
-            else {
-                return 1;
-            }
+
+        public InetAddress getInetAddress() {
+            return cachedLatestConectedClient.socket().getInetAddress();
+        }
+
+        public Integer getPort() {
+            return cachedLatestConectedClient.socket().getPort();
         }
     }
 
@@ -271,6 +299,14 @@ public class Driver extends BaseHandler {
                 }
             }
 
+        }
+
+        public InetAddress getInetAddress() {
+            return this.socket.socket().getInetAddress();
+        }
+
+        public Integer getPort() {
+            return this.socket.socket().getPort();
         }
 
     }

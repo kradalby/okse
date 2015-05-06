@@ -142,7 +142,7 @@ public class WSNRequestParser implements Hub {
         if (foundRecipient) {
             log.debug("Have recipient service, sending to recipient object");
             returnMessage = recipient.acceptMessage(message);
-            log.debug("Recieved returnMessage from recipient object");
+            log.debug("Received returnMessage from recipient object");
         } else {
             log.debug("Looking for service to send to...");
             for (ServiceConnection s: _protocolServer.getServices()) {
