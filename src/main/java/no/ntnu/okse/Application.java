@@ -51,7 +51,7 @@ import java.util.Properties;
 public class Application {
 
     // Version
-    public static final String VERSION = "0.0.1a";
+    public static final String VERSION = "1.0.0";
 
     // Initialization time
     public static long startedAt = System.currentTimeMillis();
@@ -86,8 +86,8 @@ public class Application {
         // Init the logger
         log = Logger.getLogger(Application.class.getName());
 
+        // Create a file handler for database file
         File dbFile = new File("okse.db");
-
         if (!dbFile.exists()) {
             DB.initDB();
             log.info("okse.db initiated");
