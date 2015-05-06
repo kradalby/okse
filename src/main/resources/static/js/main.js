@@ -39,8 +39,12 @@ var Main = (function($) {
     //  Private variable for holding the interval used to update the panes
     var clickInterval
 
+
     // The base url, that appends to all ajax-requests
     var BASE_URL = "/api/"
+
+    // This variable holds the last known status of the protocol servers
+    var cachedProtocolPowerStatus
 
     /*
         Sets some default settings for every AJAX request, like the request url and data type.
@@ -89,32 +93,28 @@ var Main = (function($) {
 
     var bindButtons = function() {
         $('#protocol-power-button').on('click', function() {
-            Main.ajax({
-                url: 'main/protocols/power',
-                type: 'POST',
-                success: function(response) {
-                    /*
-                    if (response.power) {
-                        $.okseDebug.logPrint("[Debug][Main] Protocol servers are ON")
-                        if ($('#protocol-power-button').hasClass('btn-success')) {
-                            $('#protocol-power-button').removeClass('btn-success')
-                            $('#protocol-power-button').addClass('btn-danger')
-                            $('#protocol-power-button').text('Stop protocolservers')
+            if (cachedProtocolPowerStatus) {
+                if (confirm("Are you sure you want to shut down the protocol servers? This will remove all publishers and subscribers.")) {
+                    Main.ajax({
+                        url: 'main/protocols/power',
+                        type: 'POST',
+                        error: function(xhr, status, error) {
+                            Main.displayMessage("Unable to stop the protocol servers")
+                            Main.error(xhr, status, error)
                         }
-                    } else {
-                        $.okseDebug.logPrint("[Debug][Main] Protocols servers are OFF")
-                        if ($('#protocol-power-button').hasClass('btn-danger')) {
-                            $('#protocol-power-button').removeClass('btn-danger')
-                            $('#protocol-power-button').addClass('btn-success')
-                            $('#protocol-power-button').text('Start protocolservers')
-                        }
-                    }
-                    */
-                },
-                error: function(xhr, status, error) {
-
+                    });
                 }
-            });
+            } else {
+                Main.ajax({
+                    url: 'main/protocols/power',
+                    type: 'POST',
+                    error: function(xhr, status, error) {
+                        Main.displayMessage("Unable to start the protocol servers")
+                        Main.error(xhr, status, error)
+                    }
+                });
+            }
+
         });
     }
 
@@ -153,8 +153,8 @@ var Main = (function($) {
         return trHTML
     }
 
-    var updateProtocolPowerButton = function(status) {
-         if (status) {
+    var updateProtocolPowerButton = function() {
+         if (cachedProtocolPowerStatus) {
             if ($('#protocol-power-button').hasClass('btn-success')) {
                 $('#protocol-power-button').removeClass('btn-success')
                 $('#protocol-power-button').addClass('btn-danger')
@@ -182,7 +182,8 @@ var Main = (function($) {
             $('#protocolinfo-table').html('<tr class="danger"><td colspan="3"><h4 class="text-center">No protocols returned from CoreService</h4></td></tr>')
         }
 
-        updateProtocolPowerButton(response.protocolPower)
+        cachedProtocolPowerStatus = response.protocolPower
+        updateProtocolPowerButton()
     }
 
     // Updates the given class with a given text

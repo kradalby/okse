@@ -24,6 +24,7 @@
 
 package no.ntnu.okse.web.controller;
 
+import no.ntnu.okse.core.CoreService;
 import no.ntnu.okse.core.Utilities;
 import no.ntnu.okse.core.subscription.SubscriptionService;
 import no.ntnu.okse.core.topic.TopicService;
@@ -79,6 +80,7 @@ public class IndexViewController {
 
         SubscriptionService ss = SubscriptionService.getInstance();
         TopicService ts = TopicService.getInstance();
+        CoreService cs = CoreService.getInstance();
 
         long totalRam = Runtime.getRuntime().totalMemory();
         long freeRam = Runtime.getRuntime().freeMemory();
@@ -107,6 +109,7 @@ public class IndexViewController {
         });
 
         model.addAttribute("protocols", protocols);
+        model.addAttribute("protocolPower", cs.protocolServersBooted);
 
         return "fragments/indexLoggedIn";
 
