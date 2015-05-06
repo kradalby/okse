@@ -129,7 +129,7 @@ public class AMQProtocolServer extends AbstractProtocolServer {
             driver.listen(this.host, this.port);
             driver.run();
         } catch (IOException e) {
-            totalErrors++;
+            totalErrors.incrementAndGet();
             log.error("I/O exception during accept(): " + e.getMessage());
         }
     }
@@ -161,23 +161,23 @@ public class AMQProtocolServer extends AbstractProtocolServer {
     }
 
     public void incrementTotalMessagesSent() {
-        totalMessagesSent++;
+        totalMessagesSent.incrementAndGet();
     }
 
     public void incrementTotalMessagesReceived() {
-        totalMessagesReceived++;
+        totalMessagesReceived.incrementAndGet();
     }
 
     public void incrementTotalRequests() {
-        totalRequests++;
+        totalRequests.incrementAndGet();
     }
 
     public void incrementTotalBadRequest() {
-        totalBadRequests++;
+        totalBadRequests.incrementAndGet();
     }
 
     public void incrementTotalErrors() {
-        totalErrors++;
+        totalErrors.incrementAndGet();
     }
 
     private AMQPServer server;

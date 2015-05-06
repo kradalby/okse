@@ -291,7 +291,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
                 WSNotificationServer._running = true;
                 log.info("WSNServer Thread started successfully.");
             } catch (Exception e) {
-                totalErrors++;
+                totalErrors.incrementAndGet();
                 log.trace(e.getStackTrace());
             }
         }
@@ -307,7 +307,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
             WSNotificationServer.this._server.join();
 
         } catch (Exception serverError) {
-            totalErrors++;
+            totalErrors.incrementAndGet();
             log.trace(serverError.getStackTrace());
         }
     }
@@ -346,7 +346,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
             this._invoked = false;
             log.info("WSNServer Client and ServerThread stopped");
         } catch (Exception e) {
-            totalErrors++;
+            totalErrors.incrementAndGet();
             log.trace(e.getStackTrace());
         }
     }
@@ -364,7 +364,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
      * Support method to allow other classes in the wsn package to increment total messages received
      */
     protected void incrementTotalMessagesReceived() {
-        totalMessagesReceived++;
+        totalMessagesReceived.incrementAndGet();
     }
 
     /**
@@ -545,7 +545,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
             log.debug("HttpHandle invoked on target: " + target);
 
             // Do some stats.
-            totalRequests++;
+            totalRequests.incrementAndGet();
 
             boolean isChunked = false;
 
@@ -603,7 +603,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
             // Improper response from WSNRequestParser! FC WHAT DO?
             if (returnMessage == null) {
                 response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR_500);
-                totalErrors++;
+                totalErrors.incrementAndGet();
                 baseRequest.setHandled(true);
                 returnMessage = new InternalMessage(InternalMessage.STATUS_FAULT_INTERNAL_ERROR, null);
             }
@@ -626,7 +626,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
                     response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR_500);
                     outputStream.flush();
                     baseRequest.setHandled(true);
-                    totalErrors++;
+                    totalErrors.incrementAndGet();
 
                     return;
                 }
@@ -635,7 +635,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
                 if ((returnMessage.statusCode & InternalMessage.STATUS_FAULT_INVALID_DESTINATION) > 0) {
                     response.setStatus(HttpStatus.NOT_FOUND_404);
                     baseRequest.setHandled(true);
-                    totalBadRequests++;
+                    totalBadRequests.incrementAndGet();
 
                     return;
 
@@ -643,7 +643,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
                 } else if ((returnMessage.statusCode & InternalMessage.STATUS_FAULT_INTERNAL_ERROR) > 0) {
                     response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR_500);
                     baseRequest.setHandled(true);
-                    totalErrors++;
+                    totalErrors.incrementAndGet();
 
                     return;
 
@@ -651,7 +651,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
                 } else if ((returnMessage.statusCode & InternalMessage.STATUS_FAULT_INVALID_PAYLOAD) > 0) {
                     response.setStatus(HttpStatus.BAD_REQUEST_400);
                     baseRequest.setHandled(true);
-                    totalBadRequests++;
+                    totalBadRequests.incrementAndGet();
 
                     return;
 
@@ -659,7 +659,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
                 } else if ((returnMessage.statusCode & InternalMessage.STATUS_FAULT_ACCESS_NOT_ALLOWED) > 0) {
                     response.setStatus(HttpStatus.FORBIDDEN_403);
                     baseRequest.setHandled(true);
-                    totalBadRequests++;
+                    totalBadRequests.incrementAndGet();
 
                     return;
                 }
@@ -670,7 +670,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
                 */
                 response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR_500);
                 baseRequest.setHandled(true);
-                totalErrors++;
+                totalErrors.incrementAndGet();
 
                 // Check if we have status=OK and also we have a message
             } else if (((InternalMessage.STATUS_OK & returnMessage.statusCode) > 0) &&
@@ -682,7 +682,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
                     log.error("The HAS_RETURNING_MESSAGE flag was checked, but there was no returning message content");
                     response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR_500);
                     baseRequest.setHandled(true);
-                    totalErrors++;
+                    totalErrors.incrementAndGet();
 
                     return;
                 }
@@ -716,7 +716,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
 
                 response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR_500);
                 baseRequest.setHandled(true);
-                totalErrors++;
+                totalErrors.incrementAndGet();
 
             }
         }
@@ -731,7 +731,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
         /* If we have nowhere to send the message */
         if(endpoint == null){
             log.error("Endpoint reference not set");
-            totalErrors++;
+            totalErrors.incrementAndGet();
             return new InternalMessage(InternalMessage.STATUS_FAULT, null);
         }
 
@@ -748,7 +748,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
 
                 log.debug("Sending message without content to " + requestInformation.getEndpointReference());
                 ContentResponse response = request.send();
-                totalRequests++;
+                totalRequests.incrementAndGet();
 
                 return new InternalMessage(InternalMessage.STATUS_OK | InternalMessage.STATUS_HAS_MESSAGE, response.getContentAsString());
             /* Request with message */
@@ -769,7 +769,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
                     // Check if we should have had a message, but there was none
                     if(message.getMessage() == null){
                         log.error("No content was found to send");
-                        totalErrors++;
+                        totalErrors.incrementAndGet();
                         return new InternalMessage(InternalMessage.STATUS_FAULT | InternalMessage.STATUS_FAULT_INVALID_PAYLOAD, null);
                     }
 
@@ -778,12 +778,12 @@ public class WSNotificationServer extends AbstractProtocolServer {
                     request.content(new InputStreamContentProvider((InputStream) message.getMessage()), "application/soap+xml;charset/utf-8");
 
                     ContentResponse response = request.send();
-                    totalMessagesSent++;
+                    totalMessagesSent.incrementAndGet();
 
                     // Check what HTTP status we received, if is not A-OK, flag the internalmessage as fault
                     // and make the response content the message of the InternalMessage returned
                     if (response.getStatus() != HttpStatus.OK_200) {
-                        totalBadRequests++;
+                        totalBadRequests.incrementAndGet();
                         return new InternalMessage(InternalMessage.STATUS_FAULT | InternalMessage.STATUS_HAS_MESSAGE, response.getContentAsString());
                     } else {
                         return new InternalMessage(InternalMessage.STATUS_OK | InternalMessage.STATUS_HAS_MESSAGE, response.getContentAsString());
@@ -793,12 +793,12 @@ public class WSNotificationServer extends AbstractProtocolServer {
         } catch(ClassCastException e) {
             log.error("sendMessage(): The message contained something else than an inputStream." +
                     "Please convert your message to an InputStream before calling this method.");
-            totalErrors++;
+            totalErrors.incrementAndGet();
 
             return new InternalMessage(InternalMessage.STATUS_FAULT | InternalMessage.STATUS_FAULT_INVALID_PAYLOAD, null);
 
         } catch(Exception e) {
-            totalErrors++;
+            totalErrors.incrementAndGet();
             log.error("sendMessage(): Unable to establish connection: " + e.getMessage());
             return new InternalMessage(InternalMessage.STATUS_FAULT_INTERNAL_ERROR, null);
         }

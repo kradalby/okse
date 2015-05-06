@@ -107,10 +107,6 @@ public class AMQPServer extends BaseHandler {
         return String.format("%s", tag++).getBytes();
     }
 
-//    private int send(String address) {
-//        return send(address, null);
-//    }
-
     /**
      * Send a AMQP message with address and sender.
      * If sender is null, the sender will be chosen
@@ -126,6 +122,9 @@ public class AMQPServer extends BaseHandler {
             if (snd == null) {
                 return 0;
             }
+            // Queue based sending will have an initial snd == null, meaning that it is not a sub
+            // and it is a message that is to be sent. Incrementing total sent here.
+            AMQProtocolServer.getInstance().incrementTotalMessagesSent();
         }
         log.debug("Fetched this sender: " + snd.toString());
 
@@ -143,7 +142,6 @@ public class AMQPServer extends BaseHandler {
             count++;
         }
 
-        AMQProtocolServer.getInstance().incrementTotalMessagesSent();
         return count;
     }
 
@@ -358,7 +356,7 @@ public class AMQPServer extends BaseHandler {
                 message.setOriginProtocol(AMQProtocolServer.getInstance().getProtocolServerType());
 
                 MessageService.getInstance().distributeMessage(message);
-                AMQProtocolServer.getInstance().incrementTotalMessagesReceived();
+
                 log.debug(String.format("Got and distributed message(%s): %s from %s", address.getName(), message, rcv.toString()));
 
                 AMQProtocolServer.getInstance().incrementTotalMessagesReceived();

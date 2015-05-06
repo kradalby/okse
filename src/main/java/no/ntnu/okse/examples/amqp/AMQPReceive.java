@@ -71,7 +71,7 @@ public class AMQPReceive {
             }
         }
         if (addrs.size() == 0) {
-            addrs.add("amqp://78.91.2.238/bang");
+            addrs.add("amqp://localhost/bang");
         }
     }
 
