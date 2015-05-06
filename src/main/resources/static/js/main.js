@@ -109,12 +109,30 @@ var Main = (function($) {
         $('#cpuCores').html(statistics.cpuAvailable)
     }
 
+    var refreshProtocolsTable = function(protocols) {
+        var trHTML = '';
+        $.each(protocols, function (i, protocol) {
+            trHTML +=
+                '<tr>' +
+                    '<td>' + protocol.type + '</td>' +
+                    '<td>' + protocol.host + '</td>' +
+                    '<td>' + protcol.port + '</td>' +
+                '</tr>';
+        });
+        return trHTML
+    }
+
     var refresh = function(response) {
         refreshElementByClassWithText('.totalSubscribers', response.subscribers)
         refreshElementByClassWithText('.totalPublishers', response.publishers)
         refreshElementByClassWithText('.totalTopics', response.topics)
         $('#uptime').html(response.uptime)
         refreshRuntimeStatistics(response.runtimeStatistics)
+        if (response.protocols.length != 0) {
+            $('#protocolinfo-table').html(refreshProtocolsTable(response.protocols))
+        } else {
+            $('#protocolinfo-table').html('<tr class="danger"><td colspan="3"><h4 class="text-center">No protocols returned from CoreService</h4></td></tr>')
+        }
     }
 
     // Updates the given class with a given text

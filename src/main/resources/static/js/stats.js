@@ -64,8 +64,14 @@ var Stats = (function($) {
 
     return {
         refresh: function(data) {
-            var table = createTableForAllProtocols(data.protocolServerStatistics)
-            $('#protocol-table').html(table)
+
+            if (data.protocolServerStatistics.length != 0) {
+                var table = createTableForAllProtocols(data.protocolServerStatistics)
+                $('#protocol-table').html(table)
+
+            } else {
+                $('#protocol-table').html('<tr class="danger"><td colspan="6"><h4 class="text-center">No protocols returned from CoreService</h4></td></tr>')
+            }
 
             refreshCoreServiceStatistics(data.coreServiceStatistics)
         }

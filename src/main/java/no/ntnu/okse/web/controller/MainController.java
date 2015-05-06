@@ -33,7 +33,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.lang.String;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * Created by Håkon Ødegård Løvdal (hakloev) on 25/02/15.
@@ -71,10 +73,19 @@ public class MainController {
                 put("freeRam", freeRam / MB);
                 put("usedRam", (totalRam - freeRam) / MB);
             }});
+            // Protocol information
+            ArrayList<HashMap<String, Object>> protocols = new ArrayList<>();
+            Application.cs.getAllProtocolServers().forEach(p -> {
+                protocols.add(new HashMap<String, Object>(){{
+                    put("host", p.getHost());
+                    put("port", p.getPort());
+                    put("type", p.getProtocolServerType());
+                }});
+            });
+            put("protocols", protocols);
         }};
 
         return result;
     }
-
 
 }

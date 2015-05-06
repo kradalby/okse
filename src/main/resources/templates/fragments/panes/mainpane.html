@@ -54,7 +54,7 @@
                                     <th>Port</th>
                                 </tr>
                                 </thead>
-                                <tbody>
+                                <tbody id="protocolinfo-table">
                                 <tr th:each="protocolInfo : ${protocols}">
                                     <td th:text="${protocolInfo.type}">Unknown</td>
                                     <td th:text="${protocolInfo.host}">Unknown</td>
