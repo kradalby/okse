@@ -285,7 +285,7 @@ public class Driver extends BaseHandler {
         }
 
         /**
-         *
+         * Handles connection to the server
          */
         public void selected() {
             if (!key.isValid()) { return; }
@@ -362,9 +362,9 @@ public class Driver extends BaseHandler {
     }
 
     /**
-     *
+     * Binds transport to the given connection
      * @param conn
-     * @return
+     * @return Transport
      */
     private static Transport makeTransport(Connection conn) {
         Transport transport = Transport.Factory.create();
@@ -379,7 +379,7 @@ public class Driver extends BaseHandler {
 
     private class Connector extends ChannelHandler {
         /**
-         * 
+         *
          * @param conn
          * @throws IOException
          */
