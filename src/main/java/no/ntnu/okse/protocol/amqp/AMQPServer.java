@@ -51,6 +51,11 @@ import java.util.concurrent.LinkedBlockingQueue;
  */
 public class AMQPServer extends BaseHandler {
 
+    /**
+     * Internal message queue for AMQP.
+     * Basically one Deque with bytes for each
+     * Queue/Topic
+     */
     private class MessageStore {
 
         Map<String,Deque<MessageBytes>> messages = new HashMap<String,Deque<MessageBytes>>();
@@ -92,6 +97,10 @@ public class AMQPServer extends BaseHandler {
         queue = new LinkedBlockingQueue<>();
     }
 
+    /**
+     * Get the tag for the next message as a byte array.
+     * @return byte[]
+     */
     private byte[] nextTag() {
         return String.format("%s", tag++).getBytes();
     }
@@ -100,6 +109,14 @@ public class AMQPServer extends BaseHandler {
 //        return send(address, null);
 //    }
 
+    /**
+     * Send a AMQP message with address and sender.
+     * If sender is null, the sender will be chosen
+     * at random from the queue for this address
+     * @param address / topic / queue
+     * @param snd Sender object or null
+     * @return int of sent bytes
+     */
     private int send(String address, Sender snd) {
         if (snd == null) {
             SubscriptionHandler.Routes<Sender> routes = subscriptionHandler.getOutgoing(address);
@@ -131,6 +148,14 @@ public class AMQPServer extends BaseHandler {
         return count;
     }
 
+    /**
+     * Send an AMQP message to the given address,
+     * this method will choose either use Topic
+     * or Queue based on the configuration of
+     * OKSE.
+     * @param address / topic / queue
+     * @return int of bytes sent
+     */
     private int send(String address) {
         int count = 0;
 
@@ -170,6 +195,10 @@ public class AMQPServer extends BaseHandler {
         return count;
     }
 
+    /**
+     * Convert a OKSE message to AMQP and add it the the message queue.
+     * @param message
+     */
     public void addMessageToQueue(no.ntnu.okse.core.messaging.Message message) {
         Message msg = convertOkseMessageToAMQP(message);
 
@@ -187,6 +216,12 @@ public class AMQPServer extends BaseHandler {
 
     }
 
+    /**
+     * Convert a AMQP message object to a MessageBytes Object.
+     * MessageBytes is basically a wrapper around a byte array.
+     * @param msg
+     * @return MessageBytes object
+     */
     public static MessageBytes convertAMQPMessageToMessageBytes(Message msg) {
 
 
@@ -197,6 +232,12 @@ public class AMQPServer extends BaseHandler {
         return mb;
     }
 
+    /**
+     * Get an AMQP message as a byte array.
+     * This method uses qualified guessing to achieve its goal.
+     * @param msg
+     * @return byte[]
+     */
     private static byte[] gestimateMessageByteSize(Message msg) {
 
         int guestimateByteSize = 0;
@@ -225,6 +266,11 @@ public class AMQPServer extends BaseHandler {
         return buffer;
     }
 
+    /**
+     * Convert a OKSE message to a AMQP Message.
+     * @param message
+     * @return AMQP message
+     */
     public static Message convertOkseMessageToAMQP(no.ntnu.okse.core.messaging.Message message) {
         Message msg = Message.Factory.create();
 
@@ -236,6 +282,9 @@ public class AMQPServer extends BaseHandler {
         return msg;
     }
 
+    /**
+     * Send the messages that are ready to go out.
+     */
     public void sendNextMessagesInQueue() {
         try {
             if (queue.size() > 0) {
@@ -261,6 +310,14 @@ public class AMQPServer extends BaseHandler {
         }
     }
 
+    /**
+     * onDelviery is triggered when the AMQP socket receives
+     * a message. When the message is received it will create
+     * a OKSE message and pass it into the MessageService.
+     * It will also add AMQP messages back into the
+     * internal AMQP queue to generate less overhead.
+     * @param event
+     */
     @Override
     public void onDelivery(Event event) {
         log.debug("Received AMQP message");
