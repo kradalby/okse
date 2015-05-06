@@ -452,6 +452,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         // Initialize topicContent and requestDialect and contentFilters
         String rawTopicContent = null;
         String requestDialect = null;
+        boolean topicExpressionIsXpath = false;
         ArrayList<String> contentFilters = new ArrayList<>();
 
         if (filters != null) {
@@ -488,6 +489,13 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
                             // List and add the dialect of the expression type
                             log.debug("Dialect: " + type.getDialect());
                             requestDialect = type.getDialect();
+
+                            // Check if dialect was XPATH, then we need to update the flag and add as filter
+                            // Since we cannot guarantee a single topic resolvement
+                            if (requestDialect.equalsIgnoreCase(WSNTools._XpathTopicExpression)) {
+                                topicExpressionIsXpath = true;
+                            }
+
                             // Do we have a MessageContent filter (XPATH)
                         } else if (filter.getValue() instanceof org.oasis_open.docs.wsn.b_2.QueryExpressionType) {
                             // Cast to proper type
@@ -497,6 +505,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
                                 log.debug("Content: " + p.toString());
                                 contentFilters.add(p.toString());
                             });
+                            requestDialect = type.getDialect();
                             // What XPATH dialect (or potentially other non-supported) was provided
                             log.debug("Dialect: " + type.getDialect());
                         }
@@ -577,8 +586,14 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         /* Prepare needed information for OKSE Subscriber object */
 
         if (rawTopicContent != null) {
+            // If the expression is XPATH, we cannot resolve to a single topic, hence add as filter
+            // And set topic reference to null
+            if (topicExpressionIsXpath) {
+                contentFilters.add(rawTopicContent);
+                rawTopicContent = null;
+            }
             // Check if the topic contains wildcards, dots or double separators
-            if (rawTopicContent.contains("*") || rawTopicContent.contains("//") ||
+            else if (rawTopicContent.contains("*") || rawTopicContent.contains("//") ||
                     rawTopicContent.contains("//.") || rawTopicContent.contains("/.")) {
                 log.debug("Topic expression contained XPATH or FullTopic wildcards or selectors, resetting topic and adding as filter");
                 contentFilters.add(rawTopicContent);

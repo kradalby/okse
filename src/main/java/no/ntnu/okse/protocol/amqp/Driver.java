@@ -39,9 +39,11 @@ import org.apache.qpid.proton.engine.TransportException;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
+import java.util.Iterator;
 
 /**
  * Most of this code is from the qpid-proton-demo (https://github.com/rhs/qpid-proton-demo) by Rafael Schloming
@@ -53,6 +55,7 @@ public class Driver extends BaseHandler {
     final private Handler[] handlers;
     final private Selector selector;
     private static Logger log;
+    private boolean _running;
     private Acceptor acceptor;
 
     public Driver(Collector collector, Handler ... handlers) throws IOException {
@@ -63,6 +66,7 @@ public class Driver extends BaseHandler {
     }
 
     public void listen(String host, int port) throws IOException {
+        //new Acceptor(host, port);
         acceptor = new Acceptor(host, port);
     }
 
@@ -75,6 +79,9 @@ public class Driver extends BaseHandler {
     }
 
     public void run() throws IOException {
+        if (!_running) {
+            _running = true;
+        }
         while (true) {
 
             for (Handler h : handlers) {
@@ -94,22 +101,32 @@ public class Driver extends BaseHandler {
             // cancelled keys remaining.
             selector.selectNow();
             if (selector.keys().isEmpty()) {
+                log.info("No sockets open - closing the selector");
                 selector.close();
                 return;
             }
 
             selector.selectedKeys().clear();
             selector.select();
-
             for (SelectionKey key : selector.selectedKeys()) {
                 Selectable selectable = (Selectable) key.attachment();
                 selectable.selected();
             }
+
+            if (!_running) {
+                Iterator keys = selector.keys().iterator();
+                while (keys.hasNext()) {
+                    SelectionKey key = (SelectionKey) keys.next();
+                    key.cancel();
+                    key.channel().close();
+                }
+            }
+
         }
     }
 
     public void processEvents() {
-        while (true) {
+        while (_running) {
             Event ev = collector.peek();
             if (ev == null) break;
             log.debug("Dispatching event of type: " + ev.getType().name());
@@ -122,6 +139,12 @@ public class Driver extends BaseHandler {
             }
             collector.pop();
         }
+    }
+
+    //Driver.stop() method, for stoping the driver and closing the socket
+    public void stop() {
+        _running = false;
+        selector.wakeup();
     }
 
     @Override

@@ -148,11 +148,8 @@ public class WSNotificationServer extends AbstractProtocolServer {
 
     /**
      * Factory method providing an instance of WSNotificationServer, adhering to the
-     * singleton pattern. (Using default port from config file.
-     *
-     * <p>Note: This factory method will ignore the port argument if an instance is already
-     * running. In that case, one must stop the WSNServer instance and invoke it again to
-     * specify a different port.</p>
+     * singleton pattern. This method allows overriding of host and port defined in the
+     * config file.
      *
      * @param host A string representing the hostname the server should bind to
      * @param port An integer representing the port WSNServer should bind to.
@@ -544,6 +541,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
 
             log.debug("Checking headers...");
 
+            // Check the request headers, check for chunked encoding
             while(headerNames.hasMoreElements()) {
                 String outMessage = (String)headerNames.nextElement();
                 Enumeration returnMessage = request.getHeaders(outMessage);
@@ -570,6 +568,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
 
             log.debug("WSNInternalMessage: " + outgoingMessage);
 
+            // Update the request information object
             outgoingMessage.getRequestInformation().setEndpointReference(request.getRemoteHost());
             outgoingMessage.getRequestInformation().setRequestURL(request.getRequestURI());
             outgoingMessage.getRequestInformation().setParameters(request.getParameterMap());
