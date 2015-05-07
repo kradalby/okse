@@ -28,6 +28,7 @@ import no.ntnu.okse.core.CoreService;
 import no.ntnu.okse.core.Utilities;
 import no.ntnu.okse.core.subscription.SubscriptionService;
 import no.ntnu.okse.core.topic.TopicService;
+import no.ntnu.okse.protocol.amqp.AMQProtocolServer;
 import org.springframework.beans.factory.annotation.Value;
 import no.ntnu.okse.Application;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -92,11 +93,13 @@ public class IndexViewController {
         model.addAttribute("subscribers", ss.getNumberOfSubscribers());
         model.addAttribute("publishers", ss.getNumberOfPublishers());
         model.addAttribute("topics", ts.getTotalNumberOfTopics());
+        model.addAttribute("totalMessages", cs.getTotalMessagesSentFromProtocolServers());
         model.addAttribute("uptime", Utilities.getDurationAsISO8601(Application.getRunningTime()));
         model.addAttribute("cpuCores", Runtime.getRuntime().availableProcessors());
         model.addAttribute("totalRam", totalRam / MainController.MB);
         model.addAttribute("freeRam", freeRam / MainController.MB);
         model.addAttribute("usedRam", (totalRam - freeRam) / MainController.MB);
+        model.addAttribute("useQueue", AMQProtocolServer.getInstance().useQueue);
 
         ArrayList<HashMap<String, Object>> protocols = new ArrayList<>();
 

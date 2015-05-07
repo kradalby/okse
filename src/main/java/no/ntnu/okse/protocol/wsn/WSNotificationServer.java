@@ -29,6 +29,9 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Properties;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import com.google.common.io.ByteStreams;
@@ -81,14 +84,16 @@ public class WSNotificationServer extends AbstractProtocolServer {
     private static final String DEFAULT_HOST = "0.0.0.0";
     private static final int DEFAULT_PORT = 61000;
     private static final Long DEFAULT_CONNECTION_TIMEOUT = 5L;
+    private static final Integer DEFAULT_HTTP_CLIENT_DISPATCHER_POOL_SIZE = 50;
 
     // Flag and defaults for operation behind NAT
     private static boolean behindNAT = false;
     private static String publicWANHost = "0.0.0.0";
     private static Integer publicWANPort = 61000;
 
-    // HTTP Client connection timeout
+    // HTTP Client fields
     private static Long connectionTimeout = DEFAULT_CONNECTION_TIMEOUT;
+    private static Integer clientPoolSize = DEFAULT_HTTP_CLIENT_DISPATCHER_POOL_SIZE;
 
     // The singleton containing the WSNotificationServer instance
     private static WSNotificationServer _singleton;
@@ -101,6 +106,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
     private HttpClient _client;
     private HttpHandler _handler;
     private HashSet<ServiceConnection> _services;
+    private ExecutorService clientPool;
 
     /**
      * Empty constructor, uses internal defaults or provided from config file
@@ -175,12 +181,19 @@ public class WSNotificationServer extends AbstractProtocolServer {
 
         // Declare HttpClient field
         _client = null;
+        clientPool = Executors.newFixedThreadPool(clientPoolSize);
 
         // Attempt to fetch connection timeout from settings, otherwise use 5 seconds as default
         try {
             connectionTimeout = Long.parseLong(Application.config.getProperty("WSN_CONNECTION_TIMEOUT", connectionTimeout.toString()));
         } catch (NumberFormatException e) {
             log.error("Failed to parse WSN Connection Timeout, using default: " + connectionTimeout);
+        }
+        // Attempt to fetch the HTTP Client pool size from settings, otherwise use default
+        try {
+            clientPoolSize = Integer.parseInt(Application.config.getProperty("WSN_POOL_SIZE", Integer.toString(DEFAULT_HTTP_CLIENT_DISPATCHER_POOL_SIZE)));
+        } catch (NumberFormatException e) {
+            log.error("Failed to parse WSN Client pool size from config file! Using default: " + DEFAULT_HTTP_CLIENT_DISPATCHER_POOL_SIZE);
         }
 
         // If we have host or port provided, set them, otherwise use internal defaults
@@ -458,8 +471,8 @@ public class WSNotificationServer extends AbstractProtocolServer {
                         outMessage.setMessage(content);
                     }
 
-                    // Pass it along to the requestparser
-                    CoreService.getInstance().execute(() -> _requestParser.acceptLocalMessage(outMessage));
+                    // Pass it along to the request parser wrapped as a thread pool executed job
+                    clientPool.execute(() -> _requestParser.acceptLocalMessage(outMessage));
                 }
             }
         } else {

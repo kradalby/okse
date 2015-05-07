@@ -135,6 +135,23 @@ var Config = (function($) {
                     });
                 }
             });
+
+            $('#AMQP-topic-config').on('click', function(e) {
+                e.preventDefault()
+                Main.ajax({
+                    url: 'config/mapping/queue/change',
+                    type: 'POST',
+                    success: function(data) {
+                        $.okseDebug.logPrint("[DEBUG][Config] Callback from server; AMQP queue value changed")
+                        $.okseDebug.logPrint("Value is now" + data.value)
+                        $(e.target).prop('checked', data.value)
+                    },
+                    error: function(xhr, status, error) {
+                        Main.displayMessage('The broker were unable to change AMQP queue value')
+                        Main.error(xhr, status, error)
+                    }
+                })
+            });
         }
     }
 

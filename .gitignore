@@ -75,6 +75,5 @@ okse.db
 #OKSE
 logs/
 *.log
-logs/
 config/
 

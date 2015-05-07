@@ -8,25 +8,38 @@
 <th:block layout:fragment="mainpane">
 <div class="tab-pane active" id="main">
     <div class="row">
-        <div class="col-md-12 text-right">
-            <a th:if="!${protocolPower}" class="btn btn-success" id="protocol-power-button">Start protocolservers</a>
-            <a th:if="${protocolPower}" class="btn btn-danger" id="protocol-power-button">Stop protocolservers</a>
-        </div>
-    </div>
-    <div class="row row-top-spacing">
         <div class="col-md-4">
-            <div class="panel panel-info">
-                <!-- Default panel contents -->
-                <div class="panel-heading">Status</div>
-                <!-- <div class="panel-body"></div> -->
-                <!-- List group -->
-                <ul class="list-group">
-                    <li class="list-group-item"><strong>Broker: </strong><span th:text="${projectName}">Unknown</span></li>
-                    <li class="list-group-item"><strong>Uptime: </strong><span id="uptime" th:text="${uptime}">Unknown</span></li>
-                    <li class="list-group-item"><strong>Topics: </strong><span class="totalTopics" th:text="${topics}">Unknown</span></li>
-                    <li class="list-group-item"><strong>Subscribers: </strong><span class="totalSubscribers" th:text="${subscribers}">Unknown</span></li>
-                    <li class="list-group-item"><strong>Publishers: </strong><span class="totalPublishers" th:text="${publishers}">Unknown</span></li>
-                </ul>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="panel panel-info">
+                        <!-- Default panel contents -->
+                        <div class="panel-heading">Status</div>
+                        <!-- <div class="panel-body"></div> -->
+                        <!-- List group -->
+                        <ul class="list-group">
+                            <li class="list-group-item"><strong>Broker: </strong><span th:text="${projectName}">Unknown</span></li>
+                            <li class="list-group-item"><strong>Uptime: </strong><span id="uptime" th:text="${uptime}">Unknown</span></li>
+                            <li class="list-group-item"><strong>Messages sent: </strong><span class="totalMessages" th:text="${totalMessages}">Unknown</span></li>
+                            <li class="list-group-item"><strong>Topics: </strong><span class="totalTopics" th:text="${topics}">Unknown</span></li>
+                            <li class="list-group-item"><strong>Subscribers: </strong><span class="totalSubscribers" th:text="${subscribers}">Unknown</span></li>
+                            <li class="list-group-item"><strong>Publishers: </strong><span class="totalPublishers" th:text="${publishers}">Unknown</span></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-12">
+                    <div class="panel panel-info">
+                        <!-- Default panel contents -->
+                        <div class="panel-heading">System</div>
+                        <!-- <div class="panel-body"></div> -->
+                        <!-- List group -->
+                        <ul class="list-group">
+                            <li class="list-group-item"><strong>CPU cores: </strong><span id="cpuCores" th:text="${cpuCores}">0</span></li>
+                            <li class="list-group-item"><strong>Total RAM: </strong><span id="totalRam" th:text="${totalRam}">0</span> MB</li>
+                            <li class="list-group-item"><strong>Free RAM: </strong><span id="freeRam" th:text="${freeRam}">0</span> MB</li>
+                            <li class="list-group-item"><strong>Used RAM: </strong><span id="usedRam" th:text="${usedRam}">0</span> MB</li>
+                        </ul>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="col-md-4">
@@ -46,7 +59,16 @@
             <div class="row">
                 <div class="col-md-12">
                     <div class="panel panel-info">
-                        <div class="panel-heading">Interfaces</div>
+                        <div class="panel-heading">
+                            <div class="btn-group pull-right">
+                                <div class="btn-group">
+                                    <a th:if="!${protocolPower}" class="btn btn-sm btn-success" id="protocol-power-button">Start protocolservers</a>
+                                    <a th:if="${protocolPower}" class="btn btn-sm btn-danger" id="protocol-power-button">Stop protocolservers</a>
+                                </div>
+                            </div>
+                            Interfaces
+                            <div class="clearfix"></div>
+                        </div>
                         <div class="panel-body">
                             <p>The admin console is bound to <strong><span th:text="${serverHost}">*.*.*.*</span><span th:text="':' + ${serverPort}">:----</span></strong></p>
                             <p>See below for protocol specific ports.</p>
@@ -76,20 +98,6 @@
                                 </tbody>
                             </table>
                         </div>
-                    </div>
-                </div>
-                <div class="col-md-12">
-                    <div class="panel panel-info">
-                        <!-- Default panel contents -->
-                        <div class="panel-heading">System</div>
-                        <!-- <div class="panel-body"></div> -->
-                        <!-- List group -->
-                        <ul class="list-group">
-                            <li class="list-group-item"><strong>CPU cores: </strong><span id="cpuCores" th:text="${cpuCores}">0</span></li>
-                            <li class="list-group-item"><strong>Total RAM: </strong><span id="totalRam" th:text="${totalRam}">0</span> MB</li>
-                            <li class="list-group-item"><strong>Free RAM: </strong><span id="freeRam" th:text="${freeRam}">0</span> MB</li>
-                            <li class="list-group-item"><strong>Used RAM: </strong><span id="usedRam" th:text="${usedRam}">0</span> MB</li>
-                        </ul>
                     </div>
                 </div>
             </div>
