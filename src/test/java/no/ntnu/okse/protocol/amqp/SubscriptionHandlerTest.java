@@ -31,6 +31,8 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import java.util.EnumSet;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static org.testng.Assert.*;
 
@@ -257,6 +259,8 @@ public class SubscriptionHandlerTest {
             }
         };
 
+         
+
     }
 
     @Test
@@ -264,18 +268,21 @@ public class SubscriptionHandlerTest {
         Source source = new Source() {
             @Override
             public String getAddress() {
-                return null;
+                return "address";
             }
         };
+        assertEquals("address", source.getAddress());
     }
 
     @Test
     public void testGetOutgoing() throws Exception {
+        Map<String,SubscriptionHandler.Routes<Sender>> outgoing = new ConcurrentHashMap<String,SubscriptionHandler.Routes<Sender>>();
 
     }
 
     @Test
     public void testGetIncomming() throws Exception {
+        Map<String,SubscriptionHandler.Routes<Receiver>> incoming = new ConcurrentHashMap<String,SubscriptionHandler.Routes<Receiver>>();
 
     }
 
