@@ -102,7 +102,7 @@ public class Subscriber {
      * @return True if it is valid, false otherwise
      */
     private boolean checkPort(Integer port) {
-        return (port > 0 || port < 65535);
+        return (port > 0 && port < 65536);
     }
 
     /**
@@ -183,7 +183,7 @@ public class Subscriber {
      * @return True if timeout is null, false otherwise
      */
     public boolean shouldExpire() {
-        if (timeout == null) return true;
+        if (timeout != null) return true;
         return false;
     }
 
@@ -218,7 +218,7 @@ public class Subscriber {
      * @return True if this subscriber should expire and has expired
      */
     public boolean hasExpired() {
-        return shouldExpire() && (timeout < System.currentTimeMillis());
+        return shouldExpire() && timeout < System.currentTimeMillis();
     }
 
     /**
