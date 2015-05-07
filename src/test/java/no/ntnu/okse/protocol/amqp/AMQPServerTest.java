@@ -63,7 +63,6 @@ public class AMQPServerTest {
         ps.stopServer();
     }
 
-
     @Test
     public void testConvertAMQPMessageToMessageBytes() throws Exception {
         String message = "Hei på test";
@@ -111,6 +110,7 @@ public class AMQPServerTest {
         String address3 = "127.0.0.1:61050/test";
         String address4 = "test";
         String address5 = "m.fest.no:6666/test";
+        String address6 = "test/test";
 
         Delivery dlv = new Delivery() {
             @Override
@@ -419,6 +419,7 @@ public class AMQPServerTest {
         assertEquals(AMQPServer.createAddress(address3, dlv).getName(), topic);
         assertEquals(AMQPServer.createAddress(address4, dlv).getName(), topic);
         assertEquals(AMQPServer.createAddress(address5, dlv).getName(), topic);
+        assertEquals(AMQPServer.createAddress(address6, dlv).getName(), topic);
     }
 
     @Test
@@ -447,41 +448,56 @@ public class AMQPServerTest {
 
 //    @Test
 //    public void testSendRecieveAMQPMessagesWhenQueueIsUsed() throws Exception {
-//        AMQProtocolServer.getInstance().useQueue = true;
-//        if (AMQProtocolServer.getInstance().useQueue) {
-//            String message = "Megatest";
-//            String topic = "test/test";
-//            int numberOfMessages = 5;
+//        Thread.sleep(1000);
+//        System.out.println(ps.getDriver());
+//        AMQProtocolServer psTest = AMQProtocolServer.getInstance("localhost", 63660);
+//        psTest.boot();
+//        Thread.sleep(1000);
+//        System.out.println(psTest.getPort());
+//        System.out.println(psTest.getDriver());
+//        psTest.useQueue = true;
+////        if (AMQProtocolServer.getInstance().useQueue) {
+//        String message = "Megatest";
+//        String topic = "test/test";
+//        int numberOfMessages = 5;
 //
-//            Messenger sendMessenger = Messenger.Factory.create();
-//            sendMessenger.start();
-//            org.apache.qpid.proton.message.Message msg = org.apache.qpid.proton.message.Message.Factory.create();
+//        System.out.println(1);
 //
-//            msg.setAddress(AMQProtocolServer.getInstance().getHost() + ":" + AMQProtocolServer.getInstance().getPort() + "/" + topic);
-//            msg.setBody(new AmqpValue(message));
+//        Messenger sendMessenger = Messenger.Factory.create();
+//        sendMessenger.start();
+//        org.apache.qpid.proton.message.Message msg = org.apache.qpid.proton.message.Message.Factory.create();
 //
-//            for (int i = 0; i < numberOfMessages; i++) {
-//                sendMessenger.put(msg);
-//                sendMessenger.send();
-//                Thread.sleep(50);
-//            }
+//        System.out.println(2);
 //
-//            sendMessenger.stop();
+//        msg.setAddress(psTest.getHost() + ":" + psTest.getPort() + "/" + topic);
+//        msg.setBody(new AmqpValue(message));
 //
-//            ArrayList<org.apache.qpid.proton.message.Message> in = new ArrayList<>();
+//        System.out.println(3);
 //
-//            Messenger receiveMessenger = Messenger.Factory.create();
-//            receiveMessenger.start();
-//            receiveMessenger.subscribe(AMQProtocolServer.getInstance().getHost() + ":" + AMQProtocolServer.getInstance().getPort() + "/" + topic);
-//
-//            receiveMessenger.recv(numberOfMessages);
-//            while (receiveMessenger.incoming() > 0) {
-//                System.out.println("derp");
-//                msg = receiveMessenger.get();
-//                in.add(msg);
-//            }
-//
-//            assertEquals(numberOfMessages, in.size());
+//        for (int i = 0; i < numberOfMessages; i++) {
+//            sendMessenger.put(msg);
+//            sendMessenger.send();
+//            Thread.sleep(0);
 //        }
+//        System.out.println(4);
+//        sendMessenger.stop();
+//        System.out.println(5);
+//        ArrayList<org.apache.qpid.proton.message.Message> in = new ArrayList<>();
+//
+//        Messenger receiveMessenger = Messenger.Factory.create();
+//        receiveMessenger.start();
+//        receiveMessenger.subscribe(psTest.getHost() + ":" + psTest.getPort() + "/" + topic);
+//        System.out.println(6);
+//        receiveMessenger.recv(numberOfMessages);
+//        System.out.println(7);
+//        while (receiveMessenger.incoming() > 0) {
+//            msg = receiveMessenger.get();
+//            in.add(msg);
+//        }
+//        System.out.println(8);
+//
+//        assertEquals(numberOfMessages, in.size());
+////        }
 //    }
+
 }
