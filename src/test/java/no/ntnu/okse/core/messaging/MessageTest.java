@@ -30,9 +30,11 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import java.time.LocalDateTime;
+import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.concurrent.TimeUnit;
 
 import static org.testng.Assert.*;
 
@@ -110,7 +112,7 @@ public class MessageTest {
     @Test
     public void testGetCreationTime() throws Exception {
         assertTrue(m.getCreationTime() instanceof LocalDateTime);
-        assertTrue(m.getCreationTime().isBefore(LocalDateTime.now()));
+        assertTrue(m.getCreationTime().isBefore(LocalDateTime.now().plusSeconds(1)));
     }
 
     @Test
