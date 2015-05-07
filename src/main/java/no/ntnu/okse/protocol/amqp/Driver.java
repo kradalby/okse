@@ -44,7 +44,7 @@ import java.nio.channels.*;
 import java.util.Iterator;
 
 /**
- * Most of this code is from the qpid-proton-demo (https://github.com/rhs/qpid-proton-demo) by Rafael Schloming
+ * This code is a heavily modified version of the qpid-proton-demo (https://github.com/rhs/qpid-proton-demo) by Rafael Schloming
  * Created by kradalby on 24/04/15.
  */
 public class Driver extends BaseHandler {
@@ -57,12 +57,6 @@ public class Driver extends BaseHandler {
     private Acceptor acceptor;
 
 
-    /**
-     *
-     * @param collector
-     * @param handlers
-     * @throws IOException
-     */
     public Driver(Collector collector, Handler ... handlers) throws IOException {
         this.collector = collector;
         this.handlers = handlers;
@@ -71,9 +65,9 @@ public class Driver extends BaseHandler {
     }
 
     /**
-     *
-     * @param host Client host address
-     * @param port Client port
+     * Create a listening acceptor.
+     * @param host
+     * @param port
      * @throws IOException
      */
     public void listen(String host, int port) throws IOException {
@@ -98,7 +92,8 @@ public class Driver extends BaseHandler {
     }
 
     /**
-     *
+     * The main event loop of the AMQP implementation,
+     * fetches and processes events.
      * @throws IOException
      */
     public void run() throws IOException {
@@ -168,7 +163,10 @@ public class Driver extends BaseHandler {
         }
     }
 
-    //Driver.stop() method, for stoping the driver and closing the socket
+
+    /**
+     * For stopping the driver and closing the socket.
+     */
     public void stop() {
         _running = false;
         selector.wakeup();
@@ -181,10 +179,6 @@ public class Driver extends BaseHandler {
         ch.selected();
     }
 
-    /**
-     *
-     * @param evt
-     */
     @Override
     public void onConnectionLocalOpen(Event evt) {
         Connection conn = evt.getConnection();
@@ -209,12 +203,6 @@ public class Driver extends BaseHandler {
         final private SelectionKey key;
         private SocketChannel cachedLatestConnectedClient;
 
-        /**
-         *
-         * @param host
-         * @param port
-         * @throws IOException
-         */
         Acceptor(String host, int port) throws IOException {
             socket = ServerSocketChannel.open();
             socket.configureBlocking(false);
@@ -223,10 +211,6 @@ public class Driver extends BaseHandler {
             key = socket.register(selector, SelectionKey.OP_ACCEPT, this);
         }
 
-        /**
-         *
-         * @throws IOException
-         */
         public void selected() throws IOException {
             SocketChannel sock = socket.accept();
             cachedLatestConnectedClient = sock;
@@ -246,7 +230,7 @@ public class Driver extends BaseHandler {
         }
 
         /**
-         *
+         * Get the address from the latest connected client.
          * @return Netaddress from latest connected client
          */
         public InetAddress getInetAddress() {
@@ -254,7 +238,7 @@ public class Driver extends BaseHandler {
         }
 
         /**
-         *
+         * get the port form the latest connected client.
          * @return Port from latest connected client
          */
         public Integer getPort() {
@@ -262,9 +246,6 @@ public class Driver extends BaseHandler {
         }
     }
 
-    /**
-     *
-     */
     private class ChannelHandler implements Selectable {
 
         final SocketChannel socket;
@@ -279,10 +260,6 @@ public class Driver extends BaseHandler {
             transport.setContext(this);
         }
 
-        /**
-         *
-         * @return
-         */
         boolean update() {
             if (socket.isConnected()) {
                 int c = transport.capacity();
@@ -301,9 +278,6 @@ public class Driver extends BaseHandler {
             }
         }
 
-        /**
-         * Handles connection to the server
-         */
         public void selected() {
             if (!key.isValid()) { return; }
 
@@ -395,11 +369,6 @@ public class Driver extends BaseHandler {
     }
 
     private class Connector extends ChannelHandler {
-        /**
-         *
-         * @param conn
-         * @throws IOException
-         */
         Connector(Connection conn) throws IOException {
             super(SocketChannel.open(), SelectionKey.OP_CONNECT, makeTransport(conn));
             log.debug("CONNECTING: " + conn.getHostname());
@@ -407,17 +376,14 @@ public class Driver extends BaseHandler {
         }
     }
 
-    /**
-     *
-     */
     public void wakeUp() {
         log.debug("Waking up the selector to get out the next messages from the queue");
         selector.wakeup();
     }
 
     /**
-     *
-     * @param buf
+     * Print ByteBuffers to system out.
+     * @param \ByteBuffer
      */
     public void printByteBuffer(ByteBuffer buf) {
         for (int i = 0; i < buf.limit();i++) {
