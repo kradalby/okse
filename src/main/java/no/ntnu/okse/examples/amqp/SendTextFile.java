@@ -5,25 +5,32 @@ package no.ntnu.okse.examples.amqp;
  */
 
 /*
-   2  *
-   3  * Licensed to the Apache Software Foundation (ASF) under one
-   4  * or more contributor license agreements.  See the NOTICE file
-   5  * distributed with this work for additional information
-   6  * regarding copyright ownership.  The ASF licenses this file
-   7  * to you under the Apache License, Version 2.0 (the
-   8  * "License"); you may not use this file except in compliance
-   9  * with the License.  You may obtain a copy of the License at
-  10  *
-  11  *   http://www.apache.org/licenses/LICENSE-2.0
-  12  *
-  13  * Unless required by applicable law or agreed to in writing,
-  14  * software distributed under the License is distributed on an
-  15  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-  16  * KIND, either express or implied.  See the License for the
-  17  * specific language governing permissions and limitations
-  18  * under the License.
-  19  *
-  20  */
+*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*
+*/
+
+/*
+ * Example/test of the java Messenger/Message API.
+* Based closely qpid src/proton/examples/messenger/py/send.py
+* @author mberkowitz@sf.org
+* @since 8/4/2013
+*/
 
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
@@ -36,13 +43,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/*
-35  * Example/test of the java Messenger/Message API.
-36  * Based closely qpid src/proton/examples/messenger/py/send.py
-37  * @author mberkowitz@sf.org
-38  * @since 8/4/2013
-39  */
-public class Send {
+public class SendTextFile {
 
     private static Logger tracer = Logger.getLogger("proton.example");
     private String address = "amqp://127.0.0.1/test";
@@ -78,7 +79,7 @@ public class Send {
         return null;
     }
 
-    private Send(String args[]) {
+    private SendTextFile(String args[]) {
         int i = 0;
         while (i < args.length) {
             String arg = args[i++];
@@ -117,7 +118,7 @@ public class Send {
     }
 
     public static void main(String args[]) {
-        Send o = new Send(args);
+        SendTextFile o = new SendTextFile(args);
         o.run();
     }
 }
