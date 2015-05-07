@@ -33,9 +33,12 @@ import no.ntnu.okse.protocol.AbstractProtocolServer;
 import no.ntnu.okse.protocol.amqp.AMQProtocolServer;
 import no.ntnu.okse.protocol.wsn.WSNotificationServer;
 import org.apache.log4j.Logger;
+import org.ntnunotif.wsnu.base.util.InternalMessage;
 import org.ntnunotif.wsnu.base.util.Utilities;
 import org.ntnunotif.wsnu.services.general.WsnUtilities;
+import org.oasis_open.docs.wsn.b_2.SubscribeResponse;
 
+import javax.xml.ws.wsaddressing.W3CEndpointReference;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
