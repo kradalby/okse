@@ -191,7 +191,7 @@ public class TopicTest {
     }
 
     @Test
-    public void testGetFullTopicString() {
+    public void testGetFullTopicString() throws Exception {
         Topic childTen = new Topic();
         Topic childEleven = new Topic();
         childTen.setName("ChildTen");
@@ -209,7 +209,7 @@ public class TopicTest {
     }
 
     @Test
-    public void testGetFullTopicStringIgnoreCase() {
+    public void testGetFullTopicStringIgnoreCase() throws Exception {
         Topic childTen = new Topic();
         Topic childEleven = new Topic();
         childTen.setName("ChildTen");
@@ -224,5 +224,31 @@ public class TopicTest {
         assertEquals(childEleven.getFullTopicStringIgnoreCase(), fullTopicForChildEleven);
         assertEquals(childTen.getFullTopicStringIgnoreCase(), fullTopicForChildTen);
         assertEquals(childThree.getFullTopicStringIgnoreCase(), fullTopicForChildThree);
+    }
+
+    @Test
+    public void testIsAncestorOf() throws Exception {
+        Topic parent = new Topic();
+        Topic child = new Topic();
+        Topic grandchild = new Topic();
+        grandchild.setParent(child);
+        child.setParent(parent);
+
+        assertTrue(parent.isAncestorOf(child));
+        assertTrue(parent.isAncestorOf(grandchild));
+        assertFalse(parent.isAncestorOf(parent));
+    }
+
+    @Test
+    public void testIsDescendantOf() throws Exception {
+        Topic parent = new Topic();
+        Topic child = new Topic();
+        Topic grandchild = new Topic();
+        grandchild.setParent(child);
+        child.setParent(parent);
+
+        assertTrue(grandchild.isDescendantOf(child));
+        assertTrue(grandchild.isDescendantOf(parent));
+        assertFalse(grandchild.isDescendantOf(grandchild));
     }
 }
