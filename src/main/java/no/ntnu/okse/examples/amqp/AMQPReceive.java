@@ -71,7 +71,7 @@ public class AMQPReceive {
             }
         }
         if (addrs.size() == 0) {
-            addrs.add("amqp://localhost/bang");
+            addrs.add("amqp://m.fap.no:61050/bang");
         }
     }
 

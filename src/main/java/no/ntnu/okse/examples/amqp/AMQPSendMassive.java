@@ -102,7 +102,7 @@ public class AMQPSendMassive {
             System.out.println(msg.getBody());
             int c = 0;
             while (c < runs) {
-                Thread.sleep(50);
+                //Thread.sleep(50);
                 mng.put(msg);
                 mng.send();
                 c++;
