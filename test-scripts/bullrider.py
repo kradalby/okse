@@ -6,8 +6,8 @@ import requests
 from random import shuffle
 
 DEBUG = True
-INTERVAL = 0.1
-RUNS = 100
+INTERVAL = 0.001
+RUNS = 1000
 SOAP_HEADER = "application/soap+xml;charset=utf-8"
 MODES = {
     "all": "All available",
