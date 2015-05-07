@@ -24,7 +24,6 @@
 
 package no.ntnu.okse.protocol.wsn;
 
-import com.sun.org.apache.xerces.internal.dom.ElementNSImpl;
 import no.ntnu.okse.core.messaging.Message;
 import org.ntnunotif.wsnu.base.net.NuNamespaceContextResolver;
 import org.ntnunotif.wsnu.base.topics.TopicUtils;
@@ -184,7 +183,10 @@ public class WSNToolsTest {
                 "</ns5:SubscribeResponse>" +
                 "</ns8:Body>" +
                 "</ns8:Envelope>";
+        InternalMessage wrapper = new InternalMessage(InternalMessage.STATUS_OK | InternalMessage.STATUS_HAS_MESSAGE, xmlSubscribeResponse);
 
-        String subscriptionReference;
+        String subscriptionReference = WSNTools.extractSubscriptionReferenceFromRawXmlResponse(wrapper);
+
+        assertEquals(subscriptionReference, "http://128.128.128.128:61000/subscriptionManager/?wsn-subscriberkey=6ff9843f23f38547a3f97db4304099abdef0bb11");
     }
 }
