@@ -29,6 +29,18 @@
 
 var Config = (function($) {
 
+    var createTableForAllRelays = function(relays) {
+        var trHTML = ""
+        $.map(relays, function(value, key) {
+            trHTML +=
+                '<tr>' +
+                    '<td>' + value.split('subscriptionManager')[0] + '</td>' +
+                    '<td>' + '<a class="btn btn-xs btn-block btn-danger delete-relay" id="' + key + '">Delete</a></td>' +
+                '</tr>'
+        });
+        return trHTML
+    }
+
     /*
      Creates, fills and returns a <tr>-element. The <tr>-element is generated based on the mappings
      list from the OKSE-RestAPI. It also adds all the buttons needed for deleting mappings. It uses the origin topic for
@@ -82,18 +94,53 @@ var Config = (function($) {
                 });
             }
         });
+
+        $('.delete-relay').on('click', function(e) {
+            e.preventDefault();
+
+            if (confirm("Are you sure you want to delete this relay?")) {
+                // Disable the topic and buttons temporarily
+                var relay = $(e.target).attr('id')
+                $.okseDebug.logPrint("Trying to remove relay: " + relay)
+                $(e.target).closest('tr').addClass('deleted')
+                $(e.target).addClass("disabled")
+
+                Main.ajax({
+                    url: 'config/relay/delete/single?relayID=' + relay,
+                    type: 'DELETE',
+                    success: function(data) {
+                        $.okseDebug.logPrint("[Debug][Config] Callback from server; relay deleted")
+                    },
+                    error: function(xhr, status, error) {
+                        $.okseDebug.logPrint("[Debug][Config] Unable to remove relay: " + relay)
+                        $(e.target).closest('tr').removeClass('deleted')
+                        $(e.target).removeClass("disabled")
+                        Main.displayMessage('Unable to remove relay!')
+                        Main.error(xhr, status, error)
+                    }
+                });
+            }
+        });
+
     }
 
     return {
         refresh: function(response) {
             unBindButtons()
 
-            var count = Object.keys(response).length
+            var countMappings = Object.keys(response.mappings).length
+            var countRelays = Object.keys(response.relays).length
 
-            if ( ! count == 0 ) {
-                $('#mappings-table').html(createTableForAllMappings(response))
+            if ( ! countMappings == 0 ) {
+                $('#mappings-table').html(createTableForAllMappings(response.mappings))
             } else {
                 $('#mappings-table').html('<tr class="danger"><td colspan="3"><h4 class="text-center">No mappings returned from TopicService</h4></td></tr>')
+            }
+
+            if ( ! countRelays == 0) {
+                $('#relays-table').html(createTableForAllRelays(response.relays))
+            } else {
+                $('#relays-table').html('<tr class="danger"><td colspan="2"><h4 class="text-center">No relays returned from ConfigController</h4></td></tr>')
             }
 
             bindButtons()
@@ -102,6 +149,7 @@ var Config = (function($) {
         init: function() {
             $('#add-relay').on('click', function(e) {
                 e.preventDefault()
+
                 Main.ajax({
                     url: 'config/relay/add?to=' + encodeURIComponent($('#relay-to').val()),
                     type: 'POST',
@@ -116,6 +164,7 @@ var Config = (function($) {
 
             $('#add-mapping').on('click', function(e) {
                 e.preventDefault()
+
                 Main.ajax({
                     url: 'config/mapping/add?fromTopic=' + encodeURIComponent($('#from-topic').val()) + '&toTopic=' + encodeURIComponent($('#to-topic').val()),
                     type: 'POST',
@@ -127,6 +176,26 @@ var Config = (function($) {
                         Main.error(xhr, status, error)
                     }
                 });
+            });
+
+            $('#delete-all-relays').on('click', function(e){
+                e.preventDefault()
+
+                if (confirm("Are you sure you want to delete all relays?")) {
+
+                    Main.ajax({
+                        url: 'config/relay/delete/all',
+                        type: 'DELETE',
+                        success: function(data) {
+                            $.okseDebug.logPrint("[Debug][Config] Callback from server; deleted all relays")
+                        },
+                        error: function(xhr, status, error) {
+                            Main.displayMessage('The broker were unable to remove all relays')
+                            Main.error(xhr, status, error)
+                        }
+                    })
+
+                }
             });
 
             $('#delete-all-mappings').on('click', function(e) {
@@ -150,12 +219,13 @@ var Config = (function($) {
 
             $('#AMQP-topic-config').on('click', function(e) {
                 e.preventDefault()
+
                 Main.ajax({
                     url: 'config/mapping/queue/change',
                     type: 'POST',
                     success: function(data) {
-                        $.okseDebug.logPrint("[DEBUG][Config] Callback from server; AMQP queue value changed")
-                        $.okseDebug.logPrint("Value is now" + data.value)
+                        $.okseDebug.logPrint("[Debug][Config] Callback from server; AMQP useQueue value changed")
+                        $.okseDebug.logPrint("[Debug][Config] AMPQ useQueue is now" + data.value)
                         $(e.target).prop('checked', data.value)
                     },
                     error: function(xhr, status, error) {
