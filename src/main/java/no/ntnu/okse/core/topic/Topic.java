@@ -51,14 +51,13 @@ public class Topic {
 
     public Topic() {
         if (name == null) this.name = "UNNAMED";
-        else this.name = name;
         if (type == null) this.type = "UNKNOWN";
-        else this.type = type;
 
         topicID = generateTopicID();
 
         parent = null;
-        children = new HashSet<>();    }
+        children = new HashSet<>();
+    }
 
     public Topic(String name, String type) {
         log = Logger.getLogger(Topic.class.getName());
@@ -253,8 +252,6 @@ public class Topic {
      */
     public boolean isAncestorOf(Topic other) {
 
-        // TODO: Write tests for this method (written on the fly)
-
         // If the other is a root node, it is impossible that this object is an ancestor of it
         if (other.isRoot()) return false;
 
@@ -272,7 +269,7 @@ public class Topic {
      * @param other The topic we wish to check if we have decended from
      * @return True if we have decended from the argument topic, false otherwise
      */
-    public boolean isDecendantOf(Topic other) {
+    public boolean isDescendantOf(Topic other) {
         return other.isAncestorOf(this);
     }
 

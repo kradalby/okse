@@ -62,6 +62,22 @@ public class TopicTest {
     }
 
     @Test
+    public void testGetTopicID() throws Exception {
+        Topic one = new Topic();
+        HashSet<String> ids = new HashSet<>();
+        assertNotNull(one.getTopicID());
+        // Hex regex
+        assertTrue(one.getTopicID().matches("-?[0-9a-fA-F]+"));
+        // Do a mass test and check for colliding ID's
+        for (int i = 0; i < 1337; i++) {
+            one = new Topic();
+            ids.add(one.getTopicID());
+        }
+        assertEquals(ids.size(), 1337);
+
+    }
+
+    @Test
     public void testGetName() throws Exception {
         assertEquals(noNameNoTypeTopic.getName(), "UNNAMED");
         assertEquals(namedAndTypedTopic.getName(), "SomeName");
@@ -191,7 +207,7 @@ public class TopicTest {
     }
 
     @Test
-    public void testGetFullTopicString() {
+    public void testGetFullTopicString() throws Exception {
         Topic childTen = new Topic();
         Topic childEleven = new Topic();
         childTen.setName("ChildTen");
@@ -209,7 +225,7 @@ public class TopicTest {
     }
 
     @Test
-    public void testGetFullTopicStringIgnoreCase() {
+    public void testGetFullTopicStringIgnoreCase() throws Exception {
         Topic childTen = new Topic();
         Topic childEleven = new Topic();
         childTen.setName("ChildTen");
@@ -225,4 +241,39 @@ public class TopicTest {
         assertEquals(childTen.getFullTopicStringIgnoreCase(), fullTopicForChildTen);
         assertEquals(childThree.getFullTopicStringIgnoreCase(), fullTopicForChildThree);
     }
+
+    @Test
+    public void testIsAncestorOf() throws Exception {
+        Topic parent = new Topic();
+        Topic child = new Topic();
+        Topic grandchild = new Topic();
+        grandchild.setParent(child);
+        child.setParent(parent);
+
+        assertTrue(parent.isAncestorOf(child));
+        assertTrue(parent.isAncestorOf(grandchild));
+        assertFalse(parent.isAncestorOf(parent));
+    }
+
+    @Test
+    public void testIsDescendantOf() throws Exception {
+        Topic parent = new Topic();
+        Topic child = new Topic();
+        Topic grandchild = new Topic();
+        grandchild.setParent(child);
+        child.setParent(parent);
+
+        assertTrue(grandchild.isDescendantOf(child));
+        assertTrue(grandchild.isDescendantOf(parent));
+        assertFalse(grandchild.isDescendantOf(grandchild));
+    }
+
+    @Test
+    public void testToString() throws Exception {
+        Topic parent = new Topic("parent", "TEST");
+        Topic child = new Topic("child", "TEST");
+        child.setParent(parent);
+        assertEquals(child.toString(), "Topic{parent/child}");
+        assertEquals(parent.toString(), "Topic{parent}");
+}
 }

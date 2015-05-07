@@ -34,9 +34,12 @@ import no.ntnu.okse.protocol.amqp.AMQProtocolServer;
 import no.ntnu.okse.protocol.wsn.WSNTools;
 import no.ntnu.okse.protocol.wsn.WSNotificationServer;
 import org.apache.log4j.Logger;
+import org.ntnunotif.wsnu.base.util.InternalMessage;
 import org.ntnunotif.wsnu.base.util.Utilities;
 import org.ntnunotif.wsnu.services.general.WsnUtilities;
+import org.oasis_open.docs.wsn.b_2.SubscribeResponse;
 
+import javax.xml.ws.wsaddressing.W3CEndpointReference;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
@@ -336,20 +339,6 @@ public class DummyProtocolServer extends AbstractProtocolServer {
     private boolean parseCommand(String command) {
         String[] args = command.split(" ");
         try {
-            if (args[0].equalsIgnoreCase("amqp")) {
-                AMQProtocolServer amqp = AMQProtocolServer.getInstance();
-                CoreService cs = CoreService.getInstance();
-                if (args[1].equalsIgnoreCase("stop")) {
-                    cs.removeProtocolServer(AMQProtocolServer.getInstance());
-                    amqp.stopServer();
-                }
-                else if (args[1].equalsIgnoreCase("start")) {
-                    cs.addProtocolServer(AMQProtocolServer.getInstance());
-                    AMQProtocolServer.getInstance().boot();
-                }
-                return true;
-            }
-
             // message <topic> <message content>
             if (args[0].equalsIgnoreCase("message")) {
                 // If it exists build a message string and distribute it

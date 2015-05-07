@@ -243,7 +243,7 @@ var Main = (function($) {
                         ajaxSettings.success = Logs.refresh
                         break;
                     case "config":
-                        ajaxSettings.url = clickedElement + '/mapping/get/all'
+                        ajaxSettings.url = clickedElement + '/get/all'
                         ajaxSettings.success = Config.refresh
                         break;
                     case "subscribers":
