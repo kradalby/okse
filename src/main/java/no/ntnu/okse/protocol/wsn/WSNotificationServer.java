@@ -81,6 +81,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
     private static final String DEFAULT_HOST = "0.0.0.0";
     private static final int DEFAULT_PORT = 61000;
     private static final Long DEFAULT_CONNECTION_TIMEOUT = 5L;
+    private static final Integer DEFAULT_HTTP_CLIENT_DISPATCHER_POOL_SIZE = 50;
 
     // Flag and defaults for operation behind NAT
     private static boolean behindNAT = false;

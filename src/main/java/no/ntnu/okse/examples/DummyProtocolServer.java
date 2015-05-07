@@ -31,6 +31,7 @@ import no.ntnu.okse.core.messaging.Message;
 import no.ntnu.okse.core.messaging.MessageService;
 import no.ntnu.okse.protocol.AbstractProtocolServer;
 import no.ntnu.okse.protocol.amqp.AMQProtocolServer;
+import no.ntnu.okse.protocol.wsn.WSNTools;
 import no.ntnu.okse.protocol.wsn.WSNotificationServer;
 import org.apache.log4j.Logger;
 import org.ntnunotif.wsnu.base.util.Utilities;
@@ -368,7 +369,12 @@ public class DummyProtocolServer extends AbstractProtocolServer {
                 if (Utilities.isValidInetAddress(args[1])) {
                     if (Utilities.isValidInetAddress(args[2])) {
                         // relay <remote URI> <URI of this broker>
-                        WsnUtilities.sendSubscriptionRequest(args[1], args[2], WSNotificationServer.getInstance().getRequestParser());
+                        log.debug(WSNTools.extractSubscriptionReferenceFromRawXmlResponse(
+                                WsnUtilities.sendSubscriptionRequest(
+                                        args[1], args[2],
+                                        WSNotificationServer.getInstance().getRequestParser()
+                                )
+                        ));
                         return true;
                     }
                 }

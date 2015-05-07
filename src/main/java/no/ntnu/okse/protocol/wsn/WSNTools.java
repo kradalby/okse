@@ -31,10 +31,9 @@ import org.ntnunotif.wsnu.base.net.XMLParser;
 import org.ntnunotif.wsnu.base.topics.ConcreteEvaluator;
 import org.ntnunotif.wsnu.base.topics.FullEvaluator;
 import org.ntnunotif.wsnu.base.util.InternalMessage;
-import org.oasis_open.docs.wsn.b_2.NotificationMessageHolderType;
-import org.oasis_open.docs.wsn.b_2.Notify;
-import org.oasis_open.docs.wsn.b_2.ObjectFactory;
-import org.oasis_open.docs.wsn.b_2.TopicExpressionType;
+import org.ntnunotif.wsnu.services.general.ServiceUtilities;
+import org.ntnunotif.wsnu.services.general.WsnUtilities;
+import org.oasis_open.docs.wsn.b_2.*;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -269,31 +268,31 @@ public class WSNTools {
         ObjectFactory factory = new ObjectFactory();
         Notify notify = factory.createNotify();
 
-            // Create message and holder
-            NotificationMessageHolderType.Message message = factory.createNotificationMessageHolderTypeMessage();
-            NotificationMessageHolderType messageHolderType = factory.createNotificationMessageHolderType();
+        // Create message and holder
+        NotificationMessageHolderType.Message message = factory.createNotificationMessageHolderTypeMessage();
+        NotificationMessageHolderType messageHolderType = factory.createNotificationMessageHolderType();
 
-            Element e = buildGenericContentElement(content);
-            message.setAny(e);
+        Element e = buildGenericContentElement(content);
+        message.setAny(e);
 
-            // Set holders message
-            messageHolderType.setMessage(message);
+        // Set holders message
+        messageHolderType.setMessage(message);
 
-            // Build topic expression
-            String expression = (prefix != null && namespace != null) ? prefix + ":" + topic : topic;
-            // Build topic
-            TopicExpressionType topicExpressionType = factory.createTopicExpressionType();
-            topicExpressionType.setDialect(ConcreteEvaluator.dialectURI);
-            topicExpressionType.getContent().add(expression);
+        // Build topic expression
+        String expression = (prefix != null && namespace != null) ? prefix + ":" + topic : topic;
+        // Build topic
+        TopicExpressionType topicExpressionType = factory.createTopicExpressionType();
+        topicExpressionType.setDialect(ConcreteEvaluator.dialectURI);
+        topicExpressionType.getContent().add(expression);
 
-            messageHolderType.setTopic(topicExpressionType);
+        messageHolderType.setTopic(topicExpressionType);
 
-            // remember to bind the necessary objects to the context
-            contextResolver.registerObjectWithCurrentNamespaceScope(message);
-            contextResolver.registerObjectWithCurrentNamespaceScope(topicExpressionType);
+        // remember to bind the necessary objects to the context
+        contextResolver.registerObjectWithCurrentNamespaceScope(message);
+        contextResolver.registerObjectWithCurrentNamespaceScope(topicExpressionType);
 
-            // Add message to the notify
-            notify.getNotificationMessage().add(messageHolderType);
+        // Add message to the notify
+        notify.getNotificationMessage().add(messageHolderType);
 
 
         // ready for return
@@ -318,6 +317,24 @@ public class WSNTools {
             log.error("Invalid parser configuration, unknown reason: " + e.getMessage());
         }
 
+        return null;
+    }
+
+    /**
+     * Helper method that extracts a subscription reference from raw subscriberequest response
+     * @param subResponse The internalMessage containing the raw XML SubscribeResponse
+     * @return A string with the complete URL + endpoint and params needed
+     */
+    public static String extractSubscriptionReferenceFromRawXmlResponse(InternalMessage subResponse) {
+        try {InternalMessage parsed = parseRawXmlString(subResponse.getMessage().toString());
+            JAXBElement jaxb = (JAXBElement) parsed.getMessage();
+            Envelope env = (Envelope) jaxb.getValue();
+            SubscribeResponse sr = (SubscribeResponse) env.getBody().getAny().get(0);
+            return ServiceUtilities.getAddress(sr.getSubscriptionReference());
+
+        } catch (ClassCastException e) {
+            log.error("Failed to cast: " + e.getMessage());
+        }
         return null;
     }
 
