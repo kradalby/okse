@@ -40,6 +40,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -101,13 +102,13 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
     private static final Routes<Receiver> EMPTY_IN = new Routes<Receiver>();
     private static Logger log = Logger.getLogger(SubscriptionHandler.class.getName());
 
-    private static HashMap<Sender, Subscriber> localSenderSubscriberMap = new HashMap<>();
-    private static HashMap<Subscriber, Sender> localSubscriberSenderMap = new HashMap<>();
-    private static HashMap<String, Sender> localRemoteContainerSenderMap = new HashMap<>();
-    private static HashMap<Sender, AbstractNotificationProducer.SubscriptionHandle> localSubscriberHandle = new HashMap<>();
+    private static ConcurrentHashMap<Sender, Subscriber> localSenderSubscriberMap = new ConcurrentHashMap<>();
+    private static ConcurrentHashMap<Subscriber, Sender> localSubscriberSenderMap = new ConcurrentHashMap<>();
+    private static ConcurrentHashMap<String, Sender> localRemoteContainerSenderMap = new ConcurrentHashMap<>();
+    private static ConcurrentHashMap<Sender, AbstractNotificationProducer.SubscriptionHandle> localSubscriberHandle = new ConcurrentHashMap<>();
 
-    final private Map<String,Routes<Sender>> outgoing = new HashMap<String,Routes<Sender>>();
-    final private Map<String,Routes<Receiver>> incoming = new HashMap<String,Routes<Receiver>>();
+    final private Map<String,Routes<Sender>> outgoing = new ConcurrentHashMap<String,Routes<Sender>>();
+    final private Map<String,Routes<Receiver>> incoming = new ConcurrentHashMap<String,Routes<Receiver>>();
 
     public SubscriptionHandler() {}
 

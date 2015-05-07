@@ -59,6 +59,11 @@
                      <input type="number" class="form-control" id="settings-update-interval" value="2" min="0.5" />
                  </div>
              </form>
+             <form>
+                 <label for="AMQP-topic-config"> Use AMQP queues instead of pub/sub topics:</label>
+                 <input type="checkbox" id="AMQP-topic-config" th:checked="${useQueue}" />
+
+             </form>
          </div>
      </div>
  </div>

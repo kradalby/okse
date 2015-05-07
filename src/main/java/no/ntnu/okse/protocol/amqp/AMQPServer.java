@@ -56,6 +56,7 @@ public class AMQPServer extends BaseHandler {
      * Basically one Deque with bytes for each
      * Queue/Topic
      */
+
     private class MessageStore {
 
         Map<String, Deque<MessageBytes>> messages = new HashMap<String, Deque<MessageBytes>>();
