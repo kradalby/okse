@@ -329,19 +329,10 @@ public class AMQPServer extends BaseHandler {
 
                 MessageBytes mb = new MessageBytes(bytes);
 
-                Address address = new Address(msg.getAddress());
-
-                // This handles an edgecase where client only sends
-                // the topic as address, which causes the Address
-                // object creation to fail.
-                if (!address.getName().equals(dlv.getLink().getTarget().getAddress())) {
-                    address.setName(msg.getAddress());
-                    address.setHost("");
-                }
+                Address address = createAddress(msg.getAddress(), dlv);
 
                 log.debug("Received a message with queue/topic: " + address.getName());
 
-                AmqpValue amqpMessageBodyString = (AmqpValue)msg.getBody();
 
                 // Add straight to AMQP queue
                 try {
@@ -352,9 +343,7 @@ public class AMQPServer extends BaseHandler {
                     log.error("Got interrupted: " + e.getMessage());
                 }
 
-                no.ntnu.okse.core.messaging.Message message =
-                        new no.ntnu.okse.core.messaging.Message((String)amqpMessageBodyString.getValue(), address.getName(), null, AMQProtocolServer.getInstance().getProtocolServerType());
-                message.setOriginProtocol(AMQProtocolServer.getInstance().getProtocolServerType());
+                no.ntnu.okse.core.messaging.Message message = convertAMQPmessageToOkseMessage(msg, address);
 
                 MessageService.getInstance().distributeMessage(message);
 
@@ -366,4 +355,37 @@ public class AMQPServer extends BaseHandler {
             }
         }
     }
+
+    public static no.ntnu.okse.core.messaging.Message convertAMQPmessageToOkseMessage(Message AMQPMessage, Address address) {
+        AmqpValue amqpMessageBodyString = (AmqpValue)AMQPMessage.getBody();
+
+        no.ntnu.okse.core.messaging.Message okseMessage =
+                new no.ntnu.okse.core.messaging.Message(
+                        (String)amqpMessageBodyString.getValue(),
+                        address.getName(),
+                        null,
+                        AMQProtocolServer.getInstance().getProtocolServerType()
+                );
+
+        okseMessage.setOriginProtocol(AMQProtocolServer.getInstance().getProtocolServerType());
+
+        return okseMessage;
+    }
+
+    public static Address createAddress(String addr, Delivery dlv) {
+        Address address = new Address(addr);
+
+        // This handles an edgecase where client only sends
+        // the topic as address, which causes the Address
+        // object creation to fail.
+        if (address.getName() == null || !address.getName().equals(dlv.getLink().getTarget().getAddress())) {
+            address.setName(addr);
+            address.setHost("");
+        }
+
+        return address;
+    }
+
+
+
 }
