@@ -104,32 +104,22 @@ var Logs = (function($) {
                     var files = ""
                     $.each(data, function(i) {
                         if (i == 0) {
-                            files += '<button type="button" class="btn btn-success active" id="button-logID-' + i + '">' + data[i] + '</button>'
+                            files += '<option value="' + i + '" selected>' + data[i] + '</option>'
                         } else {
-                            files += '<button type="button" class="btn btn-success" id="button-logID-' + i + '">' + data[i] + '</button>'
+                            files += '<option value="' + i + '">' + data[i] + '</option>'
                         }
                     })
                     $("#log-file").html(files)
-                    $.each(data, function(i) {
-                        $("#button-logID-" + i).on("click", function(e){
-                            e.preventDefault()
-                            $('#button-logID-' + i).addClass('active').siblings().removeClass('active');
-                            logID = i
-                            updateUrl()
-                            Main.setIntervalForTab({
-                                url: Logs.url(),
-                                type: 'GET',
-                                success: Logs.refresh
-                            })
-                            /*
-                            Main.ajax({
-                                url: Logs.url(),
-                                type: 'GET',
-                                success: Logs.refresh
-                            });
-                            */
-                        })
-                    })
+
+                    $('#log-file').on('change', function() {
+                        logID = $(this).val()
+                        updateUrl()
+                        Main.setIntervalForTab({
+                            url: Logs.url(),
+                            type: 'GET',
+                            success: Logs.refresh
+                        });
+                    });
                 }
             });
 

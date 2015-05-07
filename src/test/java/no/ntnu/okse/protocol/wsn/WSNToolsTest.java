@@ -185,6 +185,6 @@ public class WSNToolsTest {
                 "</ns8:Body>" +
                 "</ns8:Envelope>";
 
-        String subscriptionReference = WSNTools.
+        String subscriptionReference;
     }
 }

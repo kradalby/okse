@@ -31,6 +31,7 @@ import no.ntnu.okse.core.messaging.Message;
 import no.ntnu.okse.core.messaging.MessageService;
 import no.ntnu.okse.protocol.AbstractProtocolServer;
 import no.ntnu.okse.protocol.amqp.AMQProtocolServer;
+import no.ntnu.okse.protocol.wsn.WSNTools;
 import no.ntnu.okse.protocol.wsn.WSNotificationServer;
 import org.apache.log4j.Logger;
 import org.ntnunotif.wsnu.base.util.Utilities;
@@ -154,13 +155,13 @@ public class DummyProtocolServer extends AbstractProtocolServer {
 
             } catch (UnknownHostException e) {
                 log.error("Could not bind socket: " + e.getMessage());
-                totalErrors++;
+                totalErrors.incrementAndGet();
             } catch (ClosedChannelException e) {
                 log.error("Closed channel: " + e.getMessage());
-                totalErrors++;
+                totalErrors.incrementAndGet();
             } catch (IOException e) {
                 log.error("I/O exception: " + e.getMessage());
-                totalErrors++;
+                totalErrors.incrementAndGet();
             }
 
             // Create and start the serverThread
@@ -233,7 +234,7 @@ public class DummyProtocolServer extends AbstractProtocolServer {
                         readBuffer.clear();
 
                         log.debug("Command received: " + command);
-                        totalRequests++;
+                        totalRequests.incrementAndGet();
 
                         // Write a response
                         byte[] response = new String("Executing: " + command + "\n").getBytes();
@@ -247,7 +248,7 @@ public class DummyProtocolServer extends AbstractProtocolServer {
                             result = "Command executed.\n";
                         } else {
                             result = "Invalid command.\n";
-                            totalBadRequests++;
+                            totalBadRequests.incrementAndGet();
                         }
 
                         // Send confirmation of execution
@@ -268,7 +269,7 @@ public class DummyProtocolServer extends AbstractProtocolServer {
                 }
 
             } catch (IOException e) {
-                totalErrors++;
+                totalErrors.incrementAndGet();
                 log.error("I/O exception during select operation: " + e.getMessage());
             } catch (ClosedSelectorException e) {
                 log.debug("Caught SelectorClose, shutting down");
@@ -360,7 +361,7 @@ public class DummyProtocolServer extends AbstractProtocolServer {
                     String msg = builder.toString().trim();
                     Message message = new Message(msg, args[1], null, protocolServerType);
                     MessageService.getInstance().distributeMessage(message);
-                    totalMessagesReceived++;
+                    totalMessagesReceived.incrementAndGet();
 
                     return true;
                 }
@@ -368,7 +369,12 @@ public class DummyProtocolServer extends AbstractProtocolServer {
                 if (Utilities.isValidInetAddress(args[1])) {
                     if (Utilities.isValidInetAddress(args[2])) {
                         // relay <remote URI> <URI of this broker>
-                        WsnUtilities.sendSubscriptionRequest(args[1], args[2], WSNotificationServer.getInstance().getRequestParser());
+                        log.debug(WSNTools.extractSubscriptionReferenceFromRawXmlResponse(
+                                WsnUtilities.sendSubscriptionRequest(
+                                        args[1], args[2],
+                                        WSNotificationServer.getInstance().getRequestParser()
+                                )
+                        ));
                         return true;
                     }
                 }

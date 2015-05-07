@@ -45,7 +45,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 
 /**
- * Most of this code is from the qpid-proton-demo (https://github.com/rhs/qpid-proton-demo) by Rafael Schloming
+ * This code is a heavily modified version of the qpid-proton-demo (https://github.com/rhs/qpid-proton-demo) by Rafael Schloming
  * Created by kradalby on 24/04/15.
  *
  */
@@ -56,6 +56,7 @@ public class AMQPServer extends BaseHandler {
      * Basically one Deque with bytes for each
      * Queue/Topic
      */
+
     private class MessageStore {
 
         Map<String, Deque<MessageBytes>> messages = new HashMap<String, Deque<MessageBytes>>();
@@ -107,10 +108,6 @@ public class AMQPServer extends BaseHandler {
         return String.format("%s", tag++).getBytes();
     }
 
-//    private int send(String address) {
-//        return send(address, null);
-//    }
-
     /**
      * Send a AMQP message with address and sender.
      * If sender is null, the sender will be chosen
@@ -126,6 +123,9 @@ public class AMQPServer extends BaseHandler {
             if (snd == null) {
                 return 0;
             }
+            // Queue based sending will have an initial snd == null, meaning that it is not a sub
+            // and it is a message that is to be sent. Incrementing total sent here.
+            AMQProtocolServer.getInstance().incrementTotalMessagesSent();
         }
         log.debug("Fetched this sender: " + snd.toString());
 
@@ -136,15 +136,11 @@ public class AMQPServer extends BaseHandler {
                 snd.drained();
                 return count;
             }
-            log.debug(String.format("Preparing to send: %s", mb.toString()));
             Delivery dlv = snd.delivery(nextTag());
             byte[] bytes = mb.getBytes();
             snd.send(bytes, 0, bytes.length);
             dlv.settle();
             count++;
-            if (!quiet) {
-                log.debug(String.format("Sent message(%s): %s to %s", address, mb.toString(), snd.toString()));
-            }
         }
 
         return count;
@@ -170,12 +166,10 @@ public class AMQPServer extends BaseHandler {
 
             MessageBytes mb = messages.get(address);
             for (Sender snd : sendersOnTopic) {
-                //while (snd.getCredit() > 0 && snd.getQueued() < 1024) {
                 if (mb == null) {
                     snd.drained();
                     return count;
                 }
-                log.debug(String.format("Preparing to send: %s", mb.toString()));
                 Delivery dlv = snd.delivery(nextTag());
 
                 byte[] bytes = mb.getBytes();
@@ -186,10 +180,6 @@ public class AMQPServer extends BaseHandler {
                 dlv.settle();
 
                 count++;
-                if (!quiet) {
-                    log.debug(String.format("Sent message(%s): %s to %s", address, mb.toString(), snd.toString()));
-                }
-                //}
             }
 
         }
@@ -278,7 +268,7 @@ public class AMQPServer extends BaseHandler {
         Section body = new AmqpValue(message.getMessage());
 
         msg.setAddress(AMQProtocolServer.getInstance().getHost() +"/" + message.getTopic());
-        msg.setSubject("Message translated from OKSE");
+        msg.setSubject("OKSE translated message");
         msg.setBody(body);
         return msg;
     }
@@ -344,7 +334,7 @@ public class AMQPServer extends BaseHandler {
                 // This handles an edgecase where client only sends
                 // the topic as address, which causes the Address
                 // object creation to fail.
-                if (address.getName() != dlv.getLink().getTarget().getAddress()) {
+                if (!address.getName().equals(dlv.getLink().getTarget().getAddress())) {
                     address.setName(msg.getAddress());
                     address.setHost("");
                 }
@@ -368,10 +358,11 @@ public class AMQPServer extends BaseHandler {
 
                 MessageService.getInstance().distributeMessage(message);
 
+                log.debug(String.format("Got and distributed message(%s): %s from %s", address.getName(), message, rcv.toString()));
+
                 AMQProtocolServer.getInstance().incrementTotalMessagesReceived();
                 AMQProtocolServer.getInstance().incrementTotalRequests();
 
-                log.debug(String.format("Got and distributed message(%s): %s from %s", address, message, rcv.toString()));
             }
         }
     }

@@ -183,6 +183,7 @@ public class Application {
                     if (properties.getProperty(option).equalsIgnoreCase("true")) Log.setEnableDebug(true);
                     else Log.setEnableDebug(false);
                     break;
+
             }
         }
     }

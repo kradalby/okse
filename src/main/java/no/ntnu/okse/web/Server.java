@@ -34,7 +34,7 @@ import org.springframework.context.annotation.PropertySource;
  * okse is licenced under the MIT licence.
  */
 @SpringBootApplication
-@PropertySource(value = {"classpath:application.properties", "file:config/okse.properties"}, ignoreResourceNotFound = true)
+@PropertySource(value = {"file:config/okse.properties"}, ignoreResourceNotFound = true)
 public class Server {
 
     /**
