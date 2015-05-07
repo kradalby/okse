@@ -62,6 +62,22 @@ public class TopicTest {
     }
 
     @Test
+    public void testGetTopicID() throws Exception {
+        Topic one = new Topic();
+        HashSet<String> ids = new HashSet<>();
+        assertNotNull(one.getTopicID());
+        // Hex regex
+        assertTrue(one.getTopicID().matches("-?[0-9a-fA-F]+"));
+        // Do a mass test and check for colliding ID's
+        for (int i = 0; i < 1337; i++) {
+            one = new Topic();
+            ids.add(one.getTopicID());
+        }
+        assertEquals(ids.size(), 1337);
+
+    }
+
+    @Test
     public void testGetName() throws Exception {
         assertEquals(noNameNoTypeTopic.getName(), "UNNAMED");
         assertEquals(namedAndTypedTopic.getName(), "SomeName");
@@ -251,4 +267,13 @@ public class TopicTest {
         assertTrue(grandchild.isDescendantOf(parent));
         assertFalse(grandchild.isDescendantOf(grandchild));
     }
+
+    @Test
+    public void testToString() throws Exception {
+        Topic parent = new Topic("parent", "TEST");
+        Topic child = new Topic("child", "TEST");
+        child.setParent(parent);
+        assertEquals(child.toString(), "Topic{parent/child}");
+        assertEquals(parent.toString(), "Topic{parent}");
+}
 }
