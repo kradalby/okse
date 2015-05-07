@@ -259,7 +259,7 @@ public class SubscriptionHandlerTest {
             }
         };
 
-         
+
 
     }
 
@@ -272,6 +272,239 @@ public class SubscriptionHandlerTest {
             }
         };
         assertEquals("address", source.getAddress());
+    }
+
+    @Test
+    public void testGetAddress2() throws Exception{
+        Receiver receiver = new Receiver() {
+            @Override
+            public void flow(int i) {
+
+            }
+
+            @Override
+            public int recv(byte[] bytes, int i, int i1) {
+                return 0;
+            }
+
+            @Override
+            public void drain(int i) {
+
+            }
+
+            @Override
+            public boolean advance() {
+                return false;
+            }
+
+            @Override
+            public boolean draining() {
+                return false;
+            }
+
+            @Override
+            public void setDrain(boolean b) {
+
+            }
+
+            @Override
+            public String getName() {
+                return null;
+            }
+
+            @Override
+            public Delivery delivery(byte[] bytes) {
+                return null;
+            }
+
+            @Override
+            public Delivery delivery(byte[] bytes, int i, int i1) {
+                return null;
+            }
+
+            @Override
+            public Delivery head() {
+                return null;
+            }
+
+            @Override
+            public Delivery current() {
+                return null;
+            }
+
+            @Override
+            public Source getSource() {
+                return null;
+            }
+
+            @Override
+            public Target getTarget() {
+                return null;
+            }
+
+            @Override
+            public void setSource(Source source) {
+
+            }
+
+            @Override
+            public void setTarget(Target target) {
+
+            }
+
+            @Override
+            public Source getRemoteSource() {
+                return null;
+            }
+
+            @Override
+            public Target getRemoteTarget() {
+                return null;
+            }
+
+            @Override
+            public Link next(EnumSet<EndpointState> enumSet, EnumSet<EndpointState> enumSet1) {
+                return null;
+            }
+
+            @Override
+            public int getCredit() {
+                return 0;
+            }
+
+            @Override
+            public int getQueued() {
+                return 0;
+            }
+
+            @Override
+            public int getUnsettled() {
+                return 0;
+            }
+
+            @Override
+            public Session getSession() {
+                return null;
+            }
+
+            @Override
+            public SenderSettleMode getSenderSettleMode() {
+                return null;
+            }
+
+            @Override
+            public void setSenderSettleMode(SenderSettleMode senderSettleMode) {
+
+            }
+
+            @Override
+            public SenderSettleMode getRemoteSenderSettleMode() {
+                return null;
+            }
+
+            @Override
+            public ReceiverSettleMode getReceiverSettleMode() {
+                return null;
+            }
+
+            @Override
+            public void setReceiverSettleMode(ReceiverSettleMode receiverSettleMode) {
+
+            }
+
+            @Override
+            public ReceiverSettleMode getRemoteReceiverSettleMode() {
+                return null;
+            }
+
+            @Override
+            public void setRemoteSenderSettleMode(SenderSettleMode senderSettleMode) {
+
+            }
+
+            @Override
+            public int drained() {
+                return 0;
+            }
+
+            @Override
+            public int getRemoteCredit() {
+                return 0;
+            }
+
+            @Override
+            public boolean getDrain() {
+                return false;
+            }
+
+            @Override
+            public void detach() {
+
+            }
+
+            @Override
+            public EndpointState getLocalState() {
+                return null;
+            }
+
+            @Override
+            public EndpointState getRemoteState() {
+                return null;
+            }
+
+            @Override
+            public ErrorCondition getCondition() {
+                return null;
+            }
+
+            @Override
+            public void setCondition(ErrorCondition errorCondition) {
+
+            }
+
+            @Override
+            public ErrorCondition getRemoteCondition() {
+                return null;
+            }
+
+            @Override
+            public void free() {
+
+            }
+
+            @Override
+            public void open() {
+
+            }
+
+            @Override
+            public void close() {
+
+            }
+
+            @Override
+            public void setContext(Object o) {
+
+            }
+
+            @Override
+            public Object getContext() {
+                return null;
+            }
+        };
+
+    }
+
+    @Test
+    public void testGetAddress3() throws Exception {
+        Target target = new Target() {
+            @Override
+            public String getAddress() {
+                return "address";
+            }
+        };
+        assertEquals("address", target.getAddress());
+
     }
 
     @Test
