@@ -45,7 +45,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 
 /**
- * Most of this code is from the qpid-proton-demo (https://github.com/rhs/qpid-proton-demo) by Rafael Schloming
+ * This code is a heavily modified version of the qpid-proton-demo (https://github.com/rhs/qpid-proton-demo) by Rafael Schloming
  * Created by kradalby on 24/04/15.
  *
  */
