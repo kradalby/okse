@@ -35,6 +35,6 @@
 
     <Get name="ThreadPool">
         <Set name="minThreads">10</Set>
-        <Set name="maxThreads">200</Set>
+        <Set name="maxThreads">20</Set>
     </Get>
 </Configure>

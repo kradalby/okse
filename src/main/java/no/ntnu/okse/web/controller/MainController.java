@@ -25,14 +25,19 @@
 package no.ntnu.okse.web.controller;
 
 import no.ntnu.okse.Application;
+import no.ntnu.okse.core.CoreService;
 import no.ntnu.okse.core.Utilities;
+import no.ntnu.okse.core.event.SystemEvent;
 import no.ntnu.okse.core.subscription.SubscriptionService;
+import no.ntnu.okse.core.topic.TopicService;
 import org.apache.log4j.Logger;
 import org.springframework.web.bind.annotation.*;
 
 import java.lang.String;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * Created by Håkon Ødegård Løvdal (hakloev) on 25/02/15.
@@ -40,15 +45,25 @@ import java.util.HashMap;
  * okse is licenced under the MIT licence.
  */
 @RestController
+@RequestMapping(value = "/api/main")
 public class MainController {
 
-    private static int MB = 1024 * 1024;
+    private static final String MAIN_API = "/get/all";
+    private static final String PROTOCOL_POWER = "/protocols/power";
+
+    public static int MB = 1024 * 1024;
 
     private static Logger log = Logger.getLogger(MainController.class.getName());
 
-    @RequestMapping(value = "/api/main", method = RequestMethod.GET)
+    /**
+     * Returns all necessary information for rendering the main-pane
+     * @return A HashMap containing all the information
+     */
+    @RequestMapping(method = RequestMethod.GET, value = MAIN_API)
     public @ResponseBody HashMap<String, Object> main() {
         SubscriptionService ss = SubscriptionService.getInstance();
+        TopicService ts = TopicService.getInstance();
+        CoreService cs = CoreService.getInstance();
 
         long totalRam = Runtime.getRuntime().totalMemory();
         long freeRam = Runtime.getRuntime().freeMemory();
@@ -56,6 +71,7 @@ public class MainController {
         HashMap<String, Object> result = new HashMap<String, Object>(){{
             put("subscribers", ss.getNumberOfSubscribers());
             put("publishers", ss.getNumberOfPublishers());
+            put("topics", ts.getTotalNumberOfTopics());
             put("uptime", Utilities.getDurationAsISO8601(Application.getRunningTime()));
             // Runtime statistics
             put("runtimeStatistics", new HashMap<String, Object>(){{
@@ -64,10 +80,40 @@ public class MainController {
                 put("freeRam", freeRam / MB);
                 put("usedRam", (totalRam - freeRam) / MB);
             }});
+            // Protocol information
+            ArrayList<HashMap<String, Object>> protocols = new ArrayList<>();
+            Application.cs.getAllProtocolServers().forEach(p -> {
+                protocols.add(new HashMap<String, Object>(){{
+                    put("host", p.getHost());
+                    put("port", p.getPort());
+                    put("type", p.getProtocolServerType());
+                }});
+            });
+            put("protocols", protocols);
+            put("protocolPower", cs.protocolServersBooted);
         }};
 
         return result;
     }
 
+    @RequestMapping(method = RequestMethod.POST, value = PROTOCOL_POWER)
+    public @ResponseBody String powerProtocolServers() {
+        CoreService cs = CoreService.getInstance();
+
+        if (cs.protocolServersBooted) {
+            try {
+                cs.getEventQueue().put(new SystemEvent(SystemEvent.Type.SHUTDOWN_PROTOCOL_SERVERS, null));
+            } catch (InterruptedException e) {
+                log.warn("WARNING: Please don't interrupt the thread");
+            }
+        } else {
+            try {
+                cs.getEventQueue().put(new SystemEvent(SystemEvent.Type.BOOT_PROTOCOL_SERVERS, null));
+            } catch (InterruptedException e) {
+                log.warn("WARNING: Please don't interrupt the thread");
+            }
+        }
+        return "{ \"power\":" + cs.protocolServersBooted + " }";
+    }
 
 }

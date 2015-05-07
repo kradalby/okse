@@ -125,7 +125,7 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
         while (_running) {
             try {
                 SubscriptionTask task = queue.take();
-                log.debug(task.getType() + " job recieved, executing task...");
+                log.debug(task.getType() + " job received, executing task...");
                 // Perform the task
                 task.run();
             } catch (InterruptedException e) {
@@ -140,6 +140,7 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
     @Override
     public void stop() {
         _running = false;
+        removeAllListeners();
         Runnable job = () -> log.info("Stopping SubscriptionService...");
         try {
             queue.put(new SubscriptionTask(SubscriptionTask.Type.SHUTDOWN, job));
@@ -287,7 +288,7 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
      */
     public void addSubscriber(Subscriber s) {
         if (s == null) {
-            log.warn("Recieved null argument!");
+            log.warn("Received null argument!");
             return;
         }
         if (!_subscribers.contains(s)) {
@@ -308,7 +309,7 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
      */
     public void removeSubscriber(Subscriber s) {
         if (s == null) {
-            log.warn("Recieved null argument!");
+            log.warn("Received null argument!");
             return;
         }
         if (_subscribers.contains(s)) {
@@ -330,7 +331,7 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
      */
     public void renewSubscriber(Subscriber s, Long timeout) {
         if (s == null) {
-            log.warn("Recieved null argument!");
+            log.warn("Received null argument!");
             return;
         }
         if (_subscribers.contains(s)) {
@@ -351,7 +352,7 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
      */
     public void pauseSubscriber(Subscriber s) {
         if (s == null) {
-            log.warn("Recieved null argument!");
+            log.warn("Received null argument!");
             return;
         }
         if (_subscribers.contains(s)) {
@@ -372,7 +373,7 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
      */
     public void resumeSubscriber(Subscriber s) {
         if (s == null) {
-            log.warn("Recieved null argument!");
+            log.warn("Received null argument!");
             return;
         }
         if (_subscribers.contains(s)) {
@@ -396,7 +397,7 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
      */
     public void addPublisher(Publisher p) {
         if (p == null) {
-            log.warn("Recieved null argument!");
+            log.warn("Received null argument!");
             return;
         }
         if (!_publishers.contains(p)) {
@@ -417,7 +418,7 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
      */
     public void removePublisher(Publisher p) {
         if (p == null) {
-            log.warn("Recieved null argument!");
+            log.warn("Received null argument!");
             return;
         }
         if (_publishers.contains(p)) {
@@ -484,7 +485,7 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
         // Iterate over all subscribers
         getAllSubscribers().stream()
                     // Only pass on those who match topic argument
-                    .filter(s -> s.getTopic().equals(topic))
+                    .filter(s ->  s.getTopic() == null || s.getTopic().equals(topic))
                     // Collect in the results set
                     .forEach(s -> results.add(s));
 
@@ -553,6 +554,14 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
     /* ------------------------------------------------------------------------------------------ */
 
     /* Begin listener support */
+
+    /**
+     * Purges all registered listener objects from the SubscriptionService
+     */
+    public synchronized void removeAllListeners() {
+        _subscriptionListeners.clear();
+        _registrationListeners.clear();
+    }
 
     /**
      * SubscriptionChange event listener support

@@ -142,7 +142,7 @@ public class WSNRequestParser implements Hub {
         if (foundRecipient) {
             log.debug("Have recipient service, sending to recipient object");
             returnMessage = recipient.acceptMessage(message);
-            log.debug("Recieved returnMessage from recipient object");
+            log.debug("Received returnMessage from recipient object");
         } else {
             log.debug("Looking for service to send to...");
             for (ServiceConnection s: _protocolServer.getServices()) {
@@ -205,8 +205,6 @@ public class WSNRequestParser implements Hub {
                         }
 
                         if (e.getLinkedException() != null) {
-                            // For DEBUG purposes
-                            e.printStackTrace();
                             faultMessage += "\n\tWith linked exception:" + e.getLinkedException().getClass().getName();
                             faultMessage += e.getLinkedException().getMessage() == null ? "" : e.getLinkedException().getMessage();
                         }
@@ -331,7 +329,6 @@ public class WSNRequestParser implements Hub {
      * @param message The message to be sent out
      * @return An InternalMessage ready to be processed and sent across the wire.
      */
-    //TODO: Generate meaningful soap headers
     public InternalMessage generateOutgoingMessage(InternalMessage message) {
         Object messageContent = message.getMessage();
 
@@ -421,7 +418,7 @@ public class WSNRequestParser implements Hub {
 
     @Override
     public InternalMessage acceptLocalMessage(InternalMessage internalMessage) {
-        return this._protocolServer.sendMessage(this.generateOutgoingMessage(internalMessage));
+        return _protocolServer.sendMessage(this.generateOutgoingMessage(internalMessage));
     }
 
     @Override
@@ -431,17 +428,17 @@ public class WSNRequestParser implements Hub {
 
     @Override
     public void registerService(ServiceConnection serviceConnection) {
-        this._protocolServer.registerService(serviceConnection);
+        _protocolServer.registerService(serviceConnection);
     }
 
     @Override
     public void removeService(ServiceConnection serviceConnection) {
-        this._protocolServer.removeService(serviceConnection);
+        _protocolServer.removeService(serviceConnection);
     }
 
     @Override
     public boolean isServiceRegistered(ServiceConnection serviceConnection) {
-        return this._protocolServer.getServices().contains(serviceConnection);
+        return _protocolServer.getServices().contains(serviceConnection);
     }
 
     @Override

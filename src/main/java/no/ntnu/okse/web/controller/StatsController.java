@@ -26,6 +26,7 @@ package no.ntnu.okse.web.controller;
 
 import no.ntnu.okse.core.CoreService;
 import no.ntnu.okse.core.subscription.SubscriptionService;
+import no.ntnu.okse.core.topic.TopicService;
 import no.ntnu.okse.protocol.ProtocolServer;
 import no.ntnu.okse.web.model.ProtocolStats;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -47,23 +48,28 @@ public class StatsController {
 
     private static final String GET_STATS = "/get/all";
 
-
+    /**
+     * Returnes all the information needed to refresh the stats-pane
+     * @return A HashMap containing all the information
+     */
     @RequestMapping(method = RequestMethod.GET, value = GET_STATS)
     public @ResponseBody HashMap<String, Object> getAllStats() {
         CoreService cs = CoreService.getInstance();
         SubscriptionService ss = SubscriptionService.getInstance();
+        TopicService ts = TopicService.getInstance();
 
         HashMap<String, Object> result = new HashMap<>();
 
         // CoreService statistics
         result.put("coreServiceStatistics", new HashMap<String, Object>(){{
             put("totalMessagesSent", cs.getTotalMessagesSentFromProtocolServers());
-            put("totalMessagesReceived", cs.getTotalMessagesRecievedFromProtocolServers());
+            put("totalMessagesReceived", cs.getTotalMessagesReceivedFromProtocolServers());
             put("totalRequests", cs.getTotalRequestsFromProtocolServers());
             put("totalBadRequests", cs.getTotalBadRequestsFromProtocolServers());
             put("totalErrors", cs.getTotalErrorsFromProtocolServers());
             put("publishers", ss.getNumberOfPublishers());
             put("subscribers", ss.getNumberOfSubscribers());
+            put("topics", ts.getTotalNumberOfTopics());
         }});
 
         // ProtocolServer statistics
@@ -74,7 +80,7 @@ public class StatsController {
             protocolStats.add(new ProtocolStats(
                     p.getProtocolServerType(),
                     p.getTotalMessagesSent(),
-                    p.getTotalMessagesRecieved(),
+                    p.getTotalMessagesReceived(),
                     p.getTotalRequests(),
                     p.getTotalBadRequests(),
                     p.getTotalErrors()

@@ -36,10 +36,12 @@ import org.apache.qpid.proton.engine.Transport;
 import org.apache.qpid.proton.engine.TransportException;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
+import java.util.Iterator;
 
 /**
  * Most of this code is from the qpid-proton-demo (https://github.com/rhs/qpid-proton-demo) by Rafael Schloming
@@ -51,7 +53,16 @@ public class Driver extends BaseHandler {
     final private Handler[] handlers;
     final private Selector selector;
     private static Logger log;
+    private boolean _running;
+    private Acceptor acceptor;
 
+
+    /**
+     *
+     * @param collector
+     * @param handlers
+     * @throws IOException
+     */
     public Driver(Collector collector, Handler ... handlers) throws IOException {
         this.collector = collector;
         this.handlers = handlers;
@@ -59,21 +70,49 @@ public class Driver extends BaseHandler {
         log = Logger.getLogger(Driver.class.getName());
     }
 
+    /**
+     *
+     * @param host Client host address
+     * @param port Client port
+     * @throws IOException
+     */
     public void listen(String host, int port) throws IOException {
-        new Acceptor(host, port);
+        //new Acceptor(host, port);
+        acceptor = new Acceptor(host, port);
     }
 
+    /**
+     * Gets the netaddress from the acceptor
+     * @return The address from connection
+     */
+    public InetAddress getInetAddress() {
+        return acceptor.getInetAddress();
+    }
+
+    /**
+     * Gets the port from the acceptor
+     * @return The port from connection
+     */
+    public Integer getPort() {
+        return acceptor.getPort();
+    }
+
+    /**
+     *
+     * @throws IOException
+     */
     public void run() throws IOException {
+        if (!_running) {
+            _running = true;
+        }
         while (true) {
 
             for (Handler h : handlers) {
                 if (h instanceof AMQPServer) {
-                    log.debug("Executing sendNextMessagesInQueue");
                     ((AMQPServer) h).sendNextMessagesInQueue();
                 }
             }
 
-            log.debug(collector.toString());
             processEvents();
 
 
@@ -85,22 +124,36 @@ public class Driver extends BaseHandler {
             // cancelled keys remaining.
             selector.selectNow();
             if (selector.keys().isEmpty()) {
+                log.info("No sockets open - closing the selector");
                 selector.close();
                 return;
             }
 
             selector.selectedKeys().clear();
             selector.select();
-
             for (SelectionKey key : selector.selectedKeys()) {
                 Selectable selectable = (Selectable) key.attachment();
                 selectable.selected();
             }
+
+            if (!_running) {
+                Iterator keys = selector.keys().iterator();
+                while (keys.hasNext()) {
+                    SelectionKey key = (SelectionKey) keys.next();
+                    key.cancel();
+                    key.channel().close();
+                }
+            }
+
         }
     }
 
+    /**
+     * Process events from the event collector
+     *
+     */
     public void processEvents() {
-        while (true) {
+        while (_running) {
             Event ev = collector.peek();
             if (ev == null) break;
             log.debug("Dispatching event of type: " + ev.getType().name());
@@ -108,12 +161,17 @@ public class Driver extends BaseHandler {
             for (Handler h : handlers) {
                 ev.dispatch(h);
                 if (h instanceof AMQPServer) {
-                    log.debug("Executing sendNextMessagesInQueue in processEvents");
                     ((AMQPServer) h).sendNextMessagesInQueue();
                 }
             }
             collector.pop();
         }
+    }
+
+    //Driver.stop() method, for stoping the driver and closing the socket
+    public void stop() {
+        _running = false;
+        selector.wakeup();
     }
 
     @Override
@@ -123,9 +181,14 @@ public class Driver extends BaseHandler {
         ch.selected();
     }
 
+    /**
+     *
+     * @param evt
+     */
     @Override
     public void onConnectionLocalOpen(Event evt) {
         Connection conn = evt.getConnection();
+        Transport transport = evt.getTransport();
         if (conn.getRemoteState() == EndpointState.UNINITIALIZED) {
             try {
                 new Connector(conn);
@@ -135,6 +198,7 @@ public class Driver extends BaseHandler {
         }
     }
 
+
     private interface Selectable {
         void selected() throws IOException;
     }
@@ -143,7 +207,14 @@ public class Driver extends BaseHandler {
 
         final private ServerSocketChannel socket;
         final private SelectionKey key;
+        private SocketChannel cachedLatestConnectedClient;
 
+        /**
+         *
+         * @param host
+         * @param port
+         * @throws IOException
+         */
         Acceptor(String host, int port) throws IOException {
             socket = ServerSocketChannel.open();
             socket.configureBlocking(false);
@@ -152,22 +223,48 @@ public class Driver extends BaseHandler {
             key = socket.register(selector, SelectionKey.OP_ACCEPT, this);
         }
 
+        /**
+         *
+         * @throws IOException
+         */
         public void selected() throws IOException {
             SocketChannel sock = socket.accept();
-            log.debug("ACCEPTED: " + sock);
+            cachedLatestConnectedClient = sock;
             Connection conn = Connection.Factory.create();
             conn.collect(collector);
+            log.debug("ACCEPTED: " + sock);
             Transport transport = Transport.Factory.create();
-            Sasl sasl = transport.sasl();
-            sasl.setMechanisms("ANONYMOUS");
-            sasl.server();
-            sasl.done(Sasl.PN_SASL_OK);
+            if (AMQProtocolServer.getInstance().useSASL) {
+                Sasl sasl = transport.sasl();
+                sasl.setMechanisms("ANONYMOUS");
+                sasl.server();
+                Sasl.SaslOutcome outcome = sasl.getOutcome();
+                sasl.done(Sasl.PN_SASL_OK);
+            }
             transport.bind(conn);
             new ChannelHandler(sock, SelectionKey.OP_READ, transport);
         }
+
+        /**
+         *
+         * @return Netaddress from latest connected client
+         */
+        public InetAddress getInetAddress() {
+            return cachedLatestConnectedClient.socket().getInetAddress();
+        }
+
+        /**
+         *
+         * @return Port from latest connected client
+         */
+        public Integer getPort() {
+            return cachedLatestConnectedClient.socket().getPort();
+        }
     }
 
-
+    /**
+     *
+     */
     private class ChannelHandler implements Selectable {
 
         final SocketChannel socket;
@@ -182,6 +279,10 @@ public class Driver extends BaseHandler {
             transport.setContext(this);
         }
 
+        /**
+         *
+         * @return
+         */
         boolean update() {
             if (socket.isConnected()) {
                 int c = transport.capacity();
@@ -200,6 +301,9 @@ public class Driver extends BaseHandler {
             }
         }
 
+        /**
+         * Handles connection to the server
+         */
         public void selected() {
             if (!key.isValid()) { return; }
 
@@ -256,19 +360,46 @@ public class Driver extends BaseHandler {
 
         }
 
+        /**
+         * Used if only ChannelHandler object is available
+         * @return Netaddress from connection
+         */
+        public InetAddress getInetAddress() {
+            return this.socket.socket().getInetAddress();
+        }
+
+        /**
+         * Used if only ChannelHandler object is available
+         * @return Port from connection
+         */
+        public Integer getPort() {
+            return this.socket.socket().getPort();
+        }
+
     }
 
+    /**
+     * Binds transport to the given connection
+     * @param conn
+     * @return Transport
+     */
     private static Transport makeTransport(Connection conn) {
         Transport transport = Transport.Factory.create();
-        Sasl sasl = transport.sasl();
-        sasl.setMechanisms("ANONYMOUS");
-        sasl.client();
+        if (AMQProtocolServer.getInstance().useSASL) {
+            Sasl sasl = transport.sasl();
+            sasl.setMechanisms("ANONYMOUS");
+            sasl.client();
+        }
         transport.bind(conn);
         return transport;
     }
 
     private class Connector extends ChannelHandler {
-
+        /**
+         *
+         * @param conn
+         * @throws IOException
+         */
         Connector(Connection conn) throws IOException {
             super(SocketChannel.open(), SelectionKey.OP_CONNECT, makeTransport(conn));
             log.debug("CONNECTING: " + conn.getHostname());
@@ -276,9 +407,22 @@ public class Driver extends BaseHandler {
         }
     }
 
+    /**
+     *
+     */
     public void wakeUp() {
         log.debug("Waking up the selector to get out the next messages from the queue");
         selector.wakeup();
+    }
+
+    /**
+     *
+     * @param buf
+     */
+    public void printByteBuffer(ByteBuffer buf) {
+        for (int i = 0; i < buf.limit();i++) {
+            System.out.println(String.format("Position: %s: %s", i, buf.get(i)));
+        }
     }
 
 }

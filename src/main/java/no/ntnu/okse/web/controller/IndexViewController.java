@@ -24,8 +24,10 @@
 
 package no.ntnu.okse.web.controller;
 
+import no.ntnu.okse.core.CoreService;
 import no.ntnu.okse.core.Utilities;
 import no.ntnu.okse.core.subscription.SubscriptionService;
+import no.ntnu.okse.core.topic.TopicService;
 import org.springframework.beans.factory.annotation.Value;
 import no.ntnu.okse.Application;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -38,10 +40,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.net.*;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Properties;
+import java.util.*;
 import java.util.logging.Logger;
 
 /**
@@ -57,8 +56,19 @@ public class IndexViewController {
     @Value("${spring.application.name}")
     private String appName;
 
+    @Value("${ADMIN_PANEL_HOST}")
+    private String serverHost;
+
+    @Value("${server.port}")
+    private int serverPort;
+
     private Properties environment = System.getProperties();
 
+    /**
+     * This method returns the view to render when a user tries to reach the '/'-url
+     * @param model The model to configure
+     * @return A string telling what HTML fragment to render
+     */
     @RequestMapping("/")
     public String index(Model model) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -69,45 +79,46 @@ public class IndexViewController {
         }
 
         SubscriptionService ss = SubscriptionService.getInstance();
+        TopicService ts = TopicService.getInstance();
+        CoreService cs = CoreService.getInstance();
 
-        model.addAttribute("projectName", appName);
+        long totalRam = Runtime.getRuntime().totalMemory();
+        long freeRam = Runtime.getRuntime().freeMemory();
+
+        model.addAttribute("projectName", appName + " (" + Application.VERSION  +")");
         model.addAttribute("environment", createEnvironmentList());
+        model.addAttribute("serverPort", serverPort);
+        model.addAttribute("serverHost", serverHost);
         model.addAttribute("subscribers", ss.getNumberOfSubscribers());
         model.addAttribute("publishers", ss.getNumberOfPublishers());
+        model.addAttribute("topics", ts.getTotalNumberOfTopics());
         model.addAttribute("uptime", Utilities.getDurationAsISO8601(Application.getRunningTime()));
+        model.addAttribute("cpuCores", Runtime.getRuntime().availableProcessors());
+        model.addAttribute("totalRam", totalRam / MainController.MB);
+        model.addAttribute("freeRam", freeRam / MainController.MB);
+        model.addAttribute("usedRam", (totalRam - freeRam) / MainController.MB);
 
-        HashSet<String> ipAddresses = new HashSet<>();
+        ArrayList<HashMap<String, Object>> protocols = new ArrayList<>();
 
-        String ip;
-        try {
-            Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
-            while (interfaces.hasMoreElements()) {
-                NetworkInterface iFace = interfaces.nextElement();
-                // Filters out 127.0.0.1 and inactive interfaces
-                if (iFace.isLoopback() || !iFace.isUp())
-                    continue;
+        Application.cs.getAllProtocolServers().forEach(p -> {
+            protocols.add(new HashMap<String, Object>(){{
+                put("host", p.getHost());
+                put("port", p.getPort());
+                put("type", p.getProtocolServerType());
+            }});
+        });
 
-                Enumeration<InetAddress> addresses = iFace.getInetAddresses();
-                iFace.getInterfaceAddresses();
-                while(addresses.hasMoreElements()) {
-                    InetAddress addr = addresses.nextElement();
-                    // We are only interested in Inet4Addresses
-                    if (addr instanceof Inet6Address)
-                        continue;
-                    ip = addr.getHostAddress();
-                    ipAddresses.add(ip);
-                }
-            }
-        } catch (SocketException e) {
-            throw new RuntimeException(e);
-        }
-
-        model.addAttribute("serverIpAddresses", ipAddresses);
+        model.addAttribute("protocols", protocols);
+        model.addAttribute("protocolPower", cs.protocolServersBooted);
 
         return "fragments/indexLoggedIn";
 
     }
 
+    /**
+     * Private helper method that creates a HashMap of some environment specifics
+     * @return A HashMap containing JAVA information etc.
+     */
     private HashMap<String, String> createEnvironmentList() {
         HashMap<String, String> properties = new HashMap<>();
         properties.put("Java Runtime Name", environment.getProperty("java.runtime.name"));

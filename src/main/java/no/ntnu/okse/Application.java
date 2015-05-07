@@ -51,7 +51,7 @@ import java.util.Properties;
 public class Application {
 
     // Version
-    public static final String VERSION = "0.0.1a";
+    public static final String VERSION = "1.0.0";
 
     // Initialization time
     public static long startedAt = System.currentTimeMillis();
@@ -64,7 +64,7 @@ public class Application {
     public static long DEFAULT_PUBLISHER_TERMINATION_TIME = 15552000000L; // Half a year
 
     /* Public reference to the properties object for potential custom options */
-    public static Properties config;
+    public static Properties config = new Properties();
 
     private static Logger log;
     public static CoreService cs;
@@ -86,8 +86,8 @@ public class Application {
         // Init the logger
         log = Logger.getLogger(Application.class.getName());
 
+        // Create a file handler for database file
         File dbFile = new File("okse.db");
-
         if (!dbFile.exists()) {
             DB.initDB();
             log.info("okse.db initiated");
@@ -182,6 +182,7 @@ public class Application {
                 case "ENABLE_WSNU_DEBUG_OUTPUT":
                     if (properties.getProperty(option).equalsIgnoreCase("true")) Log.setEnableDebug(true);
                     else Log.setEnableDebug(false);
+                    break;
             }
         }
     }

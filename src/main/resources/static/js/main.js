@@ -39,8 +39,12 @@ var Main = (function($) {
     //  Private variable for holding the interval used to update the panes
     var clickInterval
 
+
     // The base url, that appends to all ajax-requests
     var BASE_URL = "/api/"
+
+    // This variable holds the last known status of the protocol servers
+    var cachedProtocolPowerStatus
 
     /*
         Sets some default settings for every AJAX request, like the request url and data type.
@@ -87,6 +91,33 @@ var Main = (function($) {
         }, $('#settings-update-interval').val() * 1000);
     }
 
+    var bindButtons = function() {
+        $('#protocol-power-button').on('click', function() {
+            if (cachedProtocolPowerStatus) {
+                if (confirm("Are you sure you want to shut down the protocol servers? This will remove all publishers and subscribers.")) {
+                    Main.ajax({
+                        url: 'main/protocols/power',
+                        type: 'POST',
+                        error: function(xhr, status, error) {
+                            Main.displayMessage("Unable to stop the protocol servers")
+                            Main.error(xhr, status, error)
+                        }
+                    });
+                }
+            } else {
+                Main.ajax({
+                    url: 'main/protocols/power',
+                    type: 'POST',
+                    error: function(xhr, status, error) {
+                        Main.displayMessage("Unable to start the protocol servers")
+                        Main.error(xhr, status, error)
+                    }
+                });
+            }
+
+        });
+    }
+
     /*
         Global error function that shows the Ajax callback and request url.
      */
@@ -109,15 +140,64 @@ var Main = (function($) {
         $('#cpuCores').html(statistics.cpuAvailable)
     }
 
+    var refreshProtocolsTable = function(protocols) {
+        var trHTML = '';
+        $.each(protocols, function (i, protocol) {
+            trHTML +=
+                '<tr>' +
+                    '<td>' + protocol.type + '</td>' +
+                    '<td>' + protocol.host + '</td>' +
+                    '<td>' + protocol.port + '</td>' +
+                '</tr>';
+        });
+        return trHTML
+    }
+
+    var updateProtocolPowerButton = function() {
+         if (cachedProtocolPowerStatus) {
+            if ($('#protocol-power-button').hasClass('btn-success')) {
+                $('#protocol-power-button').removeClass('btn-success')
+                $('#protocol-power-button').addClass('btn-danger')
+                $('#protocol-power-button').text('Stop protocolservers')
+            }
+         } else {
+            if ($('#protocol-power-button').hasClass('btn-danger')) {
+                $('#protocol-power-button').removeClass('btn-danger')
+                $('#protocol-power-button').addClass('btn-success')
+                $('#protocol-power-button').text('Start protocolservers')
+             }
+         }
+    }
+
     var refresh = function(response) {
-        Stats.refreshSubscribersAndPublishers(response.subscribers, response.publishers)
+        refreshElementByClassWithText('.totalSubscribers', response.subscribers)
+        refreshElementByClassWithText('.totalPublishers', response.publishers)
+        refreshElementByClassWithText('.totalTopics', response.topics)
         $('#uptime').html(response.uptime)
         refreshRuntimeStatistics(response.runtimeStatistics)
+
+        if (response.protocols.length != 0) {
+            $('#protocolinfo-table').html(refreshProtocolsTable(response.protocols))
+        } else {
+            $('#protocolinfo-table').html('<tr class="danger"><td colspan="3"><h4 class="text-center">No protocols returned from CoreService</h4></td></tr>')
+        }
+
+        cachedProtocolPowerStatus = response.protocolPower
+        updateProtocolPowerButton()
     }
+
+    // Updates the given class with a given text
+    var refreshElementByClassWithText = function(element, text) {
+        $(element).each(function() {
+            $(this).text(text)
+        });
+    }
+
 
     return {
         ajax: ajax,
         error: error,
+        refreshElementByClassWithText: refreshElementByClassWithText,
         setIntervalForTab: setIntervalForTab,
         clearIntervalForTab: function() {
             clearInterval(clickInterval)
@@ -144,6 +224,7 @@ var Main = (function($) {
 
                 switch (clickedElement) {
                     case "main":
+                        ajaxSettings.url = 'main/get/all'
                         ajaxSettings.success = refresh
                         break;
                     case "topics":
@@ -159,6 +240,7 @@ var Main = (function($) {
                         ajaxSettings.success = Logs.refresh
                         break;
                     case "config":
+                        ajaxSettings.url = clickedElement + '/mapping/get/all'
                         ajaxSettings.success = Config.refresh
                         break;
                     case "subscribers":
@@ -179,11 +261,12 @@ var Main = (function($) {
             if ($('#main').length) {
                 clickInterval = setInterval( function() {
                     ajax({
-                        url: 'main',
+                        url: 'main/get/all',
                         type: 'GET',
                         success: refresh
                     })}, 2000);
                 Logs.init()
+                bindButtons()
             }
         }
     }

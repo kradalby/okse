@@ -40,7 +40,7 @@ var Stats = (function($) {
                 '<tr>' +
                     '<td>' + protocol.protocolServer + '</td>' +
                     '<td>' + protocol.totalMessagesSent + '</td>' +
-                    '<td>' + protocol.totalMessagesRecieved + '</td>' +
+                    '<td>' + protocol.totalMessagesReceived + '</td>' +
                     '<td>' + protocol.totalRequests + '</td>' +
                     '<td>' + protocol.totalBadRequests + '</td>' +
                     '<td>' + protocol.totalErrors + '</td>' +
@@ -49,15 +49,7 @@ var Stats = (function($) {
         return trHTML
     }
 
-    // Updates all the subscriber counters on the main
-    var refreshSubscribersAndPublishers = function(subscribers, publishers) {
-        $('.totalSubscribers').each(function() {
-            $(this).text(subscribers)
-        });
-        $('.totalPublishers').each(function() {
-            $(this).text(publishers)
-        });
-    }
+
 
     var refreshCoreServiceStatistics = function(statistics) {
         $('#messagesSent').html(statistics.totalMessagesSent)
@@ -65,14 +57,21 @@ var Stats = (function($) {
         $('#totalRequests').html(statistics.totalRequests)
         $('#badRequests').html(statistics.totalBadRequests)
         $('#totalErrors').html(statistics.totalErrors)
-        refreshSubscribersAndPublishers(statistics.subscribers, statistics.publishers)
+        Main.refreshElementByClassWithText('.totalSubscribers', statistics.subscribers)
+        Main.refreshElementByClassWithText('.totalPublishers', statistics.publishers)
+        Main.refreshElementByClassWithText('.totalTopics', statistics.topics)
     }
 
     return {
-        refreshSubscribersAndPublishers: refreshSubscribersAndPublishers,
         refresh: function(data) {
-            var table = createTableForAllProtocols(data.protocolServerStatistics)
-            $('#protocol-table').html(table)
+
+            if (data.protocolServerStatistics.length != 0) {
+                var table = createTableForAllProtocols(data.protocolServerStatistics)
+                $('#protocol-table').html(table)
+
+            } else {
+                $('#protocol-table').html('<tr class="danger"><td colspan="6"><h4 class="text-center">No protocols returned from CoreService</h4></td></tr>')
+            }
 
             refreshCoreServiceStatistics(data.coreServiceStatistics)
         }

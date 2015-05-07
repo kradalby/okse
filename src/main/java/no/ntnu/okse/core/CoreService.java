@@ -30,13 +30,16 @@ import no.ntnu.okse.core.event.Event;
 import no.ntnu.okse.core.event.SystemEvent;
 import no.ntnu.okse.core.messaging.Message;
 import no.ntnu.okse.core.messaging.MessageService;
+import no.ntnu.okse.core.subscription.SubscriptionService;
+import no.ntnu.okse.core.topic.TopicService;
 import no.ntnu.okse.protocol.ProtocolServer;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.*;
 
 /**
  * Created by Aleksander Skraastad (myth) on 2/25/15.
@@ -55,6 +58,7 @@ public class CoreService extends AbstractCoreService {
     private ExecutorService executor;
     private HashSet<AbstractCoreService> services;
     private ArrayList<ProtocolServer> protocolServers;
+    public static boolean protocolServersBooted = false;
 
     /**
      * Constructs the CoreService instance. Constructor is private due to the singleton pattern used for
@@ -83,16 +87,8 @@ public class CoreService extends AbstractCoreService {
         eventQueue = new LinkedBlockingQueue();
         services = new HashSet<>();
         protocolServers = new ArrayList<>();
-        int execServicePoolSize = 10;
-        // Check if default has been overridden in the config file
-        if (Application.config.containsKey("CORE_SERVICE_THREAD_POOL_SIZE")) {
-            try {
-                execServicePoolSize = Integer.parseInt(Application.config.getProperty("CORE_SERVICE_THREAD_POOL_SIZE"));
-            } catch (NumberFormatException e) {
-                log.error("Failed to parse CoreService executor service thread pool size, using default (10)");
-            }
-        }
-        executor = Executors.newFixedThreadPool(execServicePoolSize);
+        // Initialize the ExecutorService (Dynamic threadpool that increases and decreases on demand in runtime)
+        executor = Executors.newCachedThreadPool();
         // Set the invoked flag
         _invoked = true;
     }
@@ -139,7 +135,10 @@ public class CoreService extends AbstractCoreService {
 
         // Call the boot() method on all registered ProtocolServers
         log.info("Booting ProtocolServers");
-        this.bootProtocolServers();
+        // Since this is CoreService bootup, we iterate directly, avoiding unnecessary overhead caused
+        // by the bootProtocolServers() method, that is used during live start / stop of protocol servers.
+        protocolServers.forEach(ps -> ps.boot());
+        protocolServersBooted = true;
         log.info("Completed booting ProtocolServers");
 
         // Call the registerListenerSupport() method on all registered Core , including self
@@ -154,6 +153,8 @@ public class CoreService extends AbstractCoreService {
             try {
                 Event e = eventQueue.take();
                 log.debug("Consumed an event: " + e);
+                if (e.getType().equals(SystemEvent.Type.SHUTDOWN_PROTOCOL_SERVERS)) stopAllProtocolServers();
+                else if (e.getType().equals(SystemEvent.Type.BOOT_PROTOCOL_SERVERS)) bootProtocolServers();
             } catch (InterruptedException e) {
                 log.error("Interrupted while attempting to fetch next event from eventQueue");
             }
@@ -168,7 +169,14 @@ public class CoreService extends AbstractCoreService {
     @Override
     public void stop() {
         // Shut down all the Protocol Servers
-        this.protocolServers.forEach(p -> p.stopServer());
+        stopAllProtocolServers();
+
+        // Give the threads a few seconds to complete
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            log.warn("Interrupted during shutdown sleep");
+        }
         // Shut down all the Core Services
         this.services.forEach(s -> s.stop());
 
@@ -182,6 +190,8 @@ public class CoreService extends AbstractCoreService {
             log.error("Interrupted while trying to inject the SHUTDOWN event to eventQueue");
         }
     }
+
+    /* Begin Public API */
 
     /**
      * This command executes a job implementing the Runnable interface
@@ -255,15 +265,15 @@ public class CoreService extends AbstractCoreService {
      * @return: An integer representing the total amount of requests.
      */
     public int getTotalRequestsFromProtocolServers() {
-        return protocolServers.stream().map(ProtocolServer::getTotalRequests).reduce(0, (a, b) -> a + b);
+        return getAllProtocolServers().stream().map(ProtocolServer::getTotalRequests).reduce(0, (a, b) -> a + b);
     }
 
     /**
-     * Statistics for total number of messages that has been recieved through all protocol servers
-     * @return: An integer representing the total amount of messages recieved.
+     * Statistics for total number of messages that has been received through all protocol servers
+     * @return: An integer representing the total amount of messages received.
      */
-    public int getTotalMessagesRecievedFromProtocolServers() {
-        return protocolServers.stream().map(ProtocolServer::getTotalMessagesRecieved).reduce(0, (a, b) -> a + b);
+    public int getTotalMessagesReceivedFromProtocolServers() {
+        return getAllProtocolServers().stream().map(ProtocolServer::getTotalMessagesReceived).reduce(0, (a, b) -> a + b);
     }
 
     /**
@@ -271,7 +281,7 @@ public class CoreService extends AbstractCoreService {
      * @return An integer representing the total number of messages sent
      */
     public int getTotalMessagesSentFromProtocolServers() {
-        return protocolServers.stream().map(ProtocolServer::getTotalMessagesSent).reduce(0, (a, b) -> a + b);
+        return getAllProtocolServers().stream().map(ProtocolServer::getTotalMessagesSent).reduce(0, (a, b) -> a + b);
     }
 
     /**
@@ -279,7 +289,7 @@ public class CoreService extends AbstractCoreService {
      * @return: An integer representing the total amount of bad or malformed requests
      */
     public int getTotalBadRequestsFromProtocolServers() {
-        return protocolServers.stream().map(ProtocolServer::getTotalBadRequests).reduce(0, (a, b) -> a + b);
+        return getAllProtocolServers().stream().map(ProtocolServer::getTotalBadRequests).reduce(0, (a, b) -> a + b);
     }
 
     /**
@@ -287,14 +297,18 @@ public class CoreService extends AbstractCoreService {
      * @return: An integer representing the total amount of errors from protocol servers.
      */
     public int getTotalErrorsFromProtocolServers() {
-        return protocolServers.stream().map(ProtocolServer::getTotalErrors).reduce(0, (a, b) -> a + b);
+        return getAllProtocolServers().stream().map(ProtocolServer::getTotalErrors).reduce(0, (a, b) -> a + b);
     }
 
     /**
      * Fetches the ArrayList of ProtocolServers currently added to CoreService.
-     * @return: An ArrayList of ProtocolServers
+     *
+     * @return: An ArrayList of ProtocolServers that are registered. Returns an empty ArrayList if not booted.
      */
-    public ArrayList<ProtocolServer> getAllProtocolServers() { return this.protocolServers; }
+    public ArrayList<ProtocolServer> getAllProtocolServers() {
+        if (protocolServersBooted) return this.protocolServers;
+        else return new ArrayList<>();
+    }
 
     /**
      * Helper method to fetch a protocol server defined by the actual Class
@@ -320,6 +334,7 @@ public class CoreService extends AbstractCoreService {
 
         // Create a system message
         Message m = new Message("The broker is shutting down", null, null, Application.OKSE_SYSTEM_NAME);
+        m.setSystemMessage(true);
 
         // Distribute the message to the Message Service
         MessageService.getInstance().distributeMessage(m);
@@ -336,7 +351,22 @@ public class CoreService extends AbstractCoreService {
 
         // Iterate over all protocol servers and initiate shutdown process
         getAllProtocolServers().forEach(ps -> ps.stopServer());
-        log.info("ProtocolServers have been stopped");
+        protocolServersBooted = false;
+
+        // Let the thread wait a bit, for tasks to be completed.
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            log.error("Interrupt during shutdown wait, please dont.");
+        }
+
+        // Removes all listeners
+        TopicService.getInstance().removeAllListeners();
+        SubscriptionService.getInstance().removeAllListeners();
+        // Reinitialize listener support for the core services
+        registerListenerSupportForAllCoreServices();
+
+        log.info("Completed dispatching SHUTDOWN to all ProtocolServers");
     }
 
     /**
@@ -353,16 +383,47 @@ public class CoreService extends AbstractCoreService {
         return null;
     }
 
+    /* Begin private helper methods */
+
     /**
      * Helper method that boots all registered core services
      */
     private void bootCoreServices() { services.forEach(s -> s.boot()); }
 
     /**
-     * Helper method that boots all added protocolservers.
+     * Helper method that boots all added protocolservers
      */
-    private void bootProtocolServers() {
+    public void bootProtocolServers() {
+        // If they are already booted, return.
+        if (protocolServersBooted) return;
+
+        // Fetch the protocolserver Classes registered
+        ArrayList<Class> protocolServerClasses = new ArrayList<>();
+        protocolServers.forEach(ps -> protocolServerClasses.add(ps.getClass()));
+        // Clear the cached protocol servers from core service registry
+        protocolServers.clear();
+        // For each of the fetched classes that was in cache
+        protocolServerClasses.forEach(clazz -> {
+            try {
+                // Fetch the getInstance method from the class
+                Method instanceMethod = clazz.getMethod("getInstance", null);
+                // Cast the returned instance as a ProtocolServer
+                ProtocolServer ps = (ProtocolServer) instanceMethod.invoke(null, null);
+                // Add the invoked instance to the ProtocolServer registry again
+                addProtocolServer(ps);
+            } catch (NoSuchMethodException e) {
+                log.error("Failed to locate getInstance method on " + clazz + ". Is it implemented properly?");
+            } catch (InvocationTargetException e) {
+                log.error("Failed to invoke getInstance method on " + clazz + ". Is it implemented properly?");
+            } catch (IllegalAccessException e) {
+                log.error("Failed to invoke getInstance method on " + clazz + ". It needs to be public access.");
+            }
+        });
+        // At this point, previously cached registered protocol servers have been removed, temporarily
+        // retaining the Class from each protocol server. They have been reinvoked and the new instances
+        // have been reinserted into the registry. Time to boot.
         protocolServers.forEach(ps -> ps.boot());
+        protocolServersBooted = true;
     }
 
 

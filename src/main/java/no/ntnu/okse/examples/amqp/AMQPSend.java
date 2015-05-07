@@ -47,7 +47,7 @@ import java.util.logging.Logger;
 public class AMQPSend {
 
     private static Logger tracer = Logger.getLogger("proton.example");
-    private String address = "amqp://127.0.0.1/bang/bang";
+    private String address = "amqp://78.91.2.238:5672/bang/bang";
     private String subject = "Artig";
     private String[] bodies = new String[]{"Hello World!"};
 
@@ -83,9 +83,9 @@ public class AMQPSend {
 
     private void run() {
         try {
-            Messenger mng = new MessengerImpl();
+            Messenger mng = Messenger.Factory.create();
             mng.start();
-            Message msg = new MessageImpl();
+            Message msg = Message.Factory.create();
             msg.setAddress(address);
             System.out.println(msg.getAddress());
             if (subject != null) msg.setSubject(subject);

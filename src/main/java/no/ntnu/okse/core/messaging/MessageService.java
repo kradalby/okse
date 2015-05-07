@@ -29,10 +29,13 @@ import no.ntnu.okse.core.AbstractCoreService;
 import no.ntnu.okse.core.CoreService;
 import no.ntnu.okse.core.event.TopicChangeEvent;
 import no.ntnu.okse.core.event.listeners.TopicChangeListener;
+import no.ntnu.okse.core.topic.Topic;
 import no.ntnu.okse.core.topic.TopicService;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -113,12 +116,12 @@ public class MessageService extends AbstractCoreService implements TopicChangeLi
                 try {
                     // Fetch the next job, will wait until a new message arrives
                     Message m = queue.take();
-                    log.info("Recieved a message for distrubution: " + m);
+                    log.info("Received a message for distrubution: " + m);
 
                     // Do we have a system message?
                     if (m.isSystemMessage() && m.getTopic() == null) {
 
-                        log.debug("Recieved message was a SystemMessage: " + m.getMessage());
+                        log.debug("Received message was a SystemMessage: " + m.getMessage());
 
                         // Check if we are to broadcast this system message
                         if (Application.BROADCAST_SYSTEM_MESSAGES_TO_SUBSCRIBERS) {
@@ -143,10 +146,38 @@ public class MessageService extends AbstractCoreService implements TopicChangeLi
                         continue;
                     }
 
+                    HashSet<Topic> mappings = TopicService.getInstance().getAllMappingsAgainstTopic(m.getTopic());
+                    if (mappings == null) {
+                        log.debug("The Topic{" + m.getTopic() + "} has no mappings");
+                    } else {
+                        log.debug("Found the following mappings against Topic{" + m.getTopic() + "}: " + mappings);
+
+                        generateMessageForAGivenTopicSet(m, mappings).forEach(duplicateMessage -> {
+                            duplicateMessage.setAttribute("duplicate", m.getTopic());
+
+                            if (m.getAttribute("duplicate") != null) {
+                                if ( ! m.getTopic().equals(duplicateMessage.getAttribute("duplicate"))) {
+                                    distributeMessage(duplicateMessage);
+                                    log.debug("The message to Topic{" + duplicateMessage.getTopic() + "} was distributed");
+                                } else {
+                                    log.debug("The message to Topic{" + duplicateMessage.getTopic() + "} is a duplicate against Topic{" + m.getTopic() +"}, and will not be distributed");
+                                }
+                            } else if (TopicService.getInstance().topicExists(m.getTopic())) {
+                                distributeMessage(duplicateMessage);
+                                log.debug("The message to Topic{" + duplicateMessage.getTopic() + "} was distributed");
+                            } else {
+                                log.debug("The message was not sent. Most likely since the Topic{" + duplicateMessage.getTopic() + "} does not exist");
+                            }
+
+                        });
+                    }
+
+
+
                     // Tell the ExecutorService to execute the following job
                     CoreService.getInstance().execute(() -> {
                         // Add message to latestMessages cache
-                        latestMessages.put(m.getTopic().getFullTopicString(), m);
+                        latestMessages.put(m.getTopic(), m);
                         // Fetch all registered protocol servers, and call the sendMessage() method on them
                         CoreService.getInstance().getAllProtocolServers().forEach(p -> {
                             // Fire the sendMessage on all servers
@@ -186,6 +217,8 @@ public class MessageService extends AbstractCoreService implements TopicChangeLi
         }
     }
 
+    /* Begin Public API */
+
     /**
      * Adds a Message object into the message queue for distribution
      * @param m The message object to be distributed
@@ -217,6 +250,28 @@ public class MessageService extends AbstractCoreService implements TopicChangeLi
         return Application.CACHE_MESSAGES;
     }
 
+
+    /**
+     * Takes in a message and a HashSet of topics and creates duplicate messages of
+     * the origin message, and returns it as a list.
+     *
+     * @param m The origin message
+     * @param topics A HashSet containing all the topics that the message topic is mapped against
+     * @return A containing the new message objects, to dispatch into the queue.
+     */
+    public List<Message> generateMessageForAGivenTopicSet(Message m, HashSet<Topic> topics) {
+        ArrayList<Message> collector = new ArrayList<>();
+
+        topics.stream()
+                .forEach(t -> {
+                    Message msg = new Message(m.getMessage(), t.getFullTopicString(), m.getPublisher(), m.getOriginProtocol());
+                    collector.add(msg);
+                });
+
+        return collector;
+    }
+
+
     /* ----------------------------------------------------------------------------------------------- */
 
     /* Private helper methods */
@@ -232,7 +287,7 @@ public class MessageService extends AbstractCoreService implements TopicChangeLi
         // Iterate over all topics and generate individual messages per topic
         TopicService.getInstance().getAllTopics().stream().forEach(t -> {
             // Create the message wrapper
-            Message msg = new Message(m.getMessage(), t, m.getPublisher(), m.getOriginProtocol());
+            Message msg = new Message(m.getMessage(), t.getFullTopicString(), m.getPublisher(), m.getOriginProtocol());
             // Flag the generated message the same as the originating message
             msg.setSystemMessage(m.isSystemMessage());
             // Add the message to the collector

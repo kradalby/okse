@@ -45,33 +45,41 @@ public class TopicController {
 
     private static final String GET_ALL_TOPICS = "/get/all";
     private static final String DELETE_ALL_TOPICS = "/delete/all";
-    private static final String DELETE_SINGLE_TOPIC = "/delete/{id}";
+    private static final String DELETE_SINGLE_TOPIC = "/delete/single";
 
     private static Logger log = Logger.getLogger(TopicController.class.getName());
 
+    /**
+     * This method returns all topics registered in the TopicService
+     * @return A JSON serialization of all registered topics
+     */
     @RequestMapping(method = RequestMethod.GET, value = GET_ALL_TOPICS)
-    public
-    @ResponseBody
-    HashMap<String, HashMap<String, Object>> getAlltopics() {
+    public @ResponseBody List<HashMap<String, Object>> getAlltopics() {
         TopicService ts = TopicService.getInstance();
         SubscriptionService ss = SubscriptionService.getInstance();
         HashSet<Topic> allTopics = ts.getAllTopics();
 
-        HashMap<String, HashMap<String, Object>> results = new HashMap<>();
+        List<HashMap<String, Object>> results = new ArrayList<>();
 
-        // TODO: This may need optimicing. Currently this operation is quite expensive.
-        allTopics.forEach(t -> {
-            int subscribers = ss.getAllSubscribersForTopic(t.getFullTopicString()).size();
-            HashMap<String, Object> topicInfo = new HashMap<String, Object>() {{
-                put("subscribers", subscribers);
-                put("topic", t);
-            }};
-            results.put(t.getFullTopicString(), topicInfo);
-        });
+        allTopics.stream()
+                .forEach(t -> {
+                    int subscribers = ss.getAllSubscribersForTopic(t.getFullTopicString()).size();
+                    HashMap<String, Object> topicInfo = new HashMap<String, Object>() {{
+                        put("subscribers", subscribers);
+                        put("topic", t);
+                    }};
+                    results.add(topicInfo);
+                });
+
+        results.sort((t1, t2) -> ((Topic) t1.get("topic")).getFullTopicString().compareTo(((Topic) t2.get("topic")).getFullTopicString()));
 
         return results;
     }
 
+    /**
+     * This method deletes all topics registered in the TopicService
+     * @return A JSON serialized string
+     */
     @RequestMapping(method = RequestMethod.DELETE, value = DELETE_ALL_TOPICS)
     public @ResponseBody String deleteAllTopics() {
         log.info("Deleting all topics");
@@ -82,11 +90,16 @@ public class TopicController {
         return "{ \"deleted\" :true }";
     }
 
+    /**
+     * This method returns a single topic registered in the TopicService, represented by a string id
+     * @param id The topic id to search for
+     * @return A JSON serialized Topic
+     */
     @RequestMapping(method = RequestMethod.DELETE, value = DELETE_SINGLE_TOPIC)
-    public @ResponseBody HashMap<String, Object> deleteSingleTopic(@PathVariable("id") String id) {
+    public @ResponseBody HashMap<String, Object> deleteSingleTopic(@RequestParam(value = "topicID") String id) {
         log.info("Deleting Topic with ID: " + id);
         TopicService ts = TopicService.getInstance();
-        Topic t = ts.getTopicByID(id);
+        Topic t = ts.getTopicByID(id.trim());
         ts.deleteTopic(t.getFullTopicString());
         HashMap<String, Object> result = new HashMap<String, Object>(){{
             put("topicID", t.getTopicID());
@@ -97,24 +110,5 @@ public class TopicController {
 
         return result;
     }
-
-    /*
-    @RequestMapping(method = RequestMethod.GET, value = GET_ALL_SUBSCRIBERS_FOR_TOPIC)
-    public @ResponseBody HashMap<String, Object> getAllSubscribersForTopic(@PathVariable("id") String id) {
-        // TODO: Add the topicName and change it to HashMap on return.
-        TopicService ts = TopicService.getInstance();
-        SubscriptionService ss = SubscriptionService.getInstance();
-        Topic t = ts.getTopicByID(id);
-        log.info("Fetching all subscribers for topic with ID: " + id);
-        HashSet<Subscriber> subscribers = ss.getAllSubscribersForTopic(t.getFullTopicString());
-
-        HashMap<String, Object> result = new HashMap<String, Object>(){{
-            put("topic", t.getFullTopicString());
-            put("subscribers", subscribers);
-        }};
-
-        return result;
-    }
-    */
 
 }

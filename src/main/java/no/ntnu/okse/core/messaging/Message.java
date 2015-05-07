@@ -45,7 +45,7 @@ public class Message {
     // Immutable fields
     private final Publisher publisher;
     private final LocalDateTime created;
-    private final Topic topic;
+    private final String topic;
     private final String message;
     private final String messageID;
 
@@ -64,7 +64,7 @@ public class Message {
      * @param publisher An instance of OKSE Publisher object
      * @param originProtocol The originating protocol name of this message (Cannot be null)
      */
-    public Message(@Nonnull String message, Topic topic, Publisher publisher, @Nonnull String originProtocol) {
+    public Message(@Nonnull String message, String topic, Publisher publisher, @Nonnull String originProtocol) {
         log = Logger.getLogger(Message.class.getName());
         this.publisher = publisher;
         this.topic = topic;
@@ -117,7 +117,7 @@ public class Message {
      * Retrieves the Topic object this message is destined for
      * @return A topic object this message is to be broadcasted to
      */
-    public Topic getTopic() {
+    public String getTopic() {
         return this.topic;
     }
 
@@ -230,6 +230,6 @@ public class Message {
     public String toString() {
         return "Message (" + messageID.substring(0,4) + "..." + messageID.substring(28,32) +
                 ") [systemMessage: " + systemMessage + ", created: " + created + ", " +
-               "topic: " + topic.getFullTopicStringIgnoreCase() + "]";
+               "topic: " + topic + "]";
     }
 }

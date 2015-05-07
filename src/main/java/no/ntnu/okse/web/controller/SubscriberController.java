@@ -44,30 +44,49 @@ import java.util.stream.Collectors;
 public class SubscriberController {
 
     private static final String GET_ALL_SUBSCRIBERS = "/get/all";
-    private static final String DELETE_SINGLE_SUBSCRIBER = "/delete/{id}";
+    private static final String DELETE_SINGLE_SUBSCRIBER = "/delete/single";
     private static final String DELETE_ALL_SUBSCRIBERS = "/delete/all";
 
     private static Logger log = Logger.getLogger(SubscriberController.class.getName());
 
+    /**
+     * This method returns all subscribers registered in the SubscriptionService
+     * @return A response body to be serialized to JSON, containing all the subscribers
+     */
     @RequestMapping(method = RequestMethod.GET, value = GET_ALL_SUBSCRIBERS)
     public @ResponseBody List<Subscriber> getAllSubscribers() {
         SubscriptionService ss = SubscriptionService.getInstance();
         HashSet<Subscriber> allSubscribers = ss.getAllSubscribers(); // TODO: Sort this lexicographically on topic
         List<Subscriber> listToSort = new ArrayList<>(allSubscribers).stream()
-                .sorted((s1, s2) -> s1.getTopic().compareTo(s2.getTopic()))
+                .sorted((s1, s2) -> { // Null-safe compare operator
+                    if (s1.getTopic() == null ^ s2.getTopic() == null) { return (s1.getTopic() == null) ? -1 : 1; }
+
+                    if (s1.getTopic() == null && s2.getTopic() == null) { return 0; }
+
+                    return s1.getTopic().compareTo(s2.getTopic());
+                })
                 .collect(Collectors.toList());
         return listToSort;
     }
 
+    /**
+     * This method deletes a single subscriber given the subscriberID request parameter.
+     * @param subscriberID The subscriber to be deleted, represented as a String id
+     * @return A JSON serialization of the deleted subscriber
+     */
     @RequestMapping(method = RequestMethod.DELETE, value= DELETE_SINGLE_SUBSCRIBER)
-    public @ResponseBody Subscriber deleteSingleSubscriber(@PathVariable("id") String id) {
-        log.info("Deleting subscriber with ID: " + id);
+    public @ResponseBody Subscriber deleteSingleSubscriber(@RequestParam(value = "subscriberID") String subscriberID) {
+        log.debug("Deleting subscriber with ID: " + subscriberID);
         SubscriptionService ss = SubscriptionService.getInstance();
-        Subscriber s = ss.getSubscriberByID(id);
+        Subscriber s = ss.getSubscriberByID(subscriberID.trim());
         ss.removeSubscriber(s);
         return s;
     }
 
+    /**
+     * Thid method deletes all the subscribers registered in the SubscriptionService.
+     * @return A JSON serialized string
+     */
     @RequestMapping(method = RequestMethod.DELETE, value = DELETE_ALL_SUBSCRIBERS)
     public @ResponseBody String deleteAllSubscribers() {
         SubscriptionService ss = SubscriptionService.getInstance();
