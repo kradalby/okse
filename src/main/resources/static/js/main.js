@@ -216,6 +216,8 @@ var Main = (function($) {
                 clearInterval(clickInterval)
                 var clickedElement = $(this).attr("href").substring(1)
                 var updateInterval = $('#settings-update-interval').val() * 1000
+                updateInterval = (updateInterval < 500 ? 500 : updateInterval) // Override if the user enters a number lower than 1
+                $.okseDebug.logPrint("[Debug][Main] The update interval is now: " + updateInterval)
 
                 var ajaxSettings = {
                     url: clickedElement,

@@ -55,8 +55,8 @@
          <div class="col-md-4">
              <form role="form" onkeypress="return event.keyCode != 13;">
                  <div class="form-group">
-                     <label for="settings-update-interval">Update interval (in seconds):</label>
-                     <input type="text" class="form-control" id="settings-update-interval" value="2" />
+                     <label for="settings-update-interval">Update interval (in seconds &ge; 0.5):</label>
+                     <input type="number" class="form-control" id="settings-update-interval" value="2" min="0.5" />
                  </div>
              </form>
          </div>
