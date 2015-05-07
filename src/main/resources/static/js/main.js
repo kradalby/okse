@@ -173,6 +173,7 @@ var Main = (function($) {
         refreshElementByClassWithText('.totalSubscribers', response.subscribers)
         refreshElementByClassWithText('.totalPublishers', response.publishers)
         refreshElementByClassWithText('.totalTopics', response.topics)
+        refreshElementByClassWithText('.totalMessages', response.totalMessages)
         $('#uptime').html(response.uptime)
         refreshRuntimeStatistics(response.runtimeStatistics)
 

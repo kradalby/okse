@@ -57,6 +57,7 @@ var Stats = (function($) {
         $('#totalRequests').html(statistics.totalRequests)
         $('#badRequests').html(statistics.totalBadRequests)
         $('#totalErrors').html(statistics.totalErrors)
+        Main.refreshElementByClassWithText('.messagesSent', statistics.totalMessagesSent)
         Main.refreshElementByClassWithText('.totalSubscribers', statistics.subscribers)
         Main.refreshElementByClassWithText('.totalPublishers', statistics.publishers)
         Main.refreshElementByClassWithText('.totalTopics', statistics.topics)

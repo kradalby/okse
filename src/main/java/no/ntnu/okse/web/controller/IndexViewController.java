@@ -92,6 +92,7 @@ public class IndexViewController {
         model.addAttribute("subscribers", ss.getNumberOfSubscribers());
         model.addAttribute("publishers", ss.getNumberOfPublishers());
         model.addAttribute("topics", ts.getTotalNumberOfTopics());
+        model.addAttribute("totalMessages", cs.getTotalMessagesSentFromProtocolServers());
         model.addAttribute("uptime", Utilities.getDurationAsISO8601(Application.getRunningTime()));
         model.addAttribute("cpuCores", Runtime.getRuntime().availableProcessors());
         model.addAttribute("totalRam", totalRam / MainController.MB);
