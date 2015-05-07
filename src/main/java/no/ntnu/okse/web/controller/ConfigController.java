@@ -3,15 +3,17 @@ package no.ntnu.okse.web.controller;
 import no.ntnu.okse.core.topic.TopicService;
 import no.ntnu.okse.protocol.amqp.AMQPServer;
 import no.ntnu.okse.protocol.amqp.AMQProtocolServer;
+import no.ntnu.okse.protocol.wsn.WSNTools;
+import no.ntnu.okse.protocol.wsn.WSNotificationServer;
 import org.apache.log4j.Logger;
+import org.ntnunotif.wsnu.base.util.InternalMessage;
+import org.ntnunotif.wsnu.services.general.WsnUtilities;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by Håkon Ødegård Løvdal (hakloev) on 17/03/15.
@@ -22,13 +24,32 @@ import java.util.HashSet;
 @RequestMapping("/api/config")
 public class ConfigController {
 
+    private static final String GET_ALL_INFO = "/get/all";
     private static final String GET_ALL_MAPPINGS = "/mapping/get/all";
     private static final String ADD_MAPPING = "/mapping/add";
     private static final String DELETE_MAPPING = "/mapping/delete/single";
     private static final String DELETE_ALL_MAPPINGS = "/mapping/delete/all";
     private static final String CHANGE_AMQP = "/mapping/queue/change";
+    private static final String ADD_RELAY = "/relay/add";
+    private static final String DELETE_ALL_RELAYS = "/relay/delete/all";
+    private static final String DELETE_RELAY = "/relay/delete/single";
 
     private static Logger log = Logger.getLogger(ConfigController.class.getName());
+
+    private ConcurrentHashMap<String, String> relays = new ConcurrentHashMap<>();
+
+    @RequestMapping(method = RequestMethod.GET, value = GET_ALL_INFO)
+    public @ResponseBody HashMap<String, Object> getAllInfo() {
+        TopicService ts = TopicService.getInstance();
+        HashMap<String, HashSet<String>> allMappings = ts.getAllMappings();
+
+        HashMap<String, Object> result = new HashMap<String, Object>(){{
+            put("mappings", allMappings);
+            put("relays", relays);
+        }};
+
+        return result;
+    }
 
     /**
      * This method returns all mappings that exists in the TopicService
@@ -90,6 +111,61 @@ public class ConfigController {
         log.debug("Value of AMQP queue is now " + AMQProtocolServer.getInstance().useQueue);
         return new ResponseEntity<String>("{ \"value\" :" + AMQProtocolServer.getInstance().useQueue + " }", HttpStatus.OK);
     }
+
+    @RequestMapping(method = RequestMethod.POST, value = ADD_RELAY)
+    public @ResponseBody ResponseEntity<String> addRelay(@RequestParam(value = "to") String relay) {
+        log.debug("Adding relay to: " + relay);
+
+        if (!relay.startsWith("http://")) { relay = "http://" + relay; }
+
+        String subscriptionReference = WSNTools.extractSubscriptionReferenceFromRawXmlResponse(
+                WsnUtilities.sendSubscriptionRequest(
+                        relay,
+                        WSNotificationServer.getInstance().getURI(),
+                        WSNotificationServer.getInstance().getRequestParser()
+                )
+        );
+
+        if (subscriptionReference == null) {
+            log.debug("Relay could not be created");
+            return new ResponseEntity<String>("{ \"added\" :false }", HttpStatus.OK);
+
+        }
+        relays.put(subscriptionReference.split("subscriberkey=")[1], subscriptionReference);
+        log.debug("Relay got subscriptionReference: " + subscriptionReference);
+        return new ResponseEntity<String>("{ \"added\" :true }", HttpStatus.OK);
+    }
+
+    @RequestMapping(method = RequestMethod.DELETE, value = DELETE_RELAY)
+    public @ResponseBody ResponseEntity<String> deleteRelay(@RequestParam(value = "relayID") String relay) {
+        log.debug("Trying to remove a relay: " + relay);
+
+        if (relays.containsKey(relay)) {
+            WsnUtilities.sendUnsubscribeRequest(relays.get(relay), WSNotificationServer.getInstance().getRequestParser());
+            relays.remove(relay);
+            log.debug("Removed relay: " + relay);
+            return new ResponseEntity<String>("{ \"deleted\" :true }", HttpStatus.OK);
+        } else {
+            log.debug("Unable to remove relay: " + relay);
+            return new ResponseEntity<String>("{ \"deleted\" :false }", HttpStatus.OK);
+        }
+
+
+    }
+
+    @RequestMapping(method = RequestMethod.DELETE, value = DELETE_ALL_RELAYS)
+    public @ResponseBody ResponseEntity<String> deleteAllRelays() {
+        log.debug("Trying to delete all relays");
+        relays.forEach((k, v) -> {
+            WsnUtilities.sendUnsubscribeRequest(relays.get(k), WSNotificationServer.getInstance().getRequestParser());
+            relays.remove(k);
+            log.debug("Removed relay: " + k);
+        });
+
+        return new ResponseEntity<String>("{ \"deleted\" :true }", HttpStatus.OK);
+    }
+
+
 
 
 }
