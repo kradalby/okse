@@ -88,8 +88,6 @@ var Config = (function($) {
         refresh: function(response) {
             unBindButtons()
 
-
-
             var count = Object.keys(response).length
 
             if ( ! count == 0 ) {
@@ -102,6 +100,20 @@ var Config = (function($) {
 
         },
         init: function() {
+            $('#add-relay').on('click', function(e) {
+                e.preventDefault()
+                Main.ajax({
+                    url: 'config/relay/add?to=' + encodeURIComponent($('#relay-to').val()),
+                    type: 'POST',
+                    success: function(data) {
+                        $.okseDebug.logPrint("Clicked and response")
+                    },
+                    error: function(data) {
+                        $.okseDebug.logPrint("Clicked and error")
+                    }
+                })
+            })
+
             $('#add-mapping').on('click', function(e) {
                 e.preventDefault()
                 Main.ajax({

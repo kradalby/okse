@@ -3,7 +3,10 @@ package no.ntnu.okse.web.controller;
 import no.ntnu.okse.core.topic.TopicService;
 import no.ntnu.okse.protocol.amqp.AMQPServer;
 import no.ntnu.okse.protocol.amqp.AMQProtocolServer;
+import no.ntnu.okse.protocol.wsn.WSNTools;
+import no.ntnu.okse.protocol.wsn.WSNotificationServer;
 import org.apache.log4j.Logger;
+import org.ntnunotif.wsnu.services.general.WsnUtilities;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -89,6 +92,13 @@ public class ConfigController {
         AMQProtocolServer.getInstance().useQueue = (AMQProtocolServer.getInstance().useQueue ? false : true);
         log.debug("Value of AMQP queue is now " + AMQProtocolServer.getInstance().useQueue);
         return new ResponseEntity<String>("{ \"value\" :" + AMQProtocolServer.getInstance().useQueue + " }", HttpStatus.OK);
+    }
+
+    @RequestMapping(method = RequestMethod.POST, value = "/relay/add")
+    public @ResponseBody ResponseEntity<String> addRelay(@RequestParam(value = "to") String relay) {
+        log.debug("Add relay to: " + relay);
+        WsnUtilities.sendSubscriptionRequest(relay, WSNotificationServer.getInstance().getURI(), WSNotificationServer.getInstance().getRequestParser());
+        return new ResponseEntity<String>("{ \"added\" :true }", HttpStatus.OK);
     }
 
 
