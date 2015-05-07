@@ -151,7 +151,7 @@ var Config = (function($) {
                 e.preventDefault()
 
                 Main.ajax({
-                    url: 'config/relay/add?to=' + encodeURIComponent($('#relay-to').val()),
+                    url: 'config/relay/add?from=' + encodeURIComponent($('#relay-from').val()),
                     type: 'POST',
                     success: function(data) {
                         $.okseDebug.logPrint("Clicked and response")

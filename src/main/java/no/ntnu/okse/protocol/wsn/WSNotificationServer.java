@@ -795,7 +795,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
 
                     // Check what HTTP status we received, if is not A-OK, flag the internalmessage as fault
                     // and make the response content the message of the InternalMessage returned
-                    if (response.getStatus() != HttpStatus.OK_200) {
+                    if (!HttpStatus.isSuccess(response.getStatus())) {
                         totalBadRequests.incrementAndGet();
                         return new InternalMessage(InternalMessage.STATUS_FAULT | InternalMessage.STATUS_HAS_MESSAGE, response.getContentAsString());
                     } else {

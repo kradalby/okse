@@ -339,20 +339,6 @@ public class DummyProtocolServer extends AbstractProtocolServer {
     private boolean parseCommand(String command) {
         String[] args = command.split(" ");
         try {
-            if (args[0].equalsIgnoreCase("amqp")) {
-                AMQProtocolServer amqp = AMQProtocolServer.getInstance();
-                CoreService cs = CoreService.getInstance();
-                if (args[1].equalsIgnoreCase("stop")) {
-                    cs.removeProtocolServer(AMQProtocolServer.getInstance());
-                    amqp.stopServer();
-                }
-                else if (args[1].equalsIgnoreCase("start")) {
-                    cs.addProtocolServer(AMQProtocolServer.getInstance());
-                    AMQProtocolServer.getInstance().boot();
-                }
-                return true;
-            }
-
             // message <topic> <message content>
             if (args[0].equalsIgnoreCase("message")) {
                 // If it exists build a message string and distribute it
