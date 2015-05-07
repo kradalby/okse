@@ -1,6 +1,8 @@
 package no.ntnu.okse.web.controller;
 
 import no.ntnu.okse.core.topic.TopicService;
+import no.ntnu.okse.protocol.amqp.AMQPServer;
+import no.ntnu.okse.protocol.amqp.AMQProtocolServer;
 import org.apache.log4j.Logger;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +25,8 @@ public class ConfigController {
     private static final String GET_ALL_MAPPINGS = "/mapping/get/all";
     private static final String ADD_MAPPING = "/mapping/add";
     private static final String DELETE_MAPPING = "/mapping/delete/single";
-    private static final String DELETE_ALL_MAPPINGS = "mapping/delete/all";
+    private static final String DELETE_ALL_MAPPINGS = "/mapping/delete/all";
+    private static final String CHANGE_AMQP = "/mapping/queue/change";
 
     private static Logger log = Logger.getLogger(ConfigController.class.getName());
 
@@ -80,5 +83,13 @@ public class ConfigController {
         });
         return new ResponseEntity<String>("{ \"deleted\" :true }", HttpStatus.OK);
     }
+
+    @RequestMapping(method = RequestMethod.POST, value = CHANGE_AMQP)
+    public @ResponseBody ResponseEntity<String> changeAMQPqueue() {
+        AMQProtocolServer.getInstance().useQueue = (AMQProtocolServer.getInstance().useQueue ? false : true);
+        log.debug("Value of AMQP queue is now " + AMQProtocolServer.getInstance().useQueue);
+        return new ResponseEntity<String>("{ \"value\" :" + AMQProtocolServer.getInstance().useQueue + " }", HttpStatus.OK);
+    }
+
 
 }

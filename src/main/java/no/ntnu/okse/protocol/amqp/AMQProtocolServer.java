@@ -56,7 +56,7 @@ public class AMQProtocolServer extends AbstractProtocolServer {
     private static final String DEFAULT_USE_QUEUE = "true";
     private static final String DEFAULT_USE_SASL = "true";
 
-    protected boolean useQueue;
+    public boolean useQueue;
     protected boolean useSASL;
 
     private Driver driver;
