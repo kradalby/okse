@@ -72,6 +72,7 @@ public class MainController {
             put("subscribers", ss.getNumberOfSubscribers());
             put("publishers", ss.getNumberOfPublishers());
             put("topics", ts.getTotalNumberOfTopics());
+            put("totalMessages", cs.getTotalMessagesSentFromProtocolServers());
             put("uptime", Utilities.getDurationAsISO8601(Application.getRunningTime()));
             // Runtime statistics
             put("runtimeStatistics", new HashMap<String, Object>(){{
