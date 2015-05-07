@@ -24,13 +24,19 @@
 
 package no.ntnu.okse.protocol.amqp;
 
+import org.apache.qpid.proton.amqp.transport.*;
+import org.apache.qpid.proton.engine.*;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import java.util.EnumSet;
+
 import static org.testng.Assert.*;
 
 public class SubscriptionHandlerTest {
+
+
 
     @BeforeMethod
     public void setUp() throws Exception {
@@ -44,12 +50,223 @@ public class SubscriptionHandlerTest {
 
     @Test
     public void testGetAddress() throws Exception {
+        Sender sender = new Sender() {
+            @Override
+            public void offer(int i) {
+
+            }
+
+            @Override
+            public int send(byte[] bytes, int i, int i1) {
+                return 0;
+            }
+
+            @Override
+            public void abort() {
+
+            }
+
+            @Override
+            public boolean advance() {
+                return false;
+            }
+
+            @Override
+            public String getName() {
+                return null;
+            }
+
+            @Override
+            public Delivery delivery(byte[] bytes) {
+                return null;
+            }
+
+            @Override
+            public Delivery delivery(byte[] bytes, int i, int i1) {
+                return null;
+            }
+
+            @Override
+            public Delivery head() {
+                return null;
+            }
+
+            @Override
+            public Delivery current() {
+                return null;
+            }
+
+            @Override
+            public Source getSource() {
+                return null;
+            }
+
+            @Override
+            public Target getTarget() {
+                return null;
+            }
+
+            @Override
+            public void setSource(Source source) {
+
+            }
+
+            @Override
+            public void setTarget(Target target) {
+
+            }
+
+            @Override
+            public Source getRemoteSource() {
+                return null;
+            }
+
+            @Override
+            public Target getRemoteTarget() {
+                return null;
+            }
+
+            @Override
+            public Link next(EnumSet<EndpointState> enumSet, EnumSet<EndpointState> enumSet1) {
+                return null;
+            }
+
+            @Override
+            public int getCredit() {
+                return 0;
+            }
+
+            @Override
+            public int getQueued() {
+                return 0;
+            }
+
+            @Override
+            public int getUnsettled() {
+                return 0;
+            }
+
+            @Override
+            public Session getSession() {
+                return null;
+            }
+
+            @Override
+            public SenderSettleMode getSenderSettleMode() {
+                return null;
+            }
+
+            @Override
+            public void setSenderSettleMode(SenderSettleMode senderSettleMode) {
+
+            }
+
+            @Override
+            public SenderSettleMode getRemoteSenderSettleMode() {
+                return null;
+            }
+
+            @Override
+            public ReceiverSettleMode getReceiverSettleMode() {
+                return null;
+            }
+
+            @Override
+            public void setReceiverSettleMode(ReceiverSettleMode receiverSettleMode) {
+
+            }
+
+            @Override
+            public ReceiverSettleMode getRemoteReceiverSettleMode() {
+                return null;
+            }
+
+            @Override
+            public void setRemoteSenderSettleMode(SenderSettleMode senderSettleMode) {
+
+            }
+
+            @Override
+            public int drained() {
+                return 0;
+            }
+
+            @Override
+            public int getRemoteCredit() {
+                return 0;
+            }
+
+            @Override
+            public boolean getDrain() {
+                return false;
+            }
+
+            @Override
+            public void detach() {
+
+            }
+
+            @Override
+            public EndpointState getLocalState() {
+                return null;
+            }
+
+            @Override
+            public EndpointState getRemoteState() {
+                return null;
+            }
+
+            @Override
+            public ErrorCondition getCondition() {
+                return null;
+            }
+
+            @Override
+            public void setCondition(ErrorCondition errorCondition) {
+
+            }
+
+            @Override
+            public ErrorCondition getRemoteCondition() {
+                return null;
+            }
+
+            @Override
+            public void free() {
+
+            }
+
+            @Override
+            public void open() {
+
+            }
+
+            @Override
+            public void close() {
+
+            }
+
+            @Override
+            public void setContext(Object o) {
+
+            }
+
+            @Override
+            public Object getContext() {
+                return null;
+            }
+        };
 
     }
 
     @Test
     public void testGetAddress1() throws Exception {
-
+        Source source = new Source() {
+            @Override
+            public String getAddress() {
+                return null;
+            }
+        };
     }
 
     @Test
@@ -74,11 +291,6 @@ public class SubscriptionHandlerTest {
 
     @Test
     public void testSubscriptionChanged() throws Exception {
-
-    }
-
-    @Test
-    public void testUnsubscribeAll() throws Exception {
 
     }
 }
