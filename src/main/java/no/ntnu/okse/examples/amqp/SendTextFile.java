@@ -29,7 +29,10 @@ import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
 import org.apache.qpid.proton.messenger.Messenger;
 
+import java.io.*;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -42,22 +45,40 @@ import java.util.logging.Logger;
 public class Send {
 
     private static Logger tracer = Logger.getLogger("proton.example");
-    private String address = "amqp://127.0.0.1";
-    //private String address = "127.0.0.1";
-    //private String address = "78.91.8.191";
-    private String subject;
-    private String[] bodies = new String[]{"Hello World!"};
+    private String address = "amqp://127.0.0.1/test";
+    private String subject = "bang";
+    private Messenger mng;
+    private Message msg;
 
     private static void usage() {
         System.err.println("Usage: send [-a ADDRESS] [-s SUBJECT] MSG+");
         System.exit(2);
     }
 
-    private Send(String args[]) {
-        //address = "78.91.8.191";
-        //address = "127.0.0.1";
-        //subject = "TEST";
+    private String[] readfile() {
+        FileReader fileReader = null;
+        try {
+            fileReader = new FileReader("d:\\test.txt");
+            BufferedReader bufferedReader = new BufferedReader(fileReader);
+            List<String> lines = new ArrayList<String>();
+            String line = null;
+            while ((line = bufferedReader.readLine()) != null) {
+                lines.add(line);
+            }
+            bufferedReader.close();
+            return lines.toArray(new String[lines.size()]);
 
+        } catch (FileNotFoundException e) {
+            System.out.println("File not found");
+            e.printStackTrace();
+        } catch (IOException e) {
+            System.out.println("IOException");
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private Send(String args[]) {
         int i = 0;
         while (i < args.length) {
             String arg = args[i++];
@@ -75,24 +96,16 @@ public class Send {
                 break;
             }
         }
-
-        if(i != args.length)
-        {
-            bodies = Arrays.copyOfRange(args, i, args.length);
-        }
     }
 
     private void run() {
         try {
-            //Messenger mng = new MessengerImpl();
-            //Depricated, use factory insted
-            Messenger mng = Messenger.Factory.create();
+            mng = Messenger.Factory.create();
             mng.start();
-            //Message msg = new MessageImpl();
-            Message msg = Message.Factory.create();
+            msg = Message.Factory.create();
             msg.setAddress(address);
             if (subject != null) msg.setSubject(subject);
-            for (String body : bodies) {
+            for (String body : readfile()) {
                 msg.setBody(new AmqpValue(body));
                 mng.put(msg);
             }
