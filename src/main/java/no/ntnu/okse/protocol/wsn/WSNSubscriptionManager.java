@@ -1,20 +1,13 @@
 package no.ntnu.okse.protocol.wsn;
 
-import com.sun.org.apache.xerces.internal.jaxp.datatype.XMLGregorianCalendarImpl;
 import no.ntnu.okse.core.event.SubscriptionChangeEvent;
 import no.ntnu.okse.core.event.listeners.SubscriptionChangeListener;
-import no.ntnu.okse.core.subscription.Publisher;
 import no.ntnu.okse.core.subscription.Subscriber;
 import no.ntnu.okse.core.subscription.SubscriptionService;
 import org.apache.log4j.Logger;
 import org.ntnunotif.wsnu.base.util.RequestInformation;
-import org.ntnunotif.wsnu.services.eventhandling.SubscriptionEvent;
-import org.ntnunotif.wsnu.services.filterhandling.FilterSupport;
 import org.ntnunotif.wsnu.services.general.ExceptionUtilities;
-import org.ntnunotif.wsnu.services.general.HelperClasses;
 import org.ntnunotif.wsnu.services.general.ServiceUtilities;
-import org.ntnunotif.wsnu.services.general.WsnUtilities;
-import org.ntnunotif.wsnu.services.implementations.notificationbroker.AbstractNotificationBroker;
 import org.ntnunotif.wsnu.services.implementations.notificationproducer.AbstractNotificationProducer;
 import org.ntnunotif.wsnu.services.implementations.subscriptionmanager.AbstractSubscriptionManager;
 import org.oasis_open.docs.wsn.b_2.*;
@@ -508,8 +501,6 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
 
             } else if (e.getType().equals(SubscriptionChangeEvent.Type.SUBSCRIBE)) {
                 log.debug("Received a SUBSCRIBE event");
-                // TODO: Investigate if we really need to do anything here since it will function as a callback
-                // TODO: after addSubscriber
             }
         }
     }

@@ -205,7 +205,7 @@ public class Message {
      * @return A LocalDateTime object representing the time of completion/processing for this message. Returns
      *         null if it has not yet been processed.
      */
-    public LocalDateTime getComplectionTime() {
+    public LocalDateTime getCompletionTime() {
         return this.processed;
     }
 

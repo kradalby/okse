@@ -55,7 +55,7 @@ public class Publisher {
         this.port = port;
         this.originProtocol = originProtocol;
         this.attributes = new HashMap<>();
-        this.timeout = Application.DEFAULT_PUBLISHER_TERMINATION_TIME;
+        this.timeout = null;
     }
 
     /**
@@ -91,14 +91,6 @@ public class Publisher {
     }
 
     /**
-     * Retrieve what topic this publisher is registered to
-     * @return The topic the publisher is registered to
-     */
-    public String getRawTopicString() {
-        return topic;
-    }
-
-    /**
      * Set a new timeout for this publisher
      * @param timeout The new timeout represented as seconds since unix epoch
      * @throws IllegalArgumentException If the timeout is in the past
@@ -113,7 +105,7 @@ public class Publisher {
      * Retrieve the current timeout of this publisher
      * @return The unix epoch time when this publisher should expire
      */
-    public long getTimeout() {
+    public Long getTimeout() {
         return timeout;
     }
 
@@ -145,7 +137,7 @@ public class Publisher {
      * @return True if this publisher object should expire, false otherwise
      */
     public boolean shouldExpire() {
-        return timeout == null;
+        return timeout != null;
     }
 
     /**
