@@ -113,8 +113,8 @@ public class ConfigController {
     }
 
     @RequestMapping(method = RequestMethod.POST, value = ADD_RELAY)
-    public @ResponseBody ResponseEntity<String> addRelay(@RequestParam(value = "to") String relay) {
-        log.debug("Adding relay to: " + relay);
+    public @ResponseBody ResponseEntity<String> addRelay(@RequestParam(value = "from") String relay) {
+        log.debug("Adding relay from: " + relay);
 
         if (!relay.startsWith("http://")) { relay = "http://" + relay; }
 
@@ -149,8 +149,6 @@ public class ConfigController {
             log.debug("Unable to remove relay: " + relay);
             return new ResponseEntity<String>("{ \"deleted\" :false }", HttpStatus.OK);
         }
-
-
     }
 
     @RequestMapping(method = RequestMethod.DELETE, value = DELETE_ALL_RELAYS)
@@ -164,8 +162,4 @@ public class ConfigController {
 
         return new ResponseEntity<String>("{ \"deleted\" :true }", HttpStatus.OK);
     }
-
-
-
-
 }
