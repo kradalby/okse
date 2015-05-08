@@ -31,6 +31,7 @@ import org.ntnunotif.wsnu.base.net.XMLParser;
 import org.ntnunotif.wsnu.base.topics.ConcreteEvaluator;
 import org.ntnunotif.wsnu.base.topics.FullEvaluator;
 import org.ntnunotif.wsnu.base.util.InternalMessage;
+import org.ntnunotif.wsnu.base.util.Utilities;
 import org.ntnunotif.wsnu.services.general.ServiceUtilities;
 import org.ntnunotif.wsnu.services.general.WsnUtilities;
 import org.oasis_open.docs.wsn.b_2.*;
@@ -39,9 +40,13 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.xmlsoap.schemas.soap.envelope.Envelope;
 
+import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
+import javax.xml.datatype.DatatypeConfigurationException;
+import javax.xml.datatype.DatatypeFactory;
+import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.*;
@@ -51,6 +56,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.GregorianCalendar;
 import java.util.List;
 
 
@@ -304,6 +310,11 @@ public class WSNTools {
         return notifyWithContext;
     }
 
+    /**
+     * Helper method that uses the DOM factory to build an XML element Node and sets text content from argument
+     * @param content The String text content
+     * @return An XML Element containing the text argument
+     */
     public static Element buildGenericContentElement(String content) {
 
         // create message content
@@ -336,6 +347,46 @@ public class WSNTools {
             log.error("Failed to cast: " + e.getMessage());
         }
         return null;
+    }
+
+    /**
+     * Generates an InternalMessage containing a Subscribe request
+     *
+     * @param endpointReference The full address of the remote host to send the request to
+     * @param topic The topic to subscribe to (can be null)
+     * @param consumerReference The consumer reference, which is the address of the subscriber
+     * @param terminationTime An initialtermination time in milliseconds since epoch.
+     *                        Can be null to allow broker to use internal defaults.
+     * @return An InternalMessage with the Subscribe payload, preset with correct destination endpoint
+     */
+    public static InternalMessage generateSubscriptionRequestWithTopic(
+            @NotNull String endpointReference, @Nullable String topic, @NotNull String consumerReference, @Nullable Long terminationTime) {
+        Subscribe subscribe = new Subscribe();
+        subscribe.setConsumerReference(ServiceUtilities.buildW3CEndpointReference(consumerReference));
+        if (terminationTime != null) {
+            // Create a gregCalendar instance so we can create a xml object from it
+            GregorianCalendar gregorianCalendar = new GregorianCalendar();
+            gregorianCalendar.setTimeInMillis(terminationTime);
+            subscribe.setInitialTerminationTime(
+                    ServiceUtilities.baseFactory.createSubscribeInitialTerminationTime(gregorianCalendar.toString())
+            );
+        }
+        if (topic != null) {
+            // Instantiate a topicexpression and insert the topic
+            TopicExpressionType topicExpression = b2_factory.createTopicExpressionType();
+            FilterType filterType = b2_factory.createFilterType();
+            topicExpression.setDialect(_ConcreteTopicExpression);
+            topicExpression.getContent().add(topic);
+            filterType.getAny().add(topicExpression);
+            // Add the expression to filter
+            subscribe.setFilter(filterType);
+        }
+        // Build InternalMessage
+        InternalMessage message = new InternalMessage(InternalMessage.STATUS_OK | InternalMessage.STATUS_HAS_MESSAGE, subscribe);
+        // Set the destination
+        message.getRequestInformation().setEndpointReference(endpointReference);
+
+        return message;
     }
 
     /**

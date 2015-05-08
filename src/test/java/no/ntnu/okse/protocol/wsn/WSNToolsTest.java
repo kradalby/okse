@@ -28,7 +28,11 @@ import no.ntnu.okse.core.messaging.Message;
 import org.ntnunotif.wsnu.base.net.NuNamespaceContextResolver;
 import org.ntnunotif.wsnu.base.topics.TopicUtils;
 import org.ntnunotif.wsnu.base.util.InternalMessage;
+import org.ntnunotif.wsnu.base.util.Utilities;
+import org.ntnunotif.wsnu.services.general.ServiceUtilities;
 import org.oasis_open.docs.wsn.b_2.Notify;
+import org.oasis_open.docs.wsn.b_2.Subscribe;
+import org.oasis_open.docs.wsn.b_2.TopicExpressionType;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -188,5 +192,29 @@ public class WSNToolsTest {
         String subscriptionReference = WSNTools.extractSubscriptionReferenceFromRawXmlResponse(wrapper);
 
         assertEquals(subscriptionReference, "http://128.128.128.128:61000/subscriptionManager/?wsn-subscriberkey=6ff9843f23f38547a3f97db4304099abdef0bb11");
+    }
+
+    @Test
+    public void testGenerateSubscriptionRequestWithTopic() throws Exception {
+        String topic = "topic";
+        String endpointReference = "http://localhost:61000";
+        String consumerReference = "http://127.0.0.1:61000";
+        Long terminationTime = System.currentTimeMillis() + 20000L;
+
+        InternalMessage message = WSNTools.generateSubscriptionRequestWithTopic(
+                endpointReference, topic, consumerReference, terminationTime);
+
+        Subscribe sub = (Subscribe) message.getMessage();
+        assertEquals(ServiceUtilities.getAddress(sub.getConsumerReference()), consumerReference);
+        assertEquals(message.getRequestInformation().getEndpointReference(), endpointReference);
+        assertEquals(((TopicExpressionType) sub.getFilter().getAny().get(0)).getContent().get(0), topic);
+
+        message = WSNTools.generateSubscriptionRequestWithTopic(
+                endpointReference, null, consumerReference, null
+        );
+        sub = (Subscribe) message.getMessage();
+        assertEquals(ServiceUtilities.getAddress(sub.getConsumerReference()), consumerReference);
+        assertEquals(message.getRequestInformation().getEndpointReference(), endpointReference);
+        assertNull(sub.getFilter());
     }
 }
