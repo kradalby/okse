@@ -207,7 +207,7 @@ public class WSNToolsTest {
         Subscribe sub = (Subscribe) message.getMessage();
         assertEquals(ServiceUtilities.getAddress(sub.getConsumerReference()), consumerReference);
         assertEquals(message.getRequestInformation().getEndpointReference(), endpointReference);
-        assertEquals(((TopicExpressionType) sub.getFilter().getAny().get(0)).getContent().get(0), topic);
+        assertEquals(((JAXBElement<TopicExpressionType>) sub.getFilter().getAny().get(0)).getValue().getContent().get(0), topic);
 
         message = WSNTools.generateSubscriptionRequestWithTopic(
                 endpointReference, null, consumerReference, null
