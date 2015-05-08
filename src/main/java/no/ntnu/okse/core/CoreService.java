@@ -251,6 +251,18 @@ public class CoreService extends AbstractCoreService {
     }
 
     /**
+     * Retrieves a service based on its class. Can be used to test if a service is registered
+     * @param serviceClass The class of the service to fetch
+     * @return A core service extending AbstractCoreService
+     */
+    public AbstractCoreService getService(Class serviceClass) {
+        for (AbstractCoreService service : services) {
+            if (service.getClass().equals(serviceClass)) return service;
+        }
+        return null;
+    }
+
+    /**
      * Adds a protocolserver to the protocolservers list.
      * @param ps: An instance of a subclass of AbstractProtocolServer that implements ProtocolServer
      */
