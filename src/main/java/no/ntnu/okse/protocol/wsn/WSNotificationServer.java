@@ -529,6 +529,24 @@ public class WSNotificationServer extends AbstractProtocolServer {
     }
 
     /**
+     * Returns the public WAN Host if behindNAT is true. If behindNAT is false, the value of host is returned.
+     * @return The public WAN Host
+     */
+    public String getPublicWANHost() {
+        if (behindNAT) return publicWANHost;
+        return host;
+    }
+
+    /**
+     * Returns the public WAN Port if behindNAT is true. If behindNAT is false, the value of port is returned.
+     * @return The public WAN Port
+     */
+    public Integer getPublicWANPort() {
+        if (behindNAT) return publicWANPort;
+        return port;
+    }
+
+    /**
      * Registers the specified ServiceConnection to the ProtocolServer
      * @param webServiceConnector: The ServiceConnection you wish to register.
      */
