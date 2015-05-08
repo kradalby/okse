@@ -186,5 +186,9 @@ public class AMQProtocolServer extends AbstractProtocolServer {
         return driver;
     }
 
+    public SubscriptionHandler getSubscriptionHandler() {
+        return sh;
+    }
+
     public boolean isShuttingDown() { return shuttingdown; }
 }

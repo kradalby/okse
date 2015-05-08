@@ -39,20 +39,29 @@ import static org.testng.Assert.*;
 public class SubscriptionHandlerTest {
 
 
+    AMQProtocolServer ps = AMQProtocolServer.getInstance();
 
     @BeforeMethod
     public void setUp() throws Exception {
-
+        ps.boot();
     }
 
     @AfterMethod
     public void tearDown() throws Exception {
-
+        ps.stopServer();
     }
 
     @Test
     public void testGetAddress() throws Exception {
-        Sender sender = new Sender() {
+
+        class TestSender implements Sender {
+
+            String address;
+
+            TestSender(String address) {
+                this.address = address;
+            }
+
             @Override
             public void offer(int i) {
 
@@ -69,11 +78,6 @@ public class SubscriptionHandlerTest {
             }
 
             @Override
-            public boolean advance() {
-                return false;
-            }
-
-            @Override
             public String getName() {
                 return null;
             }
@@ -99,13 +103,28 @@ public class SubscriptionHandlerTest {
             }
 
             @Override
+            public boolean advance() {
+                return false;
+            }
+
+            @Override
             public Source getSource() {
-                return null;
+                return new Source() {
+                    @Override
+                    public String getAddress() {
+                        return address;
+                    }
+                };
             }
 
             @Override
             public Target getTarget() {
-                return null;
+                return new Target() {
+                    @Override
+                    public String getAddress() {
+                        return address;
+                    }
+                };
             }
 
             @Override
@@ -257,26 +276,15 @@ public class SubscriptionHandlerTest {
             public Object getContext() {
                 return null;
             }
-        };
+        }
+        class TestReceiver implements Receiver {
 
+            String address;
 
-
-    }
-
-    @Test
-    public void testGetAddress1() throws Exception {
-        Source source = new Source() {
-            @Override
-            public String getAddress() {
-                return "address";
+            TestReceiver(String address) {
+                this.address = address;
             }
-        };
-        assertEquals("address", source.getAddress());
-    }
 
-    @Test
-    public void testGetAddress2() throws Exception{
-        Receiver receiver = new Receiver() {
             @Override
             public void flow(int i) {
 
@@ -293,21 +301,6 @@ public class SubscriptionHandlerTest {
             }
 
             @Override
-            public boolean advance() {
-                return false;
-            }
-
-            @Override
-            public boolean draining() {
-                return false;
-            }
-
-            @Override
-            public void setDrain(boolean b) {
-
-            }
-
-            @Override
             public String getName() {
                 return null;
             }
@@ -333,13 +326,23 @@ public class SubscriptionHandlerTest {
             }
 
             @Override
+            public boolean advance() {
+                return false;
+            }
+
+            @Override
             public Source getSource() {
                 return null;
             }
 
             @Override
             public Target getTarget() {
-                return null;
+                return new Target() {
+                    @Override
+                    public String getAddress() {
+                        return address;
+                    }
+                };
             }
 
             @Override
@@ -443,6 +446,16 @@ public class SubscriptionHandlerTest {
             }
 
             @Override
+            public boolean draining() {
+                return false;
+            }
+
+            @Override
+            public void setDrain(boolean b) {
+
+            }
+
+            @Override
             public EndpointState getLocalState() {
                 return null;
             }
@@ -491,46 +504,19 @@ public class SubscriptionHandlerTest {
             public Object getContext() {
                 return null;
             }
-        };
+        }
 
+        Sender sender = new TestSender("address");
+        Sender sender2 = new TestSender(null);
+
+        Receiver recv = new TestReceiver("address");
+        Receiver recv2 = new TestReceiver(null);
+
+        assertEquals("address", SubscriptionHandler.getAddress(recv));
+        assertEquals(null, SubscriptionHandler.getAddress(recv2));
+
+        assertEquals("address", SubscriptionHandler.getAddress(sender));
+        assertEquals(null, SubscriptionHandler.getAddress(sender2));
     }
 
-    @Test
-    public void testGetAddress3() throws Exception {
-        Target target = new Target() {
-            @Override
-            public String getAddress() {
-                return "address";
-            }
-        };
-        assertEquals("address", target.getAddress());
-
-    }
-
-    @Test
-    public void testGetOutgoing() throws Exception {
-        Map<String,SubscriptionHandler.Routes<Sender>> outgoing = new ConcurrentHashMap<String,SubscriptionHandler.Routes<Sender>>();
-
-    }
-
-    @Test
-    public void testGetIncomming() throws Exception {
-        Map<String,SubscriptionHandler.Routes<Receiver>> incoming = new ConcurrentHashMap<String,SubscriptionHandler.Routes<Receiver>>();
-
-    }
-
-    @Test
-    public void testOnLinkLocalOpen() throws Exception {
-
-    }
-
-    @Test
-    public void testOnConnectionUnbound() throws Exception {
-
-    }
-
-    @Test
-    public void testSubscriptionChanged() throws Exception {
-
-    }
 }

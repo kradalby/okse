@@ -118,7 +118,7 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
      * @param source
      * @return the address of a Source object.
      */
-    private String getAddress(Source source) {
+    private static String getAddress(Source source) {
         if (source == null) {
             return null;
         } else {
@@ -131,7 +131,7 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
      * @param target
      * @return the address of a Target object.
      */
-    private String getAddress(Target target) {
+    private static String getAddress(Target target) {
         if (target == null) {
             return null;
         } else {
@@ -144,7 +144,7 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
      * @param sender
      * @return the address of a Sender object.
      */
-    public String getAddress(Sender sender) {
+    public static String getAddress(Sender sender) {
         String source = getAddress(sender.getSource());
         String target = getAddress(sender.getTarget());
         return source != null ? source : target;
@@ -155,7 +155,7 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
      * @param receiver
      * @return the address of a Receiver object.
      */
-    public String getAddress(Receiver receiver) {
+    public static String getAddress(Receiver receiver) {
         return getAddress(receiver.getTarget());
     }
 
