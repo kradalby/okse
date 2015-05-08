@@ -30,16 +30,12 @@ import no.ntnu.okse.core.event.SystemEvent;
 import no.ntnu.okse.core.messaging.Message;
 import no.ntnu.okse.core.messaging.MessageService;
 import no.ntnu.okse.protocol.AbstractProtocolServer;
-import no.ntnu.okse.protocol.amqp.AMQProtocolServer;
 import no.ntnu.okse.protocol.wsn.WSNTools;
 import no.ntnu.okse.protocol.wsn.WSNotificationServer;
 import org.apache.log4j.Logger;
-import org.ntnunotif.wsnu.base.util.InternalMessage;
 import org.ntnunotif.wsnu.base.util.Utilities;
 import org.ntnunotif.wsnu.services.general.WsnUtilities;
-import org.oasis_open.docs.wsn.b_2.SubscribeResponse;
 
-import javax.xml.ws.wsaddressing.W3CEndpointReference;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
@@ -47,6 +43,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Properties;
 import java.util.Set;
 
 /**
@@ -70,6 +67,7 @@ public class DummyProtocolServer extends AbstractProtocolServer {
     private ServerSocketChannel serverChannel;
     private HashSet<SocketChannel> clients;
     private Selector selector;
+    private static Properties config;
 
     /**
      * Private constructor
@@ -86,14 +84,16 @@ public class DummyProtocolServer extends AbstractProtocolServer {
     public static DummyProtocolServer getInstance() {
         // If not invoked, create an instance and inject as _singleton
         if (!_invoked) {
+            // Read the config
+            config = Application.readConfigurationFiles();
             // Attempt to extract host and port from configuration file
             Integer configPort = null;
             String configHost = null;
             // Fetch potential data from configuration file
-            if (Application.config.containsKey("DUMMYPROTOCOL_HOST")) configHost = Application.config.getProperty("DUMMYPROTOCOL_HOST");
-            if (Application.config.containsKey("DUMMYPROTOCOL_PORT")) {
+            if (config.containsKey("DUMMYPROTOCOL_HOST")) configHost = config.getProperty("DUMMYPROTOCOL_HOST");
+            if (config.containsKey("DUMMYPROTOCOL_PORT")) {
                 try {
-                    configPort = Integer.parseInt(Application.config.getProperty("DUMMYPROTOCOL_PORT"));
+                    configPort = Integer.parseInt(config.getProperty("DUMMYPROTOCOL_PORT"));
                 } catch (NumberFormatException e) {
                     log.error("Failed to parse DummyProtocol Port, using default: " + DEFAULT_PORT);
                 }

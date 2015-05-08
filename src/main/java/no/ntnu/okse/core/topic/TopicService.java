@@ -48,6 +48,7 @@ public class TopicService extends AbstractCoreService {
     private static TopicService _singleton = null;
     private static Thread _serviceThread;
     private LinkedBlockingQueue<TopicTask> queue;
+    private Properties config;
     private ConcurrentHashMap<String, Topic> allTopics;
     private ConcurrentHashSet<TopicChangeListener> _listeners;
     private ConcurrentHashMap<String, HashSet<String>> mappings;
@@ -73,6 +74,7 @@ public class TopicService extends AbstractCoreService {
      * Private initialization method. All set-up operations are to be performed here.
      */
     protected void init() {
+        config = Application.readConfigurationFiles();
         log.info("Initializing TopicService...");
         queue = new LinkedBlockingQueue<>();
         allTopics = new ConcurrentHashMap<>();
@@ -81,9 +83,9 @@ public class TopicService extends AbstractCoreService {
         _invoked = true;
 
         log.info("Initializing topic mapping from configuration file");
-        if (Application.config.containsKey("TOPIC_MAPPING")) {
+        if (config.containsKey("TOPIC_MAPPING")) {
 
-            Properties topicMapping = Utilities.readConfigurationFromFile(Application.config.getProperty("TOPIC_MAPPING"));
+            Properties topicMapping = Utilities.readConfigurationFromFile(config.getProperty("TOPIC_MAPPING"));
 
             if (topicMapping == null) {
                 log.error("Failed to load topic mapping from config file");

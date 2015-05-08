@@ -310,7 +310,7 @@ public class WSNTools {
         try {
             DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
             Document document = documentBuilderFactory.newDocumentBuilder().newDocument();
-            Element element = document.createElement("Content");
+            Element element = document.createElement(WSNotificationServer.getMessageContentWrapperElementName());
             element.setTextContent(content);
             return element;
         } catch (ParserConfigurationException e) {
