@@ -85,6 +85,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
     private static final int DEFAULT_PORT = 61000;
     private static final Long DEFAULT_CONNECTION_TIMEOUT = 5L;
     private static final Integer DEFAULT_HTTP_CLIENT_DISPATCHER_POOL_SIZE = 50;
+    private static final String DEFAULT_MESSAGE_CONTENT_WRAPPER_NAME = "Content";
 
     // Flag and defaults for operation behind NAT
     private static boolean behindNAT = false;
@@ -97,6 +98,9 @@ public class WSNotificationServer extends AbstractProtocolServer {
 
     // The singleton containing the WSNotificationServer instance
     private static WSNotificationServer _singleton;
+
+    // Non-XMl Content Wrapper Name
+    private static String contentWrapperElementName = DEFAULT_MESSAGE_CONTENT_WRAPPER_NAME;
 
     // Instance fields
     private Server _server;
@@ -181,19 +185,33 @@ public class WSNotificationServer extends AbstractProtocolServer {
 
         // Declare HttpClient field
         _client = null;
-        clientPool = Executors.newFixedThreadPool(clientPoolSize);
 
         // Attempt to fetch connection timeout from settings, otherwise use 5 seconds as default
         try {
-            connectionTimeout = Long.parseLong(Application.config.getProperty("WSN_CONNECTION_TIMEOUT", connectionTimeout.toString()));
+            connectionTimeout = Long.parseLong(Application.config.getProperty("WSN_CONNECTION_TIMEOUT",
+                    connectionTimeout.toString()));
         } catch (NumberFormatException e) {
             log.error("Failed to parse WSN Connection Timeout, using default: " + connectionTimeout);
         }
+
         // Attempt to fetch the HTTP Client pool size from settings, otherwise use default
         try {
-            clientPoolSize = Integer.parseInt(Application.config.getProperty("WSN_POOL_SIZE", Integer.toString(DEFAULT_HTTP_CLIENT_DISPATCHER_POOL_SIZE)));
+            clientPoolSize = Integer.parseInt(Application.config.getProperty("WSN_POOL_SIZE",
+                    Integer.toString(DEFAULT_HTTP_CLIENT_DISPATCHER_POOL_SIZE)));
         } catch (NumberFormatException e) {
-            log.error("Failed to parse WSN Client pool size from config file! Using default: " + DEFAULT_HTTP_CLIENT_DISPATCHER_POOL_SIZE);
+            log.error("Failed to parse WSN Client pool size from config file! Using default: " +
+                    DEFAULT_HTTP_CLIENT_DISPATCHER_POOL_SIZE);
+        }
+        clientPool = Executors.newFixedThreadPool(clientPoolSize);
+
+        // If a default message content wrapper name is specified in config, set it, otherwise use default
+        contentWrapperElementName = Application.config.getProperty("WSN_MESSAGE_CONTENT_ELEMENT_NAME",
+                DEFAULT_MESSAGE_CONTENT_WRAPPER_NAME);
+
+        if (contentWrapperElementName.contains("<") || contentWrapperElementName.contains(">")) {
+            log.warn("Non-XML message payload element wrapper name cannot contain XML element characters (< or >)," +
+                    " using default: " + DEFAULT_MESSAGE_CONTENT_WRAPPER_NAME);
+            contentWrapperElementName = DEFAULT_MESSAGE_CONTENT_WRAPPER_NAME;
         }
 
         // If we have host or port provided, set them, otherwise use internal defaults
@@ -378,6 +396,15 @@ public class WSNotificationServer extends AbstractProtocolServer {
      */
     protected void incrementTotalMessagesReceived() {
         totalMessagesReceived.incrementAndGet();
+    }
+
+    /**
+     * Retrieve the default element name for non-XML messages that are to be wrapped in a soap enveloped
+     * WSNotification Notify element. This element will be the first and only child of the Message element.
+     * @return The default name of the content wrapper element
+     */
+    public static String getMessageContentWrapperElementName() {
+        return contentWrapperElementName;
     }
 
     /**

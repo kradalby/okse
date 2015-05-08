@@ -526,7 +526,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         long terminationTime = 0;
 
         // If it was provided in the request
-        if (subscribeRequest.getInitialTerminationTime() != null) {
+        if (subscribeRequest.getInitialTerminationTime() != null && !subscribeRequest.getInitialTerminationTime().isNil()) {
             try {
                 terminationTime = ServiceUtilities.interpretTerminationTime(subscribeRequest.getInitialTerminationTime().getValue());
 
