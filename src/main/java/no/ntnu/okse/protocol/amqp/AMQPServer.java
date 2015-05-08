@@ -57,7 +57,7 @@ public class AMQPServer extends BaseHandler {
      * Queue/Topic
      */
 
-    private class MessageStore {
+    private static class MessageStore {
 
         Map<String, Deque<MessageBytes>> messages = new HashMap<String, Deque<MessageBytes>>();
 
@@ -81,9 +81,12 @@ public class AMQPServer extends BaseHandler {
             }
             return msg;
         }
+    }
 
+    public static class TestMessageStore extends MessageStore {}
 
-
+    public static TestMessageStore createMessageStoreFactory() {
+        return new TestMessageStore();
     }
 
     final private MessageStore messages = new MessageStore();

@@ -30,10 +30,7 @@ import no.ntnu.okse.core.messaging.Message;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Section;
 import org.apache.qpid.proton.amqp.transport.*;
-import org.apache.qpid.proton.engine.Delivery;
-import org.apache.qpid.proton.engine.EndpointState;
-import org.apache.qpid.proton.engine.Link;
-import org.apache.qpid.proton.engine.Session;
+import org.apache.qpid.proton.engine.*;
 import org.apache.qpid.proton.engine.impl.DeliveryImpl;
 import org.apache.qpid.proton.messenger.Messenger;
 import org.apache.qpid.proton.messenger.impl.Address;
@@ -443,6 +440,281 @@ public class AMQPServerTest {
         assertEquals(okseMessage.getMessage(), (String) ((AmqpValue) AMQPMessage.getBody()).getValue());
         assertEquals(okseMessage.getTopic(), topic);
         assertEquals(okseMessage.getOriginProtocol(), "AMQP");
+
+    }
+
+    @Test
+    public void testMessageStore() throws Exception {
+        AMQPServer.TestMessageStore messageStore = AMQPServer.createMessageStoreFactory();
+
+        String address1 = "test";
+        String address2 = "test/test";
+
+        MessageBytes mb1 = new MessageBytes("test1".getBytes());
+        MessageBytes mb2 = new MessageBytes("test2".getBytes());
+        MessageBytes mb3 = new MessageBytes("test3".getBytes());
+        MessageBytes mb4 = new MessageBytes("test4".getBytes());
+        MessageBytes mb5 = new MessageBytes("test5".getBytes());
+        MessageBytes mb6 = new MessageBytes("test6".getBytes());
+
+        messageStore.put(address1, mb1);
+        messageStore.put(address1, mb2);
+        messageStore.put(address1, mb3);
+
+        messageStore.put(address2, mb4);
+        messageStore.put(address2, mb5);
+        messageStore.put(address2, mb6);
+
+        assertEquals(mb1, messageStore.get(address1));
+        assertNotEquals(mb3, messageStore.get(address1));
+        assertEquals(mb3, messageStore.get(address1));
+
+        assertNotEquals(mb6, messageStore.get(address2));
+        assertNotEquals(mb6, messageStore.get(address2));
+        assertEquals(mb6, messageStore.get(address2));
+
+    }
+
+    @Test
+    public void testRoutes() throws Exception {
+        SubscriptionHandler.Routes<Sender> routes = new SubscriptionHandler.Routes();
+
+        ArrayList<Sender> senders = new ArrayList<>();
+
+        class TestSender implements Sender {
+
+            @Override
+            public void offer(int i) {
+
+            }
+
+            @Override
+            public int send(byte[] bytes, int i, int i1) {
+                return 0;
+            }
+
+            @Override
+            public void abort() {
+
+            }
+
+            @Override
+            public String getName() {
+                return null;
+            }
+
+            @Override
+            public Delivery delivery(byte[] bytes) {
+                return null;
+            }
+
+            @Override
+            public Delivery delivery(byte[] bytes, int i, int i1) {
+                return null;
+            }
+
+            @Override
+            public Delivery head() {
+                return null;
+            }
+
+            @Override
+            public Delivery current() {
+                return null;
+            }
+
+            @Override
+            public boolean advance() {
+                return false;
+            }
+
+            @Override
+            public Source getSource() {
+                return null;
+            }
+
+            @Override
+            public Target getTarget() {
+                return null;
+            }
+
+            @Override
+            public void setSource(Source source) {
+
+            }
+
+            @Override
+            public void setTarget(Target target) {
+
+            }
+
+            @Override
+            public Source getRemoteSource() {
+                return null;
+            }
+
+            @Override
+            public Target getRemoteTarget() {
+                return null;
+            }
+
+            @Override
+            public Link next(EnumSet<EndpointState> enumSet, EnumSet<EndpointState> enumSet1) {
+                return null;
+            }
+
+            @Override
+            public int getCredit() {
+                return 0;
+            }
+
+            @Override
+            public int getQueued() {
+                return 0;
+            }
+
+            @Override
+            public int getUnsettled() {
+                return 0;
+            }
+
+            @Override
+            public Session getSession() {
+                return null;
+            }
+
+            @Override
+            public SenderSettleMode getSenderSettleMode() {
+                return null;
+            }
+
+            @Override
+            public void setSenderSettleMode(SenderSettleMode senderSettleMode) {
+
+            }
+
+            @Override
+            public SenderSettleMode getRemoteSenderSettleMode() {
+                return null;
+            }
+
+            @Override
+            public ReceiverSettleMode getReceiverSettleMode() {
+                return null;
+            }
+
+            @Override
+            public void setReceiverSettleMode(ReceiverSettleMode receiverSettleMode) {
+
+            }
+
+            @Override
+            public ReceiverSettleMode getRemoteReceiverSettleMode() {
+                return null;
+            }
+
+            @Override
+            public void setRemoteSenderSettleMode(SenderSettleMode senderSettleMode) {
+
+            }
+
+            @Override
+            public int drained() {
+                return 0;
+            }
+
+            @Override
+            public int getRemoteCredit() {
+                return 0;
+            }
+
+            @Override
+            public boolean getDrain() {
+                return false;
+            }
+
+            @Override
+            public void detach() {
+
+            }
+
+            @Override
+            public EndpointState getLocalState() {
+                return null;
+            }
+
+            @Override
+            public EndpointState getRemoteState() {
+                return null;
+            }
+
+            @Override
+            public ErrorCondition getCondition() {
+                return null;
+            }
+
+            @Override
+            public void setCondition(ErrorCondition errorCondition) {
+
+            }
+
+            @Override
+            public ErrorCondition getRemoteCondition() {
+                return null;
+            }
+
+            @Override
+            public void free() {
+
+            }
+
+            @Override
+            public void open() {
+
+            }
+
+            @Override
+            public void close() {
+
+            }
+
+            @Override
+            public void setContext(Object o) {
+
+            }
+
+            @Override
+            public Object getContext() {
+                return null;
+            }
+        }
+
+        Sender snd1 = new TestSender();
+        Sender snd2 = new TestSender();
+        Sender snd3 = new TestSender();
+        Sender snd4 = new TestSender();
+        Sender snd5 = new TestSender();
+
+        routes.add(snd1);
+        senders.add(snd1);
+        routes.add(snd2);
+        senders.add(snd2);
+        routes.add(snd3);
+        senders.add(snd3);
+        routes.add(snd4);
+        senders.add(snd4);
+        routes.add(snd5);
+        senders.add(snd5);
+
+        assertTrue(senders.contains(routes.choose()));
+        assertEquals(routes.size(), senders.size());
+        assertEquals(routes.getRoutes(), senders);
+        assertNotEquals(routes.size(), 6);
+        assertNotEquals(routes.size(), 4);
+
+        routes.remove(snd2);
+        assertNotEquals(routes.size(), 5);
+        assertEquals(routes.size(), 4);
 
     }
 
