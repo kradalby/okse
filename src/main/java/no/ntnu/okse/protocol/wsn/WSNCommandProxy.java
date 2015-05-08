@@ -718,6 +718,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
 
         // Set up OKSE publisher object
         Publisher publisher = new Publisher(rawTopicString, requestAddress, port, WSNotificationServer.getInstance().getProtocolServerType());
+        publisher.setTimeout(terminationTime);
         publisher.setAttribute(WSNRegistrationManager.WSN_PUBLISHER_TOKEN, newPublisherKey);
         publisher.setAttribute(WSNSubscriptionManager.WSN_DIALECT_TOKEN, rawDialect);
 
