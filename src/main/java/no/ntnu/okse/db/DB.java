@@ -102,7 +102,7 @@ public class DB {
             System.out.println("initDB: Tables created successfully");
 
             sql = "INSERT INTO users (username,password,enabled,description) " +
-                    "VALUES ('admin','password',1,'Administrator')";
+                    "VALUES ('admin','$2a$08$J8jPGNCgrrhc.YoZ05GJQeXx0SKSZotoOKLNGPbazZ..i3uCk/iX.',1,'Administrator')";
             stmt.executeUpdate(sql);
 
             sql = "INSERT INTO authorities (username,authority) " +

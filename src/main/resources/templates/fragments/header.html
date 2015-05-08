@@ -17,7 +17,10 @@
                     <a class="navbar-brand" href="/" th:href="@{/}">OKSE Admin Console</a>
                 </div>
                 <div id="navbar" class="navbar-collapse collapse">
-                        <form th:if="${#authorization.expression('!isAuthenticated()')}" class="navbar-form navbar-right" th:action="@{/login}" method="POST">
+                    <!-- Left Align -->
+                    <p th:if="${#authorization.expression('isAuthenticated()')}" sec:authentication="name" class="navbar-text navbar-left">User</p>
+                    <!-- Right Align -->
+                        <form th:if="${#authorization.expression('!isAuthenticated()')}" class="navbar-form navbar-right" th:action="@{auth/login}" method="POST">
                             <div class="form-group">
                                 <input type="text" name="username" placeholder="Username" class="form-control" />
                             </div>
@@ -26,10 +29,10 @@
                             </div>
                             <button type="submit" class="btn btn-success">Sign in</button>
                         </form>
-                        <form th:if="${#authorization.expression('isAuthenticated()')}" class="navbar-form navbar-right" th:action="@{/logout}" method="POST">
+                        <form th:if="${#authorization.expression('isAuthenticated()')}" class="navbar-form navbar-right" th:action="@{auth/password}" method="GET">
                             <button type="submit" class="btn btn-warning">Log out</button>
                         </form>
-                        <span th:if="${#authorization.expression('isAuthenticated()')}" class="navbar-text navbar-right" sec:authentication="name">User</span>
+                        <a th:if="${#authorization.expression('isAuthenticated()')}" href="/auth/password" class="btn btn-warning navbar-btn navbar-right">Change password</a>
                 </div><!--/.navbar-collapse -->
             </div>
         </nav>
