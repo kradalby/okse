@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Created by Håkon Ødegård Løvdal (hakloev) on 17/03/15.
@@ -114,7 +116,25 @@ public class ConfigController {
 
     @RequestMapping(method = RequestMethod.POST, value = ADD_RELAY)
     public @ResponseBody ResponseEntity<String> addRelay(@RequestParam(value = "from") String relay) {
-        log.debug("Adding relay from: " + relay);
+        log.debug("Trying to add relay from: " + relay);
+
+        String pStr = "(?:http.*://)?(?<host>[^:/ ]+).?(?<port>[0-9]*).*";
+        Matcher m = Pattern.compile(pStr).matcher(relay);
+        String host = null;
+        String port = null;
+
+        if (m.matches()) {
+            host = m.group("host");
+            port = m.group("port");
+        }
+
+        if (host == null || port == null) {
+            log.debug("Host or port not provided, not able to add relay");
+            return new ResponseEntity<String>("{ \"added\" :false }", HttpStatus.OK);
+        }
+
+        
+
 
         if (!relay.startsWith("http://")) { relay = "http://" + relay; }
 
