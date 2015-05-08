@@ -76,12 +76,14 @@ public class Application {
      * @param args Command line arguments
      */
     public static void main(String[] args) {
-
+        /*
         // Check for presence of the needed config files, if they do not exist, they must be created
         Utilities.createConfigDirectoryAndFilesIfNotExists();
-
-        // Configure the log4j logger
+        // Configure the Log4j logger
         PropertyConfigurator.configure("config/log4j.properties");
+        */
+        // Reads config files, creates defaults if it does not exist, and updates fields
+        readConfigurationFiles();
 
         // Init the logger
         log = Logger.getLogger(Application.class.getName());
@@ -94,15 +96,6 @@ public class Application {
         } else {
             log.info("okse.db exists");
         }
-
-        // Read and store the Properties from config file
-        log.info("Reading OKSE configuration file");
-        config = Utilities.readConfigurationFromFile("config/okse.properties");
-
-        // Initialize default variables from configuration file
-        log.info("Initializing default values from configuration file");
-        initializeDefaultsFromConfigFile(config);
-        log.info("Configuration file initialization complete");
 
         // Initialize main system components
         webserver = new Server();
@@ -140,6 +133,24 @@ public class Application {
      */
     public static void resetStartTime() {
         startedAt = System.currentTimeMillis();
+    }
+
+    /**
+     * This public static method reads the OKSE configuration file from disk. If it does not exist, it is created.
+     * Additionally, default fields in the Application class are populated after config has been read.
+     * @return The Properties object containing the config key/value pairs.
+     */
+    public static Properties readConfigurationFiles() {
+        // Check for presence of the needed config files, if they do not exist, they must be created
+        Utilities.createConfigDirectoryAndFilesIfNotExists();
+        // Configure the Log4j logger
+        PropertyConfigurator.configure("config/log4j.properties");
+        // Read the contents of the configuration file
+        config = Utilities.readConfigurationFromFile("config/okse.properties");
+        // Initialize the internal fields from the defaults
+        initializeDefaultsFromConfigFile(config);
+
+        return config;
     }
 
     /**

@@ -78,7 +78,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
     private static boolean _invoked, _running;
 
     // Path to internal configuration file on classpath
-    private static final String configurationFile = "/config/wsnserver.xml";
+    private static final String wsnInternalConfigFile = "/config/wsnserver.xml";
 
     // Internal Default Values
     private static final String DEFAULT_HOST = "0.0.0.0";
@@ -111,13 +111,14 @@ public class WSNotificationServer extends AbstractProtocolServer {
     private HttpHandler _handler;
     private HashSet<ServiceConnection> _services;
     private ExecutorService clientPool;
+    private Properties config;
 
     /**
      * Empty constructor, uses internal defaults or provided from config file
      */
     private WSNotificationServer() {
         // Check config file
-        Properties config = Application.config;
+        config = Application.readConfigurationFiles();
         String configHost = config.getProperty("WSN_HOST", DEFAULT_HOST);
         Integer configPort = null;
         try {
@@ -141,6 +142,8 @@ public class WSNotificationServer extends AbstractProtocolServer {
      * @param port An integer representing the port the WSNServer should bind to.
      */
     private WSNotificationServer(String host, Integer port) {
+        // Check config file
+        config = Application.readConfigurationFiles();
         this.init(host, port);
     }
 
@@ -188,7 +191,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
 
         // Attempt to fetch connection timeout from settings, otherwise use 5 seconds as default
         try {
-            connectionTimeout = Long.parseLong(Application.config.getProperty("WSN_CONNECTION_TIMEOUT",
+            connectionTimeout = Long.parseLong(config.getProperty("WSN_CONNECTION_TIMEOUT",
                     connectionTimeout.toString()));
         } catch (NumberFormatException e) {
             log.error("Failed to parse WSN Connection Timeout, using default: " + connectionTimeout);
@@ -196,7 +199,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
 
         // Attempt to fetch the HTTP Client pool size from settings, otherwise use default
         try {
-            clientPoolSize = Integer.parseInt(Application.config.getProperty("WSN_POOL_SIZE",
+            clientPoolSize = Integer.parseInt(config.getProperty("WSN_POOL_SIZE",
                     Integer.toString(DEFAULT_HTTP_CLIENT_DISPATCHER_POOL_SIZE)));
         } catch (NumberFormatException e) {
             log.error("Failed to parse WSN Client pool size from config file! Using default: " +
@@ -205,7 +208,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
         clientPool = Executors.newFixedThreadPool(clientPoolSize);
 
         // If a default message content wrapper name is specified in config, set it, otherwise use default
-        contentWrapperElementName = Application.config.getProperty("WSN_MESSAGE_CONTENT_ELEMENT_NAME",
+        contentWrapperElementName = config.getProperty("WSN_MESSAGE_CONTENT_ELEMENT_NAME",
                 DEFAULT_MESSAGE_CONTENT_WRAPPER_NAME);
 
         if (contentWrapperElementName.contains("<") || contentWrapperElementName.contains(">")) {
@@ -220,15 +223,15 @@ public class WSNotificationServer extends AbstractProtocolServer {
 
         /* Check if config file specifies that we are behind NAT, and update the provided WAN IP and PORT */
         // Check for use NAT flag
-        if (Application.config.getProperty("WSN_USES_NAT", "false").equalsIgnoreCase("true")) behindNAT = true;
+        if (config.getProperty("WSN_USES_NAT", "false").equalsIgnoreCase("true")) behindNAT = true;
         else behindNAT = false;
 
         // Check for WAN_HOST
-        publicWANHost = Application.config.getProperty("WSN_WAN_HOST", publicWANHost);
+        publicWANHost = config.getProperty("WSN_WAN_HOST", publicWANHost);
 
         // Check for WAN_PORT
         try {
-            publicWANPort = Integer.parseInt(Application.config.getProperty("WSN_WAN_PORT", publicWANPort.toString()));
+            publicWANPort = Integer.parseInt(config.getProperty("WSN_WAN_PORT", publicWANPort.toString()));
         } catch (NumberFormatException e) {
             log.error("Failed to parse WSN WAN Port, using default: " + publicWANPort);
         } 
@@ -237,7 +240,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
         Resource configResource;
         try {
             // Try to parse the configFile for WSNServer to set up the Server instance
-            configResource = Resource.newSystemResource(configurationFile);
+            configResource = Resource.newSystemResource(wsnInternalConfigFile);
             XmlConfiguration config = new XmlConfiguration(configResource.getInputStream());
             this._server = (Server)config.configure();
             // Remove the xmlxonfig connector
