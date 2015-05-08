@@ -38,7 +38,18 @@ public class ConfigController {
 
     private static Logger log = Logger.getLogger(ConfigController.class.getName());
 
-    private ConcurrentHashMap<String, String> relays = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, String> relays;
+
+    private HashSet<String> localRelays;
+
+    public ConfigController() {
+        relays = new ConcurrentHashMap<>();
+        localRelays = new HashSet<String>(){{
+            add("127.0.0.1");
+            add("0.0.0.0");
+            add("localhost");
+        }};
+    }
 
     @RequestMapping(method = RequestMethod.GET, value = GET_ALL_INFO)
     public @ResponseBody HashMap<String, Object> getAllInfo() {
@@ -76,7 +87,7 @@ public class ConfigController {
         ts.addMappingBetweenTopics(topic, newTopic);
         // TODO: We probably need to add some check somewhere, that checks if the input string is correct.
 
-        return new ResponseEntity<String>("{ \"added\" :true }", HttpStatus.OK);
+        return new ResponseEntity<String>("{ \"message\" :\"Added mapping from Topic{" + topic + "} to Topic{ " + newTopic + " }\" }", HttpStatus.OK);
     }
 
     /**
@@ -90,7 +101,7 @@ public class ConfigController {
         TopicService ts = TopicService.getInstance();
         ts.deleteMapping(topicToRemove);
 
-        return new ResponseEntity<String>("{ \"deleted\" :true }", HttpStatus.OK);
+        return new ResponseEntity<String>("{ \"message\" :\"Deleted mapping for Topic{" + topicToRemove + "}\" }", HttpStatus.OK);
     }
 
     /**
@@ -104,14 +115,14 @@ public class ConfigController {
         ts.getAllMappings().forEach((k, v) -> {
             ts.deleteMapping(k);
         });
-        return new ResponseEntity<String>("{ \"deleted\" :true }", HttpStatus.OK);
+        return new ResponseEntity<String>("{ \"message\" :\"Deleted all mappings\" }", HttpStatus.OK);
     }
 
     @RequestMapping(method = RequestMethod.POST, value = CHANGE_AMQP)
     public @ResponseBody ResponseEntity<String> changeAMQPqueue() {
         AMQProtocolServer.getInstance().useQueue = (AMQProtocolServer.getInstance().useQueue ? false : true);
         log.debug("Value of AMQP queue is now " + AMQProtocolServer.getInstance().useQueue);
-        return new ResponseEntity<String>("{ \"value\" :" + AMQProtocolServer.getInstance().useQueue + " }", HttpStatus.OK);
+        return new ResponseEntity<String>("{ \"message\" :\"Successfully changed the useQueue variable to "+ AMQProtocolServer.getInstance().useQueue + "\"}", HttpStatus.OK);
     }
 
     @RequestMapping(method = RequestMethod.POST, value = ADD_RELAY)
@@ -121,20 +132,33 @@ public class ConfigController {
         String pStr = "(?:http.*://)?(?<host>[^:/ ]+).?(?<port>[0-9]*).*";
         Matcher m = Pattern.compile(pStr).matcher(relay);
         String host = null;
-        String port = null;
+        Integer port = null;
 
         if (m.matches()) {
             host = m.group("host");
-            port = m.group("port");
+            port = Integer.valueOf(m.group("port"));
         }
 
         if (host == null || port == null) {
             log.debug("Host or port not provided, not able to add relay");
-            return new ResponseEntity<String>("{ \"added\" :false }", HttpStatus.OK);
+            return new ResponseEntity<String>("{ \"message\" :\"Host or port not provided, not able to add relay\" }", HttpStatus.BAD_REQUEST);
         }
 
-        
-
+        // if relay.host == 0.0.0 etc sjekk port
+        if (localRelays.contains(host)) {
+            log.debug("Same host, need to check port");
+            if (WSNotificationServer.getInstance().getPort() == port) {
+                log.debug("Same port, invalid relay command");
+                return new ResponseEntity<String>("{ \"message\" :\"Same host and port, not able to add relay\" }", HttpStatus.BAD_REQUEST);
+            }
+        // else sjekk relay.host mot publicWANHost, så sjekk port
+        } else if (host.equals(WSNotificationServer.getInstance().getPublicWANHost())) {
+            log.info("Same host (WAN), need to check port");
+            if (WSNotificationServer.getInstance().getPublicWANPort() == port) {
+                log.info("Same port (WAN), invalid relay command");
+                return new ResponseEntity<String>("{ \"message\" :\"Same host and port (WAN), not able to add relay\" }", HttpStatus.BAD_REQUEST);
+            }
+        }
 
         if (!relay.startsWith("http://")) { relay = "http://" + relay; }
 
@@ -148,12 +172,12 @@ public class ConfigController {
 
         if (subscriptionReference == null) {
             log.debug("Relay could not be created");
-            return new ResponseEntity<String>("{ \"added\" :false }", HttpStatus.OK);
+            return new ResponseEntity<String>("{ \"message\" :\"The subscription request failed for relay failed\" }", HttpStatus.BAD_REQUEST);
 
         }
         relays.put(subscriptionReference.split("subscriberkey=")[1], subscriptionReference);
         log.debug("Relay got subscriptionReference: " + subscriptionReference);
-        return new ResponseEntity<String>("{ \"added\" :true }", HttpStatus.OK);
+        return new ResponseEntity<String>("{ \"message\" :\"Successfully added relay\" }", HttpStatus.OK);
     }
 
     @RequestMapping(method = RequestMethod.DELETE, value = DELETE_RELAY)
@@ -164,10 +188,10 @@ public class ConfigController {
             WsnUtilities.sendUnsubscribeRequest(relays.get(relay), WSNotificationServer.getInstance().getRequestParser());
             relays.remove(relay);
             log.debug("Removed relay: " + relay);
-            return new ResponseEntity<String>("{ \"deleted\" :true }", HttpStatus.OK);
+            return new ResponseEntity<String>("{ \"message\" :\"Successfully removed the relay\" }", HttpStatus.OK);
         } else {
             log.debug("Unable to remove relay: " + relay);
-            return new ResponseEntity<String>("{ \"deleted\" :false }", HttpStatus.OK);
+            return new ResponseEntity<String>("{ \"message\" :\"Unable to remove the relay, can't find it.\" }", HttpStatus.OK);
         }
     }
 
@@ -180,6 +204,6 @@ public class ConfigController {
             log.debug("Removed relay: " + k);
         });
 
-        return new ResponseEntity<String>("{ \"deleted\" :true }", HttpStatus.OK);
+        return new ResponseEntity<String>("{ \"message\" :\"Deleted all relays\" }", HttpStatus.OK);
     }
 }
