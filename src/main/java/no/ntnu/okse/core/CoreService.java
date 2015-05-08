@@ -39,6 +39,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Properties;
 import java.util.concurrent.*;
 
 /**
@@ -58,6 +59,7 @@ public class CoreService extends AbstractCoreService {
     private ExecutorService executor;
     private HashSet<AbstractCoreService> services;
     private ArrayList<ProtocolServer> protocolServers;
+    private Properties config;
     public static boolean protocolServersBooted = false;
 
     /**
@@ -84,6 +86,8 @@ public class CoreService extends AbstractCoreService {
      */
     @Override
     protected void init() {
+        config = Application.readConfigurationFiles();
+        log.debug("Initializing CoreService");
         eventQueue = new LinkedBlockingQueue();
         services = new HashSet<>();
         protocolServers = new ArrayList<>();
@@ -153,7 +157,9 @@ public class CoreService extends AbstractCoreService {
             try {
                 Event e = eventQueue.take();
                 log.debug("Consumed an event: " + e);
+                // Are we shutting down protocol servers?
                 if (e.getType().equals(SystemEvent.Type.SHUTDOWN_PROTOCOL_SERVERS)) stopAllProtocolServers();
+                // Are we booting protocol servers?
                 else if (e.getType().equals(SystemEvent.Type.BOOT_PROTOCOL_SERVERS)) bootProtocolServers();
             } catch (InterruptedException e) {
                 log.error("Interrupted while attempting to fetch next event from eventQueue");

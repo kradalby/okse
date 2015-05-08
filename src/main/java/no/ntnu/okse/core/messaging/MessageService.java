@@ -36,6 +36,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -51,6 +52,7 @@ public class MessageService extends AbstractCoreService implements TopicChangeLi
     private static Thread _serviceThread;
     private LinkedBlockingQueue<Message> queue;
     private ConcurrentHashMap<String, Message> latestMessages;
+    private Properties config;
 
     /**
      * Private Constructor that recieves invocation from getInstance, enabling the singleton pattern for this class
@@ -64,6 +66,7 @@ public class MessageService extends AbstractCoreService implements TopicChangeLi
      * Private initializer method that flags invocation state as true, and sets up message queue
      */
     protected void init() {
+        config = Application.readConfigurationFiles();
         log.info("Initializing MessageService...");
         queue = new LinkedBlockingQueue<>();
         latestMessages = new ConcurrentHashMap<>();

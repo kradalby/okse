@@ -35,6 +35,7 @@ import org.apache.qpid.proton.engine.Collector;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.Pipe;
+import java.util.Properties;
 
 /**
  * Created by kradalby on 21/04/15.
@@ -60,6 +61,7 @@ public class AMQProtocolServer extends AbstractProtocolServer {
     protected boolean useSASL;
 
     private Driver driver;
+    private static Properties config;
 
     private AMQProtocolServer(String host, Integer port) {
         this.init(host, port);
@@ -68,27 +70,34 @@ public class AMQProtocolServer extends AbstractProtocolServer {
     public static AMQProtocolServer getInstance() {
         // If not invoked, create an instance and inject as _singleton
         if (!_invoked) {
+            // Read config
+            config = Application.readConfigurationFiles();
 
             // Attempt to extract host and port from configuration file
-            String configHost = Application.config.getProperty("AMQP_HOST", DEFAULT_HOST);
+            String configHost = config.getProperty("AMQP_HOST", DEFAULT_HOST);
             Integer configPort = null;
             try {
-                configPort = Integer.parseInt(Application.config.getProperty("AMQP_PORT", Integer.toString(DEFAULT_PORT)));
+                configPort = Integer.parseInt(config.getProperty("AMQP_PORT", Integer.toString(DEFAULT_PORT)));
             } catch (NumberFormatException e) {
                 log.error("Failed to parse AMQP Port, using default: " + DEFAULT_PORT);
             }
 
             // Update singleton
             _singleton = new AMQProtocolServer(configHost, configPort);
-            _singleton.useQueue = Boolean.parseBoolean(Application.config.getProperty("AMQP_USE_QUEUE", DEFAULT_USE_QUEUE));
-            _singleton.useSASL = Boolean.parseBoolean(Application.config.getProperty("AMQP_USE_SASL", DEFAULT_USE_SASL));
+            _singleton.useQueue = Boolean.parseBoolean(config.getProperty("AMQP_USE_QUEUE", DEFAULT_USE_QUEUE));
+            _singleton.useSASL = Boolean.parseBoolean(config.getProperty("AMQP_USE_SASL", DEFAULT_USE_SASL));
         }
 
         return _singleton;
     }
 
     public static AMQProtocolServer getInstance(String host, Integer port) {
-        if (!_invoked) _singleton = new AMQProtocolServer(host, port);
+        if (!_invoked) {
+            // Read config
+            config = Application.readConfigurationFiles();
+            // Instantiate
+            _singleton = new AMQProtocolServer(host, port);
+        }
         return _singleton;
     }
 
