@@ -154,8 +154,15 @@ var Config = (function($) {
             $('#add-relay').on('click', function(e) {
                 e.preventDefault()
 
+                var url = ('config/relay/add?from=' + $('#relay-from').val())
+
+                var relayTopic = $('#relay-topic').val()
+                if (relayTopic.length != 0) {
+                    url += ('&topic=' + encodeURIComponent(relayTopic))
+                }
+
                 Main.ajax({
-                    url: 'config/relay/add?from=' + encodeURIComponent($('#relay-from').val()),
+                    url: url,
                     type: 'POST',
                     success: function(data) {
                         $.okseDebug.logPrint("[Debug][Config] Callback from server; added relay")

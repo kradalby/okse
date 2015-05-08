@@ -122,12 +122,13 @@ public class ConfigController {
     public @ResponseBody ResponseEntity<String> changeAMQPqueue() {
         AMQProtocolServer.getInstance().useQueue = (AMQProtocolServer.getInstance().useQueue ? false : true);
         log.debug("Value of AMQP queue is now " + AMQProtocolServer.getInstance().useQueue);
-        return new ResponseEntity<String>("{ \"message\" :\"Successfully changed the useQueue variable to "+ AMQProtocolServer.getInstance().useQueue + "\"}", HttpStatus.OK);
+        return new ResponseEntity<String>("{ \"value\": " + AMQProtocolServer.getInstance().useQueue + ", " +
+                "\"message\" :\"Successfully changed the useQueue variable to "+ AMQProtocolServer.getInstance().useQueue + "\"}", HttpStatus.OK);
     }
 
     @RequestMapping(method = RequestMethod.POST, value = ADD_RELAY)
-    public @ResponseBody ResponseEntity<String> addRelay(@RequestParam(value = "from") String relay) {
-        log.debug("Trying to add relay from: " + relay);
+    public @ResponseBody ResponseEntity<String> addRelay(@RequestParam(value = "from") String relay, @RequestParam(value = "topic", required = false) String topic) {
+        log.debug("Trying to add relay from: " + relay + " with topic:" + topic);
 
         String pStr = "(?:http.*://)?(?<host>[^:/ ]+).?(?<port>[0-9]*).*";
         Matcher m = Pattern.compile(pStr).matcher(relay);
@@ -163,10 +164,12 @@ public class ConfigController {
         if (!relay.startsWith("http://")) { relay = "http://" + relay; }
 
         String subscriptionReference = WSNTools.extractSubscriptionReferenceFromRawXmlResponse(
-                WsnUtilities.sendSubscriptionRequest(
-                        relay,
-                        WSNotificationServer.getInstance().getURI(),
-                        WSNotificationServer.getInstance().getRequestParser()
+                WSNotificationServer.getInstance().getRequestParser().acceptLocalMessage(
+                        WSNTools.generateSubscriptionRequestWithTopic(
+                                relay,
+                                topic, // Topic
+                                WSNotificationServer.getInstance().getURI(),
+                                null) // Term time
                 )
         );
 
