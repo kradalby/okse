@@ -20,7 +20,7 @@
                     <!-- Left Align -->
                     <p th:if="${#authorization.expression('isAuthenticated()')}" sec:authentication="name" class="navbar-text navbar-left">User</p>
                     <!-- Right Align -->
-                        <form th:if="${#authorization.expression('!isAuthenticated()')}" class="navbar-form navbar-right" th:action="@{auth/login}" method="POST">
+                        <form th:if="${#authorization.expression('!isAuthenticated()')}" class="navbar-form navbar-right" th:action="@{/auth/login}" method="POST">
                             <div class="form-group">
                                 <input type="text" name="username" placeholder="Username" class="form-control" />
                             </div>
@@ -29,7 +29,7 @@
                             </div>
                             <button type="submit" class="btn btn-success">Sign in</button>
                         </form>
-                        <form th:if="${#authorization.expression('isAuthenticated()')}" class="navbar-form navbar-right" th:action="@{auth/password}" method="GET">
+                        <form th:if="${#authorization.expression('isAuthenticated()')}" class="navbar-form navbar-right" th:action="@{/auth/logout}" method="POST">
                             <button type="submit" class="btn btn-warning">Log out</button>
                         </form>
                         <a th:if="${#authorization.expression('isAuthenticated()')}" href="/auth/password" class="btn btn-warning navbar-btn navbar-right">Change password</a>
