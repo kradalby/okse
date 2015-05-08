@@ -25,45 +25,73 @@
 package no.ntnu.okse.db;
 
 /**
- * Created by Aleksander Skraastad (myth) on 2/25/15.
+ * Created by Trond Walleraunet on 2/25/15.
  * <p>
  * okse is licenced under the MIT licence.
  */
 
+import java.io.File;
 import java.sql.*;
+import java.util.ArrayList;
 
 public class DB {
+
     private static Connection con = null;
+    private static String dbName = "okse.db";
 
     /**
      * Connecting to database okse.db
      */
-    public static void conDB(){
+    public static boolean conDB() {
         try {
             Class.forName("org.sqlite.JDBC");
-            con = DriverManager.getConnection("jdbc:sqlite:okse.db");
+            con = DriverManager.getConnection("jdbc:sqlite:" + dbName);
             System.out.println("conDB: Opened database successfully");
+            return true;
         } catch (Exception e) {
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Static method to switch to test database
+     * @param active True if DB is to be set in testing mode, false for normal database
+     */
+    public static void setTestMode(boolean active) throws Exception {
+        if (active) {
+            dbName = "test.db";
+            File dbfile = new File(dbName);
+            if (!dbfile.exists()) System.out.println("Created test db: " + dbfile.createNewFile());
+            else {
+                dbfile.delete();
+                System.out.println("Created test db: " + dbfile.createNewFile());
+            }
+        } else {
+            File dbfile = new File(dbName);
+            if (dbfile.exists()) System.out.println("Deleted test db: " + dbfile.delete());
+            dbName = "okse.db";
         }
     }
 
     /**
      * Closing database connection
      */
-    public static void closeDB(){
+    public static boolean closeDB(){
         try {
             con.close();
             System.out.println("closeDB: Closed database successfully");
+            return true;
         } catch (SQLException e) {
             e.printStackTrace();
+            return false;
         }
     }
 
     /**
      * Initiate database, creates tables and default admin user
      */
-    public static void initDB() {
+    public static boolean initDB() {
         Statement stmt = null;
         String sql = null;
         conDB();
@@ -83,20 +111,10 @@ public class DB {
                     " constraint fk_authorities_users foreign key(username) references users(username))";
             stmt.executeUpdate(sql);
 
-            sql = "CREATE TABLE presistance" +
-                    "(topic CHAR(100), " +
-                    " message CHAR(200) ," +
-                    " protocol CHAR(50))";
-            stmt.executeUpdate(sql);
-
-            sql = "CREATE TABLE presets" +
-                    "(topic CHAR(100), " +
-                    " dialect CHAR(50))";
-            stmt.executeUpdate(sql);
-
-            sql = "CREATE TABLE stats" +
-                    "(stat CHAR(100), " +
-                    " counter INT)";
+            sql = "CREATE TABLE persistance" +
+                    "(topic VARCHAR(100), " +
+                    " message TEXT, " +
+                    " protocol VARCHAR(50))";
             stmt.executeUpdate(sql);
 
             System.out.println("initDB: Tables created successfully");
@@ -113,124 +131,87 @@ public class DB {
 
             stmt.close();
             con.close();
+            return true;
         } catch (Exception e) {
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
-        }
-    }
-    
-    /**
-     * INSERT INTO table (fields) VALUES (values)
-     * @param table A string representing the table
-     * @param fields A string representing the fields
-     * @param values A string representing the values
-     */
-    public static void insert(String table, String fields, String values) {
-        PreparedStatement insert = null;
-        String insertString =
-                "INSERT INTO " + table + " ( ? ) " +
-                "VALUES ( ? )";
-        conDB();
-        try {
-            con.setAutoCommit(false);
-            insert = con.prepareStatement(insertString);
-            insert.setString(1, fields);
-            insert.setString(2, values);
-            insert.executeUpdate();
-            con.commit();
-        } catch (SQLException e) {
-            e.printStackTrace();
-            if (con != null) {
-                try {
-                    System.err.print("Transaction is being rolled back");
-                    con.rollback();
-                } catch (SQLException excep) {
-                    excep.printStackTrace();
-                }
-            }
-        } finally {
-            if (insert != null) {
-                try {
-                    insert.close();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            }
-            try {
-                con.setAutoCommit(true);
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+            return false;
         }
     }
 
     /**
-     * SELECT * FROM table
-     * @param table A string representing the table
-     * @return A resultSet of all returned results
+     * Retrieve all users from the database
+     * @return A ResultSet containing all users and their fields
+     * @throws SQLException If error during query
      */
-    public static ResultSet selectAll(String table) {
-        Statement stmt = null;
-        String query = "SELECT * FROM " + table;
+    public static ResultSet selectAllUsers() throws SQLException {
         conDB();
-        System.out.println(query);
-        try {
-            stmt = con.createStatement();
-            return stmt.executeQuery(query);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    /**
-     * SELECT * FROM tavle WHERE colum = value
-     * @param table A string representing the table
-     * @param colum A string representing the column
-     * @param value A string representing the value
-     * @return A ResultSet of the returned results
-     */
-    public static ResultSet select(String table, String column, String value) {
-        PreparedStatement query = null;
-        ResultSet rs = null;
-        String queryString =
-                "SELECT * FROM " + table +
-                        "WHERE " + column + " = ?";
-        conDB();
-
-        try {
-            con.setAutoCommit(false);
-            query = con.prepareStatement(queryString);
-            query.setString(1, value);
-
-            rs = query.executeQuery();
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } finally {
-            if (query != null) {
-
-                try {
-                    query.close();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            }
-            try {
-                con.setAutoCommit(true);
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
-        System.out.println("select: Operation done successfully");
+        String select = "SELECT * FROM users";
+        PreparedStatement stmt = con.prepareStatement(select);
+        ResultSet rs = stmt.executeQuery();
         return rs;
     }
 
     /**
-     * SQL querie, update the password
-     * @param username
+     * Retrieve a single user based on username
+     * @param username The username to query
+     * @return A ResultSet containing the user fields
+     * @throws SQLException If error during query
+     */
+    public static ResultSet selectUser(String username) throws SQLException {
+        conDB();
+        String select = "SELECT * FROM users WHERE username = ?";
+        PreparedStatement stmt = con.prepareStatement(select);
+        stmt.setString(1, username);
+        ResultSet rs = stmt.executeQuery();
+        return rs;
+    }
+
+    /**
+     * Inserts a message into the persistance table
+     * @param message The message content
+     * @param topic The topic message was sent on
+     * @param originProtocol The protocol the message originated from
+     * @return True if the query was successful, false otherwise
+     * @throws SQLException If error during query
+     */
+    public static boolean insertPersistantMessage(String message, String topic, String originProtocol) throws SQLException {
+        conDB();
+        String insert = "INSERT INTO persistance (topic, message, protocol) VALUES (?, ?, ?)";
+        PreparedStatement stmt = con.prepareStatement(insert);
+        stmt.setString(1, topic);
+        stmt.setString(2, message);
+        stmt.setString(3, originProtocol);
+        int rows = 0;
+        try {
+            rows = stmt.executeUpdate();
+        } catch (SQLException e) {
+            con.rollback();
+        }
+        if (rows == 1) return true;
+        else return false;
+    }
+
+    /**
+     * Retrieves all messages in persistance storage on a specific topic
+     * @param topic The topic to query
+     * @return A ResultSet containing all messages on the topic
+     * @throws SQLException If error during query
+     */
+    public static ResultSet getPersistantMessages(String topic) throws SQLException {
+        conDB();
+        String select = "SELECT * FROM persistance WHERE topic = ?";
+        PreparedStatement stmt = con.prepareStatement(select);
+        stmt.setString(1, topic);
+        ResultSet rs = stmt.executeQuery();
+        return rs;
+    }
+
+    /**
+     * SQL query, update the password
+     * @param username The username
      * @param password (new password)
      */
-    public static void changePassword(String username, String password) throws SQLException {
+    public static boolean changePassword(String username, String password) throws SQLException {
         PreparedStatement changePassword = null;
         String changePasswordString =
                 "UPDATE users " +
@@ -245,6 +226,7 @@ public class DB {
             changePassword.setString(2, username);
             changePassword.executeUpdate();
             con.commit();
+            return true;
 
         } catch (SQLException e ) {
             e.printStackTrace();
@@ -252,8 +234,10 @@ public class DB {
                 try {
                     System.err.print("Transaction is being rolled back");
                     con.rollback();
+                    return true;
                 } catch(SQLException excep) {
                     excep.printStackTrace();
+                    return false;
                 }
             }
         } finally {
@@ -262,5 +246,6 @@ public class DB {
             }
             con.setAutoCommit(true);
         }
+        return false;
     }
 }
