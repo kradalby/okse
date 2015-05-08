@@ -57,6 +57,7 @@ import org.ntnunotif.wsnu.base.internal.ServiceConnection;
 import org.ntnunotif.wsnu.base.net.NuNamespaceContextResolver;
 import org.ntnunotif.wsnu.base.util.InternalMessage;
 import org.ntnunotif.wsnu.base.util.RequestInformation;
+import org.ntnunotif.wsnu.services.general.WsnUtilities;
 import org.oasis_open.docs.wsn.b_2.NotificationMessageHolderType;
 import org.oasis_open.docs.wsn.b_2.Notify;
 import org.oasis_open.docs.wsn.b_2.TopicExpressionType;
@@ -78,13 +79,14 @@ public class WSNotificationServer extends AbstractProtocolServer {
     private static boolean _invoked, _running;
 
     // Path to internal configuration file on classpath
-    private static final String configurationFile = "/config/wsnserver.xml";
+    private static final String wsnInternalConfigFile = "/config/wsnserver.xml";
 
     // Internal Default Values
     private static final String DEFAULT_HOST = "0.0.0.0";
     private static final int DEFAULT_PORT = 61000;
     private static final Long DEFAULT_CONNECTION_TIMEOUT = 5L;
     private static final Integer DEFAULT_HTTP_CLIENT_DISPATCHER_POOL_SIZE = 50;
+    private static final String DEFAULT_MESSAGE_CONTENT_WRAPPER_NAME = "Content";
 
     // Flag and defaults for operation behind NAT
     private static boolean behindNAT = false;
@@ -98,6 +100,9 @@ public class WSNotificationServer extends AbstractProtocolServer {
     // The singleton containing the WSNotificationServer instance
     private static WSNotificationServer _singleton;
 
+    // Non-XMl Content Wrapper Name
+    private static String contentWrapperElementName = DEFAULT_MESSAGE_CONTENT_WRAPPER_NAME;
+
     // Instance fields
     private Server _server;
     private WSNRequestParser _requestParser;
@@ -107,13 +112,14 @@ public class WSNotificationServer extends AbstractProtocolServer {
     private HttpHandler _handler;
     private HashSet<ServiceConnection> _services;
     private ExecutorService clientPool;
+    private Properties config;
 
     /**
      * Empty constructor, uses internal defaults or provided from config file
      */
     private WSNotificationServer() {
         // Check config file
-        Properties config = Application.config;
+        config = Application.readConfigurationFiles();
         String configHost = config.getProperty("WSN_HOST", DEFAULT_HOST);
         Integer configPort = null;
         try {
@@ -137,6 +143,8 @@ public class WSNotificationServer extends AbstractProtocolServer {
      * @param port An integer representing the port the WSNServer should bind to.
      */
     private WSNotificationServer(String host, Integer port) {
+        // Check config file
+        config = Application.readConfigurationFiles();
         this.init(host, port);
     }
 
@@ -181,19 +189,33 @@ public class WSNotificationServer extends AbstractProtocolServer {
 
         // Declare HttpClient field
         _client = null;
-        clientPool = Executors.newFixedThreadPool(clientPoolSize);
 
         // Attempt to fetch connection timeout from settings, otherwise use 5 seconds as default
         try {
-            connectionTimeout = Long.parseLong(Application.config.getProperty("WSN_CONNECTION_TIMEOUT", connectionTimeout.toString()));
+            connectionTimeout = Long.parseLong(config.getProperty("WSN_CONNECTION_TIMEOUT",
+                    connectionTimeout.toString()));
         } catch (NumberFormatException e) {
             log.error("Failed to parse WSN Connection Timeout, using default: " + connectionTimeout);
         }
+
         // Attempt to fetch the HTTP Client pool size from settings, otherwise use default
         try {
-            clientPoolSize = Integer.parseInt(Application.config.getProperty("WSN_POOL_SIZE", Integer.toString(DEFAULT_HTTP_CLIENT_DISPATCHER_POOL_SIZE)));
+            clientPoolSize = Integer.parseInt(config.getProperty("WSN_POOL_SIZE",
+                    Integer.toString(DEFAULT_HTTP_CLIENT_DISPATCHER_POOL_SIZE)));
         } catch (NumberFormatException e) {
-            log.error("Failed to parse WSN Client pool size from config file! Using default: " + DEFAULT_HTTP_CLIENT_DISPATCHER_POOL_SIZE);
+            log.error("Failed to parse WSN Client pool size from config file! Using default: " +
+                    DEFAULT_HTTP_CLIENT_DISPATCHER_POOL_SIZE);
+        }
+        clientPool = Executors.newFixedThreadPool(clientPoolSize);
+
+        // If a default message content wrapper name is specified in config, set it, otherwise use default
+        contentWrapperElementName = config.getProperty("WSN_MESSAGE_CONTENT_ELEMENT_NAME",
+                DEFAULT_MESSAGE_CONTENT_WRAPPER_NAME);
+
+        if (contentWrapperElementName.contains("<") || contentWrapperElementName.contains(">")) {
+            log.warn("Non-XML message payload element wrapper name cannot contain XML element characters (< or >)," +
+                    " using default: " + DEFAULT_MESSAGE_CONTENT_WRAPPER_NAME);
+            contentWrapperElementName = DEFAULT_MESSAGE_CONTENT_WRAPPER_NAME;
         }
 
         // If we have host or port provided, set them, otherwise use internal defaults
@@ -202,15 +224,15 @@ public class WSNotificationServer extends AbstractProtocolServer {
 
         /* Check if config file specifies that we are behind NAT, and update the provided WAN IP and PORT */
         // Check for use NAT flag
-        if (Application.config.getProperty("WSN_USES_NAT", "false").equalsIgnoreCase("true")) behindNAT = true;
+        if (config.getProperty("WSN_USES_NAT", "false").equalsIgnoreCase("true")) behindNAT = true;
         else behindNAT = false;
 
         // Check for WAN_HOST
-        publicWANHost = Application.config.getProperty("WSN_WAN_HOST", publicWANHost);
+        publicWANHost = config.getProperty("WSN_WAN_HOST", publicWANHost);
 
         // Check for WAN_PORT
         try {
-            publicWANPort = Integer.parseInt(Application.config.getProperty("WSN_WAN_PORT", publicWANPort.toString()));
+            publicWANPort = Integer.parseInt(config.getProperty("WSN_WAN_PORT", publicWANPort.toString()));
         } catch (NumberFormatException e) {
             log.error("Failed to parse WSN WAN Port, using default: " + publicWANPort);
         } 
@@ -219,7 +241,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
         Resource configResource;
         try {
             // Try to parse the configFile for WSNServer to set up the Server instance
-            configResource = Resource.newSystemResource(configurationFile);
+            configResource = Resource.newSystemResource(wsnInternalConfigFile);
             XmlConfiguration config = new XmlConfiguration(configResource.getInputStream());
             this._server = (Server)config.configure();
             // Remove the xmlxonfig connector
@@ -381,6 +403,15 @@ public class WSNotificationServer extends AbstractProtocolServer {
     }
 
     /**
+     * Retrieve the default element name for non-XML messages that are to be wrapped in a soap enveloped
+     * WSNotification Notify element. This element will be the first and only child of the Message element.
+     * @return The default name of the content wrapper element
+     */
+    public static String getMessageContentWrapperElementName() {
+        return contentWrapperElementName;
+    }
+
+    /**
      * This interface method must take in an instance of Message, which contains the appropriate references
      * and flags needed to distribute the message to consumers. Implementation specific details can vary from
      * protocol to protocol, but the end result of a method call to sendMessage is that the message is delivered,
@@ -484,7 +515,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
      * Fetches the complete URI of this ProtocolServer
      * @return A string representing the complete URI of this ProtocolServer
      */
-    public static String getURI() {
+    public String getURI() {
         // Check if we are behind NAT
         if (behindNAT) {
             return "http://" + publicWANHost + ":" + publicWANPort;
@@ -496,6 +527,24 @@ public class WSNotificationServer extends AbstractProtocolServer {
         }
         // Return the server connectors registered host and port
         return "http://" + _singleton._server.getURI().getHost()+ ":" + (_singleton._server.getURI().getPort() > -1 ? _singleton._server.getURI().getPort() : DEFAULT_PORT);
+    }
+
+    /**
+     * Returns the public WAN Host if behindNAT is true. If behindNAT is false, the value of host is returned.
+     * @return The public WAN Host
+     */
+    public String getPublicWANHost() {
+        if (behindNAT) return publicWANHost;
+        return host;
+    }
+
+    /**
+     * Returns the public WAN Port if behindNAT is true. If behindNAT is false, the value of port is returned.
+     * @return The public WAN Port
+     */
+    public Integer getPublicWANPort() {
+        if (behindNAT) return publicWANPort;
+        return port;
     }
 
     /**

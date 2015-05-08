@@ -24,6 +24,7 @@
 
 package no.ntnu.okse.core.subscription;
 
+import no.ntnu.okse.Application;
 import no.ntnu.okse.core.AbstractCoreService;
 import no.ntnu.okse.core.event.PublisherChangeEvent;
 import no.ntnu.okse.core.event.SubscriptionChangeEvent;
@@ -38,7 +39,11 @@ import org.eclipse.jetty.util.ConcurrentHashSet;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Properties;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -52,7 +57,12 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
     private static Thread _serviceThread;
     private static boolean _invoked = false;
 
+    // Is the scheduled auto removal of expired subs and pubs active?
+    private boolean autoPurgeRunning = false;
+
     private LinkedBlockingQueue<SubscriptionTask> queue;
+    private ScheduledExecutorService scheduler;
+    private Properties config;
     private ConcurrentHashSet<SubscriptionChangeListener> _subscriptionListeners;
     private ConcurrentHashSet<PublisherChangeListener> _registrationListeners;
     private ConcurrentHashSet<Subscriber> _subscribers;
@@ -81,8 +91,10 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
     @Override
     protected void init() {
         _invoked = true;
+        config = Application.readConfigurationFiles();
         log.info("Initializing SubscriptionService...");
         queue = new LinkedBlockingQueue<>();
+        scheduler = Executors.newScheduledThreadPool(1);
         _subscribers = new ConcurrentHashSet<>();
         _publishers = new ConcurrentHashSet<>();
         _registrationListeners = new ConcurrentHashSet<>();
@@ -122,6 +134,9 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
     @Override
     public void run() {
         log.info("SubscriptionService booted successfully");
+        // Start the scheduled task
+        startScheduledRemovalOfExpiredSubscribersAndPublishers();
+
         while (_running) {
             try {
                 SubscriptionTask task = queue.take();
@@ -132,6 +147,7 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
                 log.warn("Interrupt caught, consider sending a No-Op Task to the queue to awaken the thread.");
             }
         }
+        log.debug("SubscriptionService exited main run loop");
     }
 
     /**
@@ -152,6 +168,31 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
     /* ------------------------------------------------------------------------------------------ */
 
     /* Begin Service-Local methods */
+
+    /**
+     * This method starts a scheduled job that periodically removes expired subscribers and publishers
+     * from the SubscriptionService registry. Delegates its work to the purgeExpiredSubscribersAndPublishers()
+     * method.
+     */
+    private void startScheduledRemovalOfExpiredSubscribersAndPublishers() {
+        if (!autoPurgeRunning) {
+            log.info("Starting periodic removal of expired subscribers and publishers (1 min interval)");
+            scheduler.scheduleAtFixedRate(() -> purgeExpiredSubscribersAndPublishers(), 1, 1, TimeUnit.MINUTES);
+        } else {
+            log.warn("Attempt to start scheduled removal of subscribers and publishers when its already started");
+        }
+    }
+
+    /**
+     * Purge expired Subscribers and Publishers. This method should be run as a periodic job, and it delegates
+     * the actual removal to the removeSubscriber and removePublisher methods, that in turn injects the operations
+     * as SubscriptionTask into the task queue.
+     */
+    private void purgeExpiredSubscribersAndPublishers() {
+        log.debug("Running scheduled purge of expired subscribers and publishers");
+        getAllSubscribers().stream().filter(s -> s.hasExpired()).forEach(s -> removeSubscriber(s));
+        getAllPublishers().stream().filter(p -> p.hasExpired()).forEach(p -> removePublisher(p));
+    }
 
     /**
      * This helper method injects a task into the task queue and handles interrupt exceptions
