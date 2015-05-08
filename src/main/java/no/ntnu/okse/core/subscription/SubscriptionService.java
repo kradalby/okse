@@ -24,6 +24,7 @@
 
 package no.ntnu.okse.core.subscription;
 
+import no.ntnu.okse.Application;
 import no.ntnu.okse.core.AbstractCoreService;
 import no.ntnu.okse.core.event.PublisherChangeEvent;
 import no.ntnu.okse.core.event.SubscriptionChangeEvent;
@@ -38,6 +39,7 @@ import org.eclipse.jetty.util.ConcurrentHashSet;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
@@ -60,6 +62,7 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
 
     private LinkedBlockingQueue<SubscriptionTask> queue;
     private ScheduledExecutorService scheduler;
+    private Properties config;
     private ConcurrentHashSet<SubscriptionChangeListener> _subscriptionListeners;
     private ConcurrentHashSet<PublisherChangeListener> _registrationListeners;
     private ConcurrentHashSet<Subscriber> _subscribers;
@@ -88,6 +91,7 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
     @Override
     protected void init() {
         _invoked = true;
+        config = Application.readConfigurationFiles();
         log.info("Initializing SubscriptionService...");
         queue = new LinkedBlockingQueue<>();
         scheduler = Executors.newScheduledThreadPool(1);

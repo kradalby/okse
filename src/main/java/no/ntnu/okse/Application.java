@@ -76,7 +76,12 @@ public class Application {
      * @param args Command line arguments
      */
     public static void main(String[] args) {
-
+        /*
+        // Check for presence of the needed config files, if they do not exist, they must be created
+        Utilities.createConfigDirectoryAndFilesIfNotExists();
+        // Configure the Log4j logger
+        PropertyConfigurator.configure("config/log4j.properties");
+        */
         // Reads config files, creates defaults if it does not exist, and updates fields
         readConfigurationFiles();
 
@@ -141,7 +146,7 @@ public class Application {
         // Configure the Log4j logger
         PropertyConfigurator.configure("config/log4j.properties");
         // Read the contents of the configuration file
-        config = Utilities.readConfigurationFromFile("okse.properties");
+        config = Utilities.readConfigurationFromFile("config/okse.properties");
         // Initialize the internal fields from the defaults
         initializeDefaultsFromConfigFile(config);
 
