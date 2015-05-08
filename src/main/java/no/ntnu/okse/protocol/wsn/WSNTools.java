@@ -337,7 +337,8 @@ public class WSNTools {
      * @return A string with the complete URL + endpoint and params needed
      */
     public static String extractSubscriptionReferenceFromRawXmlResponse(InternalMessage subResponse) {
-        try {InternalMessage parsed = parseRawXmlString(subResponse.getMessage().toString());
+        try {
+            InternalMessage parsed = parseRawXmlString(subResponse.getMessage().toString());
             JAXBElement jaxb = (JAXBElement) parsed.getMessage();
             Envelope env = (Envelope) jaxb.getValue();
             SubscribeResponse sr = (SubscribeResponse) env.getBody().getAny().get(0);
@@ -377,7 +378,7 @@ public class WSNTools {
             FilterType filterType = b2_factory.createFilterType();
             topicExpression.setDialect(_ConcreteTopicExpression);
             topicExpression.getContent().add(topic);
-            filterType.getAny().add(topicExpression);
+            filterType.getAny().add(b2_factory.createTopicExpression(topicExpression));
             // Add the expression to filter
             subscribe.setFilter(filterType);
         }
