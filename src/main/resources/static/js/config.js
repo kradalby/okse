@@ -88,8 +88,10 @@ var Config = (function($) {
                         $.okseDebug.logPrint("[Debug][Config] Unable to remove mapping for topic: " + fromTopic)
                         $(e.target).closest('tr').removeClass('deleted')
                         $(e.target).removeClass("disabled")
-                        Main.displayMessage('Unable to remove mapping!')
+
+                        var data = JSON.parse(xhr.responseText)
                         Main.error(xhr, status, error)
+                        Main.displayMessage(data.message)
                     }
                 });
             }
@@ -115,8 +117,10 @@ var Config = (function($) {
                         $.okseDebug.logPrint("[Debug][Config] Unable to remove relay: " + relay)
                         $(e.target).closest('tr').removeClass('deleted')
                         $(e.target).removeClass("disabled")
-                        Main.displayMessage('Unable to remove relay!')
+
+                        var data = JSON.parse(xhr.responseText)
                         Main.error(xhr, status, error)
+                        Main.displayMessage(data.message)
                     }
                 });
             }
@@ -150,14 +154,24 @@ var Config = (function($) {
             $('#add-relay').on('click', function(e) {
                 e.preventDefault()
 
+                var url = ('config/relay/add?from=' + $('#relay-from').val())
+
+                var relayTopic = $('#relay-topic').val()
+                if (relayTopic.length != 0) {
+                    url += ('&topic=' + encodeURIComponent(relayTopic))
+                }
+
                 Main.ajax({
-                    url: 'config/relay/add?from=' + encodeURIComponent($('#relay-from').val()),
+                    url: url,
                     type: 'POST',
                     success: function(data) {
-                        $.okseDebug.logPrint("Clicked and response")
+                        $.okseDebug.logPrint("[Debug][Config] Callback from server; added relay")
                     },
-                    error: function(data) {
-                        $.okseDebug.logPrint("Clicked and error")
+                    error: function(xhr, status, error) {
+                        var data = JSON.parse(xhr.responseText)
+                        Main.error(xhr, status, error)
+                        Main.displayMessage(data.message)
+
                     }
                 })
             })
@@ -172,8 +186,9 @@ var Config = (function($) {
                         $.okseDebug.logPrint("[Debug][Config] Callback from server; added mapping")
                     },
                     error: function(xhr, status, error) {
-                        Main.displayMessage('The broker were unable to add the mapping, try again!')
+                        var data = JSON.parse(xhr.responseText)
                         Main.error(xhr, status, error)
+                        Main.displayMessage(data.message)
                     }
                 });
             });
@@ -190,8 +205,9 @@ var Config = (function($) {
                             $.okseDebug.logPrint("[Debug][Config] Callback from server; deleted all relays")
                         },
                         error: function(xhr, status, error) {
-                            Main.displayMessage('The broker were unable to remove all relays')
+                            var data = JSON.parse(xhr.responseText)
                             Main.error(xhr, status, error)
+                            Main.displayMessage(data.message)
                         }
                     })
 
@@ -210,8 +226,9 @@ var Config = (function($) {
                             $.okseDebug.logPrint("[Debug][Config] Callback from server; deleted all mappings")
                         },
                         error: function (xhr, status, error) {
-                            Main.displayMessage('The broker were unable to remove all mappings')
+                            var data = JSON.parse(xhr.responseText)
                             Main.error(xhr, status, error)
+                            Main.displayMessage(data.message)
                         }
                     });
                 }
@@ -229,8 +246,9 @@ var Config = (function($) {
                         $(e.target).prop('checked', data.value)
                     },
                     error: function(xhr, status, error) {
-                        Main.displayMessage('The broker were unable to change AMQP queue value')
+                        var data = JSON.parse(xhr.responseText)
                         Main.error(xhr, status, error)
+                        Main.displayMessage(data.message)
                     }
                 })
             });
