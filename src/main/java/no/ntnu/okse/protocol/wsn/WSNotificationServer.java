@@ -514,7 +514,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
      * Fetches the complete URI of this ProtocolServer
      * @return A string representing the complete URI of this ProtocolServer
      */
-    public static String getURI() {
+    public String getURI() {
         // Check if we are behind NAT
         if (behindNAT) {
             return "http://" + publicWANHost + ":" + publicWANPort;
