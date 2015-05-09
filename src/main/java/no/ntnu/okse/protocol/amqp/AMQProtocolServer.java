@@ -147,9 +147,7 @@ public class AMQProtocolServer extends AbstractProtocolServer {
     public void stopServer() {
         log.info("Stopping AMQProtocolServer");
         shuttingdown = true;
-        if (driver != null) {
-            driver.stop();
-        }
+        driver.stop();
         sh.unsubscribeAll();
         sh = null;
         _running = false;
