@@ -138,6 +138,12 @@ public class Driver extends BaseHandler {
                     key.cancel();
                     key.channel().close();
                 }
+                try {
+                    acceptor.socket.close();
+                } catch (IOException e) {
+                    log.error("Failed to close AMQP socket with error: " + e.getMessage());
+                }
+                acceptor = null;
             }
 
         }
