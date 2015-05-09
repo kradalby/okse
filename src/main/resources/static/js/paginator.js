@@ -10,8 +10,8 @@ var Paginator = (function($) {
     var _PAGESIZE = 25
 
     /*
-     This function sets up the pagination with the correct values.
-     It also fills the new paginator with the correct table.
+        This function sets up the pagination with the correct values.
+        It also fills the new paginator with the correct table.
      */
     var setupPagination = function(args) {
         $('#' + args.element).twbsPagination({
@@ -36,6 +36,9 @@ var Paginator = (function($) {
          }
     }
 
+    /*
+        This function checks if a paginator exists, and destroys it if it exists.
+     */
     var existenceCheck = function(paginatorElement) {
         var pageData = $('#' + paginatorElement).data(); // This variable holds the data-object for the paginator-element.
 
