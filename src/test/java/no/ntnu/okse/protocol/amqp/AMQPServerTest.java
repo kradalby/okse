@@ -45,23 +45,75 @@ import java.util.EnumSet;
 
 import static org.testng.Assert.*;
 
+
+@Test(singleThreaded = true, threadPoolSize = 0, sequential = false)
 public class AMQPServerTest {
 
 
-    AMQProtocolServer ps = AMQProtocolServer.getInstance();
+    AMQProtocolServer ps;
 
     @BeforeMethod
     public void setUp() throws Exception {
+        ps = AMQProtocolServer.getInstance();
         ps.boot();
     }
 
     @AfterMethod
     public void tearDown() throws Exception {
         ps.stopServer();
+        ps = null;
     }
 
-    @Test
+    @Test(groups = "amqp")
+    public void testSendReceiveAMQPMessagesWhenQueueIsUsed() throws Exception {
+        //AMQProtocolServer psTest = AMQProtocolServer.getInstance("localhost", 63660);
+        AMQProtocolServer psTest = ps;
+        //psTest.boot();
+        psTest.useQueue = true;
+//        if (AMQProtocolServer.getInstance().useQueue) {
+        String message = "Megatest";
+        String topic = "test/test";
+        int numberOfMessages = 5;
+
+
+        Messenger sendMessenger = Messenger.Factory.create();
+        sendMessenger.start();
+        org.apache.qpid.proton.message.Message msg = org.apache.qpid.proton.message.Message.Factory.create();
+
+
+        msg.setAddress(psTest.getHost() + ":" + psTest.getPort() + "/" + topic);
+        msg.setBody(new AmqpValue(message));
+
+
+        System.out.println("Preparing to send messages...");
+        for (int i = 0; i < numberOfMessages; i++) {
+            sendMessenger.put(msg);
+            System.out.println(String.format("Sending message %d", i));
+            sendMessenger.send();
+        }
+        sendMessenger.stop();
+        ArrayList<org.apache.qpid.proton.message.Message> in = new ArrayList<>();
+
+        Messenger receiveMessenger = Messenger.Factory.create();
+        receiveMessenger.start();
+        System.out.println("Subscribing...");
+        receiveMessenger.subscribe(psTest.getHost() + ":" + psTest.getPort() + "/" + topic);
+        System.out.printf("Receiving messages...");
+        receiveMessenger.recv(numberOfMessages);
+        while (receiveMessenger.incoming() > 0) {
+            msg = receiveMessenger.get();
+            in.add(msg);
+        }
+
+        assertEquals(numberOfMessages, in.size());
+        System.out.println(String.format("Got %d messages", in.size()));
+//        }
+    }
+
+
+    @Test(groups = "amqp")
     public void testConvertAMQPMessageToMessageBytes() throws Exception {
+        System.out.println("testConvertAMQPMessageToMessageBytes");
         String message = "Hei på test";
         String topic = "test/testConvertAMQPMessageToMessageBytes";
 
@@ -85,8 +137,9 @@ public class AMQPServerTest {
         assertEquals((String) ((AmqpValue) AMQPMessage.getBody()).getValue(), (String) ((AmqpValue) AMQPMessageReconstruct.getBody()).getValue());
     }
 
-    @Test
+    @Test(groups = "amqp")
     public void testConvertOkseMessageToAMQP() throws Exception {
+        System.out.println("testConvertOkseMessageToAMQP");
         String topic = "test";
         Message okseMessage = new Message("Hei", topic, null, "AMQP");
 
@@ -99,8 +152,9 @@ public class AMQPServerTest {
         assertEquals(okseMessage.getTopic(), address.getName());
     }
 
-    @Test
+    @Test(groups = "amqp")
     public void testCreateAddress() throws Exception {
+        System.out.println("testCreateAddress");
         String topic = "test";
         String address1 = "amqp://127.0.0.1/test";
         String address2 = "127.0.0.1/test";
@@ -419,8 +473,9 @@ public class AMQPServerTest {
         assertEquals(AMQPServer.createAddress(address6, dlv).getName(), topic);
     }
 
-    @Test
+    @Test(groups = "amqp")
     public void testConvertAMQPmessageToOkseMessage() throws Exception {
+        System.out.println("testConvertAMQPmessageToOkseMessage");
         String message = "Hei på test";
         String topic = "test/testConvertAMQPMessageToMessageBytes";
         String address = "127.0.0.1" + "/" + topic;
@@ -443,8 +498,9 @@ public class AMQPServerTest {
 
     }
 
-    @Test
+    @Test(groups = "amqp")
     public void testMessageStore() throws Exception {
+        System.out.println("testMessageStore");
         AMQPServer.TestMessageStore messageStore = AMQPServer.createMessageStoreFactory();
 
         String address1 = "test";
@@ -475,8 +531,9 @@ public class AMQPServerTest {
 
     }
 
-    @Test
+    @Test(groups = "amqp")
     public void testRoutes() throws Exception {
+        System.out.println("testRoutes");
         SubscriptionHandler.Routes<Sender> routes = new SubscriptionHandler.Routes();
 
         ArrayList<Sender> senders = new ArrayList<>();
@@ -717,59 +774,4 @@ public class AMQPServerTest {
         assertEquals(routes.size(), 4);
 
     }
-
-//    @Test
-//    public void testSendRecieveAMQPMessagesWhenQueueIsUsed() throws Exception {
-//        Thread.sleep(1000);
-//        System.out.println(ps.getDriver());
-//        AMQProtocolServer psTest = AMQProtocolServer.getInstance("localhost", 63660);
-//        psTest.boot();
-//        Thread.sleep(1000);
-//        System.out.println(psTest.getPort());
-//        System.out.println(psTest.getDriver());
-//        psTest.useQueue = true;
-////        if (AMQProtocolServer.getInstance().useQueue) {
-//        String message = "Megatest";
-//        String topic = "test/test";
-//        int numberOfMessages = 5;
-//
-//        System.out.println(1);
-//
-//        Messenger sendMessenger = Messenger.Factory.create();
-//        sendMessenger.start();
-//        org.apache.qpid.proton.message.Message msg = org.apache.qpid.proton.message.Message.Factory.create();
-//
-//        System.out.println(2);
-//
-//        msg.setAddress(psTest.getHost() + ":" + psTest.getPort() + "/" + topic);
-//        msg.setBody(new AmqpValue(message));
-//
-//        System.out.println(3);
-//
-//        for (int i = 0; i < numberOfMessages; i++) {
-//            sendMessenger.put(msg);
-//            sendMessenger.send();
-//            Thread.sleep(0);
-//        }
-//        System.out.println(4);
-//        sendMessenger.stop();
-//        System.out.println(5);
-//        ArrayList<org.apache.qpid.proton.message.Message> in = new ArrayList<>();
-//
-//        Messenger receiveMessenger = Messenger.Factory.create();
-//        receiveMessenger.start();
-//        receiveMessenger.subscribe(psTest.getHost() + ":" + psTest.getPort() + "/" + topic);
-//        System.out.println(6);
-//        receiveMessenger.recv(numberOfMessages);
-//        System.out.println(7);
-//        while (receiveMessenger.incoming() > 0) {
-//            msg = receiveMessenger.get();
-//            in.add(msg);
-//        }
-//        System.out.println(8);
-//
-//        assertEquals(numberOfMessages, in.size());
-////        }
-//    }
-
 }
