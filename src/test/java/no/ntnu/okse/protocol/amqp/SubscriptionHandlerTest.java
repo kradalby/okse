@@ -39,16 +39,18 @@ import static org.testng.Assert.*;
 public class SubscriptionHandlerTest {
 
 
-    AMQProtocolServer ps = AMQProtocolServer.getInstance();
+    AMQProtocolServer ps;
 
     @BeforeMethod
     public void setUp() throws Exception {
+        ps = AMQProtocolServer.getInstance();
         ps.boot();
     }
 
     @AfterMethod
     public void tearDown() throws Exception {
         ps.stopServer();
+        ps = null;
     }
 
     @Test

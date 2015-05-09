@@ -113,7 +113,6 @@ public class AMQPServerTest {
 
     @Test(groups = "amqp")
     public void testConvertAMQPMessageToMessageBytes() throws Exception {
-        System.out.println("testConvertAMQPMessageToMessageBytes");
         String message = "Hei på test";
         String topic = "test/testConvertAMQPMessageToMessageBytes";
 
@@ -154,7 +153,6 @@ public class AMQPServerTest {
 
     @Test(groups = "amqp")
     public void testCreateAddress() throws Exception {
-        System.out.println("testCreateAddress");
         String topic = "test";
         String address1 = "amqp://127.0.0.1/test";
         String address2 = "127.0.0.1/test";
@@ -475,7 +473,6 @@ public class AMQPServerTest {
 
     @Test(groups = "amqp")
     public void testConvertAMQPmessageToOkseMessage() throws Exception {
-        System.out.println("testConvertAMQPmessageToOkseMessage");
         String message = "Hei på test";
         String topic = "test/testConvertAMQPMessageToMessageBytes";
         String address = "127.0.0.1" + "/" + topic;
@@ -500,7 +497,6 @@ public class AMQPServerTest {
 
     @Test(groups = "amqp")
     public void testMessageStore() throws Exception {
-        System.out.println("testMessageStore");
         AMQPServer.TestMessageStore messageStore = AMQPServer.createMessageStoreFactory();
 
         String address1 = "test";
@@ -533,7 +529,6 @@ public class AMQPServerTest {
 
     @Test(groups = "amqp")
     public void testRoutes() throws Exception {
-        System.out.println("testRoutes");
         SubscriptionHandler.Routes<Sender> routes = new SubscriptionHandler.Routes();
 
         ArrayList<Sender> senders = new ArrayList<>();
