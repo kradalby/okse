@@ -66,9 +66,10 @@ public class CoreService extends AbstractCoreService {
      * Constructs the CoreService instance. Constructor is private due to the singleton pattern used for
      * core services.
      */
-    private CoreService() {
+    protected CoreService() {
         // Pass the className to superclass for logger initialization
         super(CoreService.class.getName());
+        if (_invoked) throw new IllegalStateException("Already invoked");
         init();
     }
 
@@ -248,6 +249,18 @@ public class CoreService extends AbstractCoreService {
         } else {
             log.error("Attempt to remove a core service that does not exist in the registry!");
         }
+    }
+
+    /**
+     * Retrieves a service based on its class. Can be used to test if a service is registered
+     * @param serviceClass The class of the service to fetch
+     * @return A core service extending AbstractCoreService
+     */
+    public AbstractCoreService getService(Class serviceClass) {
+        for (AbstractCoreService service : services) {
+            if (service.getClass().equals(serviceClass)) return service;
+        }
+        return null;
     }
 
     /**
