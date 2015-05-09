@@ -71,7 +71,7 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
     /**
      * Private constructor that passes classname to superclass log field and calls initialization method
      */
-    private SubscriptionService() {
+    protected SubscriptionService() {
         super(SubscriptionService.class.getName());
         init();
     }

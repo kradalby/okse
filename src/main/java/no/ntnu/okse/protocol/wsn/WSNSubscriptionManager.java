@@ -31,7 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 
 /**
- * Created by Trond Walleraunet on 26.03.2015.
+ * Created by Aleksander Skraastad (myth) on 26.03.2015.
  */
 @WebService(targetNamespace = "http://docs.oasis-open.org/wsn/bw-2", name = "PausableSubscriptionManager")
 @XmlSeeAlso({org.oasis_open.docs.wsn.t_1.ObjectFactory.class, org.oasis_open.docs.wsn.br_2.ObjectFactory.class, org.oasis_open.docs.wsrf.r_2.ObjectFactory.class, org.oasis_open.docs.wsrf.bf_2.ObjectFactory.class, org.oasis_open.docs.wsn.b_2.ObjectFactory.class})
@@ -303,7 +303,7 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
             log.debug("Matched Subscriber object is: " + localSubscriberMap.get(subRef));
 
             // Parse the new termination time
-            long time = ServiceUtilities.interpretTerminationTime(renewRequest.getTerminationTime());
+            long time = WSNTools.interpretTerminationTime(renewRequest.getTerminationTime());
 
             // Verify new termination time
             if(time < System.currentTimeMillis()) {
