@@ -66,9 +66,10 @@ public class CoreService extends AbstractCoreService {
      * Constructs the CoreService instance. Constructor is private due to the singleton pattern used for
      * core services.
      */
-    private CoreService() {
+    protected CoreService() {
         // Pass the className to superclass for logger initialization
         super(CoreService.class.getName());
+        if (_invoked) throw new IllegalStateException("Already invoked");
         init();
     }
 

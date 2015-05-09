@@ -57,8 +57,9 @@ public class MessageService extends AbstractCoreService implements TopicChangeLi
     /**
      * Private Constructor that recieves invocation from getInstance, enabling the singleton pattern for this class
      */
-    private MessageService() {
+    protected MessageService() {
         super(MessageService.class.getName());
+        if (_invoked) throw new IllegalStateException("Already invoked");
         init();
     }
 
