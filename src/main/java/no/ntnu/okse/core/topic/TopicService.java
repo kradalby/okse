@@ -56,8 +56,9 @@ public class TopicService extends AbstractCoreService {
     /**
      * Private constructor that passes this classname to superclass log instance. Uses getInstance to instanciate.
      */
-    private TopicService() {
+    protected TopicService() {
         super(TopicService.class.getName());
+        if (_invoked) throw new IllegalStateException("Already invoked");
         init();
     }
 

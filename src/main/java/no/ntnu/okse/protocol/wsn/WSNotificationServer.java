@@ -57,6 +57,7 @@ import org.ntnunotif.wsnu.base.internal.ServiceConnection;
 import org.ntnunotif.wsnu.base.net.NuNamespaceContextResolver;
 import org.ntnunotif.wsnu.base.util.InternalMessage;
 import org.ntnunotif.wsnu.base.util.RequestInformation;
+import org.ntnunotif.wsnu.services.general.WsnUtilities;
 import org.oasis_open.docs.wsn.b_2.NotificationMessageHolderType;
 import org.oasis_open.docs.wsn.b_2.Notify;
 import org.oasis_open.docs.wsn.b_2.TopicExpressionType;
@@ -514,7 +515,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
      * Fetches the complete URI of this ProtocolServer
      * @return A string representing the complete URI of this ProtocolServer
      */
-    public static String getURI() {
+    public String getURI() {
         // Check if we are behind NAT
         if (behindNAT) {
             return "http://" + publicWANHost + ":" + publicWANPort;
@@ -526,6 +527,24 @@ public class WSNotificationServer extends AbstractProtocolServer {
         }
         // Return the server connectors registered host and port
         return "http://" + _singleton._server.getURI().getHost()+ ":" + (_singleton._server.getURI().getPort() > -1 ? _singleton._server.getURI().getPort() : DEFAULT_PORT);
+    }
+
+    /**
+     * Returns the public WAN Host if behindNAT is true. If behindNAT is false, the value of host is returned.
+     * @return The public WAN Host
+     */
+    public String getPublicWANHost() {
+        if (behindNAT) return publicWANHost;
+        return host;
+    }
+
+    /**
+     * Returns the public WAN Port if behindNAT is true. If behindNAT is false, the value of port is returned.
+     * @return The public WAN Port
+     */
+    public Integer getPublicWANPort() {
+        if (behindNAT) return publicWANPort;
+        return port;
     }
 
     /**

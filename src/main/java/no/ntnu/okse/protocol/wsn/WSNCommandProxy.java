@@ -528,7 +528,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         // If it was provided in the request
         if (subscribeRequest.getInitialTerminationTime() != null && !subscribeRequest.getInitialTerminationTime().isNil()) {
             try {
-                terminationTime = ServiceUtilities.interpretTerminationTime(subscribeRequest.getInitialTerminationTime().getValue());
+                terminationTime = WSNTools.interpretTerminationTime(subscribeRequest.getInitialTerminationTime().getValue());
 
                 if (terminationTime < System.currentTimeMillis()) {
                     ExceptionUtilities.throwUnacceptableInitialTerminationTimeFault("en", "Termination time can not be before 'now'");

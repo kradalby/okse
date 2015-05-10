@@ -28,7 +28,12 @@ import no.ntnu.okse.core.messaging.Message;
 import org.ntnunotif.wsnu.base.net.NuNamespaceContextResolver;
 import org.ntnunotif.wsnu.base.topics.TopicUtils;
 import org.ntnunotif.wsnu.base.util.InternalMessage;
+import org.ntnunotif.wsnu.base.util.Utilities;
+import org.ntnunotif.wsnu.services.general.ServiceUtilities;
 import org.oasis_open.docs.wsn.b_2.Notify;
+import org.oasis_open.docs.wsn.b_2.Subscribe;
+import org.oasis_open.docs.wsn.b_2.TopicExpressionType;
+import org.oasis_open.docs.wsn.bw_2.UnacceptableTerminationTimeFault;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -188,5 +193,120 @@ public class WSNToolsTest {
         String subscriptionReference = WSNTools.extractSubscriptionReferenceFromRawXmlResponse(wrapper);
 
         assertEquals(subscriptionReference, "http://128.128.128.128:61000/subscriptionManager/?wsn-subscriberkey=6ff9843f23f38547a3f97db4304099abdef0bb11");
+    }
+
+    @Test
+    public void testGenerateSubscriptionRequestWithTopic() throws Exception {
+        String topic = "topic";
+        String endpointReference = "http://localhost:61000";
+        String consumerReference = "http://127.0.0.1:61000";
+        Long terminationTime = System.currentTimeMillis() + 20000L;
+
+        InternalMessage message = WSNTools.generateSubscriptionRequestWithTopic(
+                endpointReference, topic, consumerReference, terminationTime);
+
+        Subscribe sub = (Subscribe) message.getMessage();
+        assertEquals(ServiceUtilities.getAddress(sub.getConsumerReference()), consumerReference);
+        assertEquals(message.getRequestInformation().getEndpointReference(), endpointReference);
+        assertEquals(((JAXBElement<TopicExpressionType>) sub.getFilter().getAny().get(0)).getValue().getContent().get(0), topic);
+
+        message = WSNTools.generateSubscriptionRequestWithTopic(
+                endpointReference, null, consumerReference, null
+        );
+        sub = (Subscribe) message.getMessage();
+        assertEquals(ServiceUtilities.getAddress(sub.getConsumerReference()), consumerReference);
+        assertEquals(message.getRequestInformation().getEndpointReference(), endpointReference);
+        assertNull(sub.getFilter());
+    }
+
+    @Test
+    public void testIsXsdDatetime() throws Exception {
+        // Correct
+        assertTrue(WSNTools.isXsdDatetime("2016-02-01T01:02:03"));
+        assertTrue(WSNTools.isXsdDatetime("2015-12-31T23:59:59"));
+        assertTrue(WSNTools.isXsdDatetime("2015-01-01T00:00:00"));
+        assertTrue(WSNTools.isXsdDatetime("2015-01-01T00:00:00Z"));
+        assertTrue(WSNTools.isXsdDatetime("2015-01-01T00:00:00-02:00"));
+        assertTrue(WSNTools.isXsdDatetime("2015-01-01T00:00:00+03:00"));
+        // Malformed
+        assertFalse(WSNTools.isXsdDatetime("2015-02T00:00:00"));
+        assertFalse(WSNTools.isXsdDatetime("2015-01-02 00:00:00"));
+        /* Begin values outside valid range */
+        assertFalse(WSNTools.isXsdDatetime("2015-00-01T00:00:00"));
+        assertFalse(WSNTools.isXsdDatetime("2015-01-00T00:00:00"));
+        assertFalse(WSNTools.isXsdDatetime("2015-13-01T00:00:00"));
+        assertFalse(WSNTools.isXsdDatetime("2015-01-32T00:00:00"));
+        assertFalse(WSNTools.isXsdDatetime("2015-01-01T60:00:00"));
+        assertFalse(WSNTools.isXsdDatetime("2015-01-01T00:60:00"));
+        assertFalse(WSNTools.isXsdDatetime("2015-01-01T00:00:60"));
+        assertFalse(WSNTools.isXsdDatetime("2015-01-01T00:00:00-13:00"));
+        assertFalse(WSNTools.isXsdDatetime("2015-01-01T00:00:00+13:00"));
+        assertFalse(WSNTools.isXsdDatetime("2015-01-01T00:00:00+01:24"));
+
+    }
+
+    @Test
+    public void testIsXsdDuration() throws Exception {
+        // Correct
+        assertTrue(WSNTools.isXsdDuration("P1Y"));
+        assertTrue(WSNTools.isXsdDuration("P10Y"));
+        assertTrue(WSNTools.isXsdDuration("P3M"));
+        assertTrue(WSNTools.isXsdDuration("P1Y3M"));
+        assertTrue(WSNTools.isXsdDuration("P1Y5M4D"));
+        assertTrue(WSNTools.isXsdDuration("P1D"));
+        assertTrue(WSNTools.isXsdDuration("P3M2D"));
+        // False
+        assertFalse(WSNTools.isXsdDatetime("P3H"));
+        assertFalse(WSNTools.isXsdDatetime("P3S"));
+        assertFalse(WSNTools.isXsdDatetime("1Y"));
+        assertFalse(WSNTools.isXsdDatetime("1M"));
+        assertFalse(WSNTools.isXsdDatetime("1D"));
+    }
+
+    @Test
+    public void testExtractXsdDuration() throws Exception {
+
+        Long Y, M, D, H, m, S;
+        S = 1000L;
+        m = 60L * S;
+        H = 60L * m;
+        D = 24L * H;
+        M = 30L * D;
+        Y = 365L * D;
+
+        Long time = WSNTools.extractXsdDuration("P1D");
+        assertEquals(time.longValue(), D.longValue());
+        time = WSNTools.extractXsdDuration("P1Y1D");
+        assertEquals(time.longValue(), Y + D);
+        time = WSNTools.extractXsdDuration("P3M2D");
+        assertEquals(time.longValue(), 3*M + 2*D);
+        time = WSNTools.extractXsdDuration("P1DT5H");
+        assertEquals(time.longValue(), D + 5*H);
+        time = WSNTools.extractXsdDuration("P1YT20H10M1S");
+        assertEquals(time.longValue(), Y + 20*H + 10*m + S);
+        time = WSNTools.extractXsdDuration("PT11M200S");
+        assertEquals(time.longValue(), 11*m + 200*S);
+        time = WSNTools.extractXsdDuration("PT999S");
+        assertEquals(time.longValue(), 999*S);
+    }
+
+    @Test
+    public void testInterpretTerminationTime() throws Exception {
+        long time = WSNTools.interpretTerminationTime("P1D");
+        assertTrue(time > System.currentTimeMillis());
+        time = WSNTools.interpretTerminationTime("2099-01-01T00:00:00");
+        assertTrue(time > System.currentTimeMillis());
+        try {
+            WSNTools.interpretTerminationTime("hurrdurr");
+            fail("Illegal termination time passed, check parser: hurrdurr");
+        } catch (UnacceptableTerminationTimeFault e) {
+            // Should be caught
+        }
+        try {
+            WSNTools.interpretTerminationTime("2099-00-00T25:00:00+01:00");
+            fail("Illegal termination time passed, check parser: 2099-00-00T25:00:00+01:00");
+        } catch (UnacceptableTerminationTimeFault e) {
+            // Should be caught
+        }
     }
 }

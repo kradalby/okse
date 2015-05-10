@@ -31,17 +31,25 @@ import org.ntnunotif.wsnu.base.net.XMLParser;
 import org.ntnunotif.wsnu.base.topics.ConcreteEvaluator;
 import org.ntnunotif.wsnu.base.topics.FullEvaluator;
 import org.ntnunotif.wsnu.base.util.InternalMessage;
+import org.ntnunotif.wsnu.base.util.Utilities;
+import org.ntnunotif.wsnu.services.general.ExceptionUtilities;
 import org.ntnunotif.wsnu.services.general.ServiceUtilities;
 import org.ntnunotif.wsnu.services.general.WsnUtilities;
 import org.oasis_open.docs.wsn.b_2.*;
+import org.oasis_open.docs.wsn.bw_2.UnacceptableTerminationTimeFault;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.xmlsoap.schemas.soap.envelope.Envelope;
 
+import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
+import javax.xml.bind.DatatypeConverter;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
+import javax.xml.datatype.DatatypeConfigurationException;
+import javax.xml.datatype.DatatypeFactory;
+import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.*;
@@ -51,7 +59,10 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 /**
@@ -304,6 +315,11 @@ public class WSNTools {
         return notifyWithContext;
     }
 
+    /**
+     * Helper method that uses the DOM factory to build an XML element Node and sets text content from argument
+     * @param content The String text content
+     * @return An XML Element containing the text argument
+     */
     public static Element buildGenericContentElement(String content) {
 
         // create message content
@@ -326,7 +342,8 @@ public class WSNTools {
      * @return A string with the complete URL + endpoint and params needed
      */
     public static String extractSubscriptionReferenceFromRawXmlResponse(InternalMessage subResponse) {
-        try {InternalMessage parsed = parseRawXmlString(subResponse.getMessage().toString());
+        try {
+            InternalMessage parsed = parseRawXmlString(subResponse.getMessage().toString());
             JAXBElement jaxb = (JAXBElement) parsed.getMessage();
             Envelope env = (Envelope) jaxb.getValue();
             SubscribeResponse sr = (SubscribeResponse) env.getBody().getAny().get(0);
@@ -336,6 +353,147 @@ public class WSNTools {
             log.error("Failed to cast: " + e.getMessage());
         }
         return null;
+    }
+
+    /**
+     * Generates an InternalMessage containing a Subscribe request
+     *
+     * @param endpointReference The full address of the remote host to send the request to
+     * @param topic The topic to subscribe to (can be null)
+     * @param consumerReference The consumer reference, which is the address of the subscriber
+     * @param terminationTime An initialtermination time in milliseconds since epoch.
+     *                        Can be null to allow broker to use internal defaults.
+     * @return An InternalMessage with the Subscribe payload, preset with correct destination endpoint
+     */
+    public static InternalMessage generateSubscriptionRequestWithTopic(
+            @NotNull String endpointReference, @Nullable String topic, @NotNull String consumerReference, @Nullable Long terminationTime) {
+        Subscribe subscribe = new Subscribe();
+        subscribe.setConsumerReference(ServiceUtilities.buildW3CEndpointReference(consumerReference));
+        if (terminationTime != null) {
+            // Create a gregCalendar instance so we can create a xml object from it
+            GregorianCalendar gregorianCalendar = new GregorianCalendar();
+            gregorianCalendar.setTimeInMillis(terminationTime);
+            subscribe.setInitialTerminationTime(
+                    ServiceUtilities.baseFactory.createSubscribeInitialTerminationTime(gregorianCalendar.toString())
+            );
+        }
+        if (topic != null) {
+            // Instantiate a topicexpression and insert the topic
+            TopicExpressionType topicExpression = b2_factory.createTopicExpressionType();
+            FilterType filterType = b2_factory.createFilterType();
+            topicExpression.setDialect(_ConcreteTopicExpression);
+            topicExpression.getContent().add(topic);
+            filterType.getAny().add(b2_factory.createTopicExpression(topicExpression));
+            // Add the expression to filter
+            subscribe.setFilter(filterType);
+        }
+        // Build InternalMessage
+        InternalMessage message = new InternalMessage(InternalMessage.STATUS_OK | InternalMessage.STATUS_HAS_MESSAGE, subscribe);
+        // Set the destination
+        message.getRequestInformation().setEndpointReference(endpointReference);
+
+        return message;
+    }
+
+    /**
+     * Checks if a string is formatted in XsdDatetime. This method has been copied from WS-Nu and done right.
+     * Now validates months, days, hours, minutes and seconds in their actual ranges.
+     * @param
+     * @return
+     */
+    public static boolean isXsdDatetime(String time){
+        return time.matches("[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])T([0-1][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](Z|[-+](0[0-9]|1[0-2]):00)?");
+    }
+
+    /**
+     * Checks if a string is a Xs:duration string with a regular expression.
+     * @param time
+     * @return
+     */
+    public static boolean isXsdDuration(String time) {
+        return time.matches("^(-P|P)(([0-9]+Y)?([0-9]+M)?([0-9]+D)?)?(?:(T([0-9]+H)?([0-9]+M)?([0-9]+S)?))?");
+    }
+
+    /**
+     * Extracts the endtime specified by a XsdDuration string. This method will return the duration specified, added on to
+     * the systems current local time.
+     * @param time The duration as specified by a XsdDuration string.
+     * @return A timestamp
+     */
+    public static long extractXsdDuration(String time){
+        Pattern years, months, days, hours, minutes, seconds;
+        years = Pattern.compile("[0-9]+Y");
+        months = Pattern.compile("[0-9]+M");
+        days = Pattern.compile("[0-9]+D");
+        hours = Pattern.compile("[0-9]+H");
+        minutes = Pattern.compile("[0-9]+M");
+        seconds = Pattern.compile("[0-9]+S");
+
+        long milliseconds = 0L;
+
+        String times[] = time.split("T");
+
+        Matcher matcher = years.matcher(times[0]);
+        if(matcher.find()){
+            milliseconds += 365L*24L*3600L*1000L*Long.parseLong(matcher.group().replace("Y", ""));
+        }
+
+        matcher = months.matcher(times[0]);
+        if(matcher.find()){
+            milliseconds += 24L*30L*3600L*1000L*Long.parseLong(matcher.group().replace("M", ""));
+        }
+
+        matcher = days.matcher(times[0]);
+        if(matcher.find()){
+            milliseconds += 24L*3600L*1000L*Long.parseLong(matcher.group().replace("D", ""));
+        }
+
+        if(times.length != 2) {
+            return milliseconds;
+        }
+
+        matcher = hours.matcher(times[1]);
+        if(matcher.find()){
+            milliseconds += 3600L*1000L*Long.parseLong(matcher.group().replace("H", ""));
+        }
+
+        matcher = minutes.matcher(times[1]);
+        if(matcher.find()){
+            milliseconds += 60L*1000L*Long.parseLong(matcher.group().replace("M", ""));
+        }
+
+        matcher = seconds.matcher(times[1]);
+        if(matcher.find()){
+            milliseconds += 1000L*Long.parseLong(matcher.group().replace("S", ""));
+        }
+
+        return milliseconds;
+    }
+
+    /**
+     * Takes a termination-time string, represented either as XsdDuration or XsdDatetime, and returns it specified (end)date.
+     * @param time The termination-time string: either XsdDuration or XsdDatetime.
+     * @return The parsed termination time as a timestamp, long.
+     * @throws UnacceptableTerminationTimeFault If the passed in {@link java.lang.String} was not a valid XsdDuration or XsdDatetime
+     * time, or if some {@link java.lang.RuntimeException} occurred during the extraction. This can be caused by the {@link javax.xml.bind.DatatypeConverter}
+     * which is used to parse XsdDatetime.
+     */
+    public static long interpretTerminationTime(String time) throws UnacceptableTerminationTimeFault {
+        try {
+            /* Try XsdDuration first */
+            if (isXsdDuration(time)) {
+                return System.currentTimeMillis() + extractXsdDuration(time);
+            } else if (isXsdDatetime(time)) {
+                return DatatypeConverter.parseDateTime(time).getTimeInMillis();
+            } else {
+                /* Neither worked, send an unacceptableTerminationTimeFault*/
+                ExceptionUtilities.throwUnacceptableTerminationTimeFault("en", "Could not interpret termination time, could not translate: " + time);
+            }
+        } catch (RuntimeException e) {
+            ExceptionUtilities.throwUnacceptableTerminationTimeFault("en", "Could not interpret termination time, reason given: " + e.getMessage());
+        }
+        // Compiler pleasing
+        return -1;
     }
 
     /**
