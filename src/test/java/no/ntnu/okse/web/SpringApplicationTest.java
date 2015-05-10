@@ -35,6 +35,7 @@ import no.ntnu.okse.core.topic.TopicService;
 import no.ntnu.okse.web.model.Log;
 import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.SpringApplicationConfiguration;
@@ -80,6 +81,8 @@ public class SpringApplicationTest extends AbstractTestNGSpringContextTests {
 
     private static final String DEFAULT_USER = "admin";
     private static final String DEFAULT_PASSWORD = "password";
+
+    private static Logger log;
 
     @Value("${local.server.port}")
     private int port;
