@@ -228,6 +228,7 @@ public class SpringApplicationTest extends AbstractTestNGSpringContextTests {
                 String.class
         );
 
+        Thread.sleep(300);
 
         assertEquals(response.getStatusCode(), HttpStatus.OK);
         assertTrue(Utilities.isJSONValid(response.getBody()));
@@ -267,8 +268,6 @@ public class SpringApplicationTest extends AbstractTestNGSpringContextTests {
         String csrf = getCSRF(headers);
         headers.set("X-CSRF-TOKEN", csrf);
 
-//        ResponseEntity<String> derp = doGet("/", headers);
-//        System.out.println(derp.getHeaders().keySet());
 
 
         String urlWithID = url + "?topicID=" + t.getTopicID();
@@ -293,7 +292,8 @@ public class SpringApplicationTest extends AbstractTestNGSpringContextTests {
                 String.class
         );
 
-        System.out.println(entity.getBody());
+
+        Thread.sleep(300);
 
         assertEquals(response.getStatusCode(), HttpStatus.OK);
         assertTrue(Utilities.isJSONValid(response.getBody()));
@@ -394,17 +394,4 @@ public class SpringApplicationTest extends AbstractTestNGSpringContextTests {
         return response;
 
     }
-
-//    public static class HttpEntityEnclosingDeleteRequest extends HttpEntityEnclosingRequestBase {
-//
-//        public HttpEntityEnclosingDeleteRequest(final URI uri) {
-//            super();
-//            setURI(uri);
-//        }
-//
-//        @Override
-//        public String getMethod() {
-//            return "DELETE";
-//        }
-//    }
 }
