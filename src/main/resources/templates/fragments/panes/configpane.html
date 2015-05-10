@@ -93,17 +93,28 @@
                                     <div class="col-md-12">
                                         <form onkeypress="return event.keyCode != 13;" class="form-inline" role="form">
                                             <div class="form-group">
-                                                <label class="sr-only" for="relay-form">From</label>
-                                                <div class="input-group" id="relay-form">
-                                                    <div class="input-group-addon">From</div>
-                                                    <input type="text" class="form-control" id="relay-from" placeholder="0.0.0.0:8080" />
+                                                <div class="row">
+                                                    <div class="col-md-12">
+                                                        <div class="input-group" id="relay-form">
+                                                            <div class="input-group-addon">From</div>
+                                                            <input type="text" class="form-control" id="relay-from" placeholder="0.0.0.0:8080" />
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <div class="input-group">
-                                                    <div class="input-group-addon">Topic</div>
-                                                    <input type="text" class="form-control" id="relay-topic" placeholder="topic/to/relay" />
+                                                <div class="row row-top-spacing">
+                                                    <div class="col-md-12">
+                                                        <div class="input-group">
+                                                            <div class="input-group-addon">Topic</div>
+                                                            <input type="text" class="form-control" id="relay-topic" placeholder="topic/to/relay" />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row row-top-spacing">
+                                                    <div class="col-md-12">
+                                                        <input type="submit" id="add-relay" class="btn btn-success delete-button" value="Add" name="add-relay" />
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <input type="submit" id="add-relay" class="btn btn-success delete-button" value="Add" name="add-relay" />
                                         </form>
                                     </div>
                                 </div>

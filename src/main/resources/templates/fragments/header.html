@@ -30,7 +30,7 @@
                             <button type="submit" class="btn btn-success">Sign in</button>
                         </form>
                         <form th:if="${#authorization.expression('isAuthenticated()')}" class="navbar-form navbar-right" th:action="@{/auth/logout}" method="POST">
-                            <button type="submit" class="btn btn-warning">Log out</button>
+                            <button type="submit" class="btn btn-danger">Log out</button>
                         </form>
                         <a th:if="${#authorization.expression('isAuthenticated()')}" href="/auth/password" class="btn btn-warning navbar-btn navbar-right">Change password</a>
                 </div><!--/.navbar-collapse -->

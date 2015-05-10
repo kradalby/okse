@@ -87,7 +87,7 @@ public class TopicController {
         HashSet<Topic> allRootTopics = ts.getAllRootTopics();
         allRootTopics.forEach(t -> ts.deleteTopic(t.getFullTopicString()));
 
-        return "{ \"deleted\" :true }";
+        return "{ \"messages\" :\"The topic were successfully deleted\" }";
     }
 
     /**
@@ -105,8 +105,6 @@ public class TopicController {
             put("topicID", t.getTopicID());
             /*put("children", t.getChildren());*/
         }};
-
-
 
         return result;
     }
