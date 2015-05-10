@@ -358,6 +358,9 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
                 if (_subscriptionManager
                         .getSubscriber(recipient)
                         .getAttribute(WSNSubscriptionManager.WSN_USERAW_TOKEN) != null) {
+
+                    // TODO: Check for more than one bundled notificationmessage holder type
+                    // TODO: That means altering the below WSNTools helper method aswell
                     Object content = WSNTools.extractMessageContentFromNotify(toSend);
                     // Update the InternalMessage with the content of the NotificationMessage
                     outMessage.setMessage(content);
