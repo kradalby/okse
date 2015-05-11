@@ -73,12 +73,12 @@ NOTIFY_MULTIPLE = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <wsnt:Notify>
 <wsnt:NotificationMessage>
 <wsnt:Topic Dialect="http://docs.oasis-open.org/wsn/t-1/TopicExpression/Concrete">%s</wsnt:Topic>
-<wsnt:Message><notifyContent>%s</notifyContent></wsnt:Message>
+<wsnt:Message><Content>%s</Content></wsnt:Message>
 </wsnt:NotificationMessage>
 <wsnt:NotificationMessage>
 <wsnt:Topic Dialect="http://docs.oasis-open.org/wsn/t-1/TopicExpression/Simple">%s</wsnt:Topic>
-<wsnt:Message><notifyContent>%s</notifyContent></wsnt:Message>
-</wsnt:NotificaionMessage>
+<wsnt:Message><Content>%s</Content></wsnt:Message>
+</wsnt:NotificationMessage>
 </wsnt:Notify>
 </s:Body>
 </s:Envelope>"""
