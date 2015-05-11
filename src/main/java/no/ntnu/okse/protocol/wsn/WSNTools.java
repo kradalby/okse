@@ -30,6 +30,7 @@ import org.ntnunotif.wsnu.base.net.NuNamespaceContextResolver;
 import org.ntnunotif.wsnu.base.net.XMLParser;
 import org.ntnunotif.wsnu.base.topics.ConcreteEvaluator;
 import org.ntnunotif.wsnu.base.topics.FullEvaluator;
+import org.ntnunotif.wsnu.base.topics.SimpleEvaluator;
 import org.ntnunotif.wsnu.base.util.InternalMessage;
 import org.ntnunotif.wsnu.base.util.Utilities;
 import org.ntnunotif.wsnu.services.general.ExceptionUtilities;
@@ -293,7 +294,8 @@ public class WSNTools {
         String expression = (prefix != null && namespace != null) ? prefix + ":" + topic : topic;
         // Build topic
         TopicExpressionType topicExpressionType = factory.createTopicExpressionType();
-        topicExpressionType.setDialect(ConcreteEvaluator.dialectURI);
+        if (topic.contains("/")) topicExpressionType.setDialect(ConcreteEvaluator.dialectURI);
+        else topicExpressionType.setDialect(SimpleEvaluator.dialectURI);
         topicExpressionType.getContent().add(expression);
 
         messageHolderType.setTopic(topicExpressionType);
