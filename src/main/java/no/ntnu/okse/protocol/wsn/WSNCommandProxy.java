@@ -503,6 +503,8 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
             } catch (Exception e) {
                 log.error("Failed to parse endpointReference");
             }
+        } else {
+            requestAddress = stripped;
         }
 
         FilterType filters = subscribeRequest.getFilter();
@@ -728,6 +730,8 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
             } catch (Exception e) {
                 log.error("Failed to parse endpointReference");
             }
+        } else {
+            requestAddress = stripped;
         }
 
         List<TopicExpressionType> topics = registerPublisherRequest.getTopic();
