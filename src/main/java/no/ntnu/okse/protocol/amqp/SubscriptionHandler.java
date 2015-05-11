@@ -342,8 +342,7 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
 
     @Override
     public void onConnectionUnbound(Event event) {
-        //log.debug("This is event.getSession(): " + event.getSession());
-
+        
         //Getting the RemoteContainer id for the event
         Connection eventConnection = event.getConnection();
         String eventRemoteContainer = eventConnection.getRemoteContainer();
