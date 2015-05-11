@@ -28,14 +28,15 @@
 
 var Topics = (function($) {
 
+    // Private variable holding the topics object returned upon the ajax-request.
     var topics;
 
     var _PAGINATOR = 'topic-pagination-selector'
     var _CURRENTPAGE = 1; // Variable holding the last page showed in the paginator.
 
     /*
-     This function does all checks required to find out the correct paginator to append (or remove)
-     from the DOM. See each check to see what they do.
+        This function does all checks required to find out the correct paginator to append (or remove)
+        from the DOM. See each check to see what they do.
      */
     var checkIfPaginationIsNeeded = function() {
         // Do we need a pagination to populate the table?
@@ -51,6 +52,9 @@ var Topics = (function($) {
         })
     }
 
+    /*
+        This function fills the topics table
+     */
     var fillTable = function(from, to) {
         unBindButtons()
 
@@ -71,9 +75,9 @@ var Topics = (function($) {
     }
 
     /*
-     Creates, fills and returns a <tr>-element. The <tr>-element is generated based on the topics
-     list from the OKSE-RestAPI. It also adds all the buttons needed for deleting topics. It uses the id for
-     this purpose. This function does not manipulate the DOM by checking if an element exists. It overwrites everything.
+        Creates, fills and returns a <tr>-element. The <tr>-element is generated based on the topics
+        list from the OKSE-RestAPI. It also adds all the buttons needed for deleting topics. It uses the id for
+        this purpose. This function does not manipulate the DOM by checking if an element exists. It overwrites everything.
      */
     var createTableForAllTopics = function(topics) {
         var trHTML = ""

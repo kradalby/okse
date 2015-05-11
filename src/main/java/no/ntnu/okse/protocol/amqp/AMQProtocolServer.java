@@ -154,6 +154,7 @@ public class AMQProtocolServer extends AbstractProtocolServer {
         server = null;
         _singleton = null;
         _invoked = false;
+        driver = null;
         log.info("AMQProtocolServer is stopped");
     }
 
@@ -193,6 +194,10 @@ public class AMQProtocolServer extends AbstractProtocolServer {
 
     public Driver getDriver() {
         return driver;
+    }
+
+    public SubscriptionHandler getSubscriptionHandler() {
+        return sh;
     }
 
     public boolean isShuttingDown() { return shuttingdown; }

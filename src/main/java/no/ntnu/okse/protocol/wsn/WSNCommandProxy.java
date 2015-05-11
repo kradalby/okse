@@ -358,6 +358,9 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
                 if (_subscriptionManager
                         .getSubscriber(recipient)
                         .getAttribute(WSNSubscriptionManager.WSN_USERAW_TOKEN) != null) {
+
+                    // TODO: Check for more than one bundled notificationmessage holder type
+                    // TODO: That means altering the below WSNTools helper method aswell
                     Object content = WSNTools.extractMessageContentFromNotify(toSend);
                     // Update the InternalMessage with the content of the NotificationMessage
                     outMessage.setMessage(content);
@@ -734,10 +737,13 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         // Build the endpoint reference
         W3CEndpointReferenceBuilder builder = new W3CEndpointReferenceBuilder();
         builder.address(registrationEndpoint);
+        W3CEndpointReference publisherRegistrationReference = builder.build();
+        builder.address(WSNotificationServer.getInstance().getURI());
+        W3CEndpointReference consumerReference = builder.build();
 
         // Update the response with endpointreference
-        response.setConsumerReference(builder.build());
-        response.setPublisherRegistrationReference(publisherEndpoint);
+        response.setConsumerReference(consumerReference);
+        response.setPublisherRegistrationReference(publisherRegistrationReference);
 
         return response;
     }
