@@ -157,6 +157,12 @@ public class Driver extends BaseHandler {
         while (_running) {
             Event ev = collector.peek();
             if (ev == null) break;
+            if (ev.getType().name() == "CONNECTION_INIT") {
+                AMQProtocolServer.getInstance().incrementTotalErrors();
+            }
+            if (ev.getType().name() == "LINK_LOCAL_OPEN") {
+                AMQProtocolServer.getInstance().decrementTotalErrors();
+            }
             log.debug("Dispatching event of type: " + ev.getType().name());
             ev.dispatch(this);
             for (Handler h : handlers) {
