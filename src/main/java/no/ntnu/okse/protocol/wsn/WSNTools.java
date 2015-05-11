@@ -221,6 +221,19 @@ public class WSNTools {
     }
 
     /**
+     * Extract the Message element from a WS-Notification NotificationMessageHolderType wrapper
+     * This method is an overloaded counterpart of the Notify version, that assumes that the invoking
+     * method is iterating over holderTypes in a Notify. The job of this method is then to extract
+     * the content of the current holderType.
+     *
+     * @param notifyHolderType The wrapper to extract the message content from
+     * @return The message object contained within the notificationmessageholdertype
+     */
+    public static Object extractMessageContentFromNotify(NotificationMessageHolderType notifyHolderType) {
+        return notifyHolderType.getMessage().getAny();
+    }
+
+    /**
      * Injects an XML sub-tree into the message content of a notify
      * @param object The Xml root subnode to be injected
      * @param notify The Notify object to be updated

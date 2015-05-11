@@ -412,15 +412,19 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
                         .getSubscriber(recipient)
                         .getAttribute(WSNSubscriptionManager.WSN_USERAW_TOKEN) != null) {
 
-                    // TODO: Check for more than one bundled notificationmessage holder type
-                    // TODO: That means altering the below WSNTools helper method aswell
-                    Object content = WSNTools.extractMessageContentFromNotify(toSend);
-                    // Update the InternalMessage with the content of the NotificationMessage
-                    outMessage.setMessage(content);
+                    // For all bundled messages, extract and push
+                    for (NotificationMessageHolderType holderType : toSend.getNotificationMessage()) {
+                        // Extract the content
+                        Object content = WSNTools.extractMessageContentFromNotify(toSend);
+                        // Update the InternalMessage with the content of the NotificationMessage
+                        outMessage.setMessage(content);
+                        // Pass it to the requestparser
+                        CoreService.getInstance().execute(() -> hub.acceptLocalMessage(outMessage));
+                    }
+                } else {
+                    // Pass it along to the requestparser
+                    CoreService.getInstance().execute(() -> hub.acceptLocalMessage(outMessage));
                 }
-
-                // Pass it along to the requestparser
-                CoreService.getInstance().execute(() -> hub.acceptLocalMessage(outMessage));
             }
         }
         log.debug("Finished sending message to valid WS-Notification recipients");
