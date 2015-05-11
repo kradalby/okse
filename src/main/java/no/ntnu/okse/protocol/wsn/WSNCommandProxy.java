@@ -860,11 +860,25 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
             // Initialize the response object
             GetCurrentMessageResponse response = new GetCurrentMessageResponse();
 
+            WSNTools.NotifyWithContext notifywrapper = WSNTools.buildNotifyWithContext(currentMessage.getMessage(), currentMessage.getTopic(), null, null);
+            // If it contained XML, we need to create properly marshalled jaxb node structure
+            if (currentMessage.getMessage().contains("<") || currentMessage.getMessage().contains(">")) {
+                // Unmarshal from raw XML
+                Notify notify = WSNTools.createNotify(currentMessage);
+                // If it was malformed, or maybe just a message containing < or >, build it as generic content element
+                if (notify == null) {
+                    WSNTools.injectMessageContentIntoNotify(WSNTools.buildGenericContentElement(currentMessage.getMessage()), notifywrapper.notify);
+                    // Else inject the unmarshalled XML nodes into the Notify message attribute
+                } else {
+                    WSNTools.injectMessageContentIntoNotify(WSNTools.extractMessageContentFromNotify(notify), notifywrapper.notify);
+                }
+            }
+
             // Generate the NotificationMessage
             log.debug("Generated Notify wrapper");
 
             // Create a unmarshalled and linked Notify and extract the Message content from it
-            Object messageObject = WSNTools.extractMessageContentFromNotify(WSNTools.createNotify(currentMessage));
+            Object messageObject = WSNTools.extractMessageContentFromNotify(notifywrapper.notify);
             response.getAny().add(messageObject);
 
             // Return the response
