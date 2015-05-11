@@ -540,7 +540,7 @@ class WSNRequest(object):
         print "[i] Sending a PublisherRegistration request"
 
         # Generate the payload
-        payload = REGISTER % ('http://localhost:61000', self.TOPIC)
+        payload = REGISTER % (self.WAN_IP, self.TOPIC)
 
         # Send the request
         self.send_request(payload)

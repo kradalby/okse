@@ -737,10 +737,13 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         // Build the endpoint reference
         W3CEndpointReferenceBuilder builder = new W3CEndpointReferenceBuilder();
         builder.address(registrationEndpoint);
+        W3CEndpointReference publisherRegistrationReference = builder.build();
+        builder.address(WSNotificationServer.getInstance().getURI());
+        W3CEndpointReference consumerReference = builder.build();
 
         // Update the response with endpointreference
-        response.setConsumerReference(builder.build());
-        response.setPublisherRegistrationReference(publisherEndpoint);
+        response.setConsumerReference(consumerReference);
+        response.setPublisherRegistrationReference(publisherRegistrationReference);
 
         return response;
     }
