@@ -230,7 +230,7 @@ xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
 <wsn-br:RegisterPublisher><wsn-br:PublisherReference><wsa:Address>%s</wsa:Address></wsn-br:PublisherReference>
 <wsn-br:Topic Dialect="http://docs.oasis-open.org/wsn/t-1/TopicExpression/Concrete">%s</wsn-br:Topic>
 <wsn-br:Demand>false</wsn-br:Demand>
-<wsn-br:InitialTerminationTime>2015-05-08T14:03:00</wsn-br:InitialTerminationTime>
+<wsn-br:InitialTerminationTime>2016-01-01T14:03:00</wsn-br:InitialTerminationTime>
 </wsn-br:RegisterPublisher>
 </s:Body>
 </s:Envelope>
@@ -540,7 +540,7 @@ class WSNRequest(object):
         print "[i] Sending a PublisherRegistration request"
 
         # Generate the payload
-        payload = REGISTER % ('http://localhost:61000', self.TOPIC)
+        payload = REGISTER % (self.WAN_IP, self.TOPIC)
 
         # Send the request
         self.send_request(payload)
