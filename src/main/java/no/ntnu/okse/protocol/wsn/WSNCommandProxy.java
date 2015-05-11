@@ -494,12 +494,12 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
 
         String requestAddress = "";
         Integer port = 80;
-        if (endpointReference.contains(":")) {
-            String[] components = endpointReference.split(":");
+        String stripped = endpointReference.replace("http://","").replace("https://","");
+        if (stripped.contains(":")) {
+            String[] components = stripped.split(":");
             try {
                 port = Integer.parseInt(components[components.length - 1]);
                 requestAddress = components[components.length - 2];
-                requestAddress = requestAddress.replace("//", "");
             } catch (Exception e) {
                 log.error("Failed to parse endpointReference");
             }
@@ -719,12 +719,12 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
 
         String requestAddress = "";
         Integer port = 80;
-        if (endpointReference.contains(":")) {
-            String[] components = endpointReference.split(":");
+        String stripped = endpointReference.replace("http://","").replace("https://","");
+        if (stripped.contains(":")) {
+            String[] components = stripped.split(":");
             try {
                 port = Integer.parseInt(components[components.length - 1]);
                 requestAddress = components[components.length - 2];
-                requestAddress = requestAddress.replace("//", "");
             } catch (Exception e) {
                 log.error("Failed to parse endpointReference");
             }
