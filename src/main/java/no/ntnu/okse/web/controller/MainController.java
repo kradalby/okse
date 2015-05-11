@@ -48,11 +48,14 @@ import java.util.List;
 @RequestMapping(value = "/api/main")
 public class MainController {
 
+    // URL routes
     private static final String MAIN_API = "/get/all";
     private static final String PROTOCOL_POWER = "/protocols/power";
 
+    // Public static field representing a MB
     public static int MB = 1024 * 1024;
 
+    // Log4j logger
     private static Logger log = Logger.getLogger(MainController.class.getName());
 
     /**
@@ -97,6 +100,10 @@ public class MainController {
         return result;
     }
 
+    /**
+     * This method turns on/off the protocol servers registered in the CoreService
+     * @return A message telling if the protocol servers are booted or not
+     */
     @RequestMapping(method = RequestMethod.POST, value = PROTOCOL_POWER)
     public @ResponseBody String powerProtocolServers() {
         CoreService cs = CoreService.getInstance();

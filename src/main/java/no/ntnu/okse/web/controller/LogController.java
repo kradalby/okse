@@ -28,6 +28,7 @@ import com.google.common.collect.Lists;
 import no.ntnu.okse.web.model.Log;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.TrueFileFilter;
+import org.apache.log4j.Logger;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.File;
@@ -46,9 +47,11 @@ import java.util.stream.Stream;
 @RequestMapping(value = "/api/log")
 public class LogController {
 
+    // URL routes
     private static final String LOG_LEVELS = "/levels";
     private static final String LOG_FILES = "/files";
 
+    // The available log leves
     private static final LinkedHashMap<String, ArrayList<String>> logLevels = new LinkedHashMap<String, ArrayList<String>>(){{
         put("DEBUG", new ArrayList<String>(){{
             add("DEBUG");
@@ -70,9 +73,13 @@ public class LogController {
         }});
     }};
 
+    // The available files
     private static HashMap<Integer, String> fileNames;
-
     private static Integer fileID = 1;
+
+    // Log4j logger
+    private static Logger log = Logger.getLogger(LogController.class.getName());
+
 
     /**
      * Constructor for the log controller

@@ -26,6 +26,7 @@ import java.util.regex.Pattern;
 @RequestMapping("/api/config")
 public class ConfigController {
 
+    // URL routes
     private static final String GET_ALL_INFO = "/get/all";
     private static final String GET_ALL_MAPPINGS = "/mapping/get/all";
     private static final String ADD_MAPPING = "/mapping/add";
@@ -36,21 +37,30 @@ public class ConfigController {
     private static final String DELETE_ALL_RELAYS = "/relay/delete/all";
     private static final String DELETE_RELAY = "/relay/delete/single";
 
+    // LOG4J logger
     private static Logger log = Logger.getLogger(ConfigController.class.getName());
 
+    // Relay fields
     private ConcurrentHashMap<String, String> relays;
-
     private HashSet<String> localRelays;
 
+    /**
+     * Constructor for ConfigController. Initiates the localRelays
+     */
     public ConfigController() {
         relays = new ConcurrentHashMap<>();
         localRelays = new HashSet<String>(){{
             add("127.0.0.1");
             add("0.0.0.0");
             add("localhost");
+            // Maybe WSNotificationServer.getInstance().getPublicWANHost() should be added here?
         }};
     }
 
+    /**
+     * This method returns all mappings and relays registered in OKSE
+     * @return A HashMap containing all mappings and relays
+     */
     @RequestMapping(method = RequestMethod.GET, value = GET_ALL_INFO)
     public @ResponseBody HashMap<String, Object> getAllInfo() {
         TopicService ts = TopicService.getInstance();
@@ -118,6 +128,10 @@ public class ConfigController {
         return new ResponseEntity<String>("{ \"message\" :\"Deleted all mappings\" }", HttpStatus.OK);
     }
 
+    /**
+     * This method changes the boolean value of the useQueue field in AMQPProtocolServer
+     * @return A message stating the new value of the useQueue variable
+     */
     @RequestMapping(method = RequestMethod.POST, value = CHANGE_AMQP)
     public @ResponseBody ResponseEntity<String> changeAMQPqueue() {
         AMQProtocolServer.getInstance().useQueue = (AMQProtocolServer.getInstance().useQueue ? false : true);
@@ -126,12 +140,18 @@ public class ConfigController {
                 "\"message\" :\"Successfully changed the useQueue variable to "+ AMQProtocolServer.getInstance().useQueue + "\"}", HttpStatus.OK);
     }
 
+    /**
+     * This method takes in a relay and a topic (not required) and sets up a relay
+     * @param relay String with host/port to relay from
+     * @param topic String with topic to relay (not required)
+     * @return A message telling the outcome of the subscription request.
+     */
     @RequestMapping(method = RequestMethod.POST, value = ADD_RELAY)
     public @ResponseBody ResponseEntity<String> addRelay(@RequestParam(value = "from") String relay, @RequestParam(value = "topic", required = false) String topic) {
         log.debug("Trying to add relay from: " + relay + " with topic:" + topic);
 
-        String pStr = "(?:http.*://)?(?<host>[^:/ ]+).?(?<port>[0-9]*).*";
-        Matcher m = Pattern.compile(pStr).matcher(relay);
+        String regex = "(?:http.*://)?(?<host>[^:/ ]+).?(?<port>[0-9]*).*";
+        Matcher m = Pattern.compile(regex).matcher(relay);
         String host = null;
         Integer port = null;
 
@@ -183,6 +203,11 @@ public class ConfigController {
         return new ResponseEntity<String>("{ \"message\" :\"Successfully added relay\" }", HttpStatus.OK);
     }
 
+    /**
+     * This method deletes a relay if it exists
+     * @param relay The relay to delete
+     * @return A message telling if the removal were successful.
+     */
     @RequestMapping(method = RequestMethod.DELETE, value = DELETE_RELAY)
     public @ResponseBody ResponseEntity<String> deleteRelay(@RequestParam(value = "relayID") String relay) {
         log.debug("Trying to remove a relay: " + relay);
@@ -198,6 +223,10 @@ public class ConfigController {
         }
     }
 
+    /**
+     * This method deletes all relays registered.
+     * @return A response message
+     */
     @RequestMapping(method = RequestMethod.DELETE, value = DELETE_ALL_RELAYS)
     public @ResponseBody ResponseEntity<String> deleteAllRelays() {
         log.debug("Trying to delete all relays");
