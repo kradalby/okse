@@ -190,6 +190,10 @@ public class AMQProtocolServer extends AbstractProtocolServer {
         totalErrors.incrementAndGet();
     }
 
+    public void decrementTotalErrors() {
+        totalErrors.decrementAndGet();
+    }
+
     private AMQPServer server;
 
     public Driver getDriver() {
