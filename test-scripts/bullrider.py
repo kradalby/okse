@@ -57,8 +57,8 @@ xmlns:ns9="http://docs.oasis-open.org/wsrf/r-2">
 <s:Body>
 <wsnt:Notify>
 <wsnt:NotificationMessage>
-<wsnt:Topic Dialect="http://docs.oasis-open.org/wsn/t-1/TopicExpression/Concrete">%s</wsnt:Topic>
-<wsnt:Message><Content>%s</Content></wsnt:Message>
+<wsnt:Topic Dialect="http://docs.oasis-open.org/wsn/t-1/TopicExpression/Full">%s</wsnt:Topic>
+<wsnt:Message xmlns:oxmsg="http://okse.test.message"><Content>%s</Content></wsnt:Message>
 </wsnt:NotificationMessage>
 </wsnt:Notify>
 </s:Body>
@@ -223,7 +223,8 @@ xmlns:wsn-bw="http://docs.oasis-open.org/wsn/bw-2"
 xmlns:wsn-brw="http://docs.oasis-open.org/wsn/brw-2"
 xmlns:wsrf-bf="http://docs.oasis-open.org/wsrf/bf-2"
 xmlns:wsrf-bfw="http://docs.oasis-open.org/wsrf/bfw-2"
-xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"
+xmlns:ox="http://okse.default.topic">
 <s:Header><wsa:Action>http://docs.oasis-open.org/wsn/brw-2/RegisterPublisher/RegisterPublisherRequest</wsa:Action>
 </s:Header>
 <s:Body>
