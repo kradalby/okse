@@ -640,7 +640,8 @@ public class WSNotificationServer extends AbstractProtocolServer {
                 InputStream inputStream = request.getInputStream();
                 outgoingMessage = new InternalMessage(InternalMessage.STATUS_OK | InternalMessage.STATUS_HAS_MESSAGE | InternalMessage.STATUS_MESSAGE_IS_INPUTSTREAM, inputStream);
             } else if (isChunked) {
-                log.debug("Chunked InternalMessage inpustream being created...");
+                log.debug("Chunked transfer encoding!");
+                log.debug("Content length was: " + request.getContentLength());
                 InputStream chunkedInputStream = request.getInputStream();
                 outgoingMessage = new InternalMessage(
                         InternalMessage.STATUS_OK | InternalMessage.STATUS_HAS_MESSAGE | InternalMessage.STATUS_MESSAGE_IS_INPUTSTREAM,
