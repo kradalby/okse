@@ -518,11 +518,11 @@ public class AMQPServerTest {
         messageStore.put(address2, mb6);
 
         assertEquals(mb1, messageStore.get(address1));
-        assertNotEquals(mb3, messageStore.get(address1));
+        assertFalse(mb3.equals(messageStore.get(address1)));
         assertEquals(mb3, messageStore.get(address1));
 
-        assertNotEquals(mb6, messageStore.get(address2));
-        assertNotEquals(mb6, messageStore.get(address2));
+        assertFalse(mb6.equals(messageStore.get(address2)));
+        assertFalse(mb6.equals(messageStore.get(address2)));
         assertEquals(mb6, messageStore.get(address2));
 
     }
@@ -761,11 +761,11 @@ public class AMQPServerTest {
         assertTrue(senders.contains(routes.choose()));
         assertEquals(routes.size(), senders.size());
         assertEquals(routes.getRoutes(), senders);
-        assertNotEquals(routes.size(), 6);
-        assertNotEquals(routes.size(), 4);
+        assertFalse(routes.size() == 6);
+        assertFalse(routes.size() == 4);
 
         routes.remove(snd2);
-        assertNotEquals(routes.size(), 5);
+        assertFalse(routes.size() == 5);
         assertEquals(routes.size(), 4);
 
     }
