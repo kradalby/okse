@@ -62,6 +62,7 @@ import org.ntnunotif.wsnu.services.general.WsnUtilities;
 import org.oasis_open.docs.wsn.b_2.NotificationMessageHolderType;
 import org.oasis_open.docs.wsn.b_2.Notify;
 import org.oasis_open.docs.wsn.b_2.TopicExpressionType;
+import sun.net.www.http.ChunkedInputStream;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -634,18 +635,16 @@ public class WSNotificationServer extends AbstractProtocolServer {
 
             // Get message content, if any
             InternalMessage outgoingMessage;
-            if(request.getContentLength() > 0) {
+            if (request.getContentLength() > 0) {
+                log.debug("Content length was: " + request.getContentLength());
                 InputStream inputStream = request.getInputStream();
-                outgoingMessage = new InternalMessage(InternalMessage.STATUS_OK | InternalMessage.STATUS_HAS_MESSAGE, inputStream);
+                outgoingMessage = new InternalMessage(InternalMessage.STATUS_OK | InternalMessage.STATUS_HAS_MESSAGE | InternalMessage.STATUS_MESSAGE_IS_INPUTSTREAM, inputStream);
             } else if (isChunked) {
+                log.debug("Chunked InternalMessage inpustream being created...");
                 InputStream chunkedInputStream = request.getInputStream();
-                StringWriter swriter = new StringWriter();
-                IOUtils.copy(chunkedInputStream, swriter);
-                String rawRequest = swriter.toString();
-                log.debug(rawRequest);
                 outgoingMessage = new InternalMessage(
-                        InternalMessage.STATUS_OK | InternalMessage.STATUS_HAS_MESSAGE,
-                        new ByteArrayInputStream(rawRequest.getBytes()));
+                        InternalMessage.STATUS_OK | InternalMessage.STATUS_HAS_MESSAGE | InternalMessage.STATUS_MESSAGE_IS_INPUTSTREAM,
+                        chunkedInputStream);
             } else {
                 outgoingMessage = new InternalMessage(InternalMessage.STATUS_OK, null);
             }
