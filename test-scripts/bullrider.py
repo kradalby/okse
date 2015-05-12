@@ -14,6 +14,7 @@ MODES = {
     "notify": "Notification",
     "massnotify": "Mass Notification",
     "multinotify": "MultiNotification",
+    "largenotify": "Large (9MB) Notification",
     "subscribe": "Subscribe",
     "subscribe-xpath": "Subscribe (XPATH)",
     "subscribe-notopic": "Subscribe (No Topic)",
@@ -77,6 +78,21 @@ NOTIFY_MULTIPLE = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 </wsnt:NotificationMessage>
 <wsnt:NotificationMessage>
 <wsnt:Topic Dialect="http://docs.oasis-open.org/wsn/t-1/TopicExpression/Simple">%s</wsnt:Topic>
+<wsnt:Message><Content>%s</Content></wsnt:Message>
+</wsnt:NotificationMessage>
+</wsnt:Notify>
+</s:Body>
+</s:Envelope>"""
+
+NOTIFY_LARGE = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<s:Envelope xmlns:ns2="http://www.w3.org/2001/12/soap-envelope" xmlns:ns3="http://docs.oasis-open.org/wsrf/bf-2" xmlns:wsa="http://www.w3.org/2005/08/addressing" xmlns:wsnt="http://docs.oasis-open.org/wsn/b-2" xmlns:ns6="http://docs.oasis-open.org/wsn/t-1" xmlns:ns7="http://docs.oasis-open.org/wsn/br-2" xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns9="http://docs.oasis-open.org/wsrf/r-2">
+<s:Header>
+<wsa:Action>http://docs.oasis-open.org/wsn/bw-2/NotificationConsumer/Notify</wsa:Action>
+</s:Header>
+<s:Body>
+<wsnt:Notify>
+<wsnt:NotificationMessage>
+<wsnt:Topic Dialect="http://docs.oasis-open.org/wsn/t-1/TopicExpression/Concrete">%s</wsnt:Topic>
 <wsnt:Message><Content>%s</Content></wsnt:Message>
 </wsnt:NotificationMessage>
 </wsnt:Notify>
@@ -443,6 +459,24 @@ class WSNRequest(object):
         # Send the request
         self.send_request(payload)
 
+    def send_notify_large(self):
+        """
+        Sends a Notification with a large payload
+        """
+
+        print "[i] Sending a large Notify"
+
+        bigdata = None
+
+        with open('smallb64data.txt', 'r') as f:
+            bigdata = f.read()
+
+        # Generate the payload
+        payload = NOTIFY_LARGE % (self.TOPIC, bigdata)
+
+        # Send the request
+        self.send_request(payload)
+
     def send_subscription(self):
         """
         Sends a subscription request
@@ -645,6 +679,9 @@ if __name__ == "__main__":
 
     elif mode == 'notify':
         wsn_request.send_notify("derp")
+
+    elif mode == 'largenotify':
+        wsn_request.send_notify_large()
 
     elif mode == 'multinotify':
         # Shuffle the words

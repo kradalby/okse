@@ -40,6 +40,7 @@ import no.ntnu.okse.core.CoreService;
 import no.ntnu.okse.core.messaging.Message;
 import no.ntnu.okse.core.subscription.SubscriptionService;
 import no.ntnu.okse.protocol.AbstractProtocolServer;
+import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
@@ -633,9 +634,18 @@ public class WSNotificationServer extends AbstractProtocolServer {
 
             // Get message content, if any
             InternalMessage outgoingMessage;
-            if(request.getContentLength() > 0 || isChunked) {
+            if(request.getContentLength() > 0) {
                 InputStream inputStream = request.getInputStream();
                 outgoingMessage = new InternalMessage(InternalMessage.STATUS_OK | InternalMessage.STATUS_HAS_MESSAGE, inputStream);
+            } else if (isChunked) {
+                InputStream chunkedInputStream = request.getInputStream();
+                StringWriter swriter = new StringWriter();
+                IOUtils.copy(chunkedInputStream, swriter);
+                String rawRequest = swriter.toString();
+                log.debug(rawRequest);
+                outgoingMessage = new InternalMessage(
+                        InternalMessage.STATUS_OK | InternalMessage.STATUS_HAS_MESSAGE,
+                        new ByteArrayInputStream(rawRequest.getBytes()));
             } else {
                 outgoingMessage = new InternalMessage(InternalMessage.STATUS_OK, null);
             }
@@ -837,7 +847,8 @@ public class WSNotificationServer extends AbstractProtocolServer {
 
                     // Send the request to the specified endpoint reference
                     log.info("Sending message with content to " + requestInformation.getEndpointReference());
-                    request.content(new InputStreamContentProvider((InputStream) message.getMessage()), "application/soap+xml;charset/utf-8");
+                    InputStream msg = (InputStream) message.getMessage();
+                    request.content(new InputStreamContentProvider(msg), "application/soap+xml; charset=utf-8");
 
                     ContentResponse response = request.send();
                     totalMessagesSent.incrementAndGet();
@@ -861,6 +872,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
 
         } catch(Exception e) {
             totalErrors.incrementAndGet();
+            e.printStackTrace();
             log.error("sendMessage(): Unable to establish connection: " + e.getMessage());
             return new InternalMessage(InternalMessage.STATUS_FAULT_INTERNAL_ERROR, null);
         }
