@@ -434,6 +434,15 @@ class WSNRequest(object):
         if (DEBUG):
             self.print_response(response)
 
+    def generator(self, payload):
+        chunks = payload.split("\n")
+        size = len(chunks)
+        i = 0
+        while i < size:
+            yield "".join(chunks[i:i+100])
+            i = i + 100
+
+
     ### BEGIN public API
 
     def send_notify(self, message):
@@ -475,7 +484,7 @@ class WSNRequest(object):
         payload = NOTIFY_LARGE % (self.TOPIC, bigdata)
 
         # Send the request
-        self.send_request(payload)
+        self.send_request(self.generator(payload))
 
     def send_subscription(self):
         """

@@ -31,12 +31,9 @@ import java.util.HashSet;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 import com.google.common.io.ByteStreams;
 import no.ntnu.okse.Application;
-import no.ntnu.okse.core.CoreService;
 import no.ntnu.okse.core.messaging.Message;
 import no.ntnu.okse.core.subscription.SubscriptionService;
 import no.ntnu.okse.protocol.AbstractProtocolServer;
@@ -44,6 +41,9 @@ import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
+import org.eclipse.jetty.client.api.Response;
+import org.eclipse.jetty.client.api.Result;
+import org.eclipse.jetty.client.util.BytesContentProvider;
 import org.eclipse.jetty.client.util.InputStreamContentProvider;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.http.HttpStatus;
@@ -58,11 +58,9 @@ import org.ntnunotif.wsnu.base.internal.ServiceConnection;
 import org.ntnunotif.wsnu.base.net.NuNamespaceContextResolver;
 import org.ntnunotif.wsnu.base.util.InternalMessage;
 import org.ntnunotif.wsnu.base.util.RequestInformation;
-import org.ntnunotif.wsnu.services.general.WsnUtilities;
 import org.oasis_open.docs.wsn.b_2.NotificationMessageHolderType;
 import org.oasis_open.docs.wsn.b_2.Notify;
 import org.oasis_open.docs.wsn.b_2.TopicExpressionType;
-import sun.net.www.http.ChunkedInputStream;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -237,7 +235,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
             publicWANPort = Integer.parseInt(config.getProperty("WSN_WAN_PORT", publicWANPort.toString()));
         } catch (NumberFormatException e) {
             log.error("Failed to parse WSN WAN Port, using default: " + publicWANPort);
-        } 
+        }
 
         // Declare configResource (Fetched from classpath as a Resource from system)
         Resource configResource;
@@ -286,6 +284,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
             try {
                 // Initialize a plain HttpClient
                 this._client = new HttpClient();
+                this._client.setConnectTimeout(connectionTimeout * 1000L);
                 // Turn off following HTTP 30x redirects for the client
                 this._client.setFollowRedirects(false);
                 this._client.start();
@@ -435,7 +434,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
                 // If it was malformed, or maybe just a message containing < or >, build it as generic content element
                 if (notify == null) {
                     WSNTools.injectMessageContentIntoNotify(WSNTools.buildGenericContentElement(message.getMessage()), notifywrapper.notify);
-                // Else inject the unmarshalled XML nodes into the Notify message attribute
+                    // Else inject the unmarshalled XML nodes into the Notify message attribute
                 } else {
                     WSNTools.injectMessageContentIntoNotify(WSNTools.extractMessageContentFromNotify(notify), notifywrapper.notify);
                 }
@@ -810,7 +809,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
 
         /* Create the actual http-request*/
         org.eclipse.jetty.client.api.Request request = _client.newRequest(requestInformation.getEndpointReference());
-        request.timeout(connectionTimeout, TimeUnit.SECONDS);
+        _client.setIdleTimeout(2000);
 
         /* Try to send the message */
         try{
@@ -850,19 +849,13 @@ public class WSNotificationServer extends AbstractProtocolServer {
                     log.info("Sending message with content to " + requestInformation.getEndpointReference());
                     InputStream msg = (InputStream) message.getMessage();
                     request.content(new InputStreamContentProvider(msg), "application/soap+xml; charset=utf-8");
-
-                    ContentResponse response = request.send();
-                    msg.close();
-                    totalMessagesSent.incrementAndGet();
-
-                    // Check what HTTP status we received, if is not A-OK, flag the internalmessage as fault
-                    // and make the response content the message of the InternalMessage returned
-                    if (!HttpStatus.isSuccess(response.getStatus())) {
-                        totalBadRequests.incrementAndGet();
-                        return new InternalMessage(InternalMessage.STATUS_FAULT | InternalMessage.STATUS_HAS_MESSAGE, response.getContentAsString());
-                    } else {
-                        return new InternalMessage(InternalMessage.STATUS_OK | InternalMessage.STATUS_HAS_MESSAGE, response.getContentAsString());
-                    }
+                    request.send((result) -> {
+                        if (!HttpStatus.isSuccess(result.getResponse().getStatus())) {
+                            totalBadRequests.incrementAndGet();
+                        } else {
+                            totalMessagesSent.incrementAndGet();
+                        }
+                    });
                 }
             }
         } catch(ClassCastException e) {
@@ -878,6 +871,9 @@ public class WSNotificationServer extends AbstractProtocolServer {
             log.error("sendMessage(): Unable to establish connection: " + e.getMessage());
             return new InternalMessage(InternalMessage.STATUS_FAULT_INTERNAL_ERROR, null);
         }
+
+        // Since the client request is async, we just return OK since we cannot know if it fails
+        return new InternalMessage(InternalMessage.STATUS_OK, null);
     }
 }
 
