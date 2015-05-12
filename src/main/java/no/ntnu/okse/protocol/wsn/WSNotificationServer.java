@@ -641,8 +641,8 @@ public class WSNotificationServer extends AbstractProtocolServer {
                 outgoingMessage = new InternalMessage(InternalMessage.STATUS_OK | InternalMessage.STATUS_HAS_MESSAGE | InternalMessage.STATUS_MESSAGE_IS_INPUTSTREAM, inputStream);
             } else if (isChunked) {
                 log.debug("Chunked transfer encoding!");
-                log.debug("Content length was: " + request.getContentLength());
                 InputStream chunkedInputStream = request.getInputStream();
+
                 outgoingMessage = new InternalMessage(
                         InternalMessage.STATUS_OK | InternalMessage.STATUS_HAS_MESSAGE | InternalMessage.STATUS_MESSAGE_IS_INPUTSTREAM,
                         chunkedInputStream);
@@ -699,6 +699,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
                     outputStream.flush();
                     baseRequest.setHandled(true);
                     totalErrors.incrementAndGet();
+                    outputStream.close();
 
                     return;
                 }
@@ -851,6 +852,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
                     request.content(new InputStreamContentProvider(msg), "application/soap+xml; charset=utf-8");
 
                     ContentResponse response = request.send();
+                    msg.close();
                     totalMessagesSent.incrementAndGet();
 
                     // Check what HTTP status we received, if is not A-OK, flag the internalmessage as fault
