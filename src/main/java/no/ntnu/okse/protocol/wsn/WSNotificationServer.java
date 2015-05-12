@@ -848,7 +848,15 @@ public class WSNotificationServer extends AbstractProtocolServer {
                     // Send the request to the specified endpoint reference
                     log.info("Sending message with content to " + requestInformation.getEndpointReference());
                     InputStream msg = (InputStream) message.getMessage();
-                    request.content(new InputStreamContentProvider(msg), "application/soap+xml; charset=utf-8");
+                    // There is a strange bug in the InputStreamContentProvider in the Jetty HTTP client
+                    // that causes illegalstate exception in the blocking version of the HTTP Client API,
+                    // when the content is large enough that Transfer-Encoding: Chunked is
+                    // set and used. Due to that, we simply cannot pass content as inputstream, and have to
+                    // pour the contents of the input stream into a stringwriter, and pass it as bytes.
+                    StringWriter stringWriter = new StringWriter();
+                    IOUtils.copy(msg, stringWriter);
+                    byte[] dataBytes = stringWriter.toString().getBytes();
+                    request.content(new BytesContentProvider(dataBytes), "application/soap+xml; charset=utf-8");
                     ContentResponse response = request.send();
 
                     totalMessagesSent.incrementAndGet();
