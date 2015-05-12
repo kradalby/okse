@@ -477,7 +477,7 @@ class WSNRequest(object):
 
         bigdata = None
 
-        with open('smallb64data.txt', 'r') as f:
+        with open('largeb64data.txt', 'r') as f:
             bigdata = f.read()
 
         # Generate the payload
