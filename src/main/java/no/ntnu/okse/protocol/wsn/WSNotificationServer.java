@@ -849,13 +849,18 @@ public class WSNotificationServer extends AbstractProtocolServer {
                     log.info("Sending message with content to " + requestInformation.getEndpointReference());
                     InputStream msg = (InputStream) message.getMessage();
                     request.content(new InputStreamContentProvider(msg), "application/soap+xml; charset=utf-8");
-                    request.send((result) -> {
-                        if (!HttpStatus.isSuccess(result.getResponse().getStatus())) {
-                            totalBadRequests.incrementAndGet();
-                        } else {
-                            totalMessagesSent.incrementAndGet();
-                        }
-                    });
+                    ContentResponse response = request.send();
+
+                    totalMessagesSent.incrementAndGet();
+
+                    // Check what HTTP status we received, if is not A-OK, flag the internalmessage as fault
+                    // and make the response content the message of the InternalMessage returned
+                    if (!HttpStatus.isSuccess(response.getStatus())) {
+                        totalBadRequests.incrementAndGet();
+                        return new InternalMessage(InternalMessage.STATUS_FAULT | InternalMessage.STATUS_HAS_MESSAGE, response.getContentAsString());
+                    } else {
+                        return new InternalMessage(InternalMessage.STATUS_OK | InternalMessage.STATUS_HAS_MESSAGE, response.getContentAsString());
+                    }
                 }
             }
         } catch(ClassCastException e) {
@@ -871,9 +876,6 @@ public class WSNotificationServer extends AbstractProtocolServer {
             log.error("sendMessage(): Unable to establish connection: " + e.getMessage());
             return new InternalMessage(InternalMessage.STATUS_FAULT_INTERNAL_ERROR, null);
         }
-
-        // Since the client request is async, we just return OK since we cannot know if it fails
-        return new InternalMessage(InternalMessage.STATUS_OK, null);
     }
 }
 
