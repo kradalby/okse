@@ -1,5 +1,6 @@
 package no.ntnu.okse.core;
 
+import com.google.gson.Gson;
 import org.apache.log4j.Logger;
 
 import java.io.*;
@@ -87,6 +88,16 @@ public class Utilities {
             }
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    public static boolean isJSONValid(String JSON_STRING) {
+        final Gson gson = new Gson();
+        try {
+            gson.fromJson(JSON_STRING, Object.class);
+            return true;
+        } catch(com.google.gson.JsonSyntaxException ex) {
+            return false;
         }
     }
 }

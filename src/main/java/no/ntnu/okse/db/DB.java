@@ -30,6 +30,8 @@ package no.ntnu.okse.db;
  * okse is licenced under the MIT licence.
  */
 
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+
 import java.io.File;
 import java.sql.*;
 import java.util.ArrayList;
@@ -119,8 +121,10 @@ public class DB {
 
             System.out.println("initDB: Tables created successfully");
 
+            String password = new BCryptPasswordEncoder().encode("password");
+
             sql = "INSERT INTO users (username,password,enabled,description) " +
-                    "VALUES ('admin','$2a$08$J8jPGNCgrrhc.YoZ05GJQeXx0SKSZotoOKLNGPbazZ..i3uCk/iX.',1,'Administrator')";
+                    "VALUES ('admin','" + password + "',1,'Administrator')";
             stmt.executeUpdate(sql);
 
             sql = "INSERT INTO authorities (username,authority) " +
