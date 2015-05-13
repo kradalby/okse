@@ -478,24 +478,6 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
     /* ------------------------------------------------------------------------------------------ */
 
     /**
-     * Attempt to locate a subscriber by remote address, port and topic object.
-     * @param address : The remote IP or hostname of the client
-     * @param port    : The remote port of the client
-     * @param topic   : The topic object you want the subscriber object for
-     * @return The Subscriber, if found, null otherwise.
-     */
-    public Subscriber getSubscriber(String address, Integer port, Topic topic) {
-        for (Subscriber s: _subscribers) {
-            if (s.getHost().equals(address) &&
-                    s.getPort().equals(port) &&
-                    s.getTopic().equals(topic.getFullTopicString())) {
-                return s;
-            }
-        }
-        return null;
-    }
-
-    /**
      * Attempt to locate a subscriber by the ID.
      * @param id : The ID for the subscriber
      * @return The subscriber, if found, null otherwise.

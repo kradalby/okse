@@ -39,6 +39,7 @@ import org.ntnunotif.wsnu.base.net.NuNamespaceContextResolver;
 import org.ntnunotif.wsnu.base.topics.TopicUtils;
 import org.ntnunotif.wsnu.base.topics.TopicValidator;
 import org.ntnunotif.wsnu.base.util.InternalMessage;
+import org.ntnunotif.wsnu.base.util.Utilities;
 import org.ntnunotif.wsnu.services.eventhandling.PublisherRegistrationEvent;
 import org.ntnunotif.wsnu.services.eventhandling.SubscriptionEvent;
 import org.ntnunotif.wsnu.services.filterhandling.FilterSupport;
@@ -58,7 +59,6 @@ import org.oasis_open.docs.wsrf.rw_2.ResourceUnknownFault;
 
 import javax.jws.*;
 import javax.jws.soap.SOAPBinding;
-import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.annotation.XmlSeeAlso;
 import javax.xml.datatype.DatatypeConfigurationException;
@@ -127,6 +127,59 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
      */
     public WSNRegistrationManager getProxyRegistrationManager() {
         return this._registrationManager;
+    }
+
+    /**
+     * Helper method that throws a SOAP fault if a subscribers consumer reference would cause local
+     * loopback on the broker.
+     *
+     * @param reference The consumer reference of the
+     * @throws SubscribeCreationFailedFault If subscriber reference would cause loopback
+     */
+    private void throwFaultIfConsumerRefWouldCauseLoopback(String reference) throws SubscribeCreationFailedFault {
+        boolean isLegal = true;
+        // Strip off protocol
+        reference = reference.replace("http://", "").replace("https://", "");
+        // Fetch WAN host and port from config
+        String pubWanHost = WSNotificationServer.getInstance().getPublicWANHost();
+        Integer pubWanPort = WSNotificationServer.getInstance().getPublicWANPort();
+        // List the illegal hosts
+        HashSet<String> illegal = new HashSet<>(Arrays.asList("0.0.0.0", "localhost", "127.0.0.1", pubWanHost));
+        // Split at host port intersection
+        String [] parts = reference.split(":");
+        // If the host is in illegal set
+        if (illegal.contains(parts[0])) {
+            // If not port was specified
+            if (parts.length == 1) {
+                // If it was the WAN host, check for default port
+                if (parts[0].equals(pubWanHost) && pubWanPort == 80) {
+                    isLegal = false;
+                } else {
+                    // Check for defaultport at regular port
+                    if (WSNotificationServer.getInstance().getPort() == 80) {
+                        isLegal = false;
+                    }
+                }
+            }
+            else {
+                // Attempt to split away potential subpath
+                String[] portSplit = parts[1].split("/");
+                Integer refPort = Integer.parseInt(portSplit[0]);
+                // If we had match with WAN host, check for correlation with WAN port
+                if (parts[0].equals(pubWanHost)) {
+                    if (refPort.equals(pubWanPort)) {
+                        isLegal = false;
+                    }
+                } else {
+                    // If we had match with regular illegals, check regular port correlation
+                    if (refPort.equals(WSNotificationServer.getInstance().getPort())) {
+                        isLegal = false;
+                    }
+                }
+            }
+        }
+        // If we found an illefal combination, throw the exception
+        if (!isLegal) ExceptionUtilities.throwSubscribeCreationFailedFault("en", "Invalid consumer reference. Would cause local loopback on the broker.");
     }
 
     /**
@@ -358,13 +411,20 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
                 if (_subscriptionManager
                         .getSubscriber(recipient)
                         .getAttribute(WSNSubscriptionManager.WSN_USERAW_TOKEN) != null) {
-                    Object content = WSNTools.extractMessageContentFromNotify(toSend);
-                    // Update the InternalMessage with the content of the NotificationMessage
-                    outMessage.setMessage(content);
-                }
 
-                // Pass it along to the requestparser
-                CoreService.getInstance().execute(() -> hub.acceptLocalMessage(outMessage));
+                    // For all bundled messages, extract and push
+                    for (NotificationMessageHolderType holderType : toSend.getNotificationMessage()) {
+                        // Extract the content
+                        Object content = WSNTools.extractMessageContentFromNotify(toSend);
+                        // Update the InternalMessage with the content of the NotificationMessage
+                        outMessage.setMessage(content);
+                        // Pass it to the requestparser
+                        CoreService.getInstance().execute(() -> hub.acceptLocalMessage(outMessage));
+                    }
+                } else {
+                    // Pass it along to the requestparser
+                    CoreService.getInstance().execute(() -> hub.acceptLocalMessage(outMessage));
+                }
             }
         }
         log.debug("Finished sending message to valid WS-Notification recipients");
@@ -416,6 +476,9 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
 
         String endpointReference = ServiceUtilities.getAddress(consumerEndpoint);
 
+        // Loopback check
+        throwFaultIfConsumerRefWouldCauseLoopback(endpointReference);
+
         // EndpointReference is returned as "" from getAddress if something went wrong.
         if(endpointReference.equals("")){
             ExceptionUtilities.throwSubscribeCreationFailedFault("en", "EndpointReference malformatted or missing.");
@@ -435,15 +498,17 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
 
         String requestAddress = "";
         Integer port = 80;
-        if (endpointReference.contains(":")) {
-            String[] components = endpointReference.split(":");
+        String stripped = endpointReference.replace("http://","").replace("https://","");
+        if (stripped.contains(":")) {
+            String[] components = stripped.split(":");
             try {
                 port = Integer.parseInt(components[components.length - 1]);
                 requestAddress = components[components.length - 2];
-                requestAddress = requestAddress.replace("//", "");
             } catch (Exception e) {
                 log.error("Failed to parse endpointReference");
             }
+        } else {
+            requestAddress = stripped;
         }
 
         FilterType filters = subscribeRequest.getFilter();
@@ -660,15 +725,17 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
 
         String requestAddress = "";
         Integer port = 80;
-        if (endpointReference.contains(":")) {
-            String[] components = endpointReference.split(":");
+        String stripped = endpointReference.replace("http://","").replace("https://","");
+        if (stripped.contains(":")) {
+            String[] components = stripped.split(":");
             try {
                 port = Integer.parseInt(components[components.length - 1]);
                 requestAddress = components[components.length - 2];
-                requestAddress = requestAddress.replace("//", "");
             } catch (Exception e) {
                 log.error("Failed to parse endpointReference");
             }
+        } else {
+            requestAddress = stripped;
         }
 
         List<TopicExpressionType> topics = registerPublisherRequest.getTopic();
@@ -734,10 +801,13 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         // Build the endpoint reference
         W3CEndpointReferenceBuilder builder = new W3CEndpointReferenceBuilder();
         builder.address(registrationEndpoint);
+        W3CEndpointReference publisherRegistrationReference = builder.build();
+        builder.address(WSNotificationServer.getInstance().getURI());
+        W3CEndpointReference consumerReference = builder.build();
 
         // Update the response with endpointreference
-        response.setConsumerReference(builder.build());
-        response.setPublisherRegistrationReference(publisherEndpoint);
+        response.setConsumerReference(consumerReference);
+        response.setPublisherRegistrationReference(publisherRegistrationReference);
 
         return response;
     }
@@ -798,11 +868,25 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
             // Initialize the response object
             GetCurrentMessageResponse response = new GetCurrentMessageResponse();
 
+            WSNTools.NotifyWithContext notifywrapper = WSNTools.buildNotifyWithContext(currentMessage.getMessage(), currentMessage.getTopic(), null, null);
+            // If it contained XML, we need to create properly marshalled jaxb node structure
+            if (currentMessage.getMessage().contains("<") || currentMessage.getMessage().contains(">")) {
+                // Unmarshal from raw XML
+                Notify notify = WSNTools.createNotify(currentMessage);
+                // If it was malformed, or maybe just a message containing < or >, build it as generic content element
+                if (notify == null) {
+                    WSNTools.injectMessageContentIntoNotify(WSNTools.buildGenericContentElement(currentMessage.getMessage()), notifywrapper.notify);
+                    // Else inject the unmarshalled XML nodes into the Notify message attribute
+                } else {
+                    WSNTools.injectMessageContentIntoNotify(WSNTools.extractMessageContentFromNotify(notify), notifywrapper.notify);
+                }
+            }
+
             // Generate the NotificationMessage
             log.debug("Generated Notify wrapper");
 
             // Create a unmarshalled and linked Notify and extract the Message content from it
-            Object messageObject = WSNTools.extractMessageContentFromNotify(WSNTools.createNotify(currentMessage));
+            Object messageObject = WSNTools.extractMessageContentFromNotify(notifywrapper.notify);
             response.getAny().add(messageObject);
 
             // Return the response

@@ -219,21 +219,6 @@ public class WSNSubscriptionManagerTest {
         }
     }
 
-    @Test
-    public void testResumeSubscription() throws Exception {
-
-    }
-
-    @Test
-    public void testPauseSubscription() throws Exception {
-
-    }
-
-    @Test
-    public void testSubscriptionChanged() throws Exception {
-
-    }
-
     /* HELPER CLASSES */
 
     public class TestSubscriptionService extends SubscriptionService {

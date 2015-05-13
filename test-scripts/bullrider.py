@@ -14,6 +14,7 @@ MODES = {
     "notify": "Notification",
     "massnotify": "Mass Notification",
     "multinotify": "MultiNotification",
+    "largenotify": "Large (9MB) Notification",
     "subscribe": "Subscribe",
     "subscribe-xpath": "Subscribe (XPATH)",
     "subscribe-notopic": "Subscribe (No Topic)",
@@ -57,8 +58,8 @@ xmlns:ns9="http://docs.oasis-open.org/wsrf/r-2">
 <s:Body>
 <wsnt:Notify>
 <wsnt:NotificationMessage>
-<wsnt:Topic Dialect="http://docs.oasis-open.org/wsn/t-1/TopicExpression/Concrete">%s</wsnt:Topic>
-<wsnt:Message><Content>%s</Content></wsnt:Message>
+<wsnt:Topic Dialect="http://docs.oasis-open.org/wsn/t-1/TopicExpression/Full">%s</wsnt:Topic>
+<wsnt:Message xmlns:oxmsg="http://okse.test.message"><Content>%s</Content></wsnt:Message>
 </wsnt:NotificationMessage>
 </wsnt:Notify>
 </s:Body>
@@ -73,12 +74,27 @@ NOTIFY_MULTIPLE = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <wsnt:Notify>
 <wsnt:NotificationMessage>
 <wsnt:Topic Dialect="http://docs.oasis-open.org/wsn/t-1/TopicExpression/Concrete">%s</wsnt:Topic>
-<wsnt:Message><notifyContent>%s</notifyContent></wsnt:Message>
+<wsnt:Message><Content>%s</Content></wsnt:Message>
 </wsnt:NotificationMessage>
 <wsnt:NotificationMessage>
 <wsnt:Topic Dialect="http://docs.oasis-open.org/wsn/t-1/TopicExpression/Simple">%s</wsnt:Topic>
-<wsnt:Message><notifyContent>%s</notifyContent></wsnt:Message>
-</wsnt:NotificaionMessage>
+<wsnt:Message><Content>%s</Content></wsnt:Message>
+</wsnt:NotificationMessage>
+</wsnt:Notify>
+</s:Body>
+</s:Envelope>"""
+
+NOTIFY_LARGE = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<s:Envelope xmlns:ns2="http://www.w3.org/2001/12/soap-envelope" xmlns:ns3="http://docs.oasis-open.org/wsrf/bf-2" xmlns:wsa="http://www.w3.org/2005/08/addressing" xmlns:wsnt="http://docs.oasis-open.org/wsn/b-2" xmlns:ns6="http://docs.oasis-open.org/wsn/t-1" xmlns:ns7="http://docs.oasis-open.org/wsn/br-2" xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns9="http://docs.oasis-open.org/wsrf/r-2">
+<s:Header>
+<wsa:Action>http://docs.oasis-open.org/wsn/bw-2/NotificationConsumer/Notify</wsa:Action>
+</s:Header>
+<s:Body>
+<wsnt:Notify>
+<wsnt:NotificationMessage>
+<wsnt:Topic Dialect="http://docs.oasis-open.org/wsn/t-1/TopicExpression/Concrete">%s</wsnt:Topic>
+<wsnt:Message><Content>%s</Content></wsnt:Message>
+</wsnt:NotificationMessage>
 </wsnt:Notify>
 </s:Body>
 </s:Envelope>"""
@@ -223,14 +239,15 @@ xmlns:wsn-bw="http://docs.oasis-open.org/wsn/bw-2"
 xmlns:wsn-brw="http://docs.oasis-open.org/wsn/brw-2"
 xmlns:wsrf-bf="http://docs.oasis-open.org/wsrf/bf-2"
 xmlns:wsrf-bfw="http://docs.oasis-open.org/wsrf/bfw-2"
-xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"
+xmlns:ox="http://okse.default.topic">
 <s:Header><wsa:Action>http://docs.oasis-open.org/wsn/brw-2/RegisterPublisher/RegisterPublisherRequest</wsa:Action>
 </s:Header>
 <s:Body>
 <wsn-br:RegisterPublisher><wsn-br:PublisherReference><wsa:Address>%s</wsa:Address></wsn-br:PublisherReference>
 <wsn-br:Topic Dialect="http://docs.oasis-open.org/wsn/t-1/TopicExpression/Concrete">%s</wsn-br:Topic>
 <wsn-br:Demand>false</wsn-br:Demand>
-<wsn-br:InitialTerminationTime>2015-05-08T14:03:00</wsn-br:InitialTerminationTime>
+<wsn-br:InitialTerminationTime>2016-01-01T14:03:00</wsn-br:InitialTerminationTime>
 </wsn-br:RegisterPublisher>
 </s:Body>
 </s:Envelope>
@@ -442,6 +459,24 @@ class WSNRequest(object):
         # Send the request
         self.send_request(payload)
 
+    def send_notify_large(self):
+        """
+        Sends a Notification with a large payload
+        """
+
+        print "[i] Sending a large Notify"
+
+        bigdata = None
+
+        with open('smallb64data.txt', 'r') as f:
+            bigdata = f.read()
+
+        # Generate the payload
+        payload = NOTIFY_LARGE % (self.TOPIC, bigdata)
+
+        # Send the request
+        self.send_request(payload)
+
     def send_subscription(self):
         """
         Sends a subscription request
@@ -540,7 +575,7 @@ class WSNRequest(object):
         print "[i] Sending a PublisherRegistration request"
 
         # Generate the payload
-        payload = REGISTER % ('http://localhost:61000', self.TOPIC)
+        payload = REGISTER % (self.WAN_IP, self.TOPIC)
 
         # Send the request
         self.send_request(payload)
@@ -644,6 +679,9 @@ if __name__ == "__main__":
 
     elif mode == 'notify':
         wsn_request.send_notify("derp")
+
+    elif mode == 'largenotify':
+        wsn_request.send_notify_large()
 
     elif mode == 'multinotify':
         # Shuffle the words
