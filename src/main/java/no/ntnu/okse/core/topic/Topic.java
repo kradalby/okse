@@ -36,7 +36,7 @@ import java.util.Iterator;
 
 /**
  * Created by Aleksander Skraastad (myth) on 4/5/15.
- * <p/>
+ * <p>
  * okse is licenced under the MIT licence.
  */
 @JsonIgnoreProperties({"parent", "children", "type"})
