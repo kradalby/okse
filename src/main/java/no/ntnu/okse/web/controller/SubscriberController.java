@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 
 /**
  * Created by Håkon Ødegård Løvdal (hakloev) on 30/04/15.
- * <p/>
+ * <p>
  * okse is licenced under the MIT licence.
  */
 @RestController

@@ -28,7 +28,7 @@ import no.ntnu.okse.core.messaging.Message;
 
 /**
  * Created by Aleksander Skraastad (myth) on 3/13/15.
- * <p/>
+ * <p>
  * okse is licenced under the MIT licence.
  */
 public interface ProtocolServer {

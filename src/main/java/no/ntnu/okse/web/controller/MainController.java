@@ -41,7 +41,7 @@ import java.util.HashMap;
 
 /**
  * Created by Håkon Ødegård Løvdal (hakloev) on 25/02/15.
- * <p/>
+ * <p>
  * okse is licenced under the MIT licence.
  */
 @RestController

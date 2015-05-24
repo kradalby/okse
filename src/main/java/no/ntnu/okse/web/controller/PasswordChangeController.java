@@ -13,7 +13,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 /**
  * Created by Håkon Ødegård Løvdal (hakloev) on 08/05/15.
- * <p/>
+ * <p>
  * okse is licenced under the MIT licence.
  */
 @Controller

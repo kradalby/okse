@@ -26,7 +26,7 @@ package no.ntnu.okse.core.subscription;
 
 /**
  * Created by Aleksander Skraastad (myth) on 4/18/15.
- * <p/>
+ * <p>
  * okse is licenced under the MIT licence.
  */
 public class SubscriptionTask {

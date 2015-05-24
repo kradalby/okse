@@ -64,7 +64,7 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
     /**
      * This method is called from the CommandProxy to set a reference to our SubscriptionService
      *
-     * @param subService
+     * @param subService : SubscriptionService
      */
     public void initCoreSubscriptionService(SubscriptionService subService) {
         this._subscriptionService = subService;
@@ -165,7 +165,7 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
 
     /**
      * Retrieve the SubscriptionHandle of the subscriber provided as the argument
-     * <p/>
+     * <p>
      * This method attempts to extract the WS-Nu subscriptionKey from the Subscriber object's
      * attribute set, and delegates the rest to the String based method with the same name.
      *

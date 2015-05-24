@@ -32,7 +32,7 @@ import javax.sql.DataSource;
 
 /**
  * Created by Håkon Ødegård Løvdal (hakloev) on 05/03/15.
- * <p/>
+ * <p>
  * okse is licenced under the MIT licence.
  */
 @Configuration

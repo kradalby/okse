@@ -69,7 +69,7 @@ import java.util.*;
 
 /**
  * Created by Aleksander Skraastad (myth) on 4/10/15.
- * <p/>
+ * <p>
  * okse is licenced under the MIT licence.
  */
 @WebService(targetNamespace = "http://docs.oasis-open.org/wsn/brw-2", name = "NotificationBroker")
@@ -273,7 +273,6 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
      *
      * @param notify               the {@link org.oasis_open.docs.wsn.b_2.Notify} to send
      * @param w3CEndpointReference the reference of the receiving endpoint
-     * @throws IllegalAccessException If not permitted
      */
     @WebMethod(exclude = true)
     public void sendSingleNotify(Notify notify, W3CEndpointReference w3CEndpointReference) {
@@ -451,7 +450,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
 
     /**
      * The Subscribe request message as defined by the WS-N specification.
-     * <p/>
+     * <p>
      * More information can be found at http://docs.oasis-open.org/wsn/wsn-ws_base_notification-1.3-spec-os.htm#_Toc133735624
      *
      * @param subscribeRequest A {@link org.oasis_open.docs.wsn.b_2.Subscribe} object.

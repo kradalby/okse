@@ -13,7 +13,7 @@ import java.util.TimeZone;
 
 /**
  * Created by Håkon Ødegård Løvdal (hakloev) on 29/04/15.
- * <p/>
+ * <p>
  * okse is licenced under the MIT licence.
  */
 public class Utilities {

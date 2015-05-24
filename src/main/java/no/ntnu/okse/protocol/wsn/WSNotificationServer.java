@@ -67,7 +67,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Created by Aleksander Skraastad (myth) on 3/12/15.
- * <p/>
+ * <p>
  * okse is licenced under the MIT licence.
  */
 public class WSNotificationServer extends AbstractProtocolServer {
@@ -135,7 +135,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
     /**
      * Constructor that takes in a port that the WSNServer jetty instance should
      * listen to.
-     * <p/>
+     * <p>
      *
      * @param host A string representing the host the WSNServer should bind to
      * @param port An integer representing the port the WSNServer should bind to.
@@ -149,7 +149,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
     /**
      * Factory method providing an instance of WSNotificationServer, adhering to the
      * singleton pattern. (Using default port from config file.)
-     * <p/>
+     * <p>
      *
      * @return: The WSNotification instance.
      */

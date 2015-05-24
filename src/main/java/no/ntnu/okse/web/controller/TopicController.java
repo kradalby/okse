@@ -37,7 +37,7 @@ import java.util.List;
 
 /**
  * Created by Håkon Ødegård Løvdal (hakloev) on 13/03/15.
- * <p/>
+ * <p>
  * okse is licenced under the MIT licence.
  */
 @RestController

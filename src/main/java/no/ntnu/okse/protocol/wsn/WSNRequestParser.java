@@ -44,7 +44,7 @@ import java.util.Collection;
 
 /**
  * Created by Aleksander Skraastad (myth) on 3/19/15.
- * <p/>
+ * <p>
  * okse is licenced under the MIT licence.
  */
 public class WSNRequestParser implements Hub {
@@ -325,7 +325,7 @@ public class WSNRequestParser implements Hub {
 
     /**
      * Function to accept a message from a local service, and forward it out into the internet.
-     * <p/>
+     * <p>
      *
      * @param message The message to be sent out
      * @return An InternalMessage ready to be processed and sent across the wire.
@@ -379,7 +379,7 @@ public class WSNRequestParser implements Hub {
 
     /**
      * Try to locate a specific ServiceConnection based on the endpoint reference.
-     * <p/>
+     * <p>
      *
      * @param endpointReference: A string representing the endpoint reference.
      * @return The ServiceConnection that matches the specified endpoint reference argument, null if not found.

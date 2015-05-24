@@ -40,6 +40,7 @@ public class DB {
 
     /**
      * Connecting to database okse.db
+     * @return result of connection
      */
     public static boolean conDB() {
         try {
@@ -56,6 +57,7 @@ public class DB {
     /**
      * Static method to switch to test database
      *
+     * @throws java.lang.Exception : Something went wrong
      * @param active True if DB is to be set in testing mode, false for normal database
      */
     public static void setTestMode(boolean active) throws Exception {
@@ -76,6 +78,8 @@ public class DB {
 
     /**
      * Closing database connection
+     *
+     * @return true if database is successfully closed
      */
     public static boolean closeDB() {
         try {
@@ -90,6 +94,8 @@ public class DB {
 
     /**
      * Initiate database, creates tables and default admin user
+     *
+     * @return true, if init is successful
      */
     public static boolean initDB() {
         Statement stmt = null;
@@ -213,8 +219,10 @@ public class DB {
     /**
      * SQL query, update the password
      *
+     * @throws java.sql.SQLException : SQL error
      * @param username The username
      * @param password (new password)
+     * @return true, if change is successful
      */
     public static boolean changePassword(String username, String password) throws SQLException {
         PreparedStatement changePassword = null;

@@ -35,7 +35,7 @@ import java.util.HashSet;
 
 /**
  * Created by Aleksander Skraastad (myth) on 4/5/15.
- * <p/>
+ * <p>
  * okse is licenced under the MIT licence.
  */
 @JsonIgnoreProperties({"timeout"})
@@ -54,10 +54,10 @@ public class Subscriber {
     /**
      * Constructs a Subscriber object from the required fields
      *
-     * @param host
-     * @param port
-     * @param topic
-     * @param originProtocol
+     * @param host Host of the subscriber
+     * @param port Port of the subscriber
+     * @param topic The topic subscribed on
+     * @param originProtocol Origin protocol of the subscriber
      */
     public Subscriber(String host, Integer port, String topic, String originProtocol) {
         this.timeout = null;
@@ -247,7 +247,7 @@ public class Subscriber {
     /**
      * Returns a textual representation of this subscriber object
      *
-     * @return
+     * @return string representation of subscriber
      */
     @Override
     public String toString() {

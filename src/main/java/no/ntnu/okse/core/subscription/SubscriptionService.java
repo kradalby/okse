@@ -46,7 +46,7 @@ import java.util.stream.Collectors;
 
 /**
  * Created by Aleksander Skraastad (myth) on 4/5/15.
- * <p/>
+ * <p>
  * okse is licenced under the MIT licence.
  */
 public class SubscriptionService extends AbstractCoreService implements TopicChangeListener {
@@ -77,7 +77,7 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
     /**
      * The main instanciation method of SubscriptionService adhering to the singleton pattern
      *
-     * @return
+     * @return singleton instance of SubscriptionService
      */
     public static SubscriptionService getInstance() {
         if (!_invoked) _singleton = new SubscriptionService();

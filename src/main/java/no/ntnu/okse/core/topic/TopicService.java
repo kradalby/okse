@@ -37,7 +37,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * Created by Aleksander Skraastad (myth) on 4/11/15.
- * <p/>
+ * <p>
  * okse is licenced under the MIT licence.
  */
 public class TopicService extends AbstractCoreService {
@@ -135,9 +135,6 @@ public class TopicService extends AbstractCoreService {
 
     /**
      * This method Stops the TopicService
-     *
-     * @throws InterruptedException An exception that might occur if thread is interrupted while waiting for put
-     *                              command thread lock to open up.
      */
     public void stop() {
         _running = false;

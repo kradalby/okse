@@ -62,9 +62,9 @@ public class Driver extends BaseHandler {
     /**
      * Create a listening acceptor.
      *
-     * @param host
-     * @param port
-     * @throws IOException
+     * @param host : listening host/address
+     * @param port : listening port
+     * @throws IOException : Error with connection
      */
     public void listen(String host, int port) throws IOException {
         //new Acceptor(host, port);
@@ -93,7 +93,7 @@ public class Driver extends BaseHandler {
      * The main event loop of the AMQP implementation,
      * fetches and processes events.
      *
-     * @throws IOException
+     * @throws IOException : Error with connection
      */
     public void run() throws IOException {
         if (!_running) {
@@ -371,7 +371,7 @@ public class Driver extends BaseHandler {
     /**
      * Binds transport to the given connection
      *
-     * @param conn
+     * @param conn : AMQP connection
      * @return Transport
      */
     private static Transport makeTransport(Connection conn) {
@@ -401,7 +401,7 @@ public class Driver extends BaseHandler {
     /**
      * Print ByteBuffers to system out.
      *
-     * @param \ByteBuffer
+     * @param buf : list of bytes
      */
     public void printByteBuffer(ByteBuffer buf) {
         for (int i = 0; i < buf.limit(); i++) {

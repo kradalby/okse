@@ -61,7 +61,7 @@ import java.util.regex.Pattern;
 
 /**
  * Created by Aleksander Skraastad (myth) on 4/21/15.
- * <p/>
+ * <p>
  * okse is licenced under the MIT licence.
  */
 public class WSNTools {
@@ -280,6 +280,10 @@ public class WSNTools {
     /**
      * Helper method that takes in raw string content,
      *
+     * @param content : Notify content
+     * @param topic : Notify Topic
+     * @param prefix : Notify prefix
+     * @param namespace : Notify namespace
      * @return a notify with its context
      */
     public static NotifyWithContext buildNotifyWithContext(String content, String topic, String prefix, String namespace) {
@@ -416,8 +420,8 @@ public class WSNTools {
      * Checks if a string is formatted in XsdDatetime. This method has been copied from WS-Nu and done right.
      * Now validates months, days, hours, minutes and seconds in their actual ranges.
      *
-     * @param
-     * @return
+     * @param time : String representation of XsdDatetime
+     * @return result of validation
      */
     public static boolean isXsdDatetime(String time) {
         return time.matches("[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])T([0-1][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](Z|[-+](0[0-9]|1[0-2]):00)?");
@@ -426,8 +430,8 @@ public class WSNTools {
     /**
      * Checks if a string is a Xs:duration string with a regular expression.
      *
-     * @param time
-     * @return
+     * @param time : String representation of Xs:duration
+     * @return result of validation
      */
     public static boolean isXsdDuration(String time) {
         return time.matches("^(-P|P)(([0-9]+Y)?([0-9]+M)?([0-9]+D)?)?(?:(T([0-9]+H)?([0-9]+M)?([0-9]+S)?))?");

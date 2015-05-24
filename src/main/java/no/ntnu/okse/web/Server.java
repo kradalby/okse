@@ -30,7 +30,7 @@ import org.springframework.context.annotation.PropertySource;
 
 /**
  * Created by Håkon Ødegård Løvdal (hakloev) on 25/02/15.
- * <p/>
+ * <p>
  * okse is licenced under the MIT licence.
  */
 @SpringBootApplication

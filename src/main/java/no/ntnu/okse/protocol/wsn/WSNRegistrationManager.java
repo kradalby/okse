@@ -50,7 +50,7 @@ import java.util.Map;
 
 /**
  * Created by Aleksander Skraastad (myth) on 4/20/15.
- * <p/>
+ * <p>
  * okse is licenced under the MIT licence.
  */
 @WebService(targetNamespace = "http://docs.oasis-open.org/wsn/brw-2", name = "PublisherRegistrationManager")
@@ -78,7 +78,7 @@ public class WSNRegistrationManager extends AbstractPublisherRegistrationManager
     /**
      * Helper method that initializes this proxy manager with the reference to the OKSE SubscriptionService
      *
-     * @param service
+     * @param service : SubscriptionService
      */
     public void initCoreSubscriptionService(SubscriptionService service) {
         _subscriptionService = service;
@@ -186,10 +186,10 @@ public class WSNRegistrationManager extends AbstractPublisherRegistrationManager
 
     /**
      * This method implements the {@link org.oasis_open.docs.wsn.brw_2.PublisherRegistrationManager}'s DestroyRegistration.
-     * <p/>
+     * <p>
      * The method conforms to the standard. Thus, any specifics can be found at
-     * <href>http://docs.oasis-open.org/wsn/wsn-ws_brokered_notification-1.3-spec-os.htm#_Toc133294203</href>.
-     * <p/>
+     * <a href="http://docs.oasis-open.org/wsn/wsn-ws_brokered_notification-1.3-spec-os.htm#_Toc133294203"></a>
+     * <p>
      * Note that the subscription-reference is contained in the request-url.
      *
      * @param destroyRegistrationRequest The parsed object.

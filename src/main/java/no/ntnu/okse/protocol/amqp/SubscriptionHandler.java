@@ -53,7 +53,6 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
      * a topic/queue. Has additional methods to help the queue
      * behavior and the topic behavior.
      *
-     * @param \<Receiver\/Sender\>
      */
     public static class Routes<T extends Link> {
 
@@ -121,7 +120,7 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
     /**
      * Get the address of a Source object.
      *
-     * @param source
+     * @param source : Connection information object
      * @return the address of a Source object.
      */
     private static String getAddress(Source source) {
@@ -135,7 +134,7 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
     /**
      * Get the address of a Target object.
      *
-     * @param target
+     * @param target : Connection information object
      * @return the address of a Target object.
      */
     private static String getAddress(Target target) {
@@ -149,7 +148,7 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
     /**
      * Get the address of a Sender object.
      *
-     * @param sender
+     * @param sender : Client object
      * @return the address of a Sender object.
      */
     public static String getAddress(Sender sender) {
@@ -161,7 +160,7 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
     /**
      * Get the address of a Receiver object.
      *
-     * @param receiver
+     * @param receiver : Client object
      * @return the address of a Receiver object.
      */
     public static String getAddress(Receiver receiver) {
@@ -171,8 +170,8 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
     /**
      * Get the outgoing routes of a given address.
      *
-     * @param address
-     * @return Routes\<Sender\> list
+     * @param address : topic/route
+     * @return Routes of Sender objects
      */
     public Routes<Sender> getOutgoing(String address) {
         Routes<Sender> routes = outgoing.get(address);
@@ -185,8 +184,8 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
     /**
      * Get the incomming routes of a given address.
      *
-     * @param address
-     * @return Routes\<Receiver\>
+     * @param address topic/route
+     * @return Routes of Receiver objects
      */
     public Routes<Receiver> getIncomming(String address) {
         Routes<Receiver> routes = incoming.get(address);
@@ -200,7 +199,7 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
      * Add a Sender object to AMQPs internal routing system for topic/queue
      * and create and add a OKSEs subscriber to the internal system.
      *
-     * @param sender
+     * @param sender : Client object
      */
     private void add(Sender sender) {
         String senderAddress = "Unknown";
@@ -267,7 +266,7 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
      * Remove a sender object from AMQPs routing system and
      * Okses internal subscriber system.
      *
-     * @param sender
+     * @param sender : Client object
      */
     private void remove(Sender sender) {
         if (sender != null) {
@@ -306,7 +305,7 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
     /**
      * Add a Receiver object to AMQPs internal routing system
      *
-     * @param receiver
+     * @param receiver : Client object
      */
     private void add(Receiver receiver) {
         String address = getAddress(receiver);
@@ -324,7 +323,7 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
     /**
      * Remove a Receiver object from AMQPs internal routing system
      *
-     * @param receiver
+     * @param receiver : Client object
      */
     private void remove(Receiver receiver) {
         String address = getAddress(receiver);

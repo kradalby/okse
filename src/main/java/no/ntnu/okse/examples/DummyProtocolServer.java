@@ -48,7 +48,7 @@ import java.util.Set;
 
 /**
  * Created by Aleksander Skraastad (myth) on 4/19/15.
- * <p/>
+ * <p>
  * okse is licenced under the MIT licence.
  */
 public class DummyProtocolServer extends AbstractProtocolServer {
@@ -72,6 +72,7 @@ public class DummyProtocolServer extends AbstractProtocolServer {
     /**
      * Private constructor
      *
+     * @param host The host this server should bind to
      * @param port The port this server should bind to
      */
     private DummyProtocolServer(String host, Integer port) {
@@ -339,6 +340,7 @@ public class DummyProtocolServer extends AbstractProtocolServer {
      * Parse an incoming command from the raw string
      *
      * @param command The command string received from the client
+     * @return boolean based on command success
      */
     private boolean parseCommand(String command) {
         String[] args = command.split(" ");

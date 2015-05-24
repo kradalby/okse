@@ -36,7 +36,7 @@ import java.util.HashMap;
 
 /**
  * Created by Aleksander Skraastad (myth) on 4/17/15.
- * <p/>
+ * <p>
  * okse is licenced under the MIT licence.
  */
 public class Message {
@@ -135,7 +135,7 @@ public class Message {
     /**
      * Checks to see if this message was sent from a registered publisher
      *
-     * @return
+     * @return true, if publisher is registered
      */
     public boolean messageSentFromRegisteredPublisher() {
         if (this.publisher == null) return false;

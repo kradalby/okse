@@ -26,7 +26,7 @@ package no.ntnu.okse.core.event;
 
 /**
  * Created by Aleksander Skraastad (myth) on 4/18/15.
- * <p/>
+ * <p>
  * okse is licenced under the MIT licence.
  */
 public class SystemEvent extends Event {
@@ -41,8 +41,9 @@ public class SystemEvent extends Event {
 
     /**
      * Constructs an Event containing an operation, some data and a dataType.
-     * <p/>
+     * <p>
      *
+     * @param type : Type of SystemEvent
      * @param data : An object containing the data payload.
      */
     public SystemEvent(Type type, Object data) {
@@ -52,7 +53,7 @@ public class SystemEvent extends Event {
 
     /**
      * An abstract method to retrieve the data payload.
-     * <p/>
+     * <p>
      *
      * @return: An object containing the data payload casted to proper type in subclass.
      */

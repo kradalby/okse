@@ -28,7 +28,7 @@ import no.ntnu.okse.core.subscription.Subscriber;
 
 /**
  * Created by Aleksander Skraastad (myth) on 4/5/15.
- * <p/>
+ * <p>
  * okse is licenced under the MIT licence.
  */
 public class SubscriptionChangeEvent extends Event {
@@ -46,7 +46,7 @@ public class SubscriptionChangeEvent extends Event {
 
     /**
      * Constructs a SubscriptionChangeEvent of a certain Type, with associated Subscriber object.
-     * <p/>
+     * <p>
      *
      * @param eventType : The type of subscription event this is
      * @param data      : The subscriber object in question.

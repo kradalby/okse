@@ -28,7 +28,7 @@ import no.ntnu.okse.core.event.PublisherChangeEvent;
 
 /**
  * Created by Aleksander Skraastad (myth) on 4/6/15.
- * <p/>
+ * <p>
  * okse is licenced under the MIT licence.
  */
 public interface PublisherChangeListener {

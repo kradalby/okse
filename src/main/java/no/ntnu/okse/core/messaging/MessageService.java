@@ -42,7 +42,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * Created by Aleksander Skraastad (myth) on 4/17/15.
- * <p/>
+ * <p>
  * okse is licenced under the MIT licence.
  */
 public class MessageService extends AbstractCoreService implements TopicChangeListener {

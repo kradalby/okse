@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
 
 /**
  * Created by Håkon Ødegård Løvdal (hakloev) on 17/03/15.
- * <p/>
+ * <p>
  * okse is licenced under the MIT licence.
  */
 @RestController

@@ -189,7 +189,7 @@ public class AMQPServer extends BaseHandler {
     /**
      * Convert a OKSE message to AMQP and add it the the message queue.
      *
-     * @param message
+     * @param message : OKSE internal message
      */
     public void addMessageToQueue(no.ntnu.okse.core.messaging.Message message) {
         Message msg = convertOkseMessageToAMQP(message);
@@ -211,7 +211,7 @@ public class AMQPServer extends BaseHandler {
      * Convert a AMQP message object to a MessageBytes Object.
      * MessageBytes is basically a wrapper around a byte array.
      *
-     * @param msg
+     * @param msg : AMQP internal message
      * @return MessageBytes object
      */
     public static MessageBytes convertAMQPMessageToMessageBytes(Message msg) {
@@ -228,7 +228,7 @@ public class AMQPServer extends BaseHandler {
      * Get an AMQP message as a byte array.
      * This method uses qualified guessing to achieve its goal.
      *
-     * @param msg
+     * @param msg : AMQP internal message
      * @return byte[]
      */
     private static byte[] gestimateMessageByteSize(Message msg) {
@@ -262,7 +262,7 @@ public class AMQPServer extends BaseHandler {
     /**
      * Convert a OKSE message to a AMQP Message.
      *
-     * @param message
+     * @param message : OKSE internal message
      * @return AMQP message
      */
     public static Message convertOkseMessageToAMQP(no.ntnu.okse.core.messaging.Message message) {
@@ -311,7 +311,7 @@ public class AMQPServer extends BaseHandler {
      * It will also add AMQP messages back into the
      * internal AMQP queue to generate less overhead.
      *
-     * @param event
+     * @param event : AMQP event
      */
     @Override
     public void onDelivery(Event event) {
