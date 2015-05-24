@@ -28,7 +28,7 @@ import no.ntnu.okse.core.subscription.Publisher;
 
 /**
  * Created by Aleksander Skraastad (myth) on 4/6/15.
- * <p>
+ * <p/>
  * okse is licenced under the MIT licence.
  */
 public class PublisherChangeEvent extends Event {
@@ -42,7 +42,7 @@ public class PublisherChangeEvent extends Event {
 
     /**
      * Constructs an Event containing an operation, some data and a dataType.
-     * <p>
+     * <p/>
      *
      * @param type : A Type enum value from RegistrationChangeEvent class.
      * @param data : An object containing the data payload.

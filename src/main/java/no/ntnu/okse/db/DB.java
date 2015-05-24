@@ -32,7 +32,6 @@ package no.ntnu.okse.db;
 
 import java.io.File;
 import java.sql.*;
-import java.util.ArrayList;
 
 public class DB {
 
@@ -56,6 +55,7 @@ public class DB {
 
     /**
      * Static method to switch to test database
+     *
      * @param active True if DB is to be set in testing mode, false for normal database
      */
     public static void setTestMode(boolean active) throws Exception {
@@ -77,7 +77,7 @@ public class DB {
     /**
      * Closing database connection
      */
-    public static boolean closeDB(){
+    public static boolean closeDB() {
         try {
             con.close();
             System.out.println("closeDB: Closed database successfully");
@@ -140,6 +140,7 @@ public class DB {
 
     /**
      * Retrieve all users from the database
+     *
      * @return A ResultSet containing all users and their fields
      * @throws SQLException If error during query
      */
@@ -153,6 +154,7 @@ public class DB {
 
     /**
      * Retrieve a single user based on username
+     *
      * @param username The username to query
      * @return A ResultSet containing the user fields
      * @throws SQLException If error during query
@@ -168,8 +170,9 @@ public class DB {
 
     /**
      * Inserts a message into the persistance table
-     * @param message The message content
-     * @param topic The topic message was sent on
+     *
+     * @param message        The message content
+     * @param topic          The topic message was sent on
      * @param originProtocol The protocol the message originated from
      * @return True if the query was successful, false otherwise
      * @throws SQLException If error during query
@@ -193,6 +196,7 @@ public class DB {
 
     /**
      * Retrieves all messages in persistance storage on a specific topic
+     *
      * @param topic The topic to query
      * @return A ResultSet containing all messages on the topic
      * @throws SQLException If error during query
@@ -208,6 +212,7 @@ public class DB {
 
     /**
      * SQL query, update the password
+     *
      * @param username The username
      * @param password (new password)
      */
@@ -215,8 +220,8 @@ public class DB {
         PreparedStatement changePassword = null;
         String changePasswordString =
                 "UPDATE users " +
-                "SET password = ? " +
-                "WHERE username = ?";
+                        "SET password = ? " +
+                        "WHERE username = ?";
         conDB();
 
         try {
@@ -228,14 +233,14 @@ public class DB {
             con.commit();
             return true;
 
-        } catch (SQLException e ) {
+        } catch (SQLException e) {
             e.printStackTrace();
             if (con != null) {
                 try {
                     System.err.print("Transaction is being rolled back");
                     con.rollback();
                     return true;
-                } catch(SQLException excep) {
+                } catch (SQLException excep) {
                     excep.printStackTrace();
                     return false;
                 }

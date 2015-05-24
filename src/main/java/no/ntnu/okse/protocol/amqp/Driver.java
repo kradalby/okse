@@ -25,22 +25,17 @@
 package no.ntnu.okse.protocol.amqp;
 
 import org.apache.log4j.Logger;
-import org.apache.qpid.proton.engine.BaseHandler;
-import org.apache.qpid.proton.engine.Connection;
-import org.apache.qpid.proton.engine.Collector;
-import org.apache.qpid.proton.engine.EndpointState;
-import org.apache.qpid.proton.engine.Event;
-import org.apache.qpid.proton.engine.Handler;
-import org.apache.qpid.proton.engine.Sasl;
-import org.apache.qpid.proton.engine.Transport;
-import org.apache.qpid.proton.engine.TransportException;
+import org.apache.qpid.proton.engine.*;
 
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
-import java.nio.channels.*;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 
 /**
@@ -57,7 +52,7 @@ public class Driver extends BaseHandler {
     private Acceptor acceptor;
 
 
-    public Driver(Collector collector, Handler ... handlers) throws IOException {
+    public Driver(Collector collector, Handler... handlers) throws IOException {
         this.collector = collector;
         this.handlers = handlers;
         this.selector = Selector.open();
@@ -66,6 +61,7 @@ public class Driver extends BaseHandler {
 
     /**
      * Create a listening acceptor.
+     *
      * @param host
      * @param port
      * @throws IOException
@@ -77,6 +73,7 @@ public class Driver extends BaseHandler {
 
     /**
      * Gets the netaddress from the acceptor
+     *
      * @return The address from connection
      */
     public InetAddress getInetAddress() {
@@ -85,6 +82,7 @@ public class Driver extends BaseHandler {
 
     /**
      * Gets the port from the acceptor
+     *
      * @return The port from connection
      */
     public Integer getPort() {
@@ -94,6 +92,7 @@ public class Driver extends BaseHandler {
     /**
      * The main event loop of the AMQP implementation,
      * fetches and processes events.
+     *
      * @throws IOException
      */
     public void run() throws IOException {
@@ -151,7 +150,6 @@ public class Driver extends BaseHandler {
 
     /**
      * Process events from the event collector
-     *
      */
     public void processEvents() {
         while (_running) {
@@ -243,6 +241,7 @@ public class Driver extends BaseHandler {
 
         /**
          * Get the address from the latest connected client.
+         *
          * @return Netaddress from latest connected client
          */
         public InetAddress getInetAddress() {
@@ -251,6 +250,7 @@ public class Driver extends BaseHandler {
 
         /**
          * get the port form the latest connected client.
+         *
          * @return Port from latest connected client
          */
         public Integer getPort() {
@@ -291,7 +291,9 @@ public class Driver extends BaseHandler {
         }
 
         public void selected() {
-            if (!key.isValid()) { return; }
+            if (!key.isValid()) {
+                return;
+            }
 
             try {
                 if (key.isConnectable()) {
@@ -348,6 +350,7 @@ public class Driver extends BaseHandler {
 
         /**
          * Used if only ChannelHandler object is available
+         *
          * @return Netaddress from connection
          */
         public InetAddress getInetAddress() {
@@ -356,6 +359,7 @@ public class Driver extends BaseHandler {
 
         /**
          * Used if only ChannelHandler object is available
+         *
          * @return Port from connection
          */
         public Integer getPort() {
@@ -366,6 +370,7 @@ public class Driver extends BaseHandler {
 
     /**
      * Binds transport to the given connection
+     *
      * @param conn
      * @return Transport
      */
@@ -395,10 +400,11 @@ public class Driver extends BaseHandler {
 
     /**
      * Print ByteBuffers to system out.
+     *
      * @param \ByteBuffer
      */
     public void printByteBuffer(ByteBuffer buf) {
-        for (int i = 0; i < buf.limit();i++) {
+        for (int i = 0; i < buf.limit(); i++) {
             System.out.println(String.format("Position: %s: %s", i, buf.get(i)));
         }
     }

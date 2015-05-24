@@ -44,7 +44,7 @@ import java.util.Collection;
 
 /**
  * Created by Aleksander Skraastad (myth) on 3/19/15.
- * <p>
+ * <p/>
  * okse is licenced under the MIT licence.
  */
 public class WSNRequestParser implements Hub {
@@ -77,7 +77,7 @@ public class WSNRequestParser implements Hub {
                 returnMessage = recipient.acceptMessage(message);
             } else {
                 log.info("Did not immediately find a recipient... Looping through services...");
-                for (ServiceConnection s: _protocolServer.getServices()) {
+                for (ServiceConnection s : _protocolServer.getServices()) {
                     returnMessage = s.acceptMessage(message);
                     if ((returnMessage.statusCode & InternalMessage.STATUS_FAULT_INVALID_DESTINATION) > 0) {
                         log.info("Found an invalid destination: " + s);
@@ -145,7 +145,7 @@ public class WSNRequestParser implements Hub {
             log.debug("Received returnMessage from recipient object");
         } else {
             log.debug("Looking for service to send to...");
-            for (ServiceConnection s: _protocolServer.getServices()) {
+            for (ServiceConnection s : _protocolServer.getServices()) {
                 log.debug("Attempting to forward request to " + s);
                 returnMessage = s.acceptMessage(message);
 
@@ -176,7 +176,7 @@ public class WSNRequestParser implements Hub {
                     try {
                         ByteStreams.copy((InputStream) returnMessage.getMessage(), streamToRequestor);
                         return new InternalMessage(InternalMessage.STATUS_OK, null);
-                    } catch(Exception e) {
+                    } catch (Exception e) {
                         log.error("Casting the returnMessage to InputStream failed, " +
                                 "even though someone set the MESSAGE_IS_INPUTSTREAM flag.");
                         return new InternalMessage(InternalMessage.STATUS_FAULT | InternalMessage.STATUS_FAULT_INTERNAL_ERROR, null);
@@ -296,7 +296,7 @@ public class WSNRequestParser implements Hub {
 
         // Check if this is already correct type
         if (o instanceof JAXBElement) {
-            JAXBElement element = (JAXBElement)o;
+            JAXBElement element = (JAXBElement) o;
             if (element.getDeclaredType() == Envelope.class ||
                     element.getDeclaredType() == org.w3._2001._12.soap_envelope.Envelope.class)
                 return o;
@@ -325,7 +325,8 @@ public class WSNRequestParser implements Hub {
 
     /**
      * Function to accept a message from a local service, and forward it out into the internet.
-     * <p>
+     * <p/>
+     *
      * @param message The message to be sent out
      * @return An InternalMessage ready to be processed and sent across the wire.
      */
@@ -343,7 +344,7 @@ public class WSNRequestParser implements Hub {
 
                     return message;
 
-                } catch(ClassCastException castexception) {
+                } catch (ClassCastException castexception) {
 
                     log.error("Someone set the RETURNING_MESSAGE_IS_INPUTSTREAM when in fact it wasn't.");
                     log.trace(castexception.getStackTrace());
@@ -378,15 +379,16 @@ public class WSNRequestParser implements Hub {
 
     /**
      * Try to locate a specific ServiceConnection based on the endpoint reference.
-     * <p>
+     * <p/>
+     *
      * @param endpointReference: A string representing the endpoint reference.
      * @return The ServiceConnection that matches the specified endpoint reference argument, null if not found.
      */
     public ServiceConnection findRecipientService(String endpointReference) {
-        if(endpointReference == null || endpointReference.equals(""))
+        if (endpointReference == null || endpointReference.equals(""))
             return null;
 
-        for(ServiceConnection connection : _protocolServer.getServices()) {
+        for (ServiceConnection connection : _protocolServer.getServices()) {
 
             // Ensure we have connection with endpoint
             if (connection == null || connection.getServiceEndpoint() == null) {
@@ -395,12 +397,12 @@ public class WSNRequestParser implements Hub {
 
             // Try to match the ip in one of two ways
             // Is this first one strictly necessary?
-            if(endpointReference.matches("^/?" + connection.getServiceEndpoint().replaceAll("^"+WSNotificationServer.getInstance().getURI(), "") +"(.*)?")){
+            if (endpointReference.matches("^/?" + connection.getServiceEndpoint().replaceAll("^" + WSNotificationServer.getInstance().getURI(), "") + "(.*)?")) {
                 return connection;
             }
 
-            if(endpointReference.matches("/?" + Utilities.stripUrlOfProtocolAndHost(connection.getServiceEndpoint()) + "(.*)") ||
-                    ("/"+endpointReference).matches("/?" + Utilities.stripUrlOfProtocolAndHost(connection.getServiceEndpoint()) + "(.*)")){
+            if (endpointReference.matches("/?" + Utilities.stripUrlOfProtocolAndHost(connection.getServiceEndpoint()) + "(.*)") ||
+                    ("/" + endpointReference).matches("/?" + Utilities.stripUrlOfProtocolAndHost(connection.getServiceEndpoint()) + "(.*)")) {
                 return connection;
             }
 

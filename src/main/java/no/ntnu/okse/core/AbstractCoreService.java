@@ -28,7 +28,7 @@ import org.apache.log4j.Logger;
 
 /**
  * Created by Aleksander Skraastad (myth) on 4/18/15.
- * <p>
+ * <p/>
  * okse is licenced under the MIT licence.
  */
 public abstract class AbstractCoreService {
@@ -39,6 +39,7 @@ public abstract class AbstractCoreService {
 
     /**
      * Protected constructor that takes in the className string from the subclass (for logger initializing)
+     *
      * @param className
      */
     protected AbstractCoreService(String className) {

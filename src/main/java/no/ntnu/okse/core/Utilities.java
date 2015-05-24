@@ -22,6 +22,7 @@ public class Utilities {
 
     /**
      * Returns a ISO 8601 HH:mm:ss.SSS formated string of a Duration object
+     *
      * @param duration A Duration object
      * @return The formated string in HH:mm:ss.SSS format
      */
@@ -33,6 +34,7 @@ public class Utilities {
 
     /**
      * Retrieve a set of properties from a .properties configuration file
+     *
      * @param path The relative path to the configuration file (including filenam)
      * @return A Properties object containing the data from the configuration file, null if errors during read.
      */

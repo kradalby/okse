@@ -25,21 +25,14 @@
 package no.ntnu.okse.protocol.amqp;
 
 import no.ntnu.okse.core.messaging.MessageService;
-import no.ntnu.okse.core.topic.Topic;
-import no.ntnu.okse.core.topic.TopicService;
-import org.apache.commons.validator.routines.InetAddressValidator;
 import org.apache.log4j.Logger;
 import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Section;
-import org.apache.qpid.proton.engine.BaseHandler;
-import org.apache.qpid.proton.engine.Delivery;
-import org.apache.qpid.proton.engine.Event;
-import org.apache.qpid.proton.engine.Link;
-import org.apache.qpid.proton.engine.Receiver;
-import org.apache.qpid.proton.engine.Sender;
+import org.apache.qpid.proton.engine.*;
 import org.apache.qpid.proton.message.Message;
 import org.apache.qpid.proton.messenger.impl.Address;
+
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -47,7 +40,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 /**
  * This code is a heavily modified version of the qpid-proton-demo (https://github.com/rhs/qpid-proton-demo) by Rafael Schloming
  * Created by kradalby on 24/04/15.
- *
  */
 public class AMQPServer extends BaseHandler {
 
@@ -83,7 +75,8 @@ public class AMQPServer extends BaseHandler {
         }
     }
 
-    public static class TestMessageStore extends MessageStore {}
+    public static class TestMessageStore extends MessageStore {
+    }
 
     public static TestMessageStore createMessageStoreFactory() {
         return new TestMessageStore();
@@ -105,6 +98,7 @@ public class AMQPServer extends BaseHandler {
 
     /**
      * Get the tag for the next message as a byte array.
+     *
      * @return byte[]
      */
     private byte[] nextTag() {
@@ -115,8 +109,9 @@ public class AMQPServer extends BaseHandler {
      * Send a AMQP message with address and sender.
      * If sender is null, the sender will be chosen
      * at random from the queue for this address
+     *
      * @param address / topic / queue
-     * @param snd Sender object or null
+     * @param snd     Sender object or null
      * @return int of sent bytes
      */
     private int send(String address, Sender snd) {
@@ -154,6 +149,7 @@ public class AMQPServer extends BaseHandler {
      * this method will choose either use Topic
      * or Queue based on the configuration of
      * OKSE.
+     *
      * @param address / topic / queue
      * @return int of bytes sent
      */
@@ -192,6 +188,7 @@ public class AMQPServer extends BaseHandler {
 
     /**
      * Convert a OKSE message to AMQP and add it the the message queue.
+     *
      * @param message
      */
     public void addMessageToQueue(no.ntnu.okse.core.messaging.Message message) {
@@ -213,6 +210,7 @@ public class AMQPServer extends BaseHandler {
     /**
      * Convert a AMQP message object to a MessageBytes Object.
      * MessageBytes is basically a wrapper around a byte array.
+     *
      * @param msg
      * @return MessageBytes object
      */
@@ -229,19 +227,20 @@ public class AMQPServer extends BaseHandler {
     /**
      * Get an AMQP message as a byte array.
      * This method uses qualified guessing to achieve its goal.
+     *
      * @param msg
      * @return byte[]
      */
     private static byte[] gestimateMessageByteSize(Message msg) {
 
         int guestimateByteSize = 0;
-        if(msg.getBody().toString().length() != 0){
+        if (msg.getBody().toString().length() != 0) {
             guestimateByteSize += msg.getBody().toString().getBytes().length;
         }
-        if(msg.getAddress().getBytes().length != 0){
+        if (msg.getAddress().getBytes().length != 0) {
             guestimateByteSize += msg.getAddress().getBytes().length;
         }
-        if(msg.getSubject().getBytes().length != 0){
+        if (msg.getSubject().getBytes().length != 0) {
             guestimateByteSize += msg.getSubject().getBytes().length;
         }
         int encoded;
@@ -253,7 +252,7 @@ public class AMQPServer extends BaseHandler {
                 encoded = msg.encode(buffer, 0, buffer.length);
                 break;
             } catch (java.nio.BufferOverflowException e) {
-                buffer = new byte[buffer.length+1];
+                buffer = new byte[buffer.length + 1];
             }
         }
 
@@ -262,6 +261,7 @@ public class AMQPServer extends BaseHandler {
 
     /**
      * Convert a OKSE message to a AMQP Message.
+     *
      * @param message
      * @return AMQP message
      */
@@ -270,7 +270,7 @@ public class AMQPServer extends BaseHandler {
 
         Section body = new AmqpValue(message.getMessage());
 
-        msg.setAddress(AMQProtocolServer.getInstance().getHost() +"/" + message.getTopic());
+        msg.setAddress(AMQProtocolServer.getInstance().getHost() + "/" + message.getTopic());
         msg.setSubject("OKSE translated message");
         msg.setBody(body);
         return msg;
@@ -310,6 +310,7 @@ public class AMQPServer extends BaseHandler {
      * a OKSE message and pass it into the MessageService.
      * It will also add AMQP messages back into the
      * internal AMQP queue to generate less overhead.
+     *
      * @param event
      */
     @Override
@@ -360,11 +361,11 @@ public class AMQPServer extends BaseHandler {
     }
 
     public static no.ntnu.okse.core.messaging.Message convertAMQPmessageToOkseMessage(Message AMQPMessage, Address address) {
-        AmqpValue amqpMessageBodyString = (AmqpValue)AMQPMessage.getBody();
+        AmqpValue amqpMessageBodyString = (AmqpValue) AMQPMessage.getBody();
 
         no.ntnu.okse.core.messaging.Message okseMessage =
                 new no.ntnu.okse.core.messaging.Message(
-                        (String)amqpMessageBodyString.getValue(),
+                        (String) amqpMessageBodyString.getValue(),
                         address.getName(),
                         null,
                         AMQProtocolServer.getInstance().getProtocolServerType()
@@ -388,7 +389,6 @@ public class AMQPServer extends BaseHandler {
 
         return address;
     }
-
 
 
 }

@@ -26,7 +26,6 @@ package no.ntnu.okse.core;
 
 import no.ntnu.okse.Application;
 import no.ntnu.okse.core.event.Event;
-
 import no.ntnu.okse.core.event.SystemEvent;
 import no.ntnu.okse.core.messaging.Message;
 import no.ntnu.okse.core.messaging.MessageService;
@@ -37,14 +36,15 @@ import no.ntnu.okse.protocol.ProtocolServer;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Properties;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * Created by Aleksander Skraastad (myth) on 2/25/15.
- * <p>
+ * <p/>
  * okse is licenced under the MIT licence.
  */
 public class CoreService extends AbstractCoreService {
@@ -75,6 +75,7 @@ public class CoreService extends AbstractCoreService {
 
     /**
      * Main instanciation method adhering to the singleton pattern
+     *
      * @return The CoreService instance
      */
     public static CoreService getInstance() {
@@ -160,7 +161,7 @@ public class CoreService extends AbstractCoreService {
                 log.debug("Consumed an event: " + e);
                 // Are we shutting down protocol servers?
                 if (e.getType().equals(SystemEvent.Type.SHUTDOWN_PROTOCOL_SERVERS)) stopAllProtocolServers();
-                // Are we booting protocol servers?
+                    // Are we booting protocol servers?
                 else if (e.getType().equals(SystemEvent.Type.BOOT_PROTOCOL_SERVERS)) bootProtocolServers();
             } catch (InterruptedException e) {
                 log.error("Interrupted while attempting to fetch next event from eventQueue");
@@ -202,6 +203,7 @@ public class CoreService extends AbstractCoreService {
 
     /**
      * This command executes a job implementing the Runnable interface
+     *
      * @param r The Runnable job to be executed
      */
     public void execute(Runnable r) {
@@ -210,7 +212,8 @@ public class CoreService extends AbstractCoreService {
 
     /**
      * Fetches the eventQueue.
-     * <p>
+     * <p/>
+     *
      * @return The eventQueue list
      */
     public LinkedBlockingQueue<Event> getEventQueue() {
@@ -219,14 +222,18 @@ public class CoreService extends AbstractCoreService {
 
     /**
      * Fetches the ExecutorService responsible for running tasks
-     * <p>
+     * <p/>
+     *
      * @return The ExecutorService
      */
-    public ExecutorService getExecutor() { return executor; }
+    public ExecutorService getExecutor() {
+        return executor;
+    }
 
     /**
      * This method takes in an instance extending the AbstractCoreService class, the foundation for all OKSE
      * core extensions and registers it to the Core Service for startup and execution
+     *
      * @param service
      */
     public void registerService(AbstractCoreService service) {
@@ -238,6 +245,7 @@ public class CoreService extends AbstractCoreService {
      * This method takes in an instance extending the AbstractCoreService class, the foundation for all OKSE
      * core extensions, and removes it from the set of registered services. Thir process will first invoke
      * the stop() method on the service.
+     *
      * @param service
      */
     public void removeService(AbstractCoreService service) {
@@ -253,6 +261,7 @@ public class CoreService extends AbstractCoreService {
 
     /**
      * Retrieves a service based on its class. Can be used to test if a service is registered
+     *
      * @param serviceClass The class of the service to fetch
      * @return A core service extending AbstractCoreService
      */
@@ -265,6 +274,7 @@ public class CoreService extends AbstractCoreService {
 
     /**
      * Adds a protocolserver to the protocolservers list.
+     *
      * @param ps: An instance of a subclass of AbstractProtocolServer that implements ProtocolServer
      */
     public void addProtocolServer(ProtocolServer ps) {
@@ -273,6 +283,7 @@ public class CoreService extends AbstractCoreService {
 
     /**
      * Removes a protocolserver to the protocolservers list.
+     *
      * @param ps: An instance of a subclass of AbstractProtocolServer that implements ProtocolServer
      */
     public void removeProtocolServer(ProtocolServer ps) {
@@ -281,6 +292,7 @@ public class CoreService extends AbstractCoreService {
 
     /**
      * Statistics for total number of requests that has passed through all protocol servers
+     *
      * @return: An integer representing the total amount of requests.
      */
     public int getTotalRequestsFromProtocolServers() {
@@ -289,6 +301,7 @@ public class CoreService extends AbstractCoreService {
 
     /**
      * Statistics for total number of messages that has been received through all protocol servers
+     *
      * @return: An integer representing the total amount of messages received.
      */
     public int getTotalMessagesReceivedFromProtocolServers() {
@@ -297,6 +310,7 @@ public class CoreService extends AbstractCoreService {
 
     /**
      * Statistics for total number of messages that has been sent through all protocol servers
+     *
      * @return An integer representing the total number of messages sent
      */
     public int getTotalMessagesSentFromProtocolServers() {
@@ -305,6 +319,7 @@ public class CoreService extends AbstractCoreService {
 
     /**
      * Statistics for total number of bad or malformed requests that has passed through all protocol servers
+     *
      * @return: An integer representing the total amount of bad or malformed requests
      */
     public int getTotalBadRequestsFromProtocolServers() {
@@ -313,6 +328,7 @@ public class CoreService extends AbstractCoreService {
 
     /**
      * Statistics for total number of errors generated through all protocol servers
+     *
      * @return: An integer representing the total amount of errors from protocol servers.
      */
     public int getTotalErrorsFromProtocolServers() {
@@ -331,12 +347,13 @@ public class CoreService extends AbstractCoreService {
 
     /**
      * Helper method to fetch a protocol server defined by the actual Class
+     *
      * @param className: The class which the protocol server should be an actual instance of (e.g not subclass etc)
      * @return The ProtocolServer that matches the specified Class, null otherwise. If not null, the returned object
-     *         can be safely cast to the specified Class.
+     * can be safely cast to the specified Class.
      */
     public ProtocolServer getProtocolServer(Class className) {
-        for (ProtocolServer ps: protocolServers) {
+        for (ProtocolServer ps : protocolServers) {
             if (className.equals(ps.getClass())) return ps;
         }
         return null;
@@ -390,13 +407,14 @@ public class CoreService extends AbstractCoreService {
 
     /**
      * Helper method to fetch a protocol server defined by a protocolServerType string.
+     *
      * @param protocolServerType: A string representing the type of the protocol server you want to fetch.
      * @return The ProtocolServer that matches the specified string, null otherwise. If not null, the returned object
-     *         can be safely cast to the class that has a defined protocolServerType field equal to the specified
-     *         argument.
+     * can be safely cast to the class that has a defined protocolServerType field equal to the specified
+     * argument.
      */
     public ProtocolServer getProtocolServer(String protocolServerType) {
-        for (ProtocolServer ps: protocolServers) {
+        for (ProtocolServer ps : protocolServers) {
             if (ps.getProtocolServerType().equalsIgnoreCase(protocolServerType)) return ps;
         }
         return null;
@@ -407,7 +425,9 @@ public class CoreService extends AbstractCoreService {
     /**
      * Helper method that boots all registered core services
      */
-    private void bootCoreServices() { services.forEach(s -> s.boot()); }
+    private void bootCoreServices() {
+        services.forEach(s -> s.boot());
+    }
 
     /**
      * Helper method that boots all added protocolservers

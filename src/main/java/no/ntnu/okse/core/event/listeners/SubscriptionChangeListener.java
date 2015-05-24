@@ -28,7 +28,7 @@ import no.ntnu.okse.core.event.SubscriptionChangeEvent;
 
 /**
  * Created by Aleksander Skraastad (myth) on 4/5/15.
- * <p>
+ * <p/>
  * okse is licenced under the MIT licence.
  */
 public interface SubscriptionChangeListener {

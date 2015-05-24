@@ -4,7 +4,6 @@ import no.ntnu.okse.web.WebSecurityConfig;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,6 +27,7 @@ public class PasswordChangeController {
 
     /**
      * This method returns the changePassword view if the user is logged in (index page if not)
+     *
      * @return The view to render
      */
     @RequestMapping(method = RequestMethod.GET, value = CHANGE_PASSWORD)
@@ -44,9 +44,10 @@ public class PasswordChangeController {
 
     /**
      * This method changes the users password if it's valid
-     * @param firstPW First password entered by the user
-     * @param secondPW Second password entered by the user
-     * @param model A model to add attributes to for rendering
+     *
+     * @param firstPW            First password entered by the user
+     * @param secondPW           Second password entered by the user
+     * @param model              A model to add attributes to for rendering
      * @param redirectAttributes A model to add attributes which are redirect to another view
      * @return The view to render
      */
@@ -54,14 +55,14 @@ public class PasswordChangeController {
     public String changePasswordPost(@RequestParam(value = "password1") String firstPW,
                                      @RequestParam(value = "password2") String secondPW, Model model, RedirectAttributes redirectAttributes) {
         log.debug("Changing password");
-        if (! firstPW.equals(secondPW)) {
+        if (!firstPW.equals(secondPW)) {
             model.addAttribute("errorMessage", "Passwords must be equal!");
             // add message, not same
             log.debug("Unable to change password, not equal");
             return "fragments/changePassword";
         }
 
-        if (! WebSecurityConfig.changeUserPassword(firstPW)) {
+        if (!WebSecurityConfig.changeUserPassword(firstPW)) {
             // add message, unable
             model.addAttribute("errorMessage", "Unable to change password!");
             log.debug("Unable to change password.");

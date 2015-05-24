@@ -32,7 +32,7 @@ import javax.sql.DataSource;
 
 /**
  * Created by Håkon Ødegård Løvdal (hakloev) on 05/03/15.
- *
+ * <p/>
  * okse is licenced under the MIT licence.
  */
 @Configuration
@@ -40,6 +40,7 @@ public class DatabaseConfig {
 
     /**
      * Defines a Bean for Spring. Creates an connection driver to the database
+     *
      * @return The database driver
      */
     @Bean(name = "dataSource")

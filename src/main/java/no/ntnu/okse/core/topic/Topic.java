@@ -36,7 +36,7 @@ import java.util.Iterator;
 
 /**
  * Created by Aleksander Skraastad (myth) on 4/5/15.
- * <p>
+ * <p/>
  * okse is licenced under the MIT licence.
  */
 @JsonIgnoreProperties({"parent", "children", "type"})
@@ -94,12 +94,16 @@ public class Topic {
 
     /**
      * Returns the id of this topic
+     *
      * @return A string containing the id of this topic node
      */
-    public String getTopicID() { return topicID; }
+    public String getTopicID() {
+        return topicID;
+    }
 
     /**
      * Returns the name of this topic.
+     *
      * @return A string containing the name of this topic node.
      */
     public String getName() {
@@ -108,12 +112,16 @@ public class Topic {
 
     /**
      * Sets the name of this topic
+     *
      * @param name A string representing the name of this topic
      */
-    public void setName(String name) { this.name = name; }
+    public void setName(String name) {
+        this.name = name;
+    }
 
     /**
      * Returns the name of this topic in ignorecase (lowercase) mode.
+     *
      * @return A lowercase string representation of the name of this topic.
      */
     public String getNameIgnoreCase() {
@@ -122,6 +130,7 @@ public class Topic {
 
     /**
      * Returns the textual type representation of this topic.
+     *
      * @return A string containing the type of this topic.
      */
     public String getType() {
@@ -130,6 +139,7 @@ public class Topic {
 
     /**
      * Sets the type of this topic.
+     *
      * @param type A string containing a textual representation of the topic type.
      */
     public void setType(String type) {
@@ -138,6 +148,7 @@ public class Topic {
 
     /**
      * Returns the parent topic node of this topic instance.
+     *
      * @return The parent Topic node of this topic instance.
      */
     public Topic getParent() {
@@ -146,6 +157,7 @@ public class Topic {
 
     /**
      * Sets a new parent topic node for this topic instance, and updates the children for the new parent.
+     *
      * @param newParent A Topic instance to be the new parent of this topic node, or null if it is to be converted to a root node.
      */
     public void setParent(Topic newParent) {
@@ -157,7 +169,7 @@ public class Topic {
             }
             // Add ourselves to the children set of the new parent
             if (!newParent.children.contains(this)) newParent.children.add(this);
-        // We are removing the parent of this node, converting it to a root node.
+            // We are removing the parent of this node, converting it to a root node.
         } else {
             // Remove ourselves from the children set of the existing parent
             this.parent.children.remove(this);
@@ -168,6 +180,7 @@ public class Topic {
 
     /**
      * Adds a topic as a child of this topic node.
+     *
      * @param topic The topic to be added as a child node.
      */
     public void addChild(@NotNull Topic topic) {
@@ -177,6 +190,7 @@ public class Topic {
 
     /**
      * Removes a topic from the list of children.
+     *
      * @param topic The topic to be removed.
      */
     public void removeChild(@NotNull Topic topic) {
@@ -186,6 +200,7 @@ public class Topic {
 
     /**
      * Get a HashSet of the children of this node.
+     *
      * @return A shallow copy of the children set for this node, to prevent alterations to set set itself outside setters.
      */
     public HashSet<Topic> getChildren() {
@@ -205,6 +220,7 @@ public class Topic {
 
     /**
      * Checks to see wether this topic is the root node in the hierarchy.
+     *
      * @return true if this is the root node, false otherwise.
      */
     public boolean isRoot() {
@@ -214,6 +230,7 @@ public class Topic {
 
     /**
      * Checks to see wether this topic is a leaf node in the hierarchy.
+     *
      * @return true if this is a leaf node, false otherwise.
      */
     public boolean isLeaf() {
@@ -222,6 +239,7 @@ public class Topic {
 
     /**
      * Traverses up the tree quasi-recursively to generate a complete topic string.
+     *
      * @return A string containing the full topic path of this node.
      */
     public String getFullTopicString() {
@@ -235,6 +253,7 @@ public class Topic {
 
     /**
      * Traverses up the tree quasi-recursively to generate a complete topic string.
+     *
      * @return A string containing the full topic path of this node.
      */
     public String getFullTopicStringIgnoreCase() {
@@ -247,6 +266,7 @@ public class Topic {
 
     /**
      * Checks if this topic is the ancestor of another topic
+     *
      * @param other The topic node we wish to explore if is a decendant of this topic node
      * @return True if this topic is an ancestor of the argument, false otherwise
      */
@@ -255,10 +275,10 @@ public class Topic {
         // If the other is a root node, it is impossible that this object is an ancestor of it
         if (other.isRoot()) return false;
 
-        // If the other's parent is this object, we hace a match
+            // If the other's parent is this object, we hace a match
         else if (other.getParent() == this) return true;
 
-        // Recursively ascend up the family tree
+            // Recursively ascend up the family tree
         else return this.isAncestorOf(other.getParent());
     }
 

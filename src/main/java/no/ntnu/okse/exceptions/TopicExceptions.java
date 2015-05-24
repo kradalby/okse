@@ -26,7 +26,7 @@ package no.ntnu.okse.exceptions;
 
 /**
  * Created by Aleksander Skraastad (myth) on 4/11/15.
- * <p>
+ * <p/>
  * okse is licenced under the MIT licence.
  */
 public class TopicExceptions {
@@ -35,17 +35,20 @@ public class TopicExceptions {
      * Exception for when a root node was expected, but was in fact not.
      */
     public static class NonRootNodeException extends Exception {
-        public NonRootNodeException () {
+        public NonRootNodeException() {
 
         }
-        public NonRootNodeException (String message) {
-            super (message);
+
+        public NonRootNodeException(String message) {
+            super(message);
         }
-        public NonRootNodeException (Throwable cause) {
-            super (cause);
+
+        public NonRootNodeException(Throwable cause) {
+            super(cause);
         }
-        public NonRootNodeException (String message, Throwable cause) {
-            super (message, cause);
+
+        public NonRootNodeException(String message, Throwable cause) {
+            super(message, cause);
         }
     }
 }

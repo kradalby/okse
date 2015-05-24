@@ -29,17 +29,15 @@ import no.ntnu.okse.core.AbstractCoreService;
 import no.ntnu.okse.core.Utilities;
 import no.ntnu.okse.core.event.TopicChangeEvent;
 import no.ntnu.okse.core.event.listeners.TopicChangeListener;
-import no.ntnu.okse.core.subscription.SubscriptionService;
 import org.eclipse.jetty.util.ConcurrentHashSet;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.stream.Collectors;
 
 /**
  * Created by Aleksander Skraastad (myth) on 4/11/15.
- * <p>
+ * <p/>
  * okse is licenced under the MIT licence.
  */
 public class TopicService extends AbstractCoreService {
@@ -64,6 +62,7 @@ public class TopicService extends AbstractCoreService {
 
     /**
      * The getInstance method provides the public accessor for the TopicService instance, adhering to the singleton pattern.
+     *
      * @return The TopicService instance.
      */
     public static TopicService getInstance() {
@@ -99,7 +98,7 @@ public class TopicService extends AbstractCoreService {
 
                 String[] toMapToList = topicMapping.getProperty(toMapFrom).split(",");
 
-                for (String toMapTo: toMapToList) {
+                for (String toMapTo : toMapToList) {
                     addTopic(toMapTo);
                     addMappingBetweenTopics(toMapFrom, toMapTo);
                 }
@@ -136,8 +135,9 @@ public class TopicService extends AbstractCoreService {
 
     /**
      * This method Stops the TopicService
+     *
      * @throws InterruptedException An exception that might occur if thread is interrupted while waiting for put
-     * command thread lock to open up.
+     *                              command thread lock to open up.
      */
     public void stop() {
         _running = false;
@@ -168,6 +168,7 @@ public class TopicService extends AbstractCoreService {
 
     /**
      * Fetches the task queue.
+     *
      * @return A LinkedBlockingQueue that accepts TopicTask objects to be performed on the TopicService thread.
      */
     public LinkedBlockingQueue<TopicTask> getQueue() {
@@ -176,6 +177,7 @@ public class TopicService extends AbstractCoreService {
 
     /**
      * Retrieves the amount of topics currently registered.
+     *
      * @return An integer representing the total number of registered topics.
      */
     public Integer getTotalNumberOfTopics() {
@@ -184,6 +186,7 @@ public class TopicService extends AbstractCoreService {
 
     /**
      * Get all the root topic nodes as a shallow copy of the internal topic service hash set.
+     *
      * @return A HashSet of all the root topic nodes.
      */
     public HashSet<Topic> getAllRootTopics() {
@@ -198,6 +201,7 @@ public class TopicService extends AbstractCoreService {
 
     /**
      * Get all topic nodes.
+     *
      * @return A HashSet of all topic nodes.
      */
     public HashSet<Topic> getAllTopics() {
@@ -209,6 +213,7 @@ public class TopicService extends AbstractCoreService {
 
     /**
      * Get all leaf nodes as a shallow copy of the internal topic service hash set.
+     *
      * @return A HashSet of all leaf topic nodes.
      */
     public HashSet<Topic> getAllLeafTopics() {
@@ -223,6 +228,7 @@ public class TopicService extends AbstractCoreService {
 
     /**
      * Attempts to fetch a topic based on a raw topic string.
+     *
      * @param rawTopicString The topic string to use in search.
      * @return A Topic if we found one, null otherwise.
      */
@@ -233,6 +239,7 @@ public class TopicService extends AbstractCoreService {
 
     /**
      * Attempts to fetch a topic based on the ID
+     *
      * @param id The topic ID to use in the search
      * @return A topic if found, null otherwise.
      */
@@ -254,6 +261,7 @@ public class TopicService extends AbstractCoreService {
 
     /**
      * Get all mappings registered mappings in the system as a shallow copy.
+     *
      * @return A HashMap of all the registered mappings
      */
     public HashMap<String, HashSet<String>> getAllMappings() {
@@ -266,6 +274,7 @@ public class TopicService extends AbstractCoreService {
 
     /**
      * Attempts to fetch all mappings for a topic, based on the raw topic string
+     *
      * @param rawTopicString The string to identify the topic
      * @return A HashSet containing all the found topics, null otherwise
      */
@@ -273,7 +282,7 @@ public class TopicService extends AbstractCoreService {
         HashSet<Topic> result = new HashSet<>();
 
         if (mappings.containsKey(rawTopicString)) {
-          mappings.get(rawTopicString).forEach(topicToMapAgainst -> result.add(getTopic(topicToMapAgainst)));
+            mappings.get(rawTopicString).forEach(topicToMapAgainst -> result.add(getTopic(topicToMapAgainst)));
         }
 
         return (result.size() > 0) ? result : null;
@@ -283,6 +292,7 @@ public class TopicService extends AbstractCoreService {
 
     /**
      * This method should never be called from outside of a TopicTask processed through the TopicService queue.
+     *
      * @param t The topic to be added.
      */
     public void addTopicLocal(Topic t) {
@@ -294,6 +304,7 @@ public class TopicService extends AbstractCoreService {
     /**
      * Local removal of a topic from the allTopics hashmap. Do not call outside a TopicTask job instance,
      * using the deleteTopic public method, as that method will also identify and remove connected children nodes.
+     *
      * @param t The topic to be removed.
      */
     private void deleteTopicLocal(Topic t) {
@@ -308,6 +319,7 @@ public class TopicService extends AbstractCoreService {
 
     /**
      * Checks to see if a topic node exists in the TopicService.
+     *
      * @param topic The topic node instance to check.
      * @return true if it exists, false otherwise.
      */
@@ -317,6 +329,7 @@ public class TopicService extends AbstractCoreService {
 
     /**
      * Checks to see if a topic node exists based on the raw topic string.
+     *
      * @param topic The raw topic string you wish to check existance for.
      * @return true if it exists, false otherwise.
      */
@@ -331,9 +344,10 @@ public class TopicService extends AbstractCoreService {
      * nodes needed to represent the topic tree are returned in the hashSet. If a higher level Topic node
      * is found, only the non-existing nodes needed are created, linked together, and connected to the existing
      * Topic node through the parent field.
+     *
      * @param topic The full raw topic string you want to generate needed Topic nodes from
      * @return An empty set if we do not need create new nodes. A set of newly instanciated nodes that can be added
-     *         to the containers from the invoking method.
+     * to the containers from the invoking method.
      */
     public HashSet<Topic> generateTopicNodesFromRawTopicString(String topic) {
 
@@ -385,6 +399,7 @@ public class TopicService extends AbstractCoreService {
 
     /**
      * Removes a mapping by a mapping key
+     *
      * @param mapping The mapping represented as a string
      */
     public void deleteMapping(String mapping) {
@@ -399,6 +414,7 @@ public class TopicService extends AbstractCoreService {
     /**
      * Removes a Topic given by a full raw topic string. Also locates all potential children from this topic
      * and removes them aswell.
+     *
      * @param topic The full raw topic string representing the topic to be deleted
      */
     public void deleteTopic(String topic) {
@@ -432,14 +448,15 @@ public class TopicService extends AbstractCoreService {
 
     /**
      * Accepts two topic string and creates this topics. It also adds it to the mapping HashMap
+     *
      * @param fromTopic Topic to map from
-     * @param toTopic Topic to map to
+     * @param toTopic   Topic to map to
      */
     public void addMappingBetweenTopics(String fromTopic, String toTopic) {
         addTopic(fromTopic);
         addTopic(toTopic);
 
-        if (! mappings.containsKey(fromTopic)) {
+        if (!mappings.containsKey(fromTopic)) {
             mappings.put(fromTopic, new HashSet<String>(Arrays.asList(toTopic)));
         } else {
             mappings.get(fromTopic).add(toTopic);
@@ -449,6 +466,7 @@ public class TopicService extends AbstractCoreService {
 
     /**
      * Add a topic to the TopicService
+     *
      * @param topic The raw topic string that should be added. E.g "no/okse/current"
      */
     public void addTopic(String topic) {
@@ -486,6 +504,7 @@ public class TopicService extends AbstractCoreService {
 
     /**
      * This method allows registration for TopicChange listeners.
+     *
      * @param listener An object implementing the TopicChangeListener interface
      */
     public synchronized void addTopicChangeListener(TopicChangeListener listener) {
@@ -494,6 +513,7 @@ public class TopicService extends AbstractCoreService {
 
     /**
      * This method allows removal of TopicChange listeners.
+     *
      * @param listener The object implementing TopigChangeListener interface that is to be removed.
      */
     public synchronized void removeTopicChangeListener(TopicChangeListener listener) {
@@ -502,8 +522,9 @@ public class TopicService extends AbstractCoreService {
 
     /**
      * Public helper method to fire a topic change event on all listeners
+     *
      * @param topic The topic that has had an event
-     * @param type The type of topic event that occured
+     * @param type  The type of topic event that occured
      */
     public void fireTopicChangeEvent(Topic topic, TopicChangeEvent.Type type) {
         TopicChangeEvent topicEvent = new TopicChangeEvent(type, topic);

@@ -25,7 +25,6 @@
 package no.ntnu.okse.core.subscription;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import no.ntnu.okse.core.topic.Topic;
 import org.apache.log4j.Logger;
 import org.springframework.security.crypto.codec.Hex;
 
@@ -36,7 +35,7 @@ import java.util.HashSet;
 
 /**
  * Created by Aleksander Skraastad (myth) on 4/5/15.
- * <p>
+ * <p/>
  * okse is licenced under the MIT licence.
  */
 @JsonIgnoreProperties({"timeout"})
@@ -54,6 +53,7 @@ public class Subscriber {
 
     /**
      * Constructs a Subscriber object from the required fields
+     *
      * @param host
      * @param port
      * @param topic
@@ -98,6 +98,7 @@ public class Subscriber {
 
     /**
      * Check to see if the port is in valid range
+     *
      * @param port The port to be verified
      * @return True if it is valid, false otherwise
      */
@@ -107,6 +108,7 @@ public class Subscriber {
 
     /**
      * Retrieves the hostname of this subscriber
+     *
      * @return The host address of this subscriber
      */
     public String getHost() {
@@ -115,6 +117,7 @@ public class Subscriber {
 
     /**
      * Retrieves the port of this subscriber
+     *
      * @return The port of this subscriber
      */
     public Integer getPort() {
@@ -123,6 +126,7 @@ public class Subscriber {
 
     /**
      * Retrieves the full raw topic string of this subscriber
+     *
      * @return The topic this subscriber is subscribing to
      */
     public String getTopic() {
@@ -132,7 +136,7 @@ public class Subscriber {
     /**
      * Sets an attribute on this subscriber object
      *
-     * @param key The attribute key
+     * @param key   The attribute key
      * @param value The value of the key
      */
     public void setAttribute(String key, String value) {
@@ -145,6 +149,7 @@ public class Subscriber {
 
     /**
      * Retrieves the value correlated with the specified key
+     *
      * @param key The key to be queried
      * @return The value of the key if it exists, null otherwise
      */
@@ -155,6 +160,7 @@ public class Subscriber {
 
     /**
      * Retrieve the timeout for this subscriber
+     *
      * @return The timout if it should expire, null otherwise
      */
     public Long getTimeout() {
@@ -163,6 +169,7 @@ public class Subscriber {
 
     /**
      * Retrive the subscriber ID for this subscriber
+     *
      * @return The subscriber ID
      */
     public String getSubscriberID() {
@@ -171,15 +178,18 @@ public class Subscriber {
 
     /**
      * Sets the timeout for this subcriber (can be null if it should not expire)
+     *
      * @param timeout The time of expiry as seconds since unix epoch, null if infinite
      */
     public void setTimeout(Long timeout) {
-        if (timeout < System.currentTimeMillis()) throw new IllegalArgumentException("The timeout cannot be in the past.");
+        if (timeout < System.currentTimeMillis())
+            throw new IllegalArgumentException("The timeout cannot be in the past.");
         this.timeout = timeout;
     }
 
     /**
      * Check to see if this subscriber should expire
+     *
      * @return True if timeout is null, false otherwise
      */
     public boolean shouldExpire() {
@@ -189,6 +199,7 @@ public class Subscriber {
 
     /**
      * Add a message content filter to the subscriber
+     *
      * @param filterString The filterString to be added
      */
     public void addFilter(String filterString) {
@@ -198,6 +209,7 @@ public class Subscriber {
 
     /**
      * Removes a message content filter from the subscriber
+     *
      * @param filterString The filterString to be removed
      */
     public void removeFilter(String filterString) {
@@ -207,6 +219,7 @@ public class Subscriber {
 
     /**
      * Retrieve the set of message content filters on this subscriber object.
+     *
      * @return A shallow clone of the internal filter set.
      */
     public HashSet<String> getFilterSet() {
@@ -215,6 +228,7 @@ public class Subscriber {
 
     /**
      * Check to see if this subscriber has expired
+     *
      * @return True if this subscriber should expire and has expired
      */
     public boolean hasExpired() {
@@ -223,6 +237,7 @@ public class Subscriber {
 
     /**
      * Retrieve the originating protocol this subscriber used to subscribe
+     *
      * @return A string representing the originating protocol
      */
     public String getOriginProtocol() {
@@ -231,6 +246,7 @@ public class Subscriber {
 
     /**
      * Returns a textual representation of this subscriber object
+     *
      * @return
      */
     @Override

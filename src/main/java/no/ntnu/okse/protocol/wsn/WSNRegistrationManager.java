@@ -31,12 +31,10 @@ import no.ntnu.okse.core.subscription.SubscriptionService;
 import org.apache.log4j.Logger;
 import org.ntnunotif.wsnu.base.util.RequestInformation;
 import org.ntnunotif.wsnu.services.general.ExceptionUtilities;
-import org.ntnunotif.wsnu.services.general.ServiceUtilities;
 import org.ntnunotif.wsnu.services.implementations.notificationbroker.AbstractNotificationBroker;
 import org.ntnunotif.wsnu.services.implementations.publisherregistrationmanager.AbstractPublisherRegistrationManager;
 import org.oasis_open.docs.wsn.br_2.DestroyRegistration;
 import org.oasis_open.docs.wsn.br_2.DestroyRegistrationResponse;
-import org.oasis_open.docs.wsn.brw_2.PublisherRegistrationManager;
 import org.oasis_open.docs.wsn.brw_2.ResourceNotDestroyedFault;
 import org.oasis_open.docs.wsrf.rw_2.ResourceUnknownFault;
 
@@ -46,15 +44,13 @@ import javax.jws.WebResult;
 import javax.jws.WebService;
 import javax.jws.soap.SOAPBinding;
 import javax.xml.bind.annotation.XmlSeeAlso;
-import javax.xml.ws.Service;
-import javax.xml.ws.wsaddressing.W3CEndpointReference;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * Created by Aleksander Skraastad (myth) on 4/20/15.
- * <p>
+ * <p/>
  * okse is licenced under the MIT licence.
  */
 @WebService(targetNamespace = "http://docs.oasis-open.org/wsn/brw-2", name = "PublisherRegistrationManager")
@@ -81,6 +77,7 @@ public class WSNRegistrationManager extends AbstractPublisherRegistrationManager
 
     /**
      * Helper method that initializes this proxy manager with the reference to the OKSE SubscriptionService
+     *
      * @param service
      */
     public void initCoreSubscriptionService(SubscriptionService service) {
@@ -89,6 +86,7 @@ public class WSNRegistrationManager extends AbstractPublisherRegistrationManager
 
     /**
      * Check if the registrationKey already exists
+     *
      * @param registrationKey The registrationKey to check
      * @return True if the registrationKey exists, false otherwise
      */
@@ -98,6 +96,7 @@ public class WSNRegistrationManager extends AbstractPublisherRegistrationManager
 
     /**
      * Retrieves a collection of all the registered publisher reference keys
+     *
      * @return A collection of publisherReference keys
      */
     public Collection<String> getAllPublishers() {
@@ -106,7 +105,8 @@ public class WSNRegistrationManager extends AbstractPublisherRegistrationManager
 
     /**
      * The main method to add a publisher to the managing system, and the OKSE SubscriptionService
-     * @param p The Publisher object to be added
+     *
+     * @param p         The Publisher object to be added
      * @param pubHandle The WS-Nu PublisherHandle connected to the new Publisher
      */
     public void addPublisher(Publisher p, AbstractNotificationBroker.PublisherHandle pubHandle) {
@@ -117,6 +117,7 @@ public class WSNRegistrationManager extends AbstractPublisherRegistrationManager
 
     /**
      * Required method from the WS-Nu abstract class, IS NOT USED
+     *
      * @param s The Publisher key
      * @param l The TerminationTime in milliseconds since unix epoch
      */
@@ -153,6 +154,7 @@ public class WSNRegistrationManager extends AbstractPublisherRegistrationManager
     /**
      * This method uses the OKSE core subscription service to remove the subscriber,
      * and the awaits the callback from the publisherchangeevent to verify, and then remove from local maps
+     *
      * @param p The WS-Nu publisherRegistrationKey representing the publisher to be removed from the manager
      */
     @Override
@@ -164,6 +166,7 @@ public class WSNRegistrationManager extends AbstractPublisherRegistrationManager
 
     /**
      * Check wether or not we have a registered publisher with the provided registrationKey
+     *
      * @param p The registrationKey to check existance of
      * @return True if the manager knows the provided registrationKey, false otherwise
      */
@@ -183,17 +186,17 @@ public class WSNRegistrationManager extends AbstractPublisherRegistrationManager
 
     /**
      * This method implements the {@link org.oasis_open.docs.wsn.brw_2.PublisherRegistrationManager}'s DestroyRegistration.
-     *
+     * <p/>
      * The method conforms to the standard. Thus, any specifics can be found at
      * <href>http://docs.oasis-open.org/wsn/wsn-ws_brokered_notification-1.3-spec-os.htm#_Toc133294203</href>.
-     *
+     * <p/>
      * Note that the subscription-reference is contained in the request-url.
      *
      * @param destroyRegistrationRequest The parsed object.
      * @return The DestryoRegistrationtResponse if everything went fine.
      * @throws ResourceNotDestroyedFault This is thrown if either the publisher-reference is ill-formatted,
-     * or does not represent an existing publisher registration
-     * @throws ResourceUnknownFault As of 0.3 this is never thrown as WS-Resources is not implemented
+     *                                   or does not represent an existing publisher registration
+     * @throws ResourceUnknownFault      As of 0.3 this is never thrown as WS-Resources is not implemented
      */
     @Override
     @WebResult(name = "DestroyRegistrationResponse", targetNamespace = "http://docs.oasis-open.org/wsn/br-2", partName = "DestroyRegistrationResponse")
@@ -208,7 +211,7 @@ public class WSNRegistrationManager extends AbstractPublisherRegistrationManager
 
         // Iterate over the url parameters to extract the publisherReference
         for (Map.Entry<String, String[]> entry : requestInformation.getParameters().entrySet()) {
-            if(!entry.getKey().equals(WSN_PUBLISHER_TOKEN)){
+            if (!entry.getKey().equals(WSN_PUBLISHER_TOKEN)) {
                 continue;
             }
 
@@ -233,7 +236,7 @@ public class WSNRegistrationManager extends AbstractPublisherRegistrationManager
                 log.debug("Malformed subscription parameter");
                 ExceptionUtilities.throwResourceNotDestroyed("en", "Ill-formated subscription-parameter");
 
-            } else if(entry.getValue().length == 0) {
+            } else if (entry.getValue().length == 0) {
                 log.debug("Missing subscription parameter value");
                 ExceptionUtilities.throwResourceNotDestroyed("en", "Subscription-parameter is missing value");
             }
@@ -266,6 +269,7 @@ public class WSNRegistrationManager extends AbstractPublisherRegistrationManager
 
     /**
      * Event listener support for publisher change events from the OKSE SubscriptionService
+     *
      * @param e A PublisherChangeEvent containing the type of event and an associated Publisher object
      */
     @Override

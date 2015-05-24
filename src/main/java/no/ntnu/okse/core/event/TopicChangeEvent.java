@@ -28,7 +28,7 @@ import no.ntnu.okse.core.topic.Topic;
 
 /**
  * Created by Aleksander Skraastad (myth) on 4/11/15.
- * <p>
+ * <p/>
  * okse is licenced under the MIT licence.
  */
 public class TopicChangeEvent extends Event {
@@ -43,7 +43,7 @@ public class TopicChangeEvent extends Event {
 
     /**
      * Constructs an Event containing an operation, some data and a dataType.
-     * <p>
+     * <p/>
      *
      * @param data : An object containing the data payload.
      */
@@ -54,7 +54,7 @@ public class TopicChangeEvent extends Event {
 
     /**
      * A method to retrieve the data payload.
-     * <p>
+     * <p/>
      *
      * @return: An object containing the data payload casted to proper type.
      */

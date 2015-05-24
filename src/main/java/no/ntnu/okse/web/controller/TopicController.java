@@ -24,19 +24,20 @@
 
 package no.ntnu.okse.web.controller;
 
-import no.ntnu.okse.core.subscription.Subscriber;
 import no.ntnu.okse.core.subscription.SubscriptionService;
 import no.ntnu.okse.core.topic.Topic;
 import no.ntnu.okse.core.topic.TopicService;
 import org.apache.log4j.Logger;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 
 /**
  * Created by Håkon Ødegård Løvdal (hakloev) on 13/03/15.
- *
+ * <p/>
  * okse is licenced under the MIT licence.
  */
 @RestController
@@ -51,10 +52,13 @@ public class TopicController {
 
     /**
      * This method returns all topics registered in the TopicService
+     *
      * @return A JSON serialization of all registered topics
      */
     @RequestMapping(method = RequestMethod.GET, value = GET_ALL_TOPICS)
-    public @ResponseBody List<HashMap<String, Object>> getAlltopics() {
+    public
+    @ResponseBody
+    List<HashMap<String, Object>> getAlltopics() {
         TopicService ts = TopicService.getInstance();
         SubscriptionService ss = SubscriptionService.getInstance();
         HashSet<Topic> allTopics = ts.getAllTopics();
@@ -78,10 +82,13 @@ public class TopicController {
 
     /**
      * This method deletes all topics registered in the TopicService
+     *
      * @return A JSON serialized string
      */
     @RequestMapping(method = RequestMethod.DELETE, value = DELETE_ALL_TOPICS)
-    public @ResponseBody String deleteAllTopics() {
+    public
+    @ResponseBody
+    String deleteAllTopics() {
         log.info("Deleting all topics");
         TopicService ts = TopicService.getInstance();
         HashSet<Topic> allRootTopics = ts.getAllRootTopics();
@@ -92,16 +99,19 @@ public class TopicController {
 
     /**
      * This method returns a single topic registered in the TopicService, represented by a string id
+     *
      * @param id The topic id to search for
      * @return A JSON serialized Topic
      */
     @RequestMapping(method = RequestMethod.DELETE, value = DELETE_SINGLE_TOPIC)
-    public @ResponseBody HashMap<String, Object> deleteSingleTopic(@RequestParam(value = "topicID") String id) {
+    public
+    @ResponseBody
+    HashMap<String, Object> deleteSingleTopic(@RequestParam(value = "topicID") String id) {
         log.info("Deleting Topic with ID: " + id);
         TopicService ts = TopicService.getInstance();
         Topic t = ts.getTopicByID(id.trim());
         ts.deleteTopic(t.getFullTopicString());
-        HashMap<String, Object> result = new HashMap<String, Object>(){{
+        HashMap<String, Object> result = new HashMap<String, Object>() {{
             put("topicID", t.getTopicID());
             /*put("children", t.getChildren());*/
         }};

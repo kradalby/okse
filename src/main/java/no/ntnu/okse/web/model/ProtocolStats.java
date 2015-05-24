@@ -38,6 +38,7 @@ public class ProtocolStats {
 
     /**
      * Constructes a model for containing protocol stats to be serialized to JSON
+     *
      * @param protocolServer
      * @param totalMessagesSent
      * @param totalMessagesRecieved

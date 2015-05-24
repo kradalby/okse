@@ -32,11 +32,9 @@ import no.ntnu.okse.core.event.TopicChangeEvent;
 import no.ntnu.okse.core.event.listeners.PublisherChangeListener;
 import no.ntnu.okse.core.event.listeners.SubscriptionChangeListener;
 import no.ntnu.okse.core.event.listeners.TopicChangeListener;
-import no.ntnu.okse.core.topic.Topic;
 import no.ntnu.okse.core.topic.TopicService;
 import org.eclipse.jetty.util.ConcurrentHashSet;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
@@ -48,7 +46,7 @@ import java.util.stream.Collectors;
 
 /**
  * Created by Aleksander Skraastad (myth) on 4/5/15.
- * <p>
+ * <p/>
  * okse is licenced under the MIT licence.
  */
 public class SubscriptionService extends AbstractCoreService implements TopicChangeListener {
@@ -78,6 +76,7 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
 
     /**
      * The main instanciation method of SubscriptionService adhering to the singleton pattern
+     *
      * @return
      */
     public static SubscriptionService getInstance() {
@@ -196,6 +195,7 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
 
     /**
      * This helper method injects a task into the task queue and handles interrupt exceptions
+     *
      * @param task The SubscriptionTask to be executed
      */
     private void insertTask(SubscriptionTask task) {
@@ -209,6 +209,7 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
 
     /**
      * Service-local private method to add a Subscriber to the list of subscribers
+     *
      * @param s : A Subscriber instance with the proper fields set
      */
     private void addSubscriberLocal(Subscriber s) {
@@ -225,6 +226,7 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
 
     /**
      * Service-local private method to remove a subscriber from the list of subscribers
+     *
      * @param s : A Subscriber instance that exists in the subscribers set
      */
     private void removeSubscriberLocal(Subscriber s) {
@@ -241,7 +243,8 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
 
     /**
      * Service-local private method to renew the subscription for a particular subscriber
-     * @param s : The subscriber that is to be changed
+     *
+     * @param s       : The subscriber that is to be changed
      * @param timeout : The new timeout time represented as seconds since unix epoch
      */
     private void renewSubscriberLocal(Subscriber s, long timeout) {
@@ -258,6 +261,7 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
 
     /**
      * Service-local private method to pause the subscription for a particular subscriber
+     *
      * @param s : The subscriber that is to be paused
      */
     private void pauseSubscriberLocal(Subscriber s) {
@@ -274,6 +278,7 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
 
     /**
      * Service-local private method to reusme the subscription for a particular subscriber
+     *
      * @param s The subscriber that is to be resumed
      */
     private void resumeSubscriberLocal(Subscriber s) {
@@ -290,6 +295,7 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
 
     /**
      * Service-local private method to register a publisher to the publisher set
+     *
      * @param p : The publisher object that is to be registered
      */
     private void addPublisherLocal(Publisher p) {
@@ -306,6 +312,7 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
 
     /**
      * Service-local private method to unregister a publisher from the publisher set
+     *
      * @param p : A publisher object that exists in the publishers set
      */
     private void removePublisherLocal(Publisher p) {
@@ -325,6 +332,7 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
 
     /**
      * Public method to add a Subscriber
+     *
      * @param s The subscriber to be added
      */
     public void addSubscriber(Subscriber s) {
@@ -346,6 +354,7 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
 
     /**
      * Public method to remove a Subscriber
+     *
      * @param s A subscriber that exists in the subscribers set
      */
     public void removeSubscriber(Subscriber s) {
@@ -367,7 +376,8 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
 
     /**
      * Public method to renew a subscription
-     * @param s The subscriber object that is to be renewed
+     *
+     * @param s       The subscriber object that is to be renewed
      * @param timeout The new timeout of the subscription represented as seconds since unix epoch
      */
     public void renewSubscriber(Subscriber s, Long timeout) {
@@ -389,6 +399,7 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
 
     /**
      * Public method to pause a subscription
+     *
      * @param s The subciber object that is to be paused
      */
     public void pauseSubscriber(Subscriber s) {
@@ -410,6 +421,7 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
 
     /**
      * Public method to resume a subscription
+     *
      * @param s The subscriber object that is to be resumed
      */
     public void resumeSubscriber(Subscriber s) {
@@ -434,6 +446,7 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
 
     /**
      * Public method to register a publisher
+     *
      * @param p The publisher object that is to be registered
      */
     public void addPublisher(Publisher p) {
@@ -455,6 +468,7 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
 
     /**
      * Public method to unregister a publisher
+     *
      * @param p A publisher object that exists in the publishers set
      */
     public void removePublisher(Publisher p) {
@@ -479,6 +493,7 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
 
     /**
      * Attempt to locate a subscriber by the ID.
+     *
      * @param id : The ID for the subscriber
      * @return The subscriber, if found, null otherwise.
      */
@@ -498,6 +513,7 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
 
     /**
      * Retrieve a HashSet of all subscribers that have subscribed to a specific topic
+     *
      * @param topic A raw topic string of the topic to select subscribers from
      * @return A HashSet of Subscriber objects that have subscribed to the specified topic
      */
@@ -507,16 +523,17 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
 
         // Iterate over all subscribers
         getAllSubscribers().stream()
-                    // Only pass on those who match topic argument
-                    .filter(s ->  s.getTopic() == null || s.getTopic().equals(topic))
-                    // Collect in the results set
-                    .forEach(s -> results.add(s));
+                // Only pass on those who match topic argument
+                .filter(s -> s.getTopic() == null || s.getTopic().equals(topic))
+                        // Collect in the results set
+                .forEach(s -> results.add(s));
 
         return results;
     }
 
     /**
      * Retrieve a HashSet of all subscribers that have subscribed to a specific topic
+     *
      * @param topic A raw topic string of the topic to select subscribers from
      * @return A HashSet of Subscriber objects that have subscribed to the specified topic
      */
@@ -537,7 +554,7 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
     /**
      * Retrive a HashSet of all subscribers on the broker. This HashSet is a shallow clone of the internal
      * data structure, preventing unintended modification.
-     * 
+     *
      * @return A HashSet of Subscriber objects that have subscribed on the broker
      */
     public HashSet<Subscriber> getAllSubscribers() {
@@ -560,6 +577,7 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
 
     /**
      * Fetch the number of registered subscribers
+     *
      * @return The total number of subscribers
      */
     public int getNumberOfSubscribers() {
@@ -568,6 +586,7 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
 
     /**
      * Fetch the number of registered publishers
+     *
      * @return The total number of publishers
      */
     public int getNumberOfPublishers() {
@@ -588,6 +607,7 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
 
     /**
      * SubscriptionChange event listener support
+     *
      * @param s : An object implementing the SubscriptionChangeListener interface
      */
     public synchronized void addSubscriptionChangeListener(SubscriptionChangeListener s) {
@@ -596,6 +616,7 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
 
     /**
      * SubscriptionChange event listener support
+     *
      * @param s : An object implementing the SubscriptionChangeListener interface
      */
     public synchronized void removeSubscriptionChangeListener(SubscriptionChangeListener s) {
@@ -604,8 +625,9 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
 
     /**
      * Private helper method fo fire the subscriptionChange method on all listners.
-     * @param sub   : The particular subscriber object that has changed.
-     * @param type  : What type of action is associated with the subscriber object.
+     *
+     * @param sub  : The particular subscriber object that has changed.
+     * @param type : What type of action is associated with the subscriber object.
      */
     private void fireSubcriptionChangeEvent(Subscriber sub, SubscriptionChangeEvent.Type type) {
         SubscriptionChangeEvent sce = new SubscriptionChangeEvent(type, sub);
@@ -614,6 +636,7 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
 
     /**
      * PublisherChange event listener support
+     *
      * @param r : An object implementing the PublisherChangeListener interface
      */
     public synchronized void addPublisherChangeListener(PublisherChangeListener r) {
@@ -622,6 +645,7 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
 
     /**
      * PublisherChange event listener support
+     *
      * @param r : An object implementing the PublisherChangeListener interface
      */
     public synchronized void removePublisherChangeListener(PublisherChangeListener r) {
@@ -630,8 +654,9 @@ public class SubscriptionService extends AbstractCoreService implements TopicCha
 
     /**
      * Private helper method fo fire the publisherChange method on all listners.
-     * @param reg   : The particular publisher object that has changed.
-     * @param type  : What type of action is associated with the publisher object.
+     *
+     * @param reg  : The particular publisher object that has changed.
+     * @param type : What type of action is associated with the publisher object.
      */
     private void firePublisherChangeEvent(Publisher reg, PublisherChangeEvent.Type type) {
         PublisherChangeEvent pce = new PublisherChangeEvent(type, reg);
