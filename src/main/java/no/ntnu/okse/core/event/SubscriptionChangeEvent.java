@@ -58,6 +58,7 @@ public class SubscriptionChangeEvent extends Event {
 
     /**
      * Fetch the related Subscriber object.
+     *
      * @return The Subscriber object associated with this event.
      */
     @Override
@@ -67,6 +68,7 @@ public class SubscriptionChangeEvent extends Event {
 
     /**
      * Fetch the event type of this event.
+     *
      * @return A SubscriptionChangeEvent
      */
     @Override

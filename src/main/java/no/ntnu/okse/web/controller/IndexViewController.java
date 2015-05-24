@@ -24,25 +24,23 @@
 
 package no.ntnu.okse.web.controller;
 
+import no.ntnu.okse.Application;
 import no.ntnu.okse.core.CoreService;
 import no.ntnu.okse.core.Utilities;
 import no.ntnu.okse.core.subscription.SubscriptionService;
 import no.ntnu.okse.core.topic.TopicService;
 import no.ntnu.okse.protocol.amqp.AMQProtocolServer;
 import org.springframework.beans.factory.annotation.Value;
-import no.ntnu.okse.Application;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
 
-import java.net.*;
-import java.util.*;
-import java.util.logging.Logger;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Properties;
 
 /**
  * Created by Håkon Ødegård Løvdal (hakloev) on 25/02/15.
@@ -68,6 +66,7 @@ public class IndexViewController {
 
     /**
      * This method returns the view to render when a user tries to reach the '/'-url
+     *
      * @param model The model to configure
      * @return A string telling what HTML fragment to render
      */
@@ -87,7 +86,7 @@ public class IndexViewController {
         long totalRam = Runtime.getRuntime().totalMemory();
         long freeRam = Runtime.getRuntime().freeMemory();
 
-        model.addAttribute("projectName", appName + " (" + Application.VERSION  +")");
+        model.addAttribute("projectName", appName + " (" + Application.VERSION + ")");
         model.addAttribute("environment", createEnvironmentList());
         model.addAttribute("serverPort", serverPort);
         model.addAttribute("serverHost", serverHost);
@@ -105,7 +104,7 @@ public class IndexViewController {
         ArrayList<HashMap<String, Object>> protocols = new ArrayList<>();
 
         Application.cs.getAllProtocolServers().forEach(p -> {
-            protocols.add(new HashMap<String, Object>(){{
+            protocols.add(new HashMap<String, Object>() {{
                 put("host", p.getHost());
                 put("port", p.getPort());
                 put("type", p.getProtocolServerType());
@@ -121,6 +120,7 @@ public class IndexViewController {
 
     /**
      * Private helper method that creates a HashMap of some environment specifics
+     *
      * @return A HashMap containing JAVA information etc.
      */
     private HashMap<String, String> createEnvironmentList() {

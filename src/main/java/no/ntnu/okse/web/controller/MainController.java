@@ -31,13 +31,13 @@ import no.ntnu.okse.core.event.SystemEvent;
 import no.ntnu.okse.core.subscription.SubscriptionService;
 import no.ntnu.okse.core.topic.TopicService;
 import org.apache.log4j.Logger;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.lang.String;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 /**
  * Created by Håkon Ødegård Løvdal (hakloev) on 25/02/15.
@@ -60,10 +60,13 @@ public class MainController {
 
     /**
      * Returns all necessary information for rendering the main-pane
+     *
      * @return A HashMap containing all the information
      */
     @RequestMapping(method = RequestMethod.GET, value = MAIN_API)
-    public @ResponseBody HashMap<String, Object> main() {
+    public
+    @ResponseBody
+    HashMap<String, Object> main() {
         SubscriptionService ss = SubscriptionService.getInstance();
         TopicService ts = TopicService.getInstance();
         CoreService cs = CoreService.getInstance();
@@ -71,14 +74,14 @@ public class MainController {
         long totalRam = Runtime.getRuntime().totalMemory();
         long freeRam = Runtime.getRuntime().freeMemory();
 
-        HashMap<String, Object> result = new HashMap<String, Object>(){{
+        HashMap<String, Object> result = new HashMap<String, Object>() {{
             put("subscribers", ss.getNumberOfSubscribers());
             put("publishers", ss.getNumberOfPublishers());
             put("topics", ts.getTotalNumberOfTopics());
             put("totalMessages", cs.getTotalMessagesSentFromProtocolServers());
             put("uptime", Utilities.getDurationAsISO8601(Application.getRunningTime()));
             // Runtime statistics
-            put("runtimeStatistics", new HashMap<String, Object>(){{
+            put("runtimeStatistics", new HashMap<String, Object>() {{
                 put("cpuAvailable", Runtime.getRuntime().availableProcessors());
                 put("totalRam", totalRam / MB);
                 put("freeRam", freeRam / MB);
@@ -87,7 +90,7 @@ public class MainController {
             // Protocol information
             ArrayList<HashMap<String, Object>> protocols = new ArrayList<>();
             Application.cs.getAllProtocolServers().forEach(p -> {
-                protocols.add(new HashMap<String, Object>(){{
+                protocols.add(new HashMap<String, Object>() {{
                     put("host", p.getHost());
                     put("port", p.getPort());
                     put("type", p.getProtocolServerType());
@@ -102,10 +105,13 @@ public class MainController {
 
     /**
      * This method turns on/off the protocol servers registered in the CoreService
+     *
      * @return A message telling if the protocol servers are booted or not
      */
     @RequestMapping(method = RequestMethod.POST, value = PROTOCOL_POWER)
-    public @ResponseBody String powerProtocolServers() {
+    public
+    @ResponseBody
+    String powerProtocolServers() {
         CoreService cs = CoreService.getInstance();
 
         if (cs.protocolServersBooted) {

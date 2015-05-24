@@ -43,6 +43,7 @@ public class SystemEvent extends Event {
      * Constructs an Event containing an operation, some data and a dataType.
      * <p>
      *
+     * @param type : Type of SystemEvent
      * @param data : An object containing the data payload.
      */
     public SystemEvent(Type type, Object data) {

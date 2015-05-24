@@ -32,14 +32,12 @@ import no.ntnu.okse.core.messaging.MessageService;
 import no.ntnu.okse.core.subscription.Publisher;
 import no.ntnu.okse.core.subscription.Subscriber;
 import no.ntnu.okse.core.topic.TopicService;
-
 import org.apache.log4j.Logger;
 import org.ntnunotif.wsnu.base.internal.Hub;
 import org.ntnunotif.wsnu.base.net.NuNamespaceContextResolver;
 import org.ntnunotif.wsnu.base.topics.TopicUtils;
 import org.ntnunotif.wsnu.base.topics.TopicValidator;
 import org.ntnunotif.wsnu.base.util.InternalMessage;
-import org.ntnunotif.wsnu.base.util.Utilities;
 import org.ntnunotif.wsnu.services.eventhandling.PublisherRegistrationEvent;
 import org.ntnunotif.wsnu.services.eventhandling.SubscriptionEvent;
 import org.ntnunotif.wsnu.services.filterhandling.FilterSupport;
@@ -48,7 +46,6 @@ import org.ntnunotif.wsnu.services.general.HelperClasses;
 import org.ntnunotif.wsnu.services.general.ServiceUtilities;
 import org.ntnunotif.wsnu.services.general.WsnUtilities;
 import org.ntnunotif.wsnu.services.implementations.notificationbroker.AbstractNotificationBroker;
-
 import org.oasis_open.docs.wsn.b_2.*;
 import org.oasis_open.docs.wsn.br_2.RegisterPublisher;
 import org.oasis_open.docs.wsn.br_2.RegisterPublisherResponse;
@@ -115,6 +112,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
 
     /**
      * Returns the WSNSubscriptionManager associated with this broker proxy
+     *
      * @return The WSNSubscriptionManager instance
      */
     public WSNSubscriptionManager getProxySubscriptionManager() {
@@ -123,6 +121,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
 
     /**
      * Returns the WSNRegistrationManager associated with this broker proxy
+     *
      * @return The WSNRegistrationManager instance
      */
     public WSNRegistrationManager getProxyRegistrationManager() {
@@ -146,7 +145,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         // List the illegal hosts
         HashSet<String> illegal = new HashSet<>(Arrays.asList("0.0.0.0", "localhost", "127.0.0.1", pubWanHost));
         // Split at host port intersection
-        String [] parts = reference.split(":");
+        String[] parts = reference.split(":");
         // If the host is in illegal set
         if (illegal.contains(parts[0])) {
             // If not port was specified
@@ -160,8 +159,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
                         isLegal = false;
                     }
                 }
-            }
-            else {
+            } else {
                 // Attempt to split away potential subpath
                 String[] portSplit = parts[1].split("/");
                 Integer refPort = Integer.parseInt(portSplit[0]);
@@ -179,11 +177,13 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
             }
         }
         // If we found an illefal combination, throw the exception
-        if (!isLegal) ExceptionUtilities.throwSubscribeCreationFailedFault("en", "Invalid consumer reference. Would cause local loopback on the broker.");
+        if (!isLegal)
+            ExceptionUtilities.throwSubscribeCreationFailedFault("en", "Invalid consumer reference. Would cause local loopback on the broker.");
     }
 
     /**
      * Check if a subscription / registration -key exists
+     *
      * @param s The key to check existance for
      * @return True if the key exists, false otherwise
      */
@@ -195,6 +195,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
 
     /**
      * Fetch the collection of recipient subscriptionKeys
+     *
      * @return A collection containing the subscriptionKeys as strings
      */
     @Override
@@ -205,6 +206,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
 
     /**
      * Retrieves the endpointReference of a subscriber from its subscription key
+     *
      * @param subscriptionKey The subscription key representing the subscriber
      * @return A string containing the endpointReference of the subscriber
      */
@@ -216,8 +218,9 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
     /**
      * Override of the superclass method, this is to ensure that we reference the correct manager endpoint,
      * as WS-Nu only references the SUBSCRIPTION manager, not the publisherRegistrationManager
+     *
      * @param prefix The prefix-token to be used as URL param KEY
-     * @param key The SubscriptionKey or PublisherRegistrationKey used as URL param VALUE
+     * @param key    The SubscriptionKey or PublisherRegistrationKey used as URL param VALUE
      * @return A concatenated full URL of the appropriate endpoint, param key and param value
      */
     @Override
@@ -236,8 +239,9 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
 
     /**
      * Filters the recipients eligible for a notify
-     * @param s The subscriptionKey of the subscriber
-     * @param notify The Notify object to be checked
+     *
+     * @param s                          The subscriptionKey of the subscriber
+     * @param notify                     The Notify object to be checked
      * @param nuNamespaceContextResolver An instance of NuNameSpaceContextResolver
      * @return The Notify object if it passed validation, false otherwise
      */
@@ -269,7 +273,6 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
      *
      * @param notify               the {@link org.oasis_open.docs.wsn.b_2.Notify} to send
      * @param w3CEndpointReference the reference of the receiving endpoint
-     * @throws IllegalAccessException If not permitted
      */
     @WebMethod(exclude = true)
     public void sendSingleNotify(Notify notify, W3CEndpointReference w3CEndpointReference) {
@@ -299,7 +302,8 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
 
     /**
      * Sends a Notification message
-     * @param notify The Notify object containing the message(s)
+     *
+     * @param notify                   The Notify object containing the message(s)
      * @param namespaceContextResolver An instance of NuNameSpaceContextResolver
      */
     @Override
@@ -433,6 +437,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
     /**
      * Implementation of the NotificationBroker's notify. This method does nothing but forward the notify by calling
      * {@link #sendNotification(org.oasis_open.docs.wsn.b_2.Notify)}
+     *
      * @param notify The Notify object.
      */
     @Override
@@ -445,22 +450,23 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
 
     /**
      * The Subscribe request message as defined by the WS-N specification.
-     *
+     * <p>
      * More information can be found at http://docs.oasis-open.org/wsn/wsn-ws_base_notification-1.3-spec-os.htm#_Toc133735624
+     *
      * @param subscribeRequest A {@link org.oasis_open.docs.wsn.b_2.Subscribe} object.
      * @return A {@link org.oasis_open.docs.wsn.b_2.SubscribeResponse} if the subscription was added successfully.
-     * @throws NotifyMessageNotSupportedFault Never.
-     * @throws UnrecognizedPolicyRequestFault Never, policies will not be added until 2.0.
-     * @throws TopicExpressionDialectUnknownFault  If the topic expression was not valid.
-     * @throws ResourceUnknownFault Never, WS-Resources is not added as of 0.3
-     * @throws InvalidTopicExpressionFault If any topic expression added was invalid.
-     * @throws UnsupportedPolicyRequestFault Never, policies will not be added until 2.0
-     * @throws InvalidFilterFault If the filter was invalid.
+     * @throws NotifyMessageNotSupportedFault           Never.
+     * @throws UnrecognizedPolicyRequestFault           Never, policies will not be added until 2.0.
+     * @throws TopicExpressionDialectUnknownFault       If the topic expression was not valid.
+     * @throws ResourceUnknownFault                     Never, WS-Resources is not added as of 0.3
+     * @throws InvalidTopicExpressionFault              If any topic expression added was invalid.
+     * @throws UnsupportedPolicyRequestFault            Never, policies will not be added until 2.0
+     * @throws InvalidFilterFault                       If the filter was invalid.
      * @throws InvalidProducerPropertiesExpressionFault Never.
-     * @throws UnacceptableInitialTerminationTimeFault If the subscription termination time was invalid.
-     * @throws SubscribeCreationFailedFault If any internal or general fault occured during the processing of a subscription request.
-     * @throws TopicNotSupportedFault If the topic in some way is unknown or unsupported.
-     * @throws InvalidMessageContentExpressionFault Never.
+     * @throws UnacceptableInitialTerminationTimeFault  If the subscription termination time was invalid.
+     * @throws SubscribeCreationFailedFault             If any internal or general fault occured during the processing of a subscription request.
+     * @throws TopicNotSupportedFault                   If the topic in some way is unknown or unsupported.
+     * @throws InvalidMessageContentExpressionFault     Never.
      */
     @Override
     @WebMethod(operationName = "Subscribe")
@@ -480,7 +486,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         throwFaultIfConsumerRefWouldCauseLoopback(endpointReference);
 
         // EndpointReference is returned as "" from getAddress if something went wrong.
-        if(endpointReference.equals("")){
+        if (endpointReference.equals("")) {
             ExceptionUtilities.throwSubscribeCreationFailedFault("en", "EndpointReference malformatted or missing.");
         }
 
@@ -498,7 +504,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
 
         String requestAddress = "";
         Integer port = 80;
-        String stripped = endpointReference.replace("http://","").replace("https://","");
+        String stripped = endpointReference.replace("http://", "").replace("https://", "");
         if (stripped.contains(":")) {
             String[] components = stripped.split(":");
             try {
@@ -717,7 +723,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         String endpointReference = ServiceUtilities.getAddress(registerPublisherRequest.getPublisherReference());
 
         // EndpointReference is returned as "" from getAddress if something went wrong.
-        if(endpointReference.equals("")){
+        if (endpointReference.equals("")) {
             log.error("Failed to understand the endpoint reference");
             ExceptionUtilities.throwPublisherRegistrationFailedFault("en", "Could not register publisher, failed to " +
                     "understand the endpoint reference");
@@ -725,7 +731,7 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
 
         String requestAddress = "";
         Integer port = 80;
-        String stripped = endpointReference.replace("http://","").replace("https://","");
+        String stripped = endpointReference.replace("http://", "").replace("https://", "");
         if (stripped.contains(":")) {
             String[] components = stripped.split(":");
             try {

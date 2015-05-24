@@ -28,13 +28,10 @@ import no.ntnu.okse.Application;
 import no.ntnu.okse.core.messaging.Message;
 import no.ntnu.okse.core.subscription.SubscriptionService;
 import no.ntnu.okse.protocol.AbstractProtocolServer;
-
 import org.apache.log4j.Logger;
 import org.apache.qpid.proton.engine.Collector;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.channels.Pipe;
 import java.util.Properties;
 
 /**
@@ -133,8 +130,8 @@ public class AMQProtocolServer extends AbstractProtocolServer {
             SubscriptionService.getInstance().addSubscriptionChangeListener(sh);
             server = new AMQPServer(sh, false);
             driver = new Driver(collector, new Handshaker(),
-                new FlowController(1024), sh,
-                server);
+                    new FlowController(1024), sh,
+                    server);
             driver.listen(this.host, this.port);
             driver.run();
         } catch (IOException e) {
@@ -204,5 +201,7 @@ public class AMQProtocolServer extends AbstractProtocolServer {
         return sh;
     }
 
-    public boolean isShuttingDown() { return shuttingdown; }
+    public boolean isShuttingDown() {
+        return shuttingdown;
+    }
 }

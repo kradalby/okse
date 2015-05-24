@@ -29,13 +29,10 @@ import org.apache.log4j.Logger;
 import org.ntnunotif.wsnu.base.net.NuNamespaceContextResolver;
 import org.ntnunotif.wsnu.base.net.XMLParser;
 import org.ntnunotif.wsnu.base.topics.ConcreteEvaluator;
-import org.ntnunotif.wsnu.base.topics.FullEvaluator;
 import org.ntnunotif.wsnu.base.topics.SimpleEvaluator;
 import org.ntnunotif.wsnu.base.util.InternalMessage;
-import org.ntnunotif.wsnu.base.util.Utilities;
 import org.ntnunotif.wsnu.services.general.ExceptionUtilities;
 import org.ntnunotif.wsnu.services.general.ServiceUtilities;
-import org.ntnunotif.wsnu.services.general.WsnUtilities;
 import org.oasis_open.docs.wsn.b_2.*;
 import org.oasis_open.docs.wsn.bw_2.UnacceptableTerminationTimeFault;
 import org.w3c.dom.Document;
@@ -48,9 +45,6 @@ import javax.validation.constraints.NotNull;
 import javax.xml.bind.DatatypeConverter;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
-import javax.xml.datatype.DatatypeConfigurationException;
-import javax.xml.datatype.DatatypeFactory;
-import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.*;
@@ -61,7 +55,6 @@ import java.io.InputStream;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.GregorianCalendar;
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -88,8 +81,9 @@ public class WSNTools {
 
     /**
      * Generate a valid XML SOAP envelope containing a WS-Notification Notify
-     * @param topic The full raw topic path.
-     * @param dialect The namespace URI of the dialect used
+     *
+     * @param topic          The full raw topic path.
+     * @param dialect        The namespace URI of the dialect used
      * @param messageContent The full raw content of the message.
      * @return A complete WS-Notification Notify XML structure as a string
      */
@@ -131,6 +125,7 @@ public class WSNTools {
 
     /**
      * Generate a valid XML SOAP envelope containing a WS-Notification Notify
+     *
      * @param m An OKSE Message object containing topic, dialect and message
      * @return A complete WS-Notification Notify XML structure as a string
      */
@@ -143,6 +138,7 @@ public class WSNTools {
 
     /**
      * Extract the raw XML starting from a specific node, omitting XML declaration
+     *
      * @param node The XML Node to start discovery
      * @return A raw XML string representing the XML structure from the specified node
      */
@@ -173,6 +169,7 @@ public class WSNTools {
 
     /**
      * Takes in a raw XML string, and uses the WS-Nu XMLParser to unmarshal and link the XML nodes
+     *
      * @param rawXmlString The raw XML String to be parsed
      * @return A WS-Nu InternalMessage instance with the message attribute containing the parsed XML Structure
      */
@@ -189,6 +186,7 @@ public class WSNTools {
 
     /**
      * Create a WS-Notification Notify wrapper from OKSE Message object
+     *
      * @param m The OKSE Message object to transform
      * @return A WS-Notification Notify wrapper containing topic, dialect and message
      */
@@ -235,6 +233,7 @@ public class WSNTools {
 
     /**
      * Injects an XML sub-tree into the message content of a notify
+     *
      * @param object The Xml root subnode to be injected
      * @param notify The Notify object to be updated
      */
@@ -244,6 +243,7 @@ public class WSNTools {
 
     /**
      * Helper method that removes namespace prefixes from a topic expression
+     *
      * @param topicExpression The raw topic expression as a string
      * @return A rebuilt topic node set string without namespace prefixes
      */
@@ -280,6 +280,10 @@ public class WSNTools {
     /**
      * Helper method that takes in raw string content,
      *
+     * @param content : Notify content
+     * @param topic : Notify Topic
+     * @param prefix : Notify prefix
+     * @param namespace : Notify namespace
      * @return a notify with its context
      */
     public static NotifyWithContext buildNotifyWithContext(String content, String topic, String prefix, String namespace) {
@@ -332,6 +336,7 @@ public class WSNTools {
 
     /**
      * Helper method that uses the DOM factory to build an XML element Node and sets text content from argument
+     *
      * @param content The String text content
      * @return An XML Element containing the text argument
      */
@@ -353,6 +358,7 @@ public class WSNTools {
 
     /**
      * Helper method that extracts a subscription reference from raw subscriberequest response
+     *
      * @param subResponse The internalMessage containing the raw XML SubscribeResponse
      * @return A string with the complete URL + endpoint and params needed
      */
@@ -374,10 +380,10 @@ public class WSNTools {
      * Generates an InternalMessage containing a Subscribe request
      *
      * @param endpointReference The full address of the remote host to send the request to
-     * @param topic The topic to subscribe to (can be null)
+     * @param topic             The topic to subscribe to (can be null)
      * @param consumerReference The consumer reference, which is the address of the subscriber
-     * @param terminationTime An initialtermination time in milliseconds since epoch.
-     *                        Can be null to allow broker to use internal defaults.
+     * @param terminationTime   An initialtermination time in milliseconds since epoch.
+     *                          Can be null to allow broker to use internal defaults.
      * @return An InternalMessage with the Subscribe payload, preset with correct destination endpoint
      */
     public static InternalMessage generateSubscriptionRequestWithTopic(
@@ -413,17 +419,19 @@ public class WSNTools {
     /**
      * Checks if a string is formatted in XsdDatetime. This method has been copied from WS-Nu and done right.
      * Now validates months, days, hours, minutes and seconds in their actual ranges.
-     * @param
-     * @return
+     *
+     * @param time : String representation of XsdDatetime
+     * @return result of validation
      */
-    public static boolean isXsdDatetime(String time){
+    public static boolean isXsdDatetime(String time) {
         return time.matches("[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])T([0-1][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](Z|[-+](0[0-9]|1[0-2]):00)?");
     }
 
     /**
      * Checks if a string is a Xs:duration string with a regular expression.
-     * @param time
-     * @return
+     *
+     * @param time : String representation of Xs:duration
+     * @return result of validation
      */
     public static boolean isXsdDuration(String time) {
         return time.matches("^(-P|P)(([0-9]+Y)?([0-9]+M)?([0-9]+D)?)?(?:(T([0-9]+H)?([0-9]+M)?([0-9]+S)?))?");
@@ -432,10 +440,11 @@ public class WSNTools {
     /**
      * Extracts the endtime specified by a XsdDuration string. This method will return the duration specified, added on to
      * the systems current local time.
+     *
      * @param time The duration as specified by a XsdDuration string.
      * @return A timestamp
      */
-    public static long extractXsdDuration(String time){
+    public static long extractXsdDuration(String time) {
         Pattern years, months, days, hours, minutes, seconds;
         years = Pattern.compile("[0-9]+Y");
         months = Pattern.compile("[0-9]+M");
@@ -449,37 +458,37 @@ public class WSNTools {
         String times[] = time.split("T");
 
         Matcher matcher = years.matcher(times[0]);
-        if(matcher.find()){
-            milliseconds += 365L*24L*3600L*1000L*Long.parseLong(matcher.group().replace("Y", ""));
+        if (matcher.find()) {
+            milliseconds += 365L * 24L * 3600L * 1000L * Long.parseLong(matcher.group().replace("Y", ""));
         }
 
         matcher = months.matcher(times[0]);
-        if(matcher.find()){
-            milliseconds += 24L*30L*3600L*1000L*Long.parseLong(matcher.group().replace("M", ""));
+        if (matcher.find()) {
+            milliseconds += 24L * 30L * 3600L * 1000L * Long.parseLong(matcher.group().replace("M", ""));
         }
 
         matcher = days.matcher(times[0]);
-        if(matcher.find()){
-            milliseconds += 24L*3600L*1000L*Long.parseLong(matcher.group().replace("D", ""));
+        if (matcher.find()) {
+            milliseconds += 24L * 3600L * 1000L * Long.parseLong(matcher.group().replace("D", ""));
         }
 
-        if(times.length != 2) {
+        if (times.length != 2) {
             return milliseconds;
         }
 
         matcher = hours.matcher(times[1]);
-        if(matcher.find()){
-            milliseconds += 3600L*1000L*Long.parseLong(matcher.group().replace("H", ""));
+        if (matcher.find()) {
+            milliseconds += 3600L * 1000L * Long.parseLong(matcher.group().replace("H", ""));
         }
 
         matcher = minutes.matcher(times[1]);
-        if(matcher.find()){
-            milliseconds += 60L*1000L*Long.parseLong(matcher.group().replace("M", ""));
+        if (matcher.find()) {
+            milliseconds += 60L * 1000L * Long.parseLong(matcher.group().replace("M", ""));
         }
 
         matcher = seconds.matcher(times[1]);
-        if(matcher.find()){
-            milliseconds += 1000L*Long.parseLong(matcher.group().replace("S", ""));
+        if (matcher.find()) {
+            milliseconds += 1000L * Long.parseLong(matcher.group().replace("S", ""));
         }
 
         return milliseconds;
@@ -487,11 +496,12 @@ public class WSNTools {
 
     /**
      * Takes a termination-time string, represented either as XsdDuration or XsdDatetime, and returns it specified (end)date.
+     *
      * @param time The termination-time string: either XsdDuration or XsdDatetime.
      * @return The parsed termination time as a timestamp, long.
      * @throws UnacceptableTerminationTimeFault If the passed in {@link java.lang.String} was not a valid XsdDuration or XsdDatetime
-     * time, or if some {@link java.lang.RuntimeException} occurred during the extraction. This can be caused by the {@link javax.xml.bind.DatatypeConverter}
-     * which is used to parse XsdDatetime.
+     *                                          time, or if some {@link java.lang.RuntimeException} occurred during the extraction. This can be caused by the {@link javax.xml.bind.DatatypeConverter}
+     *                                          which is used to parse XsdDatetime.
      */
     public static long interpretTerminationTime(String time) throws UnacceptableTerminationTimeFault {
         try {
