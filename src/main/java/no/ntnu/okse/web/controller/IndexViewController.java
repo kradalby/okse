@@ -52,17 +52,18 @@ import java.util.logging.Logger;
 @Controller
 public class IndexViewController {
 
+    // Log4j logger
     private static org.apache.log4j.Logger log = org.apache.log4j.Logger.getLogger(IndexViewController.class.getName());
 
+    // Properties from the okse.properties file
     @Value("${spring.application.name}")
     private String appName;
-
     @Value("${ADMIN_PANEL_HOST}")
     private String serverHost;
-
     @Value("${server.port}")
     private int serverPort;
 
+    // System information
     private Properties environment = System.getProperties();
 
     /**

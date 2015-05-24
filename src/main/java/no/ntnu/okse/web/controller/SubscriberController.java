@@ -43,10 +43,12 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/subscriber")
 public class SubscriberController {
 
+    // URL routes
     private static final String GET_ALL_SUBSCRIBERS = "/get/all";
     private static final String DELETE_SINGLE_SUBSCRIBER = "/delete/single";
     private static final String DELETE_ALL_SUBSCRIBERS = "/delete/all";
 
+    // Log4j logger
     private static Logger log = Logger.getLogger(SubscriberController.class.getName());
 
     /**

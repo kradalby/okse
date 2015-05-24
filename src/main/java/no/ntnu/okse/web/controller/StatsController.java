@@ -29,6 +29,7 @@ import no.ntnu.okse.core.subscription.SubscriptionService;
 import no.ntnu.okse.core.topic.TopicService;
 import no.ntnu.okse.protocol.ProtocolServer;
 import no.ntnu.okse.web.model.ProtocolStats;
+import org.apache.log4j.Logger;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -46,7 +47,11 @@ import java.util.HashMap;
 @RequestMapping(value = "/api/statistics")
 public class StatsController {
 
+    // URL routes
     private static final String GET_STATS = "/get/all";
+
+    // Log4j logger
+    private static Logger log = Logger.getLogger(StatsController.class.getName());
 
     /**
      * Returnes all the information needed to refresh the stats-pane
