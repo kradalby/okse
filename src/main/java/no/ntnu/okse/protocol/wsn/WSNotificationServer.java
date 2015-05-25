@@ -24,14 +24,6 @@
 
 package no.ntnu.okse.protocol.wsn;
 
-import java.io.*;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.Properties;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 import com.google.common.io.ByteStreams;
 import no.ntnu.okse.Application;
 import no.ntnu.okse.core.messaging.Message;
@@ -41,9 +33,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
-import org.eclipse.jetty.client.api.Response;
-import org.eclipse.jetty.client.api.Result;
-import org.eclipse.jetty.client.util.BytesContentProvider;
 import org.eclipse.jetty.client.util.InputStreamContentProvider;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.http.HttpStatus;
@@ -293,7 +282,6 @@ public class WSNotificationServer extends AbstractProtocolServer {
             try {
                 // Initialize a plain HttpClient
                 this._client = new HttpClient();
-                this._client.setConnectTimeout(connectionTimeout * 1000L);
                 // Turn off following HTTP 30x redirects for the client
                 this._client.setFollowRedirects(false);
                 this._client.start();
@@ -655,19 +643,17 @@ public class WSNotificationServer extends AbstractProtocolServer {
             // Get message content, if any
             InternalMessage outgoingMessage;
             if (request.getContentLength() > 0) {
-<<<<<<< HEAD
-                log.debug("Content length was: " + request.getContentLength());
-=======
->>>>>>> develop
                 InputStream inputStream = request.getInputStream();
-                outgoingMessage = new InternalMessage(InternalMessage.STATUS_OK | InternalMessage.STATUS_HAS_MESSAGE | InternalMessage.STATUS_MESSAGE_IS_INPUTSTREAM, inputStream);
+                outgoingMessage = new InternalMessage(InternalMessage.STATUS_OK | InternalMessage.STATUS_HAS_MESSAGE, inputStream);
             } else if (isChunked) {
-                log.debug("Chunked transfer encoding!");
                 InputStream chunkedInputStream = request.getInputStream();
-
+                StringWriter swriter = new StringWriter();
+                IOUtils.copy(chunkedInputStream, swriter);
+                String rawRequest = swriter.toString();
+                log.debug(rawRequest);
                 outgoingMessage = new InternalMessage(
-                        InternalMessage.STATUS_OK | InternalMessage.STATUS_HAS_MESSAGE | InternalMessage.STATUS_MESSAGE_IS_INPUTSTREAM,
-                        chunkedInputStream);
+                        InternalMessage.STATUS_OK | InternalMessage.STATUS_HAS_MESSAGE,
+                        new ByteArrayInputStream(rawRequest.getBytes()));
             } else {
                 outgoingMessage = new InternalMessage(InternalMessage.STATUS_OK, null);
             }
@@ -721,7 +707,6 @@ public class WSNotificationServer extends AbstractProtocolServer {
                     outputStream.flush();
                     baseRequest.setHandled(true);
                     totalErrors.incrementAndGet();
-                    outputStream.close();
 
                     return;
                 }
@@ -832,7 +817,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
 
         /* Create the actual http-request*/
         org.eclipse.jetty.client.api.Request request = _client.newRequest(requestInformation.getEndpointReference());
-        _client.setIdleTimeout(2000);
+        request.timeout(connectionTimeout, TimeUnit.SECONDS);
 
         /* Try to send the message */
         try {
@@ -871,17 +856,9 @@ public class WSNotificationServer extends AbstractProtocolServer {
                     // Send the request to the specified endpoint reference
                     log.info("Sending message with content to " + requestInformation.getEndpointReference());
                     InputStream msg = (InputStream) message.getMessage();
-                    // There is a strange bug in the InputStreamContentProvider in the Jetty HTTP client
-                    // that causes illegalstate exception in the blocking version of the HTTP Client API,
-                    // when the content is large enough that Transfer-Encoding: Chunked is
-                    // set and used. Due to that, we simply cannot pass content as inputstream, and have to
-                    // pour the contents of the input stream into a stringwriter, and pass it as bytes.
-                    StringWriter stringWriter = new StringWriter();
-                    IOUtils.copy(msg, stringWriter);
-                    byte[] dataBytes = stringWriter.toString().getBytes();
-                    request.content(new BytesContentProvider(dataBytes), "application/soap+xml; charset=utf-8");
-                    ContentResponse response = request.send();
+                    request.content(new InputStreamContentProvider(msg), "application/soap+xml; charset=utf-8");
 
+                    ContentResponse response = request.send();
                     totalMessagesSent.incrementAndGet();
 
                     // Check what HTTP status we received, if is not A-OK, flag the internalmessage as fault
