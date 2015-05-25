@@ -67,6 +67,14 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.XMLConstants;
 import javax.xml.namespace.QName;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Properties;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by Aleksander Skraastad (myth) on 3/12/15.
@@ -139,6 +147,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
      * Constructor that takes in a port that the WSNServer jetty instance should
      * listen to.
      * <p>
+     *
      * @param host A string representing the host the WSNServer should bind to
      * @param port An integer representing the port the WSNServer should bind to.
      */
@@ -152,6 +161,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
      * Factory method providing an instance of WSNotificationServer, adhering to the
      * singleton pattern. (Using default port from config file.)
      * <p>
+     *
      * @return: The WSNotification instance.
      */
     public static WSNotificationServer getInstance() {
@@ -166,7 +176,6 @@ public class WSNotificationServer extends AbstractProtocolServer {
      *
      * @param host A string representing the hostname the server should bind to
      * @param port An integer representing the port WSNServer should bind to.
-     *
      * @return: The WSNotification instance.
      */
     public static WSNotificationServer getInstance(String host, Integer port) {
@@ -243,7 +252,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
             // Try to parse the configFile for WSNServer to set up the Server instance
             configResource = Resource.newSystemResource(wsnInternalConfigFile);
             XmlConfiguration config = new XmlConfiguration(configResource.getInputStream());
-            this._server = (Server)config.configure();
+            this._server = (Server) config.configure();
             // Remove the xmlxonfig connector
             this._server.removeConnector(this._server.getConnectors()[0]);
 
@@ -350,6 +359,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
 
     /**
      * Fetch the HashSet containing all WebServices registered to the protocol server
+     *
      * @return A HashSet of ServiceConnections for all the registered web services.
      */
     public HashSet<ServiceConnection> getServices() {
@@ -389,6 +399,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
 
     /**
      * Fetches the specified String representation of the Protocol that this ProtocolServer handles.
+     *
      * @return A string representing the name of the protocol that this ProtocolServer handles.
      */
     @Override
@@ -406,6 +417,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
     /**
      * Retrieve the default element name for non-XML messages that are to be wrapped in a soap enveloped
      * WSNotification Notify element. This element will be the first and only child of the Message element.
+     *
      * @return The default name of the content wrapper element
      */
     public static String getMessageContentWrapperElementName() {
@@ -514,6 +526,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
 
     /**
      * Fetches the complete URI of this ProtocolServer
+     *
      * @return A string representing the complete URI of this ProtocolServer
      */
     public String getURI() {
@@ -527,11 +540,12 @@ public class WSNotificationServer extends AbstractProtocolServer {
             return "http://" + DEFAULT_HOST + ":" + DEFAULT_PORT;
         }
         // Return the server connectors registered host and port
-        return "http://" + _singleton._server.getURI().getHost()+ ":" + (_singleton._server.getURI().getPort() > -1 ? _singleton._server.getURI().getPort() : DEFAULT_PORT);
+        return "http://" + _singleton._server.getURI().getHost() + ":" + (_singleton._server.getURI().getPort() > -1 ? _singleton._server.getURI().getPort() : DEFAULT_PORT);
     }
 
     /**
      * Returns the public WAN Host if behindNAT is true. If behindNAT is false, the value of host is returned.
+     *
      * @return The public WAN Host
      */
     public String getPublicWANHost() {
@@ -541,6 +555,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
 
     /**
      * Returns the public WAN Port if behindNAT is true. If behindNAT is false, the value of port is returned.
+     *
      * @return The public WAN Port
      */
     public Integer getPublicWANPort() {
@@ -550,6 +565,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
 
     /**
      * Registers the specified ServiceConnection to the ProtocolServer
+     *
      * @param webServiceConnector: The ServiceConnection you wish to register.
      */
     public synchronized void registerService(ServiceConnection webServiceConnector) {
@@ -558,6 +574,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
 
     /**
      * Unregisters the specified ServiceConnection from the ProtocolServer
+     *
      * @param webServiceConnector: The ServiceConnection you wish to remove.
      */
     public synchronized void removeService(ServiceConnection webServiceConnector) {
@@ -566,13 +583,14 @@ public class WSNotificationServer extends AbstractProtocolServer {
 
     /**
      * Add a standard serverconnector to the server instance.
+     *
      * @param address The IP address you wish to bind the serverconnector to
-     * @param port The port you with to bind the serverconnector to
+     * @param port    The port you with to bind the serverconnector to
      */
-    public void addStandardConnector(String address, int port){
+    public void addStandardConnector(String address, int port) {
         ServerConnector connector = new ServerConnector(_server);
         connector.setHost(address);
-        if(port == 80){
+        if (port == 80) {
             log.warn("You have requested to use port 80. This will not work unless you are running as root." +
                     "Are you running as root? You shouldn't. Reroute port 80 to 8080 instead.");
         }
@@ -583,15 +601,17 @@ public class WSNotificationServer extends AbstractProtocolServer {
 
     /**
      * Add a predefined serverconnector to the server instance.
+     *
      * @param connector A jetty ServerConnector
      */
-    public void addConnector(Connector connector){
+    public void addConnector(Connector connector) {
         _connectors.add(connector);
         this._server.addConnector(connector);
     }
 
     /**
      * Fetch the WSNRequestParser object
+     *
      * @return WSNRequestParser
      */
     public WSNRequestParser getRequestParser() {
@@ -617,13 +637,13 @@ public class WSNotificationServer extends AbstractProtocolServer {
             log.debug("Checking headers...");
 
             // Check the request headers, check for chunked encoding
-            while(headerNames.hasMoreElements()) {
-                String outMessage = (String)headerNames.nextElement();
+            while (headerNames.hasMoreElements()) {
+                String outMessage = (String) headerNames.nextElement();
                 Enumeration returnMessage = request.getHeaders(outMessage);
 
-                while(returnMessage.hasMoreElements()) {
-                    String inputStream = (String)returnMessage.nextElement();
-                    if(outMessage.equals("Transfer-Encoding") && inputStream.equals("chunked")) {
+                while (returnMessage.hasMoreElements()) {
+                    String inputStream = (String) returnMessage.nextElement();
+                    if (outMessage.equals("Transfer-Encoding") && inputStream.equals("chunked")) {
                         log.debug("Found Transfer-Encoding was chunked.");
                         isChunked = true;
                     }
@@ -635,7 +655,10 @@ public class WSNotificationServer extends AbstractProtocolServer {
             // Get message content, if any
             InternalMessage outgoingMessage;
             if (request.getContentLength() > 0) {
+<<<<<<< HEAD
                 log.debug("Content length was: " + request.getContentLength());
+=======
+>>>>>>> develop
                 InputStream inputStream = request.getInputStream();
                 outgoingMessage = new InternalMessage(InternalMessage.STATUS_OK | InternalMessage.STATUS_HAS_MESSAGE | InternalMessage.STATUS_MESSAGE_IS_INPUTSTREAM, inputStream);
             } else if (isChunked) {
@@ -687,7 +710,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
                     response.setContentType("application/soap+xml;charset=utf-8");
 
                     // Declare input and output streams
-                    InputStream inputStream = (InputStream)returnMessage.getMessage();
+                    InputStream inputStream = (InputStream) returnMessage.getMessage();
                     OutputStream outputStream = response.getOutputStream();
 
                     // Pipe the data from input to output stream
@@ -746,7 +769,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
 
                 // Check if we have status=OK and also we have a message
             } else if (((InternalMessage.STATUS_OK & returnMessage.statusCode) > 0) &&
-                    (InternalMessage.STATUS_HAS_MESSAGE & returnMessage.statusCode) > 0){
+                    (InternalMessage.STATUS_HAS_MESSAGE & returnMessage.statusCode) > 0) {
 
                 /* Liar liar pants on fire */
                 if (returnMessage.getMessage() == null) {
@@ -763,7 +786,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
                 response.setContentType("application/soap+xml;charset=utf-8");
 
                 // Allocate the input and output streams
-                InputStream inputStream = (InputStream)returnMessage.getMessage();
+                InputStream inputStream = (InputStream) returnMessage.getMessage();
                 OutputStream outputStream = response.getOutputStream();
 
                 /* Copy the contents of the input stream into the output stream */
@@ -801,7 +824,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
         String endpoint = requestInformation.getEndpointReference();
 
         /* If we have nowhere to send the message */
-        if(endpoint == null){
+        if (endpoint == null) {
             log.error("Endpoint reference not set");
             totalErrors.incrementAndGet();
             return new InternalMessage(InternalMessage.STATUS_FAULT, null);
@@ -812,7 +835,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
         _client.setIdleTimeout(2000);
 
         /* Try to send the message */
-        try{
+        try {
             /* Raw request */
             if ((message.statusCode & InternalMessage.STATUS_HAS_MESSAGE) == 0) {
 
@@ -839,7 +862,7 @@ public class WSNotificationServer extends AbstractProtocolServer {
                 } else {
 
                     // Check if we should have had a message, but there was none
-                    if(message.getMessage() == null){
+                    if (message.getMessage() == null) {
                         log.error("No content was found to send");
                         totalErrors.incrementAndGet();
                         return new InternalMessage(InternalMessage.STATUS_FAULT | InternalMessage.STATUS_FAULT_INVALID_PAYLOAD, null);
@@ -871,14 +894,14 @@ public class WSNotificationServer extends AbstractProtocolServer {
                     }
                 }
             }
-        } catch(ClassCastException e) {
+        } catch (ClassCastException e) {
             log.error("sendMessage(): The message contained something else than an inputStream." +
                     "Please convert your message to an InputStream before calling this method.");
             totalErrors.incrementAndGet();
 
             return new InternalMessage(InternalMessage.STATUS_FAULT | InternalMessage.STATUS_FAULT_INVALID_PAYLOAD, null);
 
-        } catch(Exception e) {
+        } catch (Exception e) {
             totalErrors.incrementAndGet();
             e.printStackTrace();
             log.error("sendMessage(): Unable to establish connection: " + e.getMessage());

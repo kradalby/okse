@@ -37,7 +37,6 @@ import org.ntnunotif.wsnu.services.implementations.notificationproducer.Abstract
 
 import javax.jws.WebMethod;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -47,13 +46,13 @@ import java.util.concurrent.ThreadLocalRandom;
  * This code is a heavily modified version of the qpid-proton-demo (https://github.com/rhs/qpid-proton-demo) by Rafael Schloming
  * Created by kradalby on 24/04/15.
  */
-public class SubscriptionHandler extends BaseHandler implements SubscriptionChangeListener{
+public class SubscriptionHandler extends BaseHandler implements SubscriptionChangeListener {
 
     /**
      * Wrapper class around a ArrayList for holding subscribers to
      * a topic/queue. Has additional methods to help the queue
      * behavior and the topic behavior.
-     * @param \<Receiver\/Sender\>
+     *
      */
     public static class Routes<T extends Link> {
 
@@ -73,10 +72,13 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
 
         /**
          * Choose a random subscriber from a queue.
+         *
          * @return random object from list
          */
         public T choose() {
-            if (routes.isEmpty()) { return null; }
+            if (routes.isEmpty()) {
+                return null;
+            }
             ThreadLocalRandom rand = ThreadLocalRandom.current();
             int idx = rand.nextInt(0, routes.size());
             return routes.get(idx);
@@ -84,6 +86,7 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
 
         /**
          * Get all available subscribers for a topic.
+         *
          * @return ArrayList of objects
          */
         public List<T> getRoutes() {
@@ -108,14 +111,16 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
     private static ConcurrentHashMap<String, Sender> localRemoteContainerSenderMap = new ConcurrentHashMap<>();
     private static ConcurrentHashMap<Sender, AbstractNotificationProducer.SubscriptionHandle> localSubscriberHandle = new ConcurrentHashMap<>();
 
-    final private Map<String,Routes<Sender>> outgoing = new ConcurrentHashMap<String,Routes<Sender>>();
-    final private Map<String,Routes<Receiver>> incoming = new ConcurrentHashMap<String,Routes<Receiver>>();
+    final private Map<String, Routes<Sender>> outgoing = new ConcurrentHashMap<String, Routes<Sender>>();
+    final private Map<String, Routes<Receiver>> incoming = new ConcurrentHashMap<String, Routes<Receiver>>();
 
-    public SubscriptionHandler() {}
+    public SubscriptionHandler() {
+    }
 
     /**
      * Get the address of a Source object.
-     * @param source
+     *
+     * @param source : Connection information object
      * @return the address of a Source object.
      */
     private static String getAddress(Source source) {
@@ -128,7 +133,8 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
 
     /**
      * Get the address of a Target object.
-     * @param target
+     *
+     * @param target : Connection information object
      * @return the address of a Target object.
      */
     private static String getAddress(Target target) {
@@ -141,7 +147,8 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
 
     /**
      * Get the address of a Sender object.
-     * @param sender
+     *
+     * @param sender : Client object
      * @return the address of a Sender object.
      */
     public static String getAddress(Sender sender) {
@@ -152,7 +159,8 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
 
     /**
      * Get the address of a Receiver object.
-     * @param receiver
+     *
+     * @param receiver : Client object
      * @return the address of a Receiver object.
      */
     public static String getAddress(Receiver receiver) {
@@ -161,30 +169,37 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
 
     /**
      * Get the outgoing routes of a given address.
-     * @param address
-     * @return Routes\<Sender\> list
+     *
+     * @param address : topic/route
+     * @return Routes of Sender objects
      */
     public Routes<Sender> getOutgoing(String address) {
         Routes<Sender> routes = outgoing.get(address);
-        if (routes == null) { return EMPTY_OUT; }
+        if (routes == null) {
+            return EMPTY_OUT;
+        }
         return routes;
     }
 
     /**
      * Get the incomming routes of a given address.
-     * @param address
-     * @return Routes\<Receiver\>
+     *
+     * @param address topic/route
+     * @return Routes of Receiver objects
      */
     public Routes<Receiver> getIncomming(String address) {
         Routes<Receiver> routes = incoming.get(address);
-        if (routes == null) { return EMPTY_IN; }
+        if (routes == null) {
+            return EMPTY_IN;
+        }
         return routes;
     }
 
     /**
      * Add a Sender object to AMQPs internal routing system for topic/queue
      * and create and add a OKSEs subscriber to the internal system.
-     * @param sender
+     *
+     * @param sender : Client object
      */
     private void add(Sender sender) {
         String senderAddress = "Unknown";
@@ -207,27 +222,26 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
 
         //If RemoteContainer id is not null add the subscriber to HashMap with RemoteContainer id as Key
         //Is used to identify which sender has open connections to the broker
-        if(remoteContainer != null){
+        if (remoteContainer != null) {
             localRemoteContainerSenderMap.put(remoteContainer, sender);
         }
 
-        if(remoteHostName != null){
+        if (remoteHostName != null) {
             senderAddress = remoteHostName;
         }
 
 
-        if(clientPort != 0){
+        if (clientPort != 0) {
             senderClientPort = clientPort;
         }
 
-        if(server.getProtocolServerType() != null){
+        if (server.getProtocolServerType() != null) {
             protocolServerType = server.getProtocolServerType();
         }
 
         //Building the Subscriber from a sender object
         Subscriber subscriber = new Subscriber(senderAddress, senderClientPort, getAddress(sender), protocolServerType);
         SubscriptionService.getInstance().addSubscriber(subscriber);
-
 
 
         localSenderSubscriberMap.put(sender, subscriber);
@@ -239,7 +253,7 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
         if (routes == null) {
             log.debug("Route does not exist, adding route for: " + address);
             routes = new Routes<Sender>();
-            outgoing.put(address,routes);
+            outgoing.put(address, routes);
         }
         log.debug("Adding sender: " + remoteHostName + " to route: " + address);
         log.debug(outgoing.toString());
@@ -251,7 +265,8 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
     /**
      * Remove a sender object from AMQPs routing system and
      * Okses internal subscriber system.
-     * @param sender
+     *
+     * @param sender : Client object
      */
     private void remove(Sender sender) {
         if (sender != null) {
@@ -276,7 +291,9 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
                     outgoing.remove(address);
                 }
             }
-            if (!AMQProtocolServer.getInstance().isShuttingDown()) {log.debug("Detaching: " + driver.getInetAddress());}
+            if (!AMQProtocolServer.getInstance().isShuttingDown()) {
+                log.debug("Detaching: " + driver.getInetAddress());
+            }
             sender.abort();
             sender.detach();
             sender.close();
@@ -287,7 +304,8 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
 
     /**
      * Add a Receiver object to AMQPs internal routing system
-     * @param receiver
+     *
+     * @param receiver : Client object
      */
     private void add(Receiver receiver) {
         String address = getAddress(receiver);
@@ -304,7 +322,8 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
 
     /**
      * Remove a Receiver object from AMQPs internal routing system
-     * @param receiver
+     *
+     * @param receiver : Client object
      */
     private void remove(Receiver receiver) {
         String address = getAddress(receiver);
@@ -319,7 +338,7 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
         log.debug(incoming.toString());
     }
 
-    private void add (Link link) {
+    private void add(Link link) {
         if (link instanceof Sender) {
             add((Sender) link);
         } else {
@@ -355,18 +374,17 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
 
         //Get sender from localRemoteContainerSenderMap  with eventRemoteContainer as key
         Sender sender = localRemoteContainerSenderMap.get(eventRemoteContainer);
-        if(sender != null){
+        if (sender != null) {
             Session senderSession = sender.getSession();
             Connection senderConnection = senderSession.getConnection();
             senderRemoteContainer = senderConnection.getRemoteContainer();
         }
 
         //Check if sender container id is equal to the event container id to see if the client has disconnected
-        if (senderRemoteContainer.equals(eventRemoteContainer)){
+        if (senderRemoteContainer.equals(eventRemoteContainer)) {
             SubscriptionService.getInstance().removeSubscriber(localSenderSubscriberMap.get(sender));
         }
     }
-
 
 
     @Override
@@ -388,6 +406,6 @@ public class SubscriptionHandler extends BaseHandler implements SubscriptionChan
     }
 
     public void unsubscribeAll() {
-        localSenderSubscriberMap.forEach( (sender,subscriber) -> SubscriptionService.getInstance().removeSubscriber(subscriber));
+        localSenderSubscriberMap.forEach((sender, subscriber) -> SubscriptionService.getInstance().removeSubscriber(subscriber));
     }
 }

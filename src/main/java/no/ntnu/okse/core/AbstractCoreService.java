@@ -39,7 +39,8 @@ public abstract class AbstractCoreService {
 
     /**
      * Protected constructor that takes in the className string from the subclass (for logger initializing)
-     * @param className
+     *
+     * @param className className as string
      */
     protected AbstractCoreService(String className) {
         _running = false;

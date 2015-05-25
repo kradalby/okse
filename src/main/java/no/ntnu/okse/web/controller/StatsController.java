@@ -29,13 +29,13 @@ import no.ntnu.okse.core.subscription.SubscriptionService;
 import no.ntnu.okse.core.topic.TopicService;
 import no.ntnu.okse.protocol.ProtocolServer;
 import no.ntnu.okse.web.model.ProtocolStats;
+import org.apache.log4j.Logger;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 
 /**
@@ -46,14 +46,21 @@ import java.util.HashMap;
 @RequestMapping(value = "/api/statistics")
 public class StatsController {
 
+    // URL routes
     private static final String GET_STATS = "/get/all";
+
+    // Log4j logger
+    private static Logger log = Logger.getLogger(StatsController.class.getName());
 
     /**
      * Returnes all the information needed to refresh the stats-pane
+     *
      * @return A HashMap containing all the information
      */
     @RequestMapping(method = RequestMethod.GET, value = GET_STATS)
-    public @ResponseBody HashMap<String, Object> getAllStats() {
+    public
+    @ResponseBody
+    HashMap<String, Object> getAllStats() {
         CoreService cs = CoreService.getInstance();
         SubscriptionService ss = SubscriptionService.getInstance();
         TopicService ts = TopicService.getInstance();
@@ -61,7 +68,7 @@ public class StatsController {
         HashMap<String, Object> result = new HashMap<>();
 
         // CoreService statistics
-        result.put("coreServiceStatistics", new HashMap<String, Object>(){{
+        result.put("coreServiceStatistics", new HashMap<String, Object>() {{
             put("totalMessagesSent", cs.getTotalMessagesSentFromProtocolServers());
             put("totalMessagesReceived", cs.getTotalMessagesReceivedFromProtocolServers());
             put("totalRequests", cs.getTotalRequestsFromProtocolServers());

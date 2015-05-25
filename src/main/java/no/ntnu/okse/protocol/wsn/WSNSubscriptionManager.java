@@ -7,7 +7,6 @@ import no.ntnu.okse.core.subscription.SubscriptionService;
 import org.apache.log4j.Logger;
 import org.ntnunotif.wsnu.base.util.RequestInformation;
 import org.ntnunotif.wsnu.services.general.ExceptionUtilities;
-import org.ntnunotif.wsnu.services.general.ServiceUtilities;
 import org.ntnunotif.wsnu.services.implementations.notificationproducer.AbstractNotificationProducer;
 import org.ntnunotif.wsnu.services.implementations.subscriptionmanager.AbstractSubscriptionManager;
 import org.oasis_open.docs.wsn.b_2.*;
@@ -26,7 +25,10 @@ import javax.xml.bind.annotation.XmlSeeAlso;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
-import java.util.*;
+import java.util.Collection;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 
@@ -61,7 +63,8 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
 
     /**
      * This method is called from the CommandProxy to set a reference to our SubscriptionService
-     * @param subService
+     *
+     * @param subService : SubscriptionService
      */
     public void initCoreSubscriptionService(SubscriptionService subService) {
         this._subscriptionService = subService;
@@ -69,6 +72,7 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
 
     /**
      * Check to see if a subscriptionKey exists
+     *
      * @param s The key to check if exists
      * @return True if the key exists, false otherwise
      */
@@ -80,6 +84,7 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
 
     /**
      * Check to see if a subscriber exists
+     *
      * @param s The subscriptionKey to check if exists
      * @return True if the subscriber exists, false otherwise
      */
@@ -91,6 +96,7 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
 
     /**
      * Check to see if a subscription is paused or not
+     *
      * @param subscriptionReference The subscriptionKey to be checked
      * @return True if the subscriber is paused, false otherwise
      */
@@ -105,7 +111,8 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
      * This is the main OKSE implementation of the subscription manager addSubscriber method that should be used.
      * It will delegate core subscriber registry to the core SubscriptionService, as well as update the local
      * mappings from WS-Nu subscriptionKey to the relevant Subscriber and SubscriptionHandle objects.
-     * @param s An instance of OKSE Subscriber with proper fields and attributes set.
+     *
+     * @param s         An instance of OKSE Subscriber with proper fields and attributes set.
      * @param subHandle An instance of WS-Nu SubscriptionHandle with proper fields and attributes set.
      */
     public void addSubscriber(Subscriber s, AbstractNotificationProducer.SubscriptionHandle subHandle) {
@@ -126,6 +133,7 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
     /**
      * Removes a Subscriber from the SubscriptionService, and the listener callback will remove it from
      * local mappings.
+     *
      * @param s The WS-Nu subscriptionkey
      */
     @Override
@@ -137,6 +145,7 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
 
     /**
      * Retrieve a collection of all the WS-Nu subscriptionKeys registered to this manager
+     *
      * @return A Collection of WS-Nu subscriptionKeys
      */
     public Collection<String> getAllRecipients() {
@@ -156,7 +165,7 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
 
     /**
      * Retrieve the SubscriptionHandle of the subscriber provided as the argument
-     *
+     * <p>
      * This method attempts to extract the WS-Nu subscriptionKey from the Subscriber object's
      * attribute set, and delegates the rest to the String based method with the same name.
      *
@@ -169,6 +178,7 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
 
     /**
      * Retrieve a OKSE Subscriber object based on the WS-Nu subscriptionReference
+     *
      * @param subscriptionReference The subscriptionReference to fetch related OKSE Subscriber object from
      * @return An OKSE Subscriber object if found, <code>null</code> otherwise
      */
@@ -189,9 +199,10 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
 
     /**
      * SimpleSubscriptionManagers implementation of unsubscribe.
+     *
      * @param unsubscribeRequest The incoming unsubscribeRequest parsed from XML
      * @return A proper UbsubscribeResponse XML Object
-     * @throws ResourceUnknownFault If the subscription reference did not exist
+     * @throws ResourceUnknownFault             If the subscription reference did not exist
      * @throws UnableToDestroySubscriptionFault If there was an other error of some sort
      */
     @Override
@@ -208,7 +219,7 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
 
         for (Map.Entry<String, String[]> entry : requestInformation.getParameters().entrySet()) {
             // If the param is not the subscription reference, continue
-            if(!entry.getKey().equals(WSN_SUBSCRIBER_TOKEN)) {
+            if (!entry.getKey().equals(WSN_SUBSCRIBER_TOKEN)) {
                 continue;
             }
 
@@ -227,7 +238,7 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
                 } else {
                     ExceptionUtilities.throwResourceUnknownFault("en", "Ill-formated subscription-parameter");
                 }
-            } else if(entry.getValue().length == 0){
+            } else if (entry.getValue().length == 0) {
                 ExceptionUtilities.throwUnableToDestroySubscriptionFault("en", "Subscription-parameter in URL is missing value");
             }
 
@@ -257,9 +268,10 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
 
     /**
      * SimpleSubscriptionManager's implementation of renew.
+     *
      * @param renewRequest The incoming renewRequest parsed from XML
      * @return A RenewResponse XML object
-     * @throws ResourceUnknownFault If the subscriptionReference was not found, or missing
+     * @throws ResourceUnknownFault             If the subscriptionReference was not found, or missing
      * @throws UnacceptableTerminationTimeFault If the terminationTime was either unparseable or in the past
      */
     @Override
@@ -274,7 +286,7 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
 
         log.debug("Received renew request");
         /* Find the subscription tag */
-        for(Map.Entry<String, String[]> entry : requestInformation.getParameters().entrySet()) {
+        for (Map.Entry<String, String[]> entry : requestInformation.getParameters().entrySet()) {
             log.debug("Current key processing: " + entry.getKey());
             if (!entry.getKey().equals(WSN_SUBSCRIBER_TOKEN)) {
                 continue;
@@ -291,7 +303,7 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
                     ExceptionUtilities.throwResourceUnknownFault("en", "Given resource was unknown: " + subRef);
                 }
             /* We just continue down here as the time-fetching operations are rather large */
-            } else if(entry.getValue().length == 0) {
+            } else if (entry.getValue().length == 0) {
                 log.debug("Attempt to renew a blank subscription reference");
                 ExceptionUtilities.throwResourceUnknownFault("en", "A blank resource is always unknown.");
             }
@@ -306,7 +318,7 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
             long time = WSNTools.interpretTerminationTime(renewRequest.getTerminationTime());
 
             // Verify new termination time
-            if(time < System.currentTimeMillis()) {
+            if (time < System.currentTimeMillis()) {
                 log.debug("Received a terminationTime in renew request that had already passed");
                 ExceptionUtilities.throwUnacceptableTerminationTimeFault("en", "Tried to renew a subscription so it " +
                         "should last until a time that has already passed.");
@@ -387,7 +399,7 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
                 }
                 log.warn("Received a malformed subscription parameter during resume request");
                 ExceptionUtilities.throwResourceUnknownFault("en", "Ill-formated subscription-parameter");
-            } else if(entry.getValue().length == 0) {
+            } else if (entry.getValue().length == 0) {
                 log.warn("Subscription-parameter in URL is missing value during resume request");
                 ExceptionUtilities.throwResumeFailedFault("en", "Subscription-parameter in URL is missing value");
             }
@@ -396,7 +408,7 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
             String subRef = entry.getValue()[0];
 
             /* The subscriptions is not recognized */
-            if(!localSubscriberMap.containsKey(subRef)){
+            if (!localSubscriberMap.containsKey(subRef)) {
                 log.debug("ResumeRequest: Subscription not found");
                 log.debug("ResumeRequest expected: " + subRef);
                 ExceptionUtilities.throwResourceUnknownFault("en", "Subscription not found.");
@@ -410,7 +422,7 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
         }
         ExceptionUtilities.throwResumeFailedFault("en", "The subscription was not found as any parameter" +
                 " in the request-uri. Please send a request on the form: " +
-                "\"http://urlofthis.domain/webservice/?"+WSN_SUBSCRIBER_TOKEN+"=subscriptionreference");
+                "\"http://urlofthis.domain/webservice/?" + WSN_SUBSCRIBER_TOKEN + "=subscriptionreference");
         return null;
     }
 
@@ -449,7 +461,7 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
                 }
                 log.debug("Received ill-formated subscription parameter in Pause request");
                 ExceptionUtilities.throwResourceUnknownFault("en", "Ill-formated subscription-parameter");
-            } else if(entry.getValue().length == 0) {
+            } else if (entry.getValue().length == 0) {
                 log.debug("Subscription parameter missing in Pause request");
                 ExceptionUtilities.throwPauseFailedFault("en", "Subscription-parameter in URL is missing value");
             }
@@ -472,7 +484,7 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
         }
         ExceptionUtilities.throwPauseFailedFault("en", "The subscription was not found as any parameter" +
                 " in the request-uri. Please send a request on the form: " +
-                "\"http://urlofthis.domain/webservice/?"+WSN_SUBSCRIBER_TOKEN+"=subscriptionreference");
+                "\"http://urlofthis.domain/webservice/?" + WSN_SUBSCRIBER_TOKEN + "=subscriptionreference");
 
         return null;
     }
@@ -485,6 +497,7 @@ public class WSNSubscriptionManager extends AbstractSubscriptionManager implemen
 
     /**
      * Listener method that takes in a SubscriptionChangeEvent
+     *
      * @param e The Event object with associated Subscriber object
      */
     @Override

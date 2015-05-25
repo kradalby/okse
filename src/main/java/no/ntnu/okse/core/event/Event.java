@@ -36,6 +36,7 @@ public abstract class Event {
     /**
      * Constructs an Event containing an operation, some data and a dataType.
      * <p>
+     *
      * @param data: An object containing the data payload.
      */
     protected Event(Object data) {
@@ -45,12 +46,14 @@ public abstract class Event {
     /**
      * An abstract method to retrieve the data payload.
      * <p>
+     *
      * @return: An object containing the data payload casted to proper type in subclass.
      */
     public abstract Object getData();
 
     /**
      * An abstract method that should return a subclass enum type
+     *
      * @return Type enum implemented in subclass
      */
     public abstract Object getType();

@@ -24,7 +24,6 @@
 
 package no.ntnu.okse.web.model;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -37,7 +36,8 @@ public class Log {
 
     /**
      * Constructs a model for containing log information to be serialized
-     * @param name The log file
+     *
+     * @param name  The log file
      * @param lines All contents of the file
      */
     public Log(String name, List<String> lines) {

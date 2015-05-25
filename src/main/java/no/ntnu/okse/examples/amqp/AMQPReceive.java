@@ -29,10 +29,9 @@ package no.ntnu.okse.examples.amqp;
  */
 
 
+import org.apache.qpid.proton.amqp.messaging.ApplicationProperties;
 import org.apache.qpid.proton.message.Message;
 import org.apache.qpid.proton.messenger.Messenger;
-import org.apache.qpid.proton.messenger.impl.MessengerImpl;
-import org.apache.qpid.proton.amqp.messaging.ApplicationProperties;
 
 import java.util.ArrayList;
 import java.util.List;

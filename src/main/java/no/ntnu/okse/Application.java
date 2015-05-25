@@ -73,6 +73,7 @@ public class Application {
     /**
      * Main method for the OKSE Message Broker
      * Used to initate the complete application (CoreService and WebServer)
+     *
      * @param args Command line arguments
      */
     public static void main(String[] args) {
@@ -108,7 +109,7 @@ public class Application {
 
         /* REGISTER PROTOCOL SERVERS HERE */
         cs.addProtocolServer(WSNotificationServer.getInstance());
-        cs.addProtocolServer(DummyProtocolServer.getInstance());    // Example ProtocolServer
+        //cs.addProtocolServer(DummyProtocolServer.getInstance());    // Example ProtocolServer
         cs.addProtocolServer(AMQProtocolServer.getInstance());
 
         // Start the admin console
@@ -121,6 +122,7 @@ public class Application {
 
     /**
      * Returns a Duration instance of the time the Application has been running
+     *
      * @return The amount of time the application has been running
      */
     public static Duration getRunningTime() {
@@ -138,6 +140,7 @@ public class Application {
     /**
      * This public static method reads the OKSE configuration file from disk. If it does not exist, it is created.
      * Additionally, default fields in the Application class are populated after config has been read.
+     *
      * @return The Properties object containing the config key/value pairs.
      */
     public static Properties readConfigurationFiles() {
@@ -155,6 +158,7 @@ public class Application {
 
     /**
      * Initializes/updates the default field values in this Application class from the configuration file
+     *
      * @param properties A Properties object containing values from the configuration file.
      */
     private static void initializeDefaultsFromConfigFile(Properties properties) {

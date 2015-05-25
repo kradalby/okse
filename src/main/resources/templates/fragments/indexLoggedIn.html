@@ -16,6 +16,7 @@
     <li role="presentation"><a href="#log" data-toggle="tab">Logs</a></li>
 </ul>
 <div class="tab-content">
+    <!-- ADD NEW PANES HERE -->
     <div layout:replace="fragments/panes/mainpane :: mainpane"></div>
     <div layout:replace="fragments/panes/topicspane :: topicspane"></div>
     <div layout:replace="fragments/panes/subscriberspane :: subscriberspane"></div>
@@ -25,6 +26,7 @@
 </div>
 </th:block>
 <th:block layout:fragment="scripts">
+    <!-- ADD NEW SCRIPTS FOR PANES HERE -->
     <script th:src="@{/js/config.js}" src="/static/js/config.js"></script>
     <script th:src="@{/js/stats.js}" src="/static/js/stats.js"></script>
     <script th:src="@{/js/topics.js}" src="/static/js/topics.js"></script>

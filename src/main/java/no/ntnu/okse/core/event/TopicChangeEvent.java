@@ -45,6 +45,7 @@ public class TopicChangeEvent extends Event {
      * Constructs an Event containing an operation, some data and a dataType.
      * <p>
      *
+     * @param eventType : Type of TopicChangeEvent
      * @param data : An object containing the data payload.
      */
     public TopicChangeEvent(Type eventType, Object data) {

@@ -25,7 +25,6 @@
 package no.ntnu.okse.core.messaging;
 
 import no.ntnu.okse.core.subscription.Publisher;
-import no.ntnu.okse.core.topic.Topic;
 import org.apache.log4j.Logger;
 import org.springframework.security.crypto.codec.Hex;
 
@@ -59,9 +58,9 @@ public class Message {
     /**
      * Constructor that takes in a message, topic, publisher and originProtocol to produce a single OKSE Message
      *
-     * @param message The message content, represented as a string (Cannot be null)
-     * @param topic An instance of OKSE Topic object
-     * @param publisher An instance of OKSE Publisher object
+     * @param message        The message content, represented as a string (Cannot be null)
+     * @param topic          An instance of OKSE Topic object
+     * @param publisher      An instance of OKSE Publisher object
      * @param originProtocol The originating protocol name of this message (Cannot be null)
      */
     public Message(@Nonnull String message, String topic, Publisher publisher, @Nonnull String originProtocol) {
@@ -99,6 +98,7 @@ public class Message {
 
     /**
      * Fetches the Message ID of this Message object.
+     *
      * @return A string containing the MessageID of this object.
      */
     public String getMessageID() {
@@ -107,6 +107,7 @@ public class Message {
 
     /**
      * Retrieves the raw message content of this message
+     *
      * @return A string containing the message
      */
     public String getMessage() {
@@ -115,6 +116,7 @@ public class Message {
 
     /**
      * Retrieves the Topic object this message is destined for
+     *
      * @return A topic object this message is to be broadcasted to
      */
     public String getTopic() {
@@ -123,6 +125,7 @@ public class Message {
 
     /**
      * Retrieves the Publisher object this message originated from, null if non-registered or system-message
+     *
      * @return The publisher object this message came from, null otherwise.
      */
     public Publisher getPublisher() {
@@ -131,7 +134,8 @@ public class Message {
 
     /**
      * Checks to see if this message was sent from a registered publisher
-     * @return
+     *
+     * @return true, if publisher is registered
      */
     public boolean messageSentFromRegisteredPublisher() {
         if (this.publisher == null) return false;
@@ -140,6 +144,7 @@ public class Message {
 
     /**
      * Sets the originating protocol of this message
+     *
      * @param originProtocol A string containing the name of the originating protocol of this message
      */
     public void setOriginProtocol(String originProtocol) {
@@ -148,6 +153,7 @@ public class Message {
 
     /**
      * Retrieve the originating protocol of this message
+     *
      * @return A string containing the name of the originating protocol, null if it is a system message or other
      */
     public String getOriginProtocol() {
@@ -156,6 +162,7 @@ public class Message {
 
     /**
      * Returns a LocalDateTime object of when this message object was initialized
+     *
      * @return A LocalDateTime object representing the creation time of this object.
      */
     public LocalDateTime getCreationTime() {
@@ -164,6 +171,7 @@ public class Message {
 
     /**
      * Checks to see if this message has been processed yet.
+     *
      * @return True if the message has been processed, false otherwise.
      */
     public boolean isProcessed() {
@@ -173,6 +181,7 @@ public class Message {
 
     /**
      * Flags this message as processed. This is a one-time operation and cannot be updated further.
+     *
      * @return The LocalDateTime object representing the time at which this command was first run.
      */
     public LocalDateTime setProcessed() {
@@ -182,7 +191,8 @@ public class Message {
 
     /**
      * Set an attribute on this Message object
-     * @param key They key of the attribute
+     *
+     * @param key   They key of the attribute
      * @param value The value of the attribute
      */
     public void setAttribute(String key, String value) {
@@ -192,6 +202,7 @@ public class Message {
 
     /**
      * Retrieve an attribute from this message object
+     *
      * @param key The key to fetch the value of
      * @return The value if the attribute exists, null otherwise
      */
@@ -202,8 +213,9 @@ public class Message {
 
     /**
      * Retrieves the completion time of this message (when it was processed).
+     *
      * @return A LocalDateTime object representing the time of completion/processing for this message. Returns
-     *         null if it has not yet been processed.
+     * null if it has not yet been processed.
      */
     public LocalDateTime getCompletionTime() {
         return this.processed;
@@ -212,6 +224,7 @@ public class Message {
     /**
      * Sets the systemMessage status flag of this message. Used to check if this message was broadcasted from the brokering
      * system itself, and not from an external publisher.
+     *
      * @param flag True to set this message as a system message, false otherwise.
      */
     public void setSystemMessage(boolean flag) {
@@ -220,6 +233,7 @@ public class Message {
 
     /**
      * Checks to see if this message originated from the brokering system itself, and not an external publisher.
+     *
      * @return True if it was a system generated message, false otherwise.
      */
     public boolean isSystemMessage() {
@@ -228,8 +242,8 @@ public class Message {
 
     @Override
     public String toString() {
-        return "Message (" + messageID.substring(0,4) + "..." + messageID.substring(28,32) +
+        return "Message (" + messageID.substring(0, 4) + "..." + messageID.substring(28, 32) +
                 ") [systemMessage: " + systemMessage + ", created: " + created + ", " +
-               "topic: " + topic + "]";
+                "topic: " + topic + "]";
     }
 }

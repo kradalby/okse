@@ -71,6 +71,8 @@ public class DummyProtocolServer extends AbstractProtocolServer {
 
     /**
      * Private constructor
+     *
+     * @param host The host this server should bind to
      * @param port The port this server should bind to
      */
     private DummyProtocolServer(String host, Integer port) {
@@ -79,6 +81,7 @@ public class DummyProtocolServer extends AbstractProtocolServer {
 
     /**
      * The main DummuProtocolServer instanciation method
+     *
      * @return The DummyProtocolServer instance
      */
     public static DummyProtocolServer getInstance() {
@@ -107,6 +110,7 @@ public class DummyProtocolServer extends AbstractProtocolServer {
 
     /**
      * Initialization method
+     *
      * @param port The port this server should bind to
      */
     @Override
@@ -334,7 +338,9 @@ public class DummyProtocolServer extends AbstractProtocolServer {
 
     /**
      * Parse an incoming command from the raw string
+     *
      * @param command The command string received from the client
+     * @return boolean based on command success
      */
     private boolean parseCommand(String command) {
         String[] args = command.split(" ");
@@ -373,8 +379,8 @@ public class DummyProtocolServer extends AbstractProtocolServer {
                 log.debug("SHUTDOWN PROTOCOL SERVERS RECIEVED");
                 try {
                     CoreService.getInstance().getEventQueue().put(new SystemEvent(
-                        SystemEvent.Type.SHUTDOWN_PROTOCOL_SERVERS,
-                        null
+                            SystemEvent.Type.SHUTDOWN_PROTOCOL_SERVERS,
+                            null
                     ));
                 } catch (InterruptedException e) {
                     log.error("Interrupted while attempting to insert an event into CoreService");

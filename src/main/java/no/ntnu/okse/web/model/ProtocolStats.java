@@ -38,17 +38,18 @@ public class ProtocolStats {
 
     /**
      * Constructes a model for containing protocol stats to be serialized to JSON
-     * @param protocolServer
-     * @param totalMessagesSent
-     * @param totalMessagesRecieved
-     * @param totalRequests
-     * @param totalBadRequests
-     * @param totalErrors
+     *
+     * @param protocolServer : The protocol server
+     * @param totalMessagesSent : Total amount of messages sent
+     * @param totalMessagesReceived : Total amount of messages received
+     * @param totalRequests : Total amount of requests
+     * @param totalBadRequests : Total amount of bad requests
+     * @param totalErrors : Total amount of errors
      */
-    public ProtocolStats(String protocolServer, int totalMessagesSent, int totalMessagesRecieved, int totalRequests, int totalBadRequests, int totalErrors) {
+    public ProtocolStats(String protocolServer, int totalMessagesSent, int totalMessagesReceived, int totalRequests, int totalBadRequests, int totalErrors) {
         this.protocolServer = protocolServer;
         this.totalMessagesSent = totalMessagesSent;
-        this.totalMessagesReceived = totalMessagesRecieved;
+        this.totalMessagesReceived = totalMessagesReceived;
         this.totalRequests = totalRequests;
         this.totalBadRequests = totalBadRequests;
         this.totalErrors = totalErrors;

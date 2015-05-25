@@ -24,8 +24,6 @@
 
 package no.ntnu.okse.core.subscription;
 
-import no.ntnu.okse.Application;
-
 import java.util.HashMap;
 
 /**
@@ -44,9 +42,10 @@ public class Publisher {
 
     /**
      * Create a Publisher object using the required input arguments
+     *
      * @param rawTopicString The full raw topic string this publisher is registered to
-     * @param host The host of the publisher
-     * @param port The port used by the publisher
+     * @param host           The host of the publisher
+     * @param port           The port used by the publisher
      * @param originProtocol The originating protocol the publisher registered from
      */
     public Publisher(String rawTopicString, String host, Integer port, String originProtocol) {
@@ -60,6 +59,7 @@ public class Publisher {
 
     /**
      * Fetch what protocol this publisher used to register
+     *
      * @return The originating protocol
      */
     public String getOriginProtocol() {
@@ -68,6 +68,7 @@ public class Publisher {
 
     /**
      * Retrieve the hostname or ip this publisher used to register
+     *
      * @return The hostname of or ip of the publisher
      */
     public String getHost() {
@@ -76,6 +77,7 @@ public class Publisher {
 
     /**
      * Retrieves the raw topic string this publisher has registered to
+     *
      * @return The raw topic string this publisher is registered to
      */
     public String getTopic() {
@@ -84,6 +86,7 @@ public class Publisher {
 
     /**
      * Retrieve the port this publisher used to register
+     *
      * @return The port of the publisher
      */
     public Integer getPort() {
@@ -92,17 +95,20 @@ public class Publisher {
 
     /**
      * Set a new timeout for this publisher
+     *
      * @param timeout The new timeout represented as seconds since unix epoch
      * @throws IllegalArgumentException If the timeout is in the past
      */
     public void setTimeout(Long timeout) throws IllegalArgumentException {
         if (timeout == null) this.timeout = timeout;
-        else if (timeout < System.currentTimeMillis()) throw new IllegalArgumentException("Timeout cannot be in the past");
+        else if (timeout < System.currentTimeMillis())
+            throw new IllegalArgumentException("Timeout cannot be in the past");
         this.timeout = timeout;
     }
 
     /**
      * Retrieve the current timeout of this publisher
+     *
      * @return The unix epoch time when this publisher should expire
      */
     public Long getTimeout() {
@@ -111,7 +117,8 @@ public class Publisher {
 
     /**
      * Set an attribute on this publisher object
-     * @param key The attribute key
+     *
+     * @param key   The attribute key
      * @param value The attribute value
      */
     public void setAttribute(String key, String value) {
@@ -124,6 +131,7 @@ public class Publisher {
 
     /**
      * Retrieve an attribute from this publisher object
+     *
      * @param key The attribute key to be queried
      * @return The value of the attribute key, <code>null</code> if it does not exist
      */
@@ -134,6 +142,7 @@ public class Publisher {
 
     /**
      * Checks to see if this publisher should expire
+     *
      * @return True if this publisher object should expire, false otherwise
      */
     public boolean shouldExpire() {
@@ -142,6 +151,7 @@ public class Publisher {
 
     /**
      * Checks to see if this publisher has expired
+     *
      * @return True if it should expire and has expired, false otherwise
      */
     public boolean hasExpired() {
@@ -153,6 +163,7 @@ public class Publisher {
 
     /**
      * Fetches a concatenation of host and port as a string
+     *
      * @return The host and port of the subscriber as a string
      */
     public String getHostAndPort() {

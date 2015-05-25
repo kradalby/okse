@@ -77,6 +77,7 @@ public class MessageService extends AbstractCoreService implements TopicChangeLi
     /**
      * The main invocation method of the MessageService. Instanciates a MessageService instance if needed,
      * and returns the active instance.
+     *
      * @return The MessageService instance
      */
     public static MessageService getInstance() {
@@ -160,11 +161,11 @@ public class MessageService extends AbstractCoreService implements TopicChangeLi
                             duplicateMessage.setAttribute("duplicate", m.getTopic());
 
                             if (m.getAttribute("duplicate") != null) {
-                                if ( ! m.getTopic().equals(duplicateMessage.getAttribute("duplicate"))) {
+                                if (!m.getTopic().equals(duplicateMessage.getAttribute("duplicate"))) {
                                     distributeMessage(duplicateMessage);
                                     log.debug("The message to Topic{" + duplicateMessage.getTopic() + "} was distributed");
                                 } else {
-                                    log.debug("The message to Topic{" + duplicateMessage.getTopic() + "} is a duplicate against Topic{" + m.getTopic() +"}, and will not be distributed");
+                                    log.debug("The message to Topic{" + duplicateMessage.getTopic() + "} is a duplicate against Topic{" + m.getTopic() + "}, and will not be distributed");
                                 }
                             } else if (TopicService.getInstance().topicExists(m.getTopic())) {
                                 distributeMessage(duplicateMessage);
@@ -175,7 +176,6 @@ public class MessageService extends AbstractCoreService implements TopicChangeLi
 
                         });
                     }
-
 
 
                     // Tell the ExecutorService to execute the following job
@@ -225,6 +225,7 @@ public class MessageService extends AbstractCoreService implements TopicChangeLi
 
     /**
      * Adds a Message object into the message queue for distribution
+     *
      * @param m The message object to be distributed
      */
     public void distributeMessage(Message m) {
@@ -237,6 +238,7 @@ public class MessageService extends AbstractCoreService implements TopicChangeLi
 
     /**
      * Retrieves the latest message sent on a specific topic
+     *
      * @param topic The topic to retrieve the latest message for
      * @return The message object for the specified topic, null if there has not been any messages yet
      */
@@ -248,6 +250,7 @@ public class MessageService extends AbstractCoreService implements TopicChangeLi
 
     /**
      * Check if the OKSE system is currently caching messages
+     *
      * @return True if this setting is set to true, false otherwise
      */
     public boolean isCachingMessages() {
@@ -259,7 +262,7 @@ public class MessageService extends AbstractCoreService implements TopicChangeLi
      * Takes in a message and a HashSet of topics and creates duplicate messages of
      * the origin message, and returns it as a list.
      *
-     * @param m The origin message
+     * @param m      The origin message
      * @param topics A HashSet containing all the topics that the message topic is mapped against
      * @return A containing the new message objects, to dispatch into the queue.
      */
@@ -282,6 +285,7 @@ public class MessageService extends AbstractCoreService implements TopicChangeLi
 
     /**
      * Private helper method to duplicate an incoming message to be
+     *
      * @param m The message to be duplicated to all topics
      * @return A HashSet of the generated messages
      */

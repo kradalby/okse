@@ -35,9 +35,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.annotation.web.servlet.configuration.EnableWebMvcSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.encrypt.Encryptors;
-import org.springframework.security.crypto.encrypt.TextEncryptor;
-import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import javax.sql.DataSource;
@@ -62,6 +59,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     /**
      * Connects to the dataSource and validates a user log in
+     *
      * @param auth An AuthenticationManagerBuilder instance
      * @throws Exception general exception
      */
@@ -86,6 +84,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     /**
      * Defines rules and access for http-requests
+     *
      * @param http A HttpSecurity instance
      * @throws Exception general exception
      */
@@ -93,18 +92,18 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http
                 .authorizeRequests()
-                    .antMatchers("/", "/js/**" , "/gfx/*", "/css/**", "/fonts/**").permitAll()
-                    .anyRequest().authenticated()
-                    .and()
+                .antMatchers("/", "/js/**", "/gfx/*", "/css/**", "/fonts/**").permitAll()
+                .anyRequest().authenticated()
+                .and()
                 .formLogin()
-                    .loginProcessingUrl("/auth/login")
-                    .loginPage("/").usernameParameter("username").passwordParameter("password")
-                    .permitAll()
-                    .and()
+                .loginProcessingUrl("/auth/login")
+                .loginPage("/").usernameParameter("username").passwordParameter("password")
+                .permitAll()
+                .and()
                 .logout()
-                    .logoutUrl("/auth/logout")
-                    .permitAll()
-                    .and()
+                .logoutUrl("/auth/logout")
+                .permitAll()
+                .and()
                 .csrf();
     }
 

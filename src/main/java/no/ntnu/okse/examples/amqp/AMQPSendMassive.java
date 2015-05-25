@@ -30,9 +30,7 @@ package no.ntnu.okse.examples.amqp;
 
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
-import org.apache.qpid.proton.message.impl.MessageImpl;
 import org.apache.qpid.proton.messenger.Messenger;
-import org.apache.qpid.proton.messenger.impl.MessengerImpl;
 
 import java.util.Arrays;
 import java.util.logging.Level;
@@ -41,6 +39,7 @@ import java.util.logging.Logger;
 /**
  * Example/test of the java Messenger/Message API.
  * Based closely qpid src/proton/examples/messenger/py/send.py
+ *
  * @author mberkowitz@sf.org
  * @since 8/4/2013
  */
@@ -81,8 +80,7 @@ public class AMQPSendMassive {
             }
         }
 
-        if(i != args.length)
-        {
+        if (i != args.length) {
             bodies = Arrays.copyOfRange(args, i, args.length);
         }
     }
