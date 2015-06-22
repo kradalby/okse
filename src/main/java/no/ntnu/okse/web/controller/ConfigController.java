@@ -201,17 +201,18 @@ public class ConfigController {
             }
         }
 
-        if (!relay.startsWith("http://")) {
+        if (!relay.startsWith("http://") && !relay.startsWith("https://")) {
             relay = "http://" + relay;
         }
 
         String subscriptionReference = WSNTools.extractSubscriptionReferenceFromRawXmlResponse(
-                WSNotificationServer.getInstance().getRequestParser().acceptLocalMessage(
+                WSNotificationServer.getInstance().sendMessage(
                         WSNTools.generateSubscriptionRequestWithTopic(
                                 relay,
                                 topic, // Topic
                                 WSNotificationServer.getInstance().getURI(),
-                                null) // Term time
+                                null // Termination time
+                        )
                 )
         );
 

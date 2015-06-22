@@ -31,14 +31,19 @@ import org.ntnunotif.wsnu.base.net.XMLParser;
 import org.ntnunotif.wsnu.base.topics.ConcreteEvaluator;
 import org.ntnunotif.wsnu.base.topics.SimpleEvaluator;
 import org.ntnunotif.wsnu.base.util.InternalMessage;
+import org.ntnunotif.wsnu.base.util.Utilities;
 import org.ntnunotif.wsnu.services.general.ExceptionUtilities;
 import org.ntnunotif.wsnu.services.general.ServiceUtilities;
 import org.oasis_open.docs.wsn.b_2.*;
+import org.oasis_open.docs.wsn.b_2.ObjectFactory;
 import org.oasis_open.docs.wsn.bw_2.UnacceptableTerminationTimeFault;
+import org.w3._2005._08.addressing.*;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
+import org.xmlsoap.schemas.soap.envelope.Body;
 import org.xmlsoap.schemas.soap.envelope.Envelope;
+import org.xmlsoap.schemas.soap.envelope.Header;
 
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
@@ -53,7 +58,12 @@ import javax.xml.transform.stream.StreamResult;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -364,6 +374,7 @@ public class WSNTools {
      */
     public static String extractSubscriptionReferenceFromRawXmlResponse(InternalMessage subResponse) {
         try {
+            log.debug("Extracting subscriptionRef from raw XML response: " + subResponse.getMessage().toString());
             InternalMessage parsed = parseRawXmlString(subResponse.getMessage().toString());
             JAXBElement jaxb = (JAXBElement) parsed.getMessage();
             Envelope env = (Envelope) jaxb.getValue();
@@ -388,6 +399,38 @@ public class WSNTools {
      */
     public static InternalMessage generateSubscriptionRequestWithTopic(
             @NotNull String endpointReference, @Nullable String topic, @NotNull String consumerReference, @Nullable Long terminationTime) {
+        String rawXml = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" +
+            "<ns6:Envelope xmlns:ns2=\"http://www.w3.org/2005/08/addressing\" " +
+            "xmlns:ns3=\"http://docs.oasis-open.org/wsn/b-2\" " +
+            "xmlns:ns4=\"http://docs.oasis-open.org/wsn/t-1\" " +
+            "xmlns:ns5=\"http://docs.oasis-open.org/wsrf/bf-2\" " +
+            "xmlns:ns6=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
+            "<ns6:Header>" +
+            "<ns2:Action>http://docs.oasis-open.org/wsn/bw-2/NotificationProducer/SubscribeRequest</ns2:Action>" +
+            "</ns6:Header>" +
+            "<ns6:Body>" +
+            "<ns3:Subscribe>" +
+            "<ns3:ConsumerReference><ns2:Address>" + consumerReference + "</ns2:Address></ns3:ConsumerReference>";
+        if (topic != null) {
+            rawXml += "<ns3:Filter>";
+            if (topic.contains("/")) {
+                rawXml += "<ns3:TopicExpression Dialect=\"http://docs.oasis-open.org/wsn/t-1/TopicExpression/Concrete\">" + topic + "</ns3:TopicExpression>";
+            } else {
+                rawXml += "<ns3:TopicExpression Dialect=\"http://docs.oasis-open.org/wsn/t-1/TopicExpression/Simple\">" + topic + "</ns3:TopicExpression>";
+            }
+            rawXml += "</ns3:Filter>";
+        }
+        if (terminationTime != null) {
+            rawXml += "<ns3:InitialTerminationTime>";
+            DateTimeFormatter dtf = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
+            log.debug("Formatted terminationTime to ISO offset date time: " + dtf.format(Instant.ofEpochMilli(terminationTime)));
+            rawXml += dtf.format(Instant.ofEpochMilli(terminationTime));
+            rawXml += "</ns3:InitialTerminationTime>";
+        }
+        rawXml += "</ns3:Subscribe>" +
+            "</ns6:Body>" +
+            "</ns6:Envelope>";
+        /*
         Subscribe subscribe = new Subscribe();
         subscribe.setConsumerReference(ServiceUtilities.buildW3CEndpointReference(consumerReference));
         if (terminationTime != null) {
@@ -402,14 +445,21 @@ public class WSNTools {
             // Instantiate a topicexpression and insert the topic
             TopicExpressionType topicExpression = b2_factory.createTopicExpressionType();
             FilterType filterType = b2_factory.createFilterType();
-            topicExpression.setDialect(_ConcreteTopicExpression);
+            if (topic.contains("/")) topicExpression.setDialect(ConcreteEvaluator.dialectURI);
+            else topicExpression.setDialect(SimpleEvaluator.dialectURI);
             topicExpression.getContent().add(topic);
             filterType.getAny().add(b2_factory.createTopicExpression(topicExpression));
             // Add the expression to filter
             subscribe.setFilter(filterType);
         }
+        */
+
         // Build InternalMessage
-        InternalMessage message = new InternalMessage(InternalMessage.STATUS_OK | InternalMessage.STATUS_HAS_MESSAGE, subscribe);
+        ByteArrayInputStream bais = new ByteArrayInputStream(rawXml.getBytes());
+        InternalMessage message = new InternalMessage(
+            InternalMessage.STATUS_OK | InternalMessage.STATUS_HAS_MESSAGE | InternalMessage.STATUS_MESSAGE_IS_INPUTSTREAM,
+            bais
+        );
         // Set the destination
         message.getRequestInformation().setEndpointReference(endpointReference);
 

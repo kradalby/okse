@@ -782,7 +782,9 @@ public class WSNCommandProxy extends AbstractNotificationBroker {
         // Send subscriptionRequest back if isDemand isRequested
         if (registerPublisherRequest.isDemand()) {
             log.info("Demand registration is TRUE, sending subrequest back");
-            WsnUtilities.sendSubscriptionRequest(endpointReference, getEndpointReference(), getHub());
+            WSNotificationServer.getInstance().sendMessage(WSNTools.generateSubscriptionRequestWithTopic(
+               endpointReference, null, WSNotificationServer.getInstance().getURI(), null
+            ));
         }
 
         // Create the necessary WS-Nu components needed for the RegisterPublisherResponse
