@@ -228,6 +228,9 @@ public class WSNToolsTest {
         assertTrue(WSNTools.isXsdDatetime("2015-01-01T00:00:00Z"));
         assertTrue(WSNTools.isXsdDatetime("2015-01-01T00:00:00-02:00"));
         assertTrue(WSNTools.isXsdDatetime("2015-01-01T00:00:00+03:00"));
+        assertTrue(WSNTools.isXsdDatetime("2015-01-01T00:00:00.000+02:00"));
+        assertTrue(WSNTools.isXsdDatetime("2015-01-01T00:00:00.000"));
+        assertTrue(WSNTools.isXsdDatetime("2015-01-01T00:00:00.999Z"));
         // Malformed
         assertFalse(WSNTools.isXsdDatetime("2015-02T00:00:00"));
         assertFalse(WSNTools.isXsdDatetime("2015-01-02 00:00:00"));

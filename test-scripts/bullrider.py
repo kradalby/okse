@@ -112,7 +112,7 @@ xmlns:ns6="http://schemas.xmlsoap.org/soap/envelope/">
 <ns3:Subscribe>
 <ns3:ConsumerReference><ns2:Address>%s</ns2:Address></ns3:ConsumerReference>
 <ns3:Filter xmlns:ox="http://okse.default.topic"><ns3:TopicExpression Dialect="http://docs.oasis-open.org/wsn/t-1/TopicExpression/Concrete">%s</ns3:TopicExpression></ns3:Filter>
-<ns3:InitialTerminationTime>2016-01-01T00:00:00</ns3:InitialTerminationTime>
+<ns3:InitialTerminationTime>2016-01-01T00:00:00.500+02:00</ns3:InitialTerminationTime>
 </ns3:Subscribe>
 </ns6:Body>
 </ns6:Envelope>
