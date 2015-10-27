@@ -14,7 +14,7 @@ Extending with additional protocols is also possible, by extending the appropria
 
 # Development Team
 
-* [Aleksander Skraastad](https://github.com/mythern)
+* [Aleksander Skraastad](https://github.com/myth)
 * [Håkon Ødegård Løvdal](https://github.com/hakloev)
 * [Fredrik Christoffer Berg](https://github.com/Bergalerga)
 * [Trond Walleraunet](https://github.com/trondwalleraunet)
